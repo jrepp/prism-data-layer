@@ -1,0 +1,29 @@
+syntax = "proto3";
+
+package prism.common;
+
+// Standard error response
+message Error {
+  ErrorCode code = 1;
+  string message = 2;
+  map<string, string> details = 3;
+  string request_id = 4;
+}
+
+enum ErrorCode {
+  ERROR_CODE_UNSPECIFIED = 0;
+
+  // Client errors (4xx)
+  ERROR_CODE_INVALID_REQUEST = 400;
+  ERROR_CODE_UNAUTHORIZED = 401;
+  ERROR_CODE_FORBIDDEN = 403;
+  ERROR_CODE_NOT_FOUND = 404;
+  ERROR_CODE_CONFLICT = 409;
+  ERROR_CODE_PRECONDITION_FAILED = 412;
+  ERROR_CODE_RATE_LIMITED = 429;
+
+  // Server errors (5xx)
+  ERROR_CODE_INTERNAL = 500;
+  ERROR_CODE_BACKEND_UNAVAILABLE = 503;
+  ERROR_CODE_TIMEOUT = 504;
+}

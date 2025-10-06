@@ -1,0 +1,46 @@
+syntax = "proto3";
+
+package prism.common;
+
+// Timestamp (epoch milliseconds for consistency with Kafka)
+message Timestamp {
+  int64 millis = 1;
+}
+
+// UUID (standard 128-bit UUID)
+message UUID {
+  string value = 1;  // UUID string format
+}
+
+// Cursor for pagination
+message Cursor {
+  bytes token = 1;  // Opaque pagination token
+}
+
+// Time range
+message TimeRange {
+  int64 start_millis = 1;  // Inclusive
+  int64 end_millis = 2;     // Exclusive
+}
+
+// Tags for filtering/indexing
+message Tags {
+  map<string, string> tags = 1;
+}
+
+// Compression type
+enum CompressionType {
+  COMPRESSION_TYPE_UNSPECIFIED = 0;
+  COMPRESSION_TYPE_NONE = 1;
+  COMPRESSION_TYPE_LZ4 = 2;
+  COMPRESSION_TYPE_ZSTD = 3;
+  COMPRESSION_TYPE_GZIP = 4;
+}
+
+// Consistency level
+enum ConsistencyLevel {
+  CONSISTENCY_LEVEL_UNSPECIFIED = 0;
+  CONSISTENCY_LEVEL_EVENTUAL = 1;
+  CONSISTENCY_LEVEL_CAUSAL = 2;
+  CONSISTENCY_LEVEL_STRONG = 3;
+}

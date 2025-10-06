@@ -1,0 +1,36 @@
+syntax = "proto3";
+
+package prism.common;
+
+import "prism/common/types.proto";
+
+// Metadata for stored items
+message ItemMetadata {
+  // Compression info
+  CompressionType compression = 1;
+
+  // Encryption info (if encrypted)
+  EncryptionInfo encryption = 2;
+
+  // TTL (time-to-live)
+  int64 ttl_seconds = 3;
+
+  // Chunking info (for large items)
+  ChunkMetadata chunking = 4;
+
+  // Created/updated timestamps
+  int64 created_at_millis = 5;
+  int64 updated_at_millis = 6;
+}
+
+message EncryptionInfo {
+  string algorithm = 1;  // e.g., "AES-256-GCM"
+  string key_id = 2;     // Key version for rotation
+}
+
+message ChunkMetadata {
+  int32 total_chunks = 1;
+  int32 chunk_size_bytes = 2;
+  string hash_algorithm = 3;  // e.g., "SHA256"
+  bytes hash = 4;             // Hash of complete data
+}

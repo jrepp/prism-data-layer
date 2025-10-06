@@ -1,0 +1,9 @@
+version: v1
+
+# Python code generation
+plugins:
+  - plugin: buf.build/protocolbuffers/python:v25.1
+    out: ../tooling/generated
+
+  - plugin: buf.build/grpc/python:v1.60.0
+    out: ../tooling/generated

@@ -1,0 +1,105 @@
+syntax = "proto3";
+
+package prism;
+
+import "google/protobuf/descriptor.proto";
+
+//
+// Message-level options (for data models)
+//
+
+extend google.protobuf.MessageOptions {
+  // Namespace: logical dataset name
+  string namespace = 50000;
+
+  // Access pattern hint for capacity planning
+  // Values: "read_heavy" | "write_heavy" | "append_heavy" | "balanced"
+  string access_pattern = 50001;
+
+  // Capacity estimates
+  int64 estimated_read_rps = 50002;
+  int64 estimated_write_rps = 50003;
+  int64 estimated_data_size_gb = 50004;
+
+  // Backend selection
+  // Values: "postgres" | "kafka" | "nats" | "sqlite" | "neptune" | "auto"
+  string backend = 50005;
+
+  // Consistency level
+  // Values: "strong" | "eventual" | "causal"
+  string consistency = 50006;
+
+  // Retention policy
+  int32 retention_days = 50007;  // 0 = keep forever
+
+  // Caching
+  bool enable_cache = 50008;
+  int32 cache_ttl_seconds = 50009;
+}
+
+//
+// Field-level options (for individual fields)
+//
+
+extend google.protobuf.FieldOptions {
+  // Index type
+  // Values: "primary" | "secondary" | "partition_key" | "clustering_key"
+  string index = 50100;
+
+  // PII classification
+  // Values: "email" | "name" | "phone" | "ssn" | "address" | "ip_address" | "credit_card"
+  string pii = 50101;
+
+  // Encryption at rest
+  bool encrypt_at_rest = 50102;
+
+  // Masking in logs/traces
+  bool mask_in_logs = 50103;
+
+  // Audit all accesses to this field
+  bool access_audit = 50104;
+
+  // Validation rules
+  string validation = 50105;  // "email" | "uuid" | "url" | "regex:..." | "min:N" | "max:N"
+
+  // Max length for strings
+  int32 max_length = 50106;
+
+  // Required field (for backward compatibility tracking)
+  bool required = 50107;
+}
+
+//
+// Service-level options (for gRPC services)
+//
+
+extend google.protobuf.ServiceOptions {
+  // Require authentication for all RPCs
+  bool require_auth = 50200;
+
+  // Service-wide rate limit (requests per second)
+  int32 rate_limit_rps = 50201;
+
+  // Service version
+  string version = 50202;
+}
+
+//
+// RPC-level options (for individual methods)
+//
+
+extend google.protobuf.MethodOptions {
+  // Is this RPC idempotent? (safe to retry)
+  bool idempotent = 50300;
+
+  // RPC timeout in milliseconds
+  int32 timeout_ms = 50301;
+
+  // Cache RPC responses
+  bool cacheable = 50302;
+  int32 rpc_cache_ttl_seconds = 50303;
+
+  // Required permissions
+  // Values: "read" | "write" | "admin"
+  repeated string required_permissions = 50304;
+}

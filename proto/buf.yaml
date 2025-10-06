@@ -1,0 +1,32 @@
+version: v1
+
+# Dependencies
+deps:
+  - buf.build/googleapis/googleapis
+
+# Lint configuration
+lint:
+  use:
+    - STANDARD
+  except:
+    # Allow custom field numbers for extensions
+    - ENUM_VALUE_PREFIX
+    - RPC_REQUEST_STANDARD_NAME
+    - RPC_RESPONSE_STANDARD_NAME
+    # Allow unversioned packages for options and common types
+    - PACKAGE_VERSION_SUFFIX
+  enum_zero_value_suffix: _UNSPECIFIED
+  service_suffix: Service
+
+# Breaking change detection
+breaking:
+  use:
+    - FILE
+  except:
+    # Allow adding fields (backward compatible)
+    - FIELD_SAME_LABEL
+
+# Code generation inputs
+build:
+  excludes:
+    - proto/vendor
