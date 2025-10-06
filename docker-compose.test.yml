@@ -1,0 +1,109 @@
+version: '3.9'
+
+# Prism local testing infrastructure
+# Based on ADR-004: Local-First Testing Strategy
+#
+# Usage:
+#   python -m tooling.test.local-stack up
+#   python -m tooling.test.local-stack down
+
+services:
+  # PostgreSQL - for KeyValue and relational data
+  postgres:
+    image: postgres:16-alpine
+    container_name: prism-postgres
+    environment:
+      POSTGRES_DB: prism_test
+      POSTGRES_USER: prism
+      POSTGRES_PASSWORD: prism_test_password
+    command:
+      - postgres
+      - -c
+      - fsync=off              # Faster for tests (unsafe for production!)
+      - -c
+      - full_page_writes=off   # Faster for tests
+      - -c
+      - synchronous_commit=off # Faster for tests
+    tmpfs:
+      - /var/lib/postgresql/data:rw  # In-memory for maximum speed
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U prism"]
+      interval: 1s
+      timeout: 1s
+      retries: 30
+    networks:
+      - prism-test
+
+  # Kafka - for TimeSeries and event streaming
+  kafka:
+    image: apache/kafka:3.7.0
+    container_name: prism-kafka
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@localhost:9093
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      # Fast for tests
+      KAFKA_LOG_FLUSH_INTERVAL_MESSAGES: 1
+      KAFKA_LOG_FLUSH_INTERVAL_MS: 10
+      KAFKA_LOG_RETENTION_HOURS: 1
+    ports:
+      - "9092:9092"
+    healthcheck:
+      test: ["CMD-SHELL", "kafka-broker-api-versions.sh --bootstrap-server localhost:9092 || exit 1"]
+      interval: 2s
+      timeout: 5s
+      retries: 30
+    networks:
+      - prism-test
+
+  # NATS - for lightweight messaging
+  nats:
+    image: nats:2.10-alpine
+    container_name: prism-nats
+    command: ["-js", "-m", "8222"]  # Enable JetStream and monitoring
+    ports:
+      - "4222:4222"  # Client connections
+      - "8222:8222"  # HTTP monitoring
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:8222/healthz || exit 1"]
+      interval: 1s
+      timeout: 1s
+      retries: 10
+    networks:
+      - prism-test
+
+  # LocalStack - for Neptune and AWS services
+  localstack:
+    image: localstack/localstack:3.0
+    container_name: prism-localstack
+    environment:
+      SERVICES: neptune,kms,s3
+      DEBUG: 0
+      DISABLE_CORS_CHECKS: 1
+      PERSISTENCE: 0  # No persistence for tests
+    ports:
+      - "4566:4566"  # LocalStack main endpoint
+      - "8182:8182"  # Neptune endpoint
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:4566/_localstack/health || exit 1"]
+      interval: 2s
+      timeout: 5s
+      retries: 30
+    networks:
+      - prism-test
+
+networks:
+  prism-test:
+    name: prism-test
+    driver: bridge

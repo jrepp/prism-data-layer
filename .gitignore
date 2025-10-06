@@ -1,0 +1,99 @@
+# Prism .gitignore
+
+# === Security: Never commit secrets ===
+**/*.env
+**/*.env.*
+!**/*.env.example
+.aws/
+*.pem
+*.key
+*.crt
+secrets/
+credentials
+
+# === Rust ===
+proxy/target/
+proxy/**/*.rs.bk
+proxy/**/*.pdb
+proxy/Cargo.lock  # Uncomment if library
+
+# === Python ===
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+.venv/
+venv/
+ENV/
+env/
+
+# === Node/Ember ===
+admin/node_modules/
+admin/bower_components/
+admin/dist/
+admin/tmp/
+admin/.ember-cli
+admin/npm-debug.log*
+admin/yarn-error.log
+admin/testem.log
+admin/.node_modules.ember-try/
+admin/package-lock.json
+admin/yarn.lock
+
+# === Generated Code ===
+**/generated/
+**/*_pb2.py
+**/*_pb2.pyi
+**/*_grpc.py
+**/*.pb.go
+**/*.pb.rs
+
+# === IDE ===
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# === Testing ===
+.pytest_cache/
+.coverage
+htmlcov/
+*.log
+test-results/
+
+# === Docker ===
+*.dockerignore
+
+# === OS ===
+Thumbs.db
+.DS_Store
+
+# === Local dev ===
+*.local.db
+*.local.db-shm
+*.local.db-wal
+local-data/
+
+# === Temporary ===
+tmp/
+temp/
+*.tmp
+*.bak
