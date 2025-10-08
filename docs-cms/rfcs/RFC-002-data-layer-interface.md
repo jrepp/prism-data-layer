@@ -1309,6 +1309,483 @@ func TestQueueIntegration(t *testing.T) {
 - [gRPC Documentation](https://grpc.io/docs/)
 - [Protobuf Style Guide](https://protobuf.dev/programming-guides/style/)
 
-## 14. Revision History
+## 14. Cache Service (RFC-007)
+
+### 14.1 Overview
+
+Transparent caching layer with look-aside and write-through strategies for high-performance data access.
+
+### 14.2 Service Definition
+
+```protobuf
+syntax = "proto3";
+
+package prism.cache.v1;
+
+service CacheService {
+  // Get value from cache (look-aside pattern)
+  rpc Get(GetRequest) returns (GetResponse);
+
+  // Set value in cache
+  rpc Set(SetRequest) returns (SetResponse);
+
+  // Delete cache entry
+  rpc Delete(DeleteRequest) returns (DeleteResponse);
+
+  // Get multiple values (batch)
+  rpc GetMulti(GetMultiRequest) returns (GetMultiResponse);
+
+  // Check if key exists
+  rpc Exists(ExistsRequest) returns (ExistsResponse);
+
+  // Set with expiration
+  rpc SetEx(SetExRequest) returns (SetExResponse);
+
+  // Increment counter
+  rpc Increment(IncrementRequest) returns (IncrementResponse);
+}
+```
+
+### 14.3 Cache Patterns
+
+**Look-Aside (Cache-Aside)**:
+
+```mermaid
+sequenceDiagram
+    participant Client
+    participant Prism
+    participant Cache as Redis Cache
+    participant DB as PostgreSQL
+
+    Client->>Prism: Get(key="user:123")
+    Prism->>Cache: GET user:123
+    alt Cache Hit
+        Cache-->>Prism: User data
+        Prism-->>Client: User data (2ms)
+    else Cache Miss
+        Cache-->>Prism: nil
+        Prism->>DB: SELECT * FROM users WHERE id=123
+        DB-->>Prism: User data
+        Prism->>Cache: SET user:123 data TTL=300s
+        Prism-->>Client: User data (25ms)
+    end
+```
+
+**Write-Through**:
+
+```mermaid
+sequenceDiagram
+    participant Client
+    participant Prism
+    participant Cache as Redis Cache
+    participant DB as PostgreSQL
+
+    Client->>Prism: Set(key="config:flags", value=...)
+    Prism->>DB: UPDATE config SET value=...
+    DB-->>Prism: OK
+    Prism->>Cache: SET config:flags value
+    Cache-->>Prism: OK
+    Prism-->>Client: OK (18ms)
+```
+
+### 14.4 Use-Case Recommendations
+
+| Use Case | Strategy | TTL | Rationale |
+|----------|----------|-----|-----------|
+| ✅ **User Sessions** | Look-Aside | 24h | High read, low write |
+| ✅ **API Responses** | Look-Aside | 5-15m | Tolerate stale data |
+| ✅ **Product Catalog** | Look-Aside | 1h | Read-only reference data |
+| ✅ **User Profiles** | Look-Aside | 15m | Frequently accessed |
+| ✅ **Application Config** | Write-Through | Infinite | Require consistency |
+| ✅ **Feature Flags** | Write-Through | Infinite | Must be fresh |
+| ✅ **Rate Limit Counters** | Cache-Only | 1m | Temporary state |
+| ❌ **Financial Transactions** | No Cache | N/A | Require strong consistency |
+| ❌ **Audit Logs** | No Cache | N/A | Write-once, read-rarely |
+
+## 15. TimeSeries Service (RFC-005)
+
+### 15.1 Overview
+
+ClickHouse-backed time series analytics for high-volume event data with OLAP queries.
+
+### 15.2 Service Definition
+
+```protobuf
+syntax = "proto3";
+
+package prism.timeseries.v1;
+
+service TimeSeriesService {
+  // Append event(s) to time series
+  rpc AppendEvents(AppendEventsRequest) returns (AppendEventsResponse);
+
+  // Stream events for continuous ingestion
+  rpc StreamEvents(stream Event) returns (StreamEventsResponse);
+
+  // Query events with time range and filters
+  rpc QueryEvents(QueryRequest) returns (QueryResponse);
+
+  // Query pre-aggregated data
+  rpc QueryAggregates(AggregateRequest) returns (AggregateResponse);
+
+  // Stream query results
+  rpc StreamQuery(QueryRequest) returns (stream Event);
+}
+
+message Event {
+  int64 timestamp = 1;  // Unix nanoseconds
+  string event_type = 2;
+  string source = 3;
+  map<string, string> dimensions = 4;
+  map<string, double> metrics = 5;
+  string payload = 6;
+}
+```
+
+### 15.3 Architecture
+
+```mermaid
+graph LR
+    Client[Client Apps]
+    Proxy[Prism Proxy]
+    CH[ClickHouse<br/>Sharded Cluster]
+    MV[Materialized Views<br/>1m, 5m, 1h rollups]
+
+    Client -->|Append Events| Proxy
+    Proxy -->|Batch Insert| CH
+    CH --> MV
+    Client -->|Query Aggregates| Proxy
+    Proxy -->|SELECT| MV
+```
+
+### 15.4 Use-Case Recommendations
+
+| Use Case | Ingestion Rate | Retention | Rationale |
+|----------|----------------|-----------|-----------|
+| ✅ **Application Logs** | 100k events/s | 30 days | High volume, short retention |
+| ✅ **Observability Metrics** | 1M events/s | 90 days | Standard monitoring retention |
+| ✅ **User Analytics** | 10k events/s | 1 year | Business analytics |
+| ✅ **IoT Sensor Data** | 500k events/s | 90 days | High frequency measurements |
+| ✅ **Click Stream** | 50k events/s | 180 days | User behavior analysis |
+| ✅ **Audit Events** | 1k events/s | 7 years | Compliance requirements |
+| ❌ **Real-Time Transactions** | N/A | N/A | Use transactional DB instead |
+
+## 16. Object Storage Service (ADR-032)
+
+### 16.1 Overview
+
+S3-compatible object storage for blobs with MinIO for local development.
+
+### 16.2 Service Definition
+
+```protobuf
+syntax = "proto3";
+
+package prism.objectstore.v1;
+
+service ObjectStoreService {
+  // Upload object (streaming for large files)
+  rpc PutObject(stream PutObjectRequest) returns (PutObjectResponse);
+
+  // Download object (streaming)
+  rpc GetObject(GetObjectRequest) returns (stream GetObjectResponse);
+
+  // Delete object
+  rpc DeleteObject(DeleteObjectRequest) returns (DeleteObjectResponse);
+
+  // List objects in bucket/prefix
+  rpc ListObjects(ListObjectsRequest) returns (ListObjectsResponse);
+
+  // Get object metadata
+  rpc HeadObject(HeadObjectRequest) returns (HeadObjectResponse);
+
+  // Generate presigned URL
+  rpc GetPresignedURL(PresignedURLRequest) returns (PresignedURLResponse);
+}
+
+message PutObjectRequest {
+  string bucket = 1;
+  string key = 2;
+  map<string, string> metadata = 3;
+  string content_type = 4;
+  optional int64 ttl_seconds = 5;
+  bytes chunk = 6;  // Streaming chunk
+}
+```
+
+### 16.3 Architecture
+
+```mermaid
+graph TB
+    Client[Client App]
+    Proxy[Prism Proxy]
+    MinIO[MinIO / S3]
+    CDN[CDN<br/>Optional]
+
+    Client -->|Upload| Proxy
+    Proxy -->|Stream| MinIO
+    Client -->|Get Presigned URL| Proxy
+    Proxy -->|Generate URL| MinIO
+    Client -.Direct Upload.-> MinIO
+    MinIO -.Serve.-> CDN
+```
+
+### 16.4 Use-Case Recommendations
+
+| Use Case | Object Size | TTL | Rationale |
+|----------|-------------|-----|-----------|
+| ✅ **File Uploads** | 1KB - 100MB | 90 days | User-generated content |
+| ✅ **Profile Pictures** | 10KB - 5MB | 1 year | Long-lived media |
+| ✅ **Build Artifacts** | 10MB - 2GB | 30 days | CI/CD outputs |
+| ✅ **ML Models** | 100MB - 10GB | Infinite | Model serving |
+| ✅ **Backups** | 1GB - 100GB | 90 days | Database backups |
+| ✅ **Video/Audio** | 10MB - 5GB | 1 year | Media streaming |
+| ✅ **Log Archives** | 100MB - 10GB | 7 years | Compliance |
+| ❌ **Small Metadata** | < 1KB | N/A | Use KeyValue instead |
+
+## 17. Vector Search Service (RFC-004)
+
+### 17.1 Overview
+
+Redis-backed vector similarity search for ML embeddings and semantic search.
+
+### 17.2 Service Definition
+
+```protobuf
+syntax = "proto3";
+
+package prism.vector.v1;
+
+service VectorService {
+  // Index vector embedding
+  rpc IndexVector(IndexVectorRequest) returns (IndexVectorResponse);
+
+  // Search for similar vectors
+  rpc SearchSimilar(SearchRequest) returns (SearchResponse);
+
+  // Batch index vectors
+  rpc BatchIndex(stream IndexVectorRequest) returns (BatchIndexResponse);
+
+  // Delete vector
+  rpc DeleteVector(DeleteVectorRequest) returns (DeleteVectorResponse);
+
+  // Get vector by ID
+  rpc GetVector(GetVectorRequest) returns (GetVectorResponse);
+}
+
+message IndexVectorRequest {
+  string id = 1;
+  repeated float vector = 2;  // Embedding (e.g., 768 dims)
+  map<string, string> metadata = 3;
+}
+
+message SearchRequest {
+  repeated float query_vector = 1;
+  int32 top_k = 2;  // Return top K similar
+  optional float min_score = 3;
+  map<string, string> filters = 4;
+}
+
+message SearchResponse {
+  repeated SimilarVector results = 1;
+}
+
+message SimilarVector {
+  string id = 1;
+  float score = 2;  // Similarity score (0-1)
+  map<string, string> metadata = 3;
+}
+```
+
+### 17.3 Architecture
+
+```mermaid
+graph LR
+    Client[Client App]
+    Proxy[Prism Proxy]
+    Redis[Redis VSS<br/>Vector Similarity Search]
+    Index[HNSW Index<br/>Hierarchical NSW]
+
+    Client -->|Index Vector| Proxy
+    Proxy -->|FT.INDEX| Redis
+    Redis --> Index
+    Client -->|Search Similar| Proxy
+    Proxy -->|FT.SEARCH| Redis
+    Redis -->|KNN Query| Index
+```
+
+### 17.4 Use-Case Recommendations
+
+| Use Case | Vector Dims | Index Size | Rationale |
+|----------|-------------|------------|-----------|
+| ✅ **Semantic Search** | 384-768 | 1M vectors | Document similarity |
+| ✅ **Image Similarity** | 512-2048 | 10M vectors | Visual search |
+| ✅ **Product Recommendations** | 256-512 | 5M vectors | E-commerce similarity |
+| ✅ **Duplicate Detection** | 128-384 | 100k vectors | Content deduplication |
+| ✅ **Anomaly Detection** | 64-256 | 1M vectors | Pattern matching |
+| ❌ **High-Dimensional (>4096)** | N/A | N/A | Use specialized vector DB |
+| ❌ **Exact Match** | N/A | N/A | Use KeyValue index instead |
+
+## 18. Data Access Pattern Decision Tree
+
+```mermaid
+graph TD
+    Start[What type of data?]
+    Start -->|Binary/Files| ObjStore[Object Storage<br/>MinIO/S3]
+    Start -->|Events/Logs| TimeSeries[TimeSeries<br/>ClickHouse]
+    Start -->|Messages| MsgType{Message Type?}
+    Start -->|Structured| Struct{Access Pattern?}
+    Start -->|Vectors| Vector[Vector Search<br/>Redis VSS]
+
+    MsgType -->|Queue| Queue[Queue Service<br/>Kafka]
+    MsgType -->|PubSub| PubSub[PubSub Service<br/>NATS]
+
+    Struct -->|Read-Heavy| Cache{Stale OK?}
+    Struct -->|Write-Heavy| Transaction[Transact Service<br/>PostgreSQL]
+    Struct -->|Paged Read| Reader[Reader Service<br/>PostgreSQL]
+
+    Cache -->|Yes| LookAside[Look-Aside Cache<br/>Redis + DB]
+    Cache -->|No| WriteThrough[Write-Through Cache<br/>Redis + DB]
+
+    ObjStore -.Metadata.-> Cache
+    TimeSeries -.Aggregates.-> Cache
+```
+
+## 19. Performance Comparison
+
+| Pattern | Latency (P99) | Throughput | Use When |
+|---------|---------------|------------|----------|
+| **Cache (Hit)** | < 5ms | 50k RPS | Frequent reads |
+| **Cache (Miss)** | < 50ms | 5k RPS | First access |
+| **KeyValue** | < 20ms | 10k RPS | Transactional data |
+| **TimeSeries** | < 100ms | 1M events/s | Analytics |
+| **Object Storage** | < 500ms | 1k RPS | Large files |
+| **Vector Search** | < 50ms | 5k RPS | Similarity queries |
+| **Queue** | < 30ms | 100k msgs/s | Async processing |
+| **PubSub** | < 10ms | 50k msgs/s | Real-time events |
+
+## 20. Consistency Guarantees
+
+| Pattern | Consistency | Durability | Rationale |
+|---------|-------------|------------|-----------|
+| **Look-Aside Cache** | Eventual | Cache: None, DB: Strong | Tolerate stale reads |
+| **Write-Through Cache** | Strong | Cache: None, DB: Strong | Fresh reads required |
+| **KeyValue (Transact)** | Serializable | Strong | ACID transactions |
+| **TimeSeries** | Eventual | Strong | Analytics, not transactions |
+| **Object Storage** | Strong | Strong | Immutable objects |
+| **Vector Search** | Eventual | None (Cache) | Search results, not source of truth |
+| **Queue** | At-least-once | Strong | Message delivery |
+| **PubSub** | At-most-once | None | Real-time, ephemeral |
+
+## 21. Integration Patterns
+
+### 21.1 Cache + KeyValue
+
+```mermaid
+sequenceDiagram
+    Client->>Proxy: Read user profile
+    Proxy->>Cache: Check cache
+    alt Cache Hit
+        Cache-->>Proxy: Profile data
+    else Cache Miss
+        Proxy->>KeyValue: Query PostgreSQL
+        KeyValue-->>Proxy: Profile data
+        Proxy->>Cache: Update cache (TTL=15m)
+    end
+    Proxy-->>Client: Profile data
+```
+
+### 21.2 Queue + TimeSeries
+
+```mermaid
+sequenceDiagram
+    Client->>Proxy: Publish event to queue
+    Proxy->>Queue: Enqueue (Kafka)
+    Queue-->>Proxy: Acknowledged
+
+    Worker->>Proxy: Subscribe to queue
+    Proxy->>Queue: Pull events
+    Queue-->>Proxy: Event batch
+
+    Worker->>Proxy: AppendEvents (ClickHouse)
+    Proxy->>TimeSeries: Batch insert
+    TimeSeries-->>Proxy: Inserted
+```
+
+### 21.3 Object Storage + Cache
+
+```mermaid
+sequenceDiagram
+    Client->>Proxy: Get object metadata
+    Proxy->>Cache: Check metadata cache
+    alt Cache Hit
+        Cache-->>Proxy: Metadata
+    else Cache Miss
+        Proxy->>ObjectStore: HeadObject
+        ObjectStore-->>Proxy: Metadata
+        Proxy->>Cache: Cache metadata (TTL=1h)
+    end
+    Proxy-->>Client: Metadata
+
+    Client->>Proxy: GetPresignedURL
+    Proxy->>ObjectStore: Generate URL
+    ObjectStore-->>Proxy: Presigned URL
+    Proxy-->>Client: URL
+    Client-.Direct Download.->ObjectStore
+```
+
+## 22. Migration Guide
+
+### 22.1 Moving from Direct Backend to Prism
+
+**Before (Direct PostgreSQL)**:
+```python
+import psycopg2
+
+conn = psycopg2.connect("postgres://localhost/mydb")
+cursor = conn.cursor()
+cursor.execute("SELECT * FROM users WHERE id = %s", (user_id,))
+user = cursor.fetchone()
+```
+
+**After (Prism Reader Service)**:
+```python
+from prism_sdk import PrismClient
+
+client = PrismClient(namespace="users")
+response = client.get(collection="users", id=user_id)
+user = response.row.fields
+```
+
+### 22.2 Adding Cache Layer
+
+**Before (Direct DB reads)**:
+```python
+user = db.query("SELECT * FROM users WHERE id = ?", user_id)
+```
+
+**After (Look-Aside Cache via Prism)**:
+```python
+# Prism handles cache check + DB fallback automatically
+user = client.get(collection="users", id=user_id)
+# First call: ~20ms (DB), subsequent: ~2ms (cache)
+```
+
+### 22.3 Event Streaming
+
+**Before (Direct Kafka)**:
+```python
+producer = KafkaProducer(bootstrap_servers="kafka:9092")
+producer.send("events", event_data)
+```
+
+**After (Prism Queue Service)**:
+```python
+client.publish(topic="events", payload=event_data)
+# Prism handles Kafka producer config, retries, partitioning
+```
+
+## 23. Revision History
 
 - 2025-10-07: Initial draft
+- 2025-10-08: Added Cache, TimeSeries, Object Storage, Vector Search services; decision tree; integration patterns
