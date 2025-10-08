@@ -139,6 +139,30 @@ This directory contains records of architectural decisions made for Prism.
   - Multi-stage builds for small images
   - Debug variants with busybox for troubleshooting
 
+### Admin & Operations Management
+
+- [ADR-027: Admin API via gRPC](./027-admin-api-grpc.md) - **Accepted**
+  - Separate admin service on port 8981
+  - Config, session, namespace, and backend management
+  - RBAC and audit logging
+
+- [ADR-028: Admin UI with FastAPI and gRPC-Web](./028-admin-ui-fastapi-grpc-web.md) - **Accepted**
+  - FastAPI serving static files and gRPC-Web proxy
+  - Vanilla JavaScript frontend with Tailwind CSS
+  - Browser-accessible administration
+
+### Observability & Schema Management
+
+- [ADR-029: Protocol Recording with Protobuf Tagging](./029-protocol-recording-protobuf-tags.md) - **Accepted**
+  - Custom protobuf options for protocol recording
+  - Sampling and queryable storage
+  - Interceptor-based recording
+
+- [ADR-030: Schema Recording with Protobuf Tagging](./030-schema-recording-protobuf-tags.md) - **Accepted**
+  - Schema registry with version tracking
+  - Compatibility checking (backward, forward, full)
+  - Automated migration generation
+
 ## Status Definitions
 
 - **Proposed**: Under discussion, not yet decided
@@ -150,10 +174,22 @@ This directory contains records of architectural decisions made for Prism.
 ## Adding New ADRs
 
 1. Copy `000-template.md` to `NNN-short-title.md`
-2. Fill in all sections
-3. Update this index
-4. Create PR for team review
-5. Update status when accepted
+2. Use YAML frontmatter for metadata (see CLAUDE.md for format)
+3. Fill in all sections
+4. Update this index
+5. Create PR for team review
+6. Update status when accepted
+
+**Frontmatter Format:**
+```markdown
+---
+title: "ADR-XXX: Descriptive Title"
+status: Accepted
+date: 2025-10-08
+deciders: Core Team
+tags: [architecture, backend]
+---
+```
 
 ## ADR Lifecycle
 
@@ -165,6 +201,8 @@ Proposed → Reviewed → Accepted → Implemented
 
 ## Recent Changes
 
+- 2025-10-08: Converted all ADRs to YAML frontmatter format
+- 2025-10-08: ADRs 027-030 added (Admin interface, protocol/schema recording)
 - 2025-10-07: ADRs 022-026 added (Client configuration, interfaces, deployment)
 - 2025-10-07: ADRs 012-021 added (Go and Rust implementation patterns)
 - 2025-10-05: ADRs 001-010 accepted (initial architecture)
@@ -180,14 +218,27 @@ ADRs are tagged for easy filtering:
 - `#performance` - Performance and optimization
 - `#testing` - Testing strategies
 - `#operations` - Deployment, monitoring, ops
+- `#admin` - Administration and management
 - `#dx` - Developer experience
 - `#go` - Go-specific patterns and practices
 - `#rust` - Rust-specific patterns and practices
 - `#concurrency` - Concurrent programming patterns
 - `#error-handling` - Error handling strategies
 - `#logging` - Logging and observability
+- `#observability` - Tracing, monitoring, debugging
 - `#grpc` - gRPC and protobuf patterns
+- `#protobuf` - Protocol Buffers schema and options
+- `#schema` - Schema management and evolution
+- `#versioning` - Version management and compatibility
 - `#configuration` - Configuration management
 - `#containers` - Container and deployment patterns
 - `#client-server` - Client-server architecture
 - `#api-design` - API design and interfaces
+- `#ui` - User interface design
+- `#frontend` - Frontend development
+- `#fastapi` - FastAPI framework
+- `#grpc-web` - gRPC-Web protocol
+- `#protocols` - Protocol design and recording
+- `#registry` - Schema and service registries
+- `#debugging` - Debugging tools and techniques
+- `#evolution` - System evolution and migration
