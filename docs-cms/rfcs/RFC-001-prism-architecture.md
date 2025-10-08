@@ -24,7 +24,7 @@ Prism addresses the complexity of managing multiple data backends in modern appl
 
 ### 1.2 Goals
 
-- **Performance**: P99 latency <10ms, 10k+ RPS sustained per connection
+- **Performance**: P99 latency `<10ms`, 10k+ RPS sustained per connection
 - **Flexibility**: Support multiple access patterns (KV, Queue, PubSub, Paged Reader, Transactions)
 - **Scalability**: Horizontal scaling of both proxy and backend-specific containers
 - **Security**: mTLS, OAuth2, PII tagging, audit logging
@@ -508,9 +508,9 @@ message UserProfile {
 
 ### 10.1 Latency
 
-- **P50**: <2ms overhead
-- **P95**: <5ms overhead
-- **P99**: <10ms overhead
+- **P50**: `<2ms overhead`
+- **P95**: `<5ms overhead`
+- **P99**: `<10ms overhead`
 
 (Overhead measured from gRPC request receipt to backend call)
 
@@ -522,9 +522,9 @@ message UserProfile {
 
 ### 10.3 Resource Utilization
 
-- **Proxy**: <500MB RAM per instance
-- **Plugins**: <100MB RAM per container
-- **CPU**: <10% overhead for routing logic
+- **Proxy**: `<500MB RAM` per instance
+- **Plugins**: `<100MB RAM` per container
+- **CPU**: `<10% overhead` for routing logic
 
 ## 11. Implementation Roadmap
 
@@ -594,7 +594,7 @@ message UserProfile {
 - End-to-end tests passing
 
 ✅ **Performance**:
-- P99 <10ms latency
+- P99 `<10ms latency`
 - 10k+ RPS sustained
 
 ✅ **Operational**:

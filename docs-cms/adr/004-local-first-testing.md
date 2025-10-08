@@ -326,7 +326,7 @@ async fn load_test_keyvalue_writes() {
 ### Positive
 
 - **High Confidence**: Tests use real backends, catch real bugs
-- **Fast Feedback**: Full test suite runs in <1 minute locally
+- **Fast Feedback**: Full test suite runs in `<1 minute` locally
 - **Easy Debugging**: Reproduce any test failure on laptop
 - **Performance Testing**: Load tests use same local infrastructure
 - **Documentation**: docker-compose.yml shows how to run Prism

@@ -1,6 +1,8 @@
-# Prism Analysis Summary
-
-**Date**: 2025-10-05
+---
+title: Prism Analysis Summary
+date: 2025-10-05
+tags: [analysis, netflix, comparison]
+---
 
 ## What is Prism?
 
@@ -280,7 +282,7 @@ How we'll measure Prism's success:
 - **Performance**: P50 < 1ms, P99 < 10ms (vs. Netflix's ~5ms P50)
 - **Adoption**: 10+ applications using Prism within 6 months
 - **Reliability**: 99.99% uptime SLO
-- **Developer Satisfaction**: <10 min from signup to first query
+- **Developer Satisfaction**: `<10 min` from signup to first query
 - **Cost Efficiency**: 50% reduction in infrastructure spend vs. direct database access
 
 ## References

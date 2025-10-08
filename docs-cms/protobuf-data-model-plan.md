@@ -1,10 +1,12 @@
-# Prism Protobuf Data Model Plan
-
-**Version**: proto3 (latest stable)
-
-**Date**: 2025-10-05
+---
+title: Prism Protobuf Data Model Plan
+date: 2025-10-05
+tags: [protobuf, planning, data-model]
+---
 
 This document outlines the complete protobuf structure for Prism, organized by module and abstraction.
+
+**Version**: proto3 (latest stable)
 
 ## Directory Structure
 

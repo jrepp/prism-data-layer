@@ -1,4 +1,7 @@
-# Prism Data Access Layer - Flow Diagrams
+---
+title: Prism Data Access Layer - Flow Diagrams
+tags: [diagrams, architecture, workflows]
+---
 
 This document contains sequence and architecture diagrams for Prism's key workflows.
 
