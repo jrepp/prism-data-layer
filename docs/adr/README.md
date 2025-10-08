@@ -110,6 +110,35 @@ This directory contains records of architectural decisions made for Prism.
   - Span instrumentation for request correlation
   - OpenTelemetry integration
 
+### Client Configuration & Interface Design
+
+- [ADR-022: Dynamic Client Configuration System](./022-dynamic-client-configuration.md) - **Accepted**
+  - Separation of server and client configuration
+  - Named configurations and inline descriptors
+  - Protobuf-based configuration with runtime discovery
+
+- [ADR-023: gRPC-First Interface Design](./023-grpc-first-interface-design.md) - **Accepted**
+  - gRPC over HTTP/2 for all client-server communication
+  - Service-per-pattern organization
+  - Streaming support for pagination and pub/sub
+
+- [ADR-024: Layered Interface Hierarchy](./024-layered-interface-hierarchy.md) - **Accepted**
+  - Session layer as foundation (auth, audit, state)
+  - Use-case layers: Queue, PubSub, Reader, Transact
+  - Progressive disclosure of complexity
+
+### Deployment & Operations
+
+- [ADR-025: Container Plugin Model](./025-container-plugin-model.md) - **Accepted**
+  - Backend-specific containers with standard interfaces
+  - Horizontal scaling per plugin type
+  - Publisher, Consumer, Processor, Listener roles
+
+- [ADR-026: Distroless Container Images](./026-distroless-container-images.md) - **Accepted**
+  - Google Distroless for minimal attack surface
+  - Multi-stage builds for small images
+  - Debug variants with busybox for troubleshooting
+
 ## Status Definitions
 
 - **Proposed**: Under discussion, not yet decided
@@ -136,6 +165,7 @@ Proposed → Reviewed → Accepted → Implemented
 
 ## Recent Changes
 
+- 2025-10-07: ADRs 022-026 added (Client configuration, interfaces, deployment)
 - 2025-10-07: ADRs 012-021 added (Go and Rust implementation patterns)
 - 2025-10-05: ADRs 001-010 accepted (initial architecture)
 - 2025-10-05: Created ADR index
@@ -156,3 +186,8 @@ ADRs are tagged for easy filtering:
 - `#concurrency` - Concurrent programming patterns
 - `#error-handling` - Error handling strategies
 - `#logging` - Logging and observability
+- `#grpc` - gRPC and protobuf patterns
+- `#configuration` - Configuration management
+- `#containers` - Container and deployment patterns
+- `#client-server` - Client-server architecture
+- `#api-design` - API design and interfaces
