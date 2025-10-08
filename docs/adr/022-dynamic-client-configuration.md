@@ -78,17 +78,53 @@ import "prism/options.proto";
 
 // Client configuration descriptor
 message ClientConfig {
+  option (prism.schema) = {
+    version: "1.0.0"
+    category: "config"
+    compatibility: COMPATIBILITY_MODE_BACKWARD
+    backend: "postgres"
+    track_evolution: true
+    owner: "platform-team"
+    tags: ["client", "configuration", "core"]
+  };
+
+  option (prism.protocol) = {
+    recording: RECORDING_LEVEL_METADATA
+    category: "config"
+    operation: "client_config"
+    sample_rate: 0.1
+    tags: ["configuration", "audit"]
+  };
+
   // Configuration name (for named configs)
-  string name = 1;
+  string name = 1 [
+    (prism.field_schema) = {
+      index: INDEX_TYPE_PRIMARY
+      required_for_create: true
+    }
+  ];
 
   // Version for evolution
-  string version = 2;
+  string version = 2 [
+    (prism.field_schema) = {
+      index: INDEX_TYPE_SECONDARY
+      required_for_create: true
+    }
+  ];
 
   // Data access pattern
-  AccessPattern pattern = 3;
+  AccessPattern pattern = 3 [
+    (prism.field_schema) = {
+      required_for_create: true
+    }
+  ];
 
   // Backend selection
-  BackendConfig backend = 4;
+  BackendConfig backend = 4 [
+    (prism.field_schema) = {
+      required_for_create: true
+    }
+  ];
 
   // Consistency requirements
   ConsistencyConfig consistency = 5;
@@ -100,7 +136,12 @@ message ClientConfig {
   RateLimitConfig rate_limit = 7;
 
   // Namespace for data isolation
-  string namespace = 8;
+  string namespace = 8 [
+    (prism.field_schema) = {
+      index: INDEX_TYPE_SECONDARY
+      required_for_create: true
+    }
+  ];
 }
 
 // Access patterns supported by Prism
@@ -359,6 +400,63 @@ observability:
     port: 9090
 ```
 
+### Protobuf Tagging for Configuration
+
+Client configuration messages use protobuf custom options for schema evolution and protocol recording (see ADR-029, ADR-030):
+
+**Schema Tagging:**
+- `(prism.schema)` option on ClientConfig tracks versioning and compatibility
+- `(prism.field_schema)` options on fields enable:
+  - Index hints for storage backends
+  - Required field validation
+  - Migration planning
+
+**Protocol Tagging:**
+- `(prism.protocol)` option enables recording of configuration changes
+- Sampling at 10% to track config usage patterns
+- Metadata-only recording (no sensitive data in payloads)
+
+**Benefits:**
+- Configuration changes automatically recorded for audit
+- Schema evolution tracked in registry
+- Breaking changes detected before deployment
+- Field-level metadata drives validation and storage optimization
+
+**Example: Recording Configuration Request**
+```rust
+// Proxy automatically records configuration requests
+let entry = ProtocolEntry {
+    id: Uuid::new_v4(),
+    category: "config",
+    operation: "client_config",
+    message_type: "prism.config.v1.ClientConfig",
+    recording_level: RecordingLevel::Metadata,
+    metadata: {
+        "name": config.name,
+        "version": config.version,
+        "pattern": format!("{:?}", config.pattern),
+        "namespace": config.namespace,
+    },
+    payload: None,  // Metadata only
+    tags: vec!["configuration", "audit"],
+};
+recorder.record(entry).await?;
+```
+
+**Example: Schema Registry Integration**
+```bash
+# Schemas automatically registered during build
+prism-admin schema register \
+  --proto proto/prism/config/v1/client_config.proto \
+  --version 1.0.0 \
+  --environment production
+
+# Check compatibility before deployment
+prism-admin schema check \
+  --proto proto/prism/config/v1/client_config.proto \
+  --against 0.9.0
+```
+
 ### Alternatives Considered
 
 1. **Static client configuration files**
@@ -486,7 +584,10 @@ func (c *ConfigCache) Get(name string) (*ClientConfig, error) {
 - ADR-002: Client-Originated Configuration
 - ADR-003: Protobuf as Single Source of Truth
 - ADR-006: Namespace and Multi-Tenancy
+- ADR-029: Protocol Recording with Protobuf Tagging
+- ADR-030: Schema Recording with Protobuf Tagging
 
 ## Revision History
 
+- 2025-10-08: Added protobuf tagging section with schema and protocol recording examples
 - 2025-10-07: Initial draft and acceptance
