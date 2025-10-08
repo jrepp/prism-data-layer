@@ -619,8 +619,8 @@ Once the foundation is solid, subsequent phases:
 ## References
 
 - ADR-001 through ADR-010 (all previous architectural decisions)
-- [Protobuf Data Model Plan](../protobuf-data-model-plan.md)
-- [PRD](../../PRD.md)
+- [Protobuf Data Model Plan](https://github.com/jrepp/prism-data-layer/blob/main/docs-cms/protobuf-data-model-plan.md)
+- [PRD](https://github.com/jrepp/prism-data-layer/blob/main/PRD.md)
 
 ## Revision History
 

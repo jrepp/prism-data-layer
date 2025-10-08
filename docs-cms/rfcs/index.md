@@ -107,4 +107,4 @@ RFCs should include:
 - **Alternatives Considered**: Other approaches and trade-offs
 - **Open Questions**: Unresolved issues for discussion
 
-For questions about the RFC process, see [CLAUDE.md](../../CLAUDE.md#requirements-process) in the repository root.
+For questions about the RFC process, see [CLAUDE.md](https://github.com/jrepp/prism-data-layer/blob/main/CLAUDE.md#requirements-process) in the repository root.

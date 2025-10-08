@@ -893,9 +893,9 @@ export PRISM_OUTPUT_FORMAT="json"
 
 ### Performance Targets
 
-- **Command Startup**: <100ms cold start, <50ms warm start
-- **gRPC Calls**: <10ms for simple queries, <100ms for complex operations
-- **Streaming**: Live trace output with <10ms latency
+- **Command Startup**: &lt;100ms cold start, &lt;50ms warm start
+- **gRPC Calls**: &lt;10ms for simple queries, &lt;100ms for complex operations
+- **Streaming**: Live trace output with &lt;10ms latency
 - **Large Lists**: Pagination and streaming for 1000+ items
 
 ### UX Enhancements
