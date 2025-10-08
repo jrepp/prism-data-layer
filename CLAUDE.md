@@ -152,11 +152,83 @@ cd admin && ember serve
 python -m tooling.deploy --env staging
 ```
 
+## Automation with uv
+
+**IMPORTANT**: We automate common tasks using Python scripts invoked via `uv run`. This provides:
+- Zero-setup execution (uv handles dependencies)
+- Consistent tooling across environments
+- Fast iteration with Python's flexibility
+
+### Documentation Tools
+
+```bash
+# Build documentation site
+uv run tooling/build_docs.py
+uv run tooling/build_docs.py --clean  # Clean build
+
+# Validate documentation
+uv run tooling/validate_docs.py
+uv run tooling/validate_docs.py --verbose  # Detailed output
+
+# Convert documents to frontmatter format
+uv run tooling/convert_to_frontmatter.py
+```
+
+### Git Hooks
+
+Enable automatic validation on commit:
+
+```bash
+# Install git hooks
+git config core.hooksPath .githooks
+
+# Hooks will run automatically on:
+# - pre-commit: Validates markdown files
+```
+
+### Creating New Automation Scripts
+
+When adding new tooling:
+
+1. **Use uv run pattern**:
+   ```python
+   #!/usr/bin/env python3
+   """
+   Script description.
+
+   Usage:
+       uv run tooling/my_script.py [args]
+   """
+   import argparse
+   from pathlib import Path
+   ```
+
+2. **Add to CLAUDE.md** under this section
+
+3. **Make executable**: `chmod +x tooling/my_script.py`
+
+4. **Test directly**: `uv run tooling/my_script.py`
+
+### Why uv for Automation?
+
+- **No venv management**: uv handles dependencies automatically
+- **Fast**: Sub-second cold starts
+- **Portable**: Works on any system with uv installed
+- **CI-friendly**: Easy GitHub Actions integration
+
 ## Architecture Decision Records (ADRs)
 
-All significant architectural decisions are documented in `docs/adr/`.
+All significant architectural decisions are documented in `docs-cms/adr/`.
 
-Template: `docs/adr/000-template.md`
+**Documentation structure:**
+- `docs-cms/` - Source markdown files (version controlled)
+  - `adr/` - Architecture Decision Records
+  - `rfcs/` - Request for Comments
+  - Other documentation
+- `docs/` - Built Docusaurus site (generated, Git Pages)
+- `docusaurus/` - Docusaurus configuration
+
+Template: `docs-cms/adr/000-template.md`
 
 ### ADR Format
 

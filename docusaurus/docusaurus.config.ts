@@ -45,9 +45,9 @@ const config: Config = {
       {
         docs: {
           sidebarPath: './sidebars.ts',
-          path: '../docs',
+          // Use internal docs folder for general documentation
           routeBasePath: 'docs',
-          editUrl: 'https://github.com/jrepp/prism-data-layer/tree/main/',
+          editUrl: 'https://github.com/jrepp/prism-data-layer/tree/main/docusaurus/',
         },
         blog: false, // Disable blog
         theme: {
@@ -62,20 +62,20 @@ const config: Config = {
       '@docusaurus/plugin-content-docs',
       {
         id: 'adr',
-        path: '../docs/adr',
+        path: '../docs-cms/adr',
         routeBasePath: 'adr',
         sidebarPath: './sidebars-adr.ts',
-        editUrl: 'https://github.com/jrepp/prism-data-layer/tree/main/',
+        editUrl: 'https://github.com/jrepp/prism-data-layer/tree/main/docs-cms/',
       },
     ],
     [
       '@docusaurus/plugin-content-docs',
       {
         id: 'rfc',
-        path: '../docs/rfcs',
+        path: '../docs-cms/rfcs',
         routeBasePath: 'rfc',
         sidebarPath: './sidebars-rfc.ts',
-        editUrl: 'https://github.com/jrepp/prism-data-layer/tree/main/',
+        editUrl: 'https://github.com/jrepp/prism-data-layer/tree/main/docs-cms/',
       },
     ],
   ],
