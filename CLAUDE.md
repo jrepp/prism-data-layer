@@ -158,7 +158,47 @@ All significant architectural decisions are documented in `docs/adr/`.
 
 Template: `docs/adr/000-template.md`
 
-Key ADRs to create:
+### ADR Format
+
+All ADRs and RFCs use **YAML frontmatter** for metadata:
+
+```markdown
+---
+title: "ADR-XXX: Descriptive Title"
+status: Accepted
+date: 2025-10-08
+deciders: Core Team
+tags: [architecture, backend, security]
+---
+
+## Context
+
+[Description of the problem and requirements...]
+
+## Decision
+
+[What was decided...]
+
+## Consequences
+
+[Impact of the decision...]
+```
+
+**Frontmatter Fields:**
+- `title`: Full title including ADR/RFC number
+- `status`: Proposed | Accepted | Implemented | Deprecated | Superseded
+- `date`: Decision date (ISO 8601)
+- `deciders`: Team or individuals who made the decision
+- `tags`: Array of topic tags for categorization
+- `author` (RFCs): Document author
+- `created`/`updated` (RFCs): Timestamp fields
+
+**Converting to Frontmatter:**
+```bash
+python3 tooling/convert_to_frontmatter.py
+```
+
+Key ADRs:
 - **ADR-001**: Why Rust for the proxy
 - **ADR-002**: Client-originated configuration design
 - **ADR-003**: Protobuf as single source of truth
