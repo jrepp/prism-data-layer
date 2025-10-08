@@ -11,32 +11,32 @@ type FeatureItem = {
 
 const FeatureList: FeatureItem[] = [
   {
-    title: 'Easy to Use',
+    title: 'Unified API',
     Svg: require('@site/static/img/undraw_docusaurus_mountain.svg').default,
     description: (
       <>
-        Docusaurus was designed from the ground up to be easily installed and
-        used to get your website up and running quickly.
+        Single gRPC/HTTP interface across all backends: Kafka, NATS, Postgres, SQLite, Neptune.
+        Applications declare requirements; Prism auto-provisions and routes.
       </>
     ),
   },
   {
-    title: 'Focus on What Matters',
+    title: 'Rust Performance',
     Svg: require('@site/static/img/undraw_docusaurus_tree.svg').default,
     description: (
       <>
-        Docusaurus lets you focus on your docs, and we&apos;ll do the chores. Go
-        ahead and move your docs into the <code>docs</code> directory.
+        10-100x faster than JVM alternatives with sub-millisecond P50 latency.
+        Built with Rust for predictable performance and memory safety.
       </>
     ),
   },
   {
-    title: 'Powered by React',
+    title: 'Protobuf-Driven',
     Svg: require('@site/static/img/undraw_docusaurus_react.svg').default,
     description: (
       <>
-        Extend or customize your website layout by reusing React. Docusaurus can
-        be extended while reusing the same header and footer.
+        Single source of truth for all data models. PII tagging drives encryption and masking.
+        Consistent types across Rust, Python, and TypeScript.
       </>
     ),
   },

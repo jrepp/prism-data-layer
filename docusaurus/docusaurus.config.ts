@@ -97,7 +97,7 @@ const config: Config = {
           type: 'docSidebar',
           sidebarId: 'tutorialSidebar',
           position: 'left',
-          label: 'Docs',
+          label: 'Overview',
         },
         {
           to: '/adr',
@@ -123,8 +123,8 @@ const config: Config = {
           title: 'Documentation',
           items: [
             {
-              label: 'Getting Started',
-              to: '/docs',
+              label: 'Overview',
+              to: '/docs/intro',
             },
             {
               label: 'ADRs',
