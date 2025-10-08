@@ -52,6 +52,51 @@ RFCs serve to:
 
 ---
 
+### RFC-004: Redis Integration
+
+**Status**: Draft
+**Summary**: Comprehensive Redis integration covering three distinct access patterns: Cache (HashMap operations), PubSub (broadcasting), and Vector Similarity Search for ML embeddings and semantic search.
+
+[Read RFC-004 →](./RFC-004-redis-integration)
+
+---
+
+### RFC-005: ClickHouse Integration for Time Series
+
+**Status**: Draft
+**Summary**: ClickHouse-backed time series analytics for OLAP workloads, supporting 1M+ events/sec ingestion with ReplicatedMergeTree engine, materialized views for pre-aggregations, and tiered storage with TTL.
+
+[Read RFC-005 →](./RFC-005-clickhouse-integration)
+
+---
+
+### RFC-006: Python Admin CLI
+
+**Status**: Draft
+**Summary**: Python-based command-line interface for administering Prism, covering namespace management, backend health checks, session inspection, metrics, and shadow traffic management using Typer and Rich for excellent developer experience.
+
+[Read RFC-006 →](./RFC-006-python-admin-cli)
+
+---
+
+### RFC-007: Cache Strategies for Data Layer
+
+**Status**: Draft
+**Summary**: Standardized cache strategies including look-aside (cache-aside) and write-through patterns for common use cases like table readers and object storage metadata, with configuration-driven behavior and observability.
+
+[Read RFC-007 →](./RFC-007-cache-strategies)
+
+---
+
+### RFC-008: Proxy Plugin Architecture
+
+**Status**: Draft
+**Summary**: Architectural separation between minimal proxy core (networking, auth, config) and backend plugins (data-source-specific logic), enabling extensibility through in-process, sidecar, and remote plugin deployment models with secure channels.
+
+[Read RFC-008 →](./RFC-008-proxy-plugin-architecture)
+
+---
+
 ## Writing RFCs
 
 RFCs should include:
