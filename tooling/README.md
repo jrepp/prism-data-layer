@@ -6,39 +6,33 @@ This directory contains scripts and tools for maintaining the Prism documentatio
 
 ### validate_docs.py
 
-Validates documentation structure, frontmatter, and link integrity.
+**⚠️ CRITICAL: Run this before pushing documentation changes!**
+
+Comprehensive validation that catches issues before they break the GitHub Pages build.
 
 ```bash
-# Run documentation validation
+# Full validation (recommended before pushing)
 uv run tooling/validate_docs.py
+
+# Quick check (skip build, faster iteration)
+uv run tooling/validate_docs.py --skip-build
+
+# Verbose output for debugging
+uv run tooling/validate_docs.py --verbose
 ```
 
 **What it checks**:
-- Document frontmatter (id, title, sidebar_label, status)
-- Internal and external links
-- Broken references
-- Document counts (ADRs, RFCs, Docs)
-
-### pre_lint_docs.py
-
-**⚠️ REQUIRED BEFORE PUSHING DOCUMENTATION CHANGES**
-
-Pre-lint validation to catch issues before they break the GitHub Pages build.
-
-```bash
-# Run pre-lint validation before pushing
-uv run tooling/pre_lint_docs.py
-```
-
-**What it checks**:
-1. **MDX Special Characters**: Detects unescaped `<` characters that break MDX parsing
-2. **Internal Links**: Identifies cross-plugin markdown links that won't work in Docusaurus
-3. **TypeScript Typecheck**: Validates Docusaurus configuration
-4. **Build Validation**: Runs full Docusaurus build to catch compilation errors
+1. **YAML Frontmatter**: Required fields (id, title, status for ADRs/RFCs)
+2. **Link Validity**: Internal and external link reachability
+3. **MDX Compatibility**: Detects unescaped `<` and `>` that break MDX parsing
+4. **Cross-Plugin Links**: Identifies problematic relative links across plugins
+5. **TypeScript Typecheck**: Validates Docusaurus configuration
+6. **Full Build**: Runs Docusaurus build to catch compilation errors
 
 **Exit codes**:
 - `0`: All checks passed, safe to push
 - `1`: Validation failed, fix issues before pushing
+- `2`: Script error
 
 ### Common MDX Issues
 
@@ -79,16 +73,16 @@ See [CLAUDE.md](https://github.com/jrepp/prism-data-layer/blob/main/CLAUDE.md) f
 ### Before Committing Documentation
 
 ```bash
-# 1. Validate documentation structure
+# 1. Run full validation (includes build check)
 uv run tooling/validate_docs.py
 
-# 2. Run pre-lint checks (catches build errors)
-uv run tooling/pre_lint_docs.py
-
-# 3. If both pass, commit and push
+# 2. If validation passes, commit and push
 git add .
 git commit -m "Your commit message"
 git push origin main
+
+# Quick iteration (skip slow build check during development)
+uv run tooling/validate_docs.py --skip-build
 ```
 
 ### GitHub Pages Build
@@ -140,18 +134,21 @@ Add to `.git/hooks/pre-commit`:
 
 ```bash
 #!/bin/bash
-echo "Running documentation pre-lint validation..."
-uv run tooling/pre_lint_docs.py
+echo "Running documentation validation..."
+uv run tooling/validate_docs.py --skip-build
 if [ $? -ne 0 ]; then
-    echo "❌ Pre-lint validation failed. Fix issues before committing."
+    echo "❌ Validation failed. Fix issues before committing."
     exit 1
 fi
+echo "✅ Validation passed. Run full check before push: uv run tooling/validate_docs.py"
 ```
 
 Make executable:
 ```bash
 chmod +x .git/hooks/pre-commit
 ```
+
+**Note**: Pre-commit uses `--skip-build` for speed. Always run full validation before pushing!
 
 ### GitHub Actions
 
@@ -184,10 +181,13 @@ if custom_issues:
 ### Testing Locally
 
 ```bash
-# Run validation on specific directory
-python tooling/pre_lint_docs.py
+# Run full validation
+uv run tooling/validate_docs.py
 
-# Test Docusaurus build
+# Quick validation during development
+uv run tooling/validate_docs.py --skip-build
+
+# Test Docusaurus build directly
 cd docusaurus && npm run build
 
 # Serve locally to test
@@ -198,8 +198,7 @@ npm run serve
 
 | Script | Purpose | Usage |
 |--------|---------|-------|
-| `validate_docs.py` | Structure validation | `uv run tooling/validate_docs.py` |
-| `pre_lint_docs.py` | Pre-push validation | `uv run tooling/pre_lint_docs.py` |
+| `validate_docs.py` | Comprehensive doc validation | `uv run tooling/validate_docs.py` |
 | `bootstrap.py` | (Future) Setup script | `uv run tooling/bootstrap.py` |
 
 ## Support

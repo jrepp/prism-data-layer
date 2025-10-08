@@ -153,14 +153,14 @@ prism/
 
 ### Contributing to Documentation
 
-**⚠️ Before pushing documentation changes, run pre-lint validation:**
+**⚠️ CRITICAL: Run validation before pushing documentation changes:**
 
 ```bash
-# Validate documentation structure and links
+# Full validation (required before push)
 uv run tooling/validate_docs.py
 
-# Pre-lint check (catches build errors before push)
-uv run tooling/pre_lint_docs.py
+# Quick check during development (skip slow build)
+uv run tooling/validate_docs.py --skip-build
 ```
 
 See [tooling/README.md](./tooling/README.md) for detailed documentation validation guide.

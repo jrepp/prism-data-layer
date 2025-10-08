@@ -161,16 +161,38 @@ python -m tooling.deploy --env staging
 
 ### Documentation Tools
 
+**⚠️ CRITICAL WORKFLOW: Always run validation before pushing documentation!**
+
 ```bash
-# Build documentation site
-uv run tooling/build_docs.py
-uv run tooling/build_docs.py --clean  # Clean build
-
-# Validate documentation
+# REQUIRED before pushing documentation changes
 uv run tooling/validate_docs.py
-uv run tooling/validate_docs.py --verbose  # Detailed output
 
-# Convert documents to frontmatter format
+# Quick check during development (skip slow build)
+uv run tooling/validate_docs.py --skip-build
+
+# Verbose output for debugging
+uv run tooling/validate_docs.py --verbose
+```
+
+**What validation checks**:
+- ✓ YAML frontmatter (required fields)
+- ✓ Internal/external links
+- ✓ MDX syntax compatibility (catches `<` and `>` issues)
+- ✓ Cross-plugin link problems
+- ✓ TypeScript compilation
+- ✓ Full Docusaurus build
+
+**Why this matters**: MDX compilation errors and broken links will break the GitHub Pages deployment. Running validation locally catches these issues before they reach CI/CD.
+
+**Other documentation tools**:
+```bash
+# Build documentation site locally
+cd docusaurus && npm run build
+
+# Serve documentation locally
+cd docusaurus && npm run serve
+
+# Convert documents to frontmatter format (if needed)
 uv run tooling/convert_to_frontmatter.py
 ```
 

@@ -7,10 +7,15 @@ Validates markdown documents for:
 - Internal link reachability
 - Markdown formatting issues
 - Consistent ADR/RFC numbering
+- MDX compilation compatibility
+- Docusaurus build validation
+
+⚠️ CRITICAL: Run this before pushing documentation changes!
 
 Usage:
     uv run tooling/validate_docs.py
     uv run tooling/validate_docs.py --verbose
+    uv run tooling/validate_docs.py --skip-build  # Skip Docusaurus build check
     uv run tooling/validate_docs.py --fix  # Auto-fix issues where possible
 
 Exit Codes:
@@ -20,7 +25,9 @@ Exit Codes:
 """
 
 import argparse
+import os
 import re
+import subprocess
 import sys
 from pathlib import Path
 from typing import Dict, List, Set, Tuple
@@ -311,6 +318,199 @@ class PrismDocValidator:
             link.is_valid = False
             link.error_message = f"Ambiguous link format: {target}"
 
+    def check_mdx_compatibility(self):
+        """Check for MDX parsing issues (unescaped special characters)"""
+        self.log("\n🔧 Checking MDX compatibility...")
+
+        # MDX doesn't like unescaped < and > in markdown
+        problematic_patterns = [
+            (r'^\s*[-*]\s+.*<\d+', 'Unescaped < before number (use &lt; or backticks)'),
+            (r':\s+<\d+', 'Unescaped < after colon (use &lt; or backticks)'),
+            (r'^\s*[-*]\s+.*>\d+', 'Unescaped > before number (use &gt; or backticks)'),
+        ]
+
+        mdx_issues_found = False
+
+        for doc in self.documents:
+            try:
+                content = doc.file_path.read_text(encoding='utf-8')
+                lines = content.split('\n')
+
+                in_code_fence = False
+                code_fence_pattern = re.compile(r'^```')
+
+                for line_num, line in enumerate(lines, start=1):
+                    # Toggle code fence
+                    if code_fence_pattern.match(line):
+                        in_code_fence = not in_code_fence
+                        continue
+
+                    if in_code_fence:
+                        continue
+
+                    # Remove inline code
+                    line_without_code = re.sub(r'`[^`]+`', '', line)
+
+                    for pattern, issue_desc in problematic_patterns:
+                        if re.search(pattern, line_without_code):
+                            error = f"Line {line_num}: {issue_desc}"
+                            doc.errors.append(error)
+                            mdx_issues_found = True
+                            self.log(f"   ✗ {doc.file_path.name}:{line_num} - {issue_desc}")
+
+            except Exception as e:
+                doc.errors.append(f"Error checking MDX compatibility: {e}")
+
+        if not mdx_issues_found:
+            self.log("   ✓ No MDX syntax issues found")
+
+    def check_cross_plugin_links(self):
+        """Check for problematic cross-plugin links"""
+        self.log("\n🔗 Checking cross-plugin links...")
+
+        cross_plugin_pattern = re.compile(r'\[([^\]]+)\]\((\.\.\/){2,}[^)]+\)')
+        issues_found = False
+
+        for doc in self.documents:
+            try:
+                content = doc.file_path.read_text(encoding='utf-8')
+                matches = list(cross_plugin_pattern.finditer(content))
+
+                if matches:
+                    issues_found = True
+                    error = f"Found {len(matches)} cross-plugin link(s) - use absolute GitHub URLs instead"
+                    doc.errors.append(error)
+                    self.log(f"   ⚠️  {doc.file_path.name}: {error}")
+
+            except Exception as e:
+                doc.errors.append(f"Error checking cross-plugin links: {e}")
+
+        if not issues_found:
+            self.log("   ✓ No problematic cross-plugin links found")
+
+    def check_typescript_config(self):
+        """Run TypeScript typecheck on Docusaurus config"""
+        self.log("\n🔍 Running TypeScript typecheck...")
+
+        docusaurus_dir = self.repo_root / 'docusaurus'
+        if not docusaurus_dir.exists():
+            self.log("   ⚠️  Docusaurus directory not found, skipping typecheck")
+            return True
+
+        original_dir = os.getcwd()
+        try:
+            os.chdir(docusaurus_dir)
+
+            result = subprocess.run(
+                ['npm', 'run', 'typecheck'],
+                capture_output=True,
+                text=True,
+                timeout=60
+            )
+
+            if result.returncode == 0:
+                self.log("   ✓ TypeScript typecheck passed")
+                return True
+            else:
+                error = "TypeScript typecheck failed"
+                self.errors.append(error)
+                self.log(f"   ✗ {error}")
+                if self.verbose:
+                    self.log(f"      {result.stderr}")
+                return False
+
+        except subprocess.TimeoutExpired:
+            error = "TypeScript typecheck timed out"
+            self.errors.append(error)
+            self.log(f"   ✗ {error}")
+            return False
+        except FileNotFoundError:
+            self.log("   ⚠️  npm not found, skipping typecheck")
+            return True
+        except Exception as e:
+            error = f"Error running typecheck: {e}"
+            self.errors.append(error)
+            self.log(f"   ✗ {error}")
+            return False
+        finally:
+            os.chdir(original_dir)
+
+    def check_docusaurus_build(self, skip_build: bool = False):
+        """Run Docusaurus build to catch compilation errors"""
+        if skip_build:
+            self.log("\n⏭️  Skipping Docusaurus build check (--skip-build)")
+            return True
+
+        self.log("\n🏗️  Running Docusaurus build validation...")
+        self.log("   This may take a minute...")
+
+        docusaurus_dir = self.repo_root / 'docusaurus'
+        if not docusaurus_dir.exists():
+            self.log("   ⚠️  Docusaurus directory not found, skipping build check")
+            return True
+
+        original_dir = os.getcwd()
+        try:
+            os.chdir(docusaurus_dir)
+
+            result = subprocess.run(
+                ['npm', 'run', 'build'],
+                capture_output=True,
+                text=True,
+                timeout=300  # 5 minutes
+            )
+
+            output = result.stdout + result.stderr
+
+            # Extract warnings
+            warning_pattern = re.compile(r'Warning:\s+(.+)')
+            warnings = warning_pattern.findall(output)
+
+            if result.returncode == 0:
+                self.log(f"   ✓ Docusaurus build succeeded")
+                if warnings:
+                    self.log(f"   ⚠️  Build completed with {len(warnings)} warning(s)")
+                    if self.verbose:
+                        for warning in warnings[:5]:
+                            self.log(f"      {warning}")
+                        if len(warnings) > 5:
+                            self.log(f"      ... and {len(warnings) - 5} more warnings")
+                return True
+            else:
+                # Extract error details
+                error_pattern = re.compile(r'Error:\s+(.+)')
+                errors = error_pattern.findall(output)
+
+                error_msg = "Docusaurus build failed"
+                self.errors.append(error_msg)
+                self.log(f"   ✗ {error_msg}")
+
+                if errors:
+                    for error in errors[:3]:
+                        self.log(f"      {error}")
+                        self.errors.append(f"Build error: {error}")
+                elif self.verbose:
+                    # Show last 500 chars if no specific error found
+                    self.log(f"      {output[-500:]}")
+
+                return False
+
+        except subprocess.TimeoutExpired:
+            error = "Docusaurus build timed out (5 minutes)"
+            self.errors.append(error)
+            self.log(f"   ✗ {error}")
+            return False
+        except FileNotFoundError:
+            self.log("   ⚠️  npm not found, skipping build check")
+            return True
+        except Exception as e:
+            error = f"Error running build: {e}"
+            self.errors.append(error)
+            self.log(f"   ✗ {error}")
+            return False
+        finally:
+            os.chdir(original_dir)
+
     def check_formatting(self):
         """Check markdown formatting issues"""
         self.log("\n📝 Checking formatting...")
@@ -412,31 +612,49 @@ class PrismDocValidator:
 
         return all_valid, "\n".join(lines)
 
-    def validate(self) -> bool:
+    def validate(self, skip_build: bool = False) -> bool:
         """Run full validation pipeline"""
         self.scan_documents()
         self.extract_links()
         self.validate_links()
+        self.check_mdx_compatibility()
+        self.check_cross_plugin_links()
         self.check_formatting()
+
+        # Build validation (can be skipped for faster checks)
+        build_passed = self.check_typescript_config()
+        build_passed = self.check_docusaurus_build(skip_build) and build_passed
+
         all_valid, report = self.generate_report()
         print(report)
-        return all_valid
+        return all_valid and build_passed
 
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Validate Prism documentation",
+        description="Validate Prism documentation (⚠️ CRITICAL: Run before pushing docs!)",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-    # Validate all docs
+    # Full validation (recommended before pushing)
     uv run tooling/validate_docs.py
+
+    # Quick check (skip slow build validation)
+    uv run tooling/validate_docs.py --skip-build
 
     # Verbose output
     uv run tooling/validate_docs.py --verbose
 
     # Auto-fix issues (future)
     uv run tooling/validate_docs.py --fix
+
+What this checks:
+    ✓ YAML frontmatter format
+    ✓ Internal link validity
+    ✓ MDX syntax compatibility
+    ✓ Cross-plugin link issues
+    ✓ TypeScript compilation
+    ✓ Full Docusaurus build
         """
     )
 
@@ -444,6 +662,12 @@ Examples:
         '--verbose', '-v',
         action='store_true',
         help='Verbose output'
+    )
+
+    parser.add_argument(
+        '--skip-build',
+        action='store_true',
+        help='Skip Docusaurus build check (faster, but less thorough)'
     )
 
     parser.add_argument(
@@ -458,7 +682,7 @@ Examples:
     validator = PrismDocValidator(repo_root=repo_root, verbose=args.verbose, fix=args.fix)
 
     try:
-        all_valid = validator.validate()
+        all_valid = validator.validate(skip_build=args.skip_build)
         sys.exit(0 if all_valid else 1)
     except Exception as e:
         print(f"\n❌ ERROR: {e}", file=sys.stderr)
