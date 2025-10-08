@@ -80,6 +80,33 @@ const config: Config = {
     ],
   ],
 
+  themes: [
+    [
+      require.resolve("@easyops-cn/docusaurus-search-local"),
+      {
+        // Index all markdown content
+        hashed: true,
+        language: ["en"],
+        highlightSearchTermsOnTargetPage: true,
+        explicitSearchResultPath: true,
+
+        // Index optimization
+        indexDocs: true,
+        indexBlog: false,
+        indexPages: true,
+
+        // Search behavior
+        searchResultLimits: 8,
+        searchResultContextMaxLength: 50,
+
+        // UI customization
+        searchBarShortcut: true,
+        searchBarShortcutHint: true,
+        searchBarPosition: "right" as const,
+      },
+    ],
+  ],
+
   themeConfig: {
     // Replace with your project's social card
     image: 'img/docusaurus-social-card.jpg',
