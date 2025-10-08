@@ -1,12 +1,10 @@
-# ADR-013: Go Error Handling Strategy
-
-**Status**: Accepted
-
-**Date**: 2025-10-07
-
-**Deciders**: Core Team
-
-**Tags**: go, error-handling, reliability, observability
+---
+title: "ADR-013: Go Error Handling Strategy"
+status: Accepted
+date: 2025-10-07
+deciders: Core Team
+tags: ['go', 'error-handling', 'reliability', 'observability']
+---
 
 ## Context
 

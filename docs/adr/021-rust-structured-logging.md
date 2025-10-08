@@ -1,12 +1,10 @@
-# ADR-021: Rust Structured Logging with Tracing
-
-**Status**: Accepted
-
-**Date**: 2025-10-07
-
-**Deciders**: Core Team
-
-**Tags**: rust, logging, observability, tracing, debugging
+---
+title: "ADR-021: Rust Structured Logging with Tracing"
+status: Accepted
+date: 2025-10-07
+deciders: Core Team
+tags: ['rust', 'logging', 'observability', 'tracing', 'debugging']
+---
 
 ## Context
 

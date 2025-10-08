@@ -1,12 +1,10 @@
-# ADR-023: gRPC-First Interface Design
-
-**Status**: Accepted
-
-**Date**: 2025-10-07
-
-**Deciders**: Core Team
-
-**Tags**: architecture, grpc, performance, api-design
+---
+title: "ADR-023: gRPC-First Interface Design"
+status: Accepted
+date: 2025-10-07
+deciders: Core Team
+tags: ['architecture', 'grpc', 'performance', 'api-design']
+---
 
 ## Context
 

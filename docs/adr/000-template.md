@@ -1,12 +1,10 @@
-# ADR-XXX: [Short Title]
-
-**Status**: [Proposed | Accepted | Deprecated | Superseded by ADR-YYY]
-
-**Date**: YYYY-MM-DD
-
-**Deciders**: [Names/Roles]
-
-**Tags**: [backend | proxy | security | performance | testing | ...]
+---
+title: "ADR-XXX: [Short Title]"
+status: [Proposed | Accepted | Deprecated | Superseded by ADR-YYY]
+date: YYYY-MM-DD
+deciders: [Names/Roles]
+tags: ['[backend | proxy | security | performance | testing | ...]']
+---
 
 ## Context
 

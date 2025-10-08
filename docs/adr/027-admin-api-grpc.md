@@ -1,12 +1,10 @@
-# ADR-027: Admin API via gRPC
-
-**Status**: Accepted
-
-**Date**: 2025-10-07
-
-**Deciders**: Core Team
-
-**Tags**: admin, grpc, api-design, operations
+---
+title: "ADR-027: Admin API via gRPC"
+status: Accepted
+date: 2025-10-07
+deciders: Core Team
+tags: ['admin', 'grpc', 'api-design', 'operations']
+---
 
 ## Context
 

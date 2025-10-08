@@ -1,12 +1,10 @@
-# ADR-014: Go Concurrency Patterns
-
-**Status**: Accepted
-
-**Date**: 2025-10-07
-
-**Deciders**: Core Team
-
-**Tags**: go, concurrency, performance, patterns
+---
+title: "ADR-014: Go Concurrency Patterns"
+status: Accepted
+date: 2025-10-07
+deciders: Core Team
+tags: ['go', 'concurrency', 'performance', 'patterns']
+---
 
 ## Context
 

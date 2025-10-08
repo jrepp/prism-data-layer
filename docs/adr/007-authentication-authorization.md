@@ -1,12 +1,10 @@
-# ADR-007: Authentication and Authorization
-
-**Status**: Accepted
-
-**Date**: 2025-10-05
-
-**Deciders**: Core Team
-
-**Tags**: security, architecture
+---
+title: "ADR-007: Authentication and Authorization"
+status: Accepted
+date: 2025-10-05
+deciders: Core Team
+tags: ['security', 'architecture']
+---
 
 ## Context
 

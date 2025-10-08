@@ -1,12 +1,10 @@
-# ADR-029: Protocol Recording with Protobuf Tagging
-
-**Status**: Accepted
-
-**Date**: 2025-10-07
-
-**Deciders**: Core Team
-
-**Tags**: protobuf, protocols, observability, debugging
+---
+title: "ADR-029: Protocol Recording with Protobuf Tagging"
+status: Accepted
+date: 2025-10-07
+deciders: Core Team
+tags: ['protobuf', 'protocols', 'observability', 'debugging']
+---
 
 ## Context
 

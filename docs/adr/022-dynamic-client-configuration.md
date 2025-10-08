@@ -1,12 +1,10 @@
-# ADR-022: Dynamic Client Configuration System
-
-**Status**: Accepted
-
-**Date**: 2025-10-07
-
-**Deciders**: Core Team
-
-**Tags**: architecture, configuration, client-server, protobuf
+---
+title: "ADR-022: Dynamic Client Configuration System"
+status: Accepted
+date: 2025-10-07
+deciders: Core Team
+tags: ['architecture', 'configuration', 'client-server', 'protobuf']
+---
 
 ## Context
 

@@ -1,12 +1,10 @@
-# ADR-011: Implementation Roadmap and Next Steps
-
-**Status**: Accepted
-
-**Date**: 2025-10-05
-
-**Deciders**: Core Team
-
-**Tags**: architecture, planning
+---
+title: "ADR-011: Implementation Roadmap and Next Steps"
+status: Accepted
+date: 2025-10-05
+deciders: Core Team
+tags: ['architecture', 'planning']
+---
 
 ## Context
 

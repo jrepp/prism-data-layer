@@ -1,12 +1,10 @@
-# ADR-012: Go for Tooling and CLI Utilities
-
-**Status**: Accepted
-
-**Date**: 2025-10-07
-
-**Deciders**: Core Team
-
-**Tags**: language, tooling, cli, developer-experience
+---
+title: "ADR-012: Go for Tooling and CLI Utilities"
+status: Accepted
+date: 2025-10-07
+deciders: Core Team
+tags: ['language', 'tooling', 'cli', 'developer-experience']
+---
 
 ## Context
 

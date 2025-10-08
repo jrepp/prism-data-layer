@@ -1,12 +1,10 @@
-# ADR-002: Client-Originated Configuration
-
-**Status**: Accepted
-
-**Date**: 2025-10-05
-
-**Deciders**: Core Team
-
-**Tags**: architecture, configuration, dx
+---
+title: "ADR-002: Client-Originated Configuration"
+status: Accepted
+date: 2025-10-05
+deciders: Core Team
+tags: ['architecture', 'configuration', 'dx']
+---
 
 ## Context
 

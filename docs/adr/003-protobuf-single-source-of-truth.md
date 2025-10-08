@@ -1,12 +1,10 @@
-# ADR-003: Protobuf as Single Source of Truth
-
-**Status**: Accepted
-
-**Date**: 2025-10-05
-
-**Deciders**: Core Team
-
-**Tags**: architecture, codegen, dx, dry
+---
+title: "ADR-003: Protobuf as Single Source of Truth"
+status: Accepted
+date: 2025-10-05
+deciders: Core Team
+tags: ['architecture', 'codegen', 'dx', 'dry']
+---
 
 ## Context
 

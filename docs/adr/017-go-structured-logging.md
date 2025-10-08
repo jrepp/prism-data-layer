@@ -1,12 +1,10 @@
-# ADR-017: Go Structured Logging with slog
-
-**Status**: Accepted
-
-**Date**: 2025-10-07
-
-**Deciders**: Core Team
-
-**Tags**: go, logging, observability, debugging
+---
+title: "ADR-017: Go Structured Logging with slog"
+status: Accepted
+date: 2025-10-07
+deciders: Core Team
+tags: ['go', 'logging', 'observability', 'debugging']
+---
 
 ## Context
 

@@ -1,9 +1,10 @@
-# RFC-003: Admin Interface for Prism
-
-**Status**: Proposed
-**Author**: Platform Team
-**Created**: 2025-10-08
-**Updated**: 2025-10-08
+---
+title: "RFC-003: Admin Interface for Prism"
+status: Proposed
+author: Platform Team
+created: 2025-10-08
+updated: 2025-10-08
+---
 
 ## Abstract
 

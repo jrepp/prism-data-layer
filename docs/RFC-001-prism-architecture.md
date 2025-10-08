@@ -1,9 +1,10 @@
-# RFC-001: Prism Data Access Layer Architecture
-
-**Status**: Draft
-**Author**: Core Team
-**Created**: 2025-10-07
-**Updated**: 2025-10-07
+---
+title: "RFC-001: Prism Data Access Layer Architecture"
+status: Draft
+author: Core Team
+created: 2025-10-07
+updated: 2025-10-07
+---
 
 ## Abstract
 

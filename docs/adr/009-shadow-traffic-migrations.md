@@ -1,12 +1,10 @@
-# ADR-009: Shadow Traffic for Migrations
-
-**Status**: Accepted
-
-**Date**: 2025-10-05
-
-**Deciders**: Core Team
-
-**Tags**: operations, reliability, backend
+---
+title: "ADR-009: Shadow Traffic for Migrations"
+status: Accepted
+date: 2025-10-05
+deciders: Core Team
+tags: ['operations', 'reliability', 'backend']
+---
 
 ## Context
 

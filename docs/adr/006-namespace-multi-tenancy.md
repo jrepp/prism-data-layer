@@ -1,12 +1,10 @@
-# ADR-006: Namespace and Multi-Tenancy
-
-**Status**: Accepted
-
-**Date**: 2025-10-05
-
-**Deciders**: Core Team
-
-**Tags**: architecture, backend, operations
+---
+title: "ADR-006: Namespace and Multi-Tenancy"
+status: Accepted
+date: 2025-10-05
+deciders: Core Team
+tags: ['architecture', 'backend', 'operations']
+---
 
 ## Context
 

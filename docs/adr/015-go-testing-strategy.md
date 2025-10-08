@@ -1,12 +1,10 @@
-# ADR-015: Go Testing Strategy
-
-**Status**: Accepted
-
-**Date**: 2025-10-07
-
-**Deciders**: Core Team
-
-**Tags**: go, testing, quality, ci-cd
+---
+title: "ADR-015: Go Testing Strategy"
+status: Accepted
+date: 2025-10-07
+deciders: Core Team
+tags: ['go', 'testing', 'quality', 'ci-cd']
+---
 
 ## Context
 

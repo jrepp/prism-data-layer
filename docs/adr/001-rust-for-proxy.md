@@ -1,12 +1,10 @@
-# ADR-001: Rust for the Proxy Implementation
-
-**Status**: Accepted
-
-**Date**: 2025-10-05
-
-**Deciders**: Core Team
-
-**Tags**: proxy, performance, languages
+---
+title: "ADR-001: Rust for the Proxy Implementation"
+status: Accepted
+date: 2025-10-05
+deciders: Core Team
+tags: ['proxy', 'performance', 'languages']
+---
 
 ## Context
 

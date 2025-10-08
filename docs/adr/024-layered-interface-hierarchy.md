@@ -1,12 +1,10 @@
-# ADR-024: Layered Interface Hierarchy
-
-**Status**: Accepted
-
-**Date**: 2025-10-07
-
-**Deciders**: Core Team
-
-**Tags**: architecture, api-design, interfaces, use-cases
+---
+title: "ADR-024: Layered Interface Hierarchy"
+status: Accepted
+date: 2025-10-07
+deciders: Core Team
+tags: ['architecture', 'api-design', 'interfaces', 'use-cases']
+---
 
 ## Context
 

@@ -1,12 +1,10 @@
-# ADR-028: Admin UI with FastAPI and gRPC-Web
-
-**Status**: Accepted
-
-**Date**: 2025-10-07
-
-**Deciders**: Core Team
-
-**Tags**: admin, ui, fastapi, grpc-web, frontend
+---
+title: "ADR-028: Admin UI with FastAPI and gRPC-Web"
+status: Accepted
+date: 2025-10-07
+deciders: Core Team
+tags: ['admin', 'ui', 'fastapi', 'grpc-web', 'frontend']
+---
 
 ## Context
 

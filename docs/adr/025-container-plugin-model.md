@@ -1,12 +1,10 @@
-# ADR-025: Container Plugin Model
-
-**Status**: Accepted
-
-**Date**: 2025-10-07
-
-**Deciders**: Core Team
-
-**Tags**: architecture, deployment, containers, plugins, backends
+---
+title: "ADR-025: Container Plugin Model"
+status: Accepted
+date: 2025-10-07
+deciders: Core Team
+tags: ['architecture', 'deployment', 'containers', 'plugins', 'backends']
+---
 
 ## Context
 

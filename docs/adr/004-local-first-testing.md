@@ -1,12 +1,10 @@
-# ADR-004: Local-First Testing Strategy
-
-**Status**: Accepted
-
-**Date**: 2025-10-05
-
-**Deciders**: Core Team
-
-**Tags**: testing, dx, reliability
+---
+title: "ADR-004: Local-First Testing Strategy"
+status: Accepted
+date: 2025-10-05
+deciders: Core Team
+tags: ['testing', 'dx', 'reliability']
+---
 
 ## Context
 

@@ -1,12 +1,10 @@
-# ADR-008: Observability Strategy
-
-**Status**: Accepted
-
-**Date**: 2025-10-05
-
-**Deciders**: Core Team
-
-**Tags**: operations, performance, reliability
+---
+title: "ADR-008: Observability Strategy"
+status: Accepted
+date: 2025-10-05
+deciders: Core Team
+tags: ['operations', 'performance', 'reliability']
+---
 
 ## Context
 

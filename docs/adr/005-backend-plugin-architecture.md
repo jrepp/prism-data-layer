@@ -1,12 +1,10 @@
-# ADR-005: Backend Plugin Architecture
-
-**Status**: Accepted
-
-**Date**: 2025-10-05
-
-**Deciders**: Core Team
-
-**Tags**: backend, architecture, dx
+---
+title: "ADR-005: Backend Plugin Architecture"
+status: Accepted
+date: 2025-10-05
+deciders: Core Team
+tags: ['backend', 'architecture', 'dx']
+---
 
 ## Context
 

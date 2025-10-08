@@ -1,12 +1,10 @@
-# ADR-030: Schema Recording with Protobuf Tagging
-
-**Status**: Accepted
-
-**Date**: 2025-10-08
-
-**Deciders**: Core Team
-
-**Tags**: protobuf, schema, versioning, evolution, registry
+---
+title: "ADR-030: Schema Recording with Protobuf Tagging"
+status: Accepted
+date: 2025-10-08
+deciders: Core Team
+tags: ['protobuf', 'schema', 'versioning', 'evolution', 'registry']
+---
 
 ## Context
 

@@ -1,11 +1,12 @@
-# RFC-002: Data Layer Interface Specification
-
-**Status**: Draft
-**Author**: Core Team
-**Created**: 2025-10-07
-**Updated**: 2025-10-07
-**Supersedes**: N/A
-**Related**: RFC-001, ADR-024
+---
+title: "RFC-002: Data Layer Interface Specification"
+status: Draft
+author: Core Team
+created: 2025-10-07
+updated: 2025-10-07
+supersedes: N/A
+related: RFC-001, ADR-024
+---
 
 ## Abstract
 
