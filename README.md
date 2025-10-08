@@ -149,6 +149,21 @@ prism/
 - **[Architecture Decision Records](./docs/adr/)**: Why we made key design choices
 - **[Requirements](./docs/requirements/)**: Detailed functional and non-functional requirements
 - **[Netflix Reference](./docs/netflix/)**: Materials that inspired Prism
+- **[GitHub Pages](https://jrepp.github.io/prism-data-layer/)**: Live documentation site with search
+
+### Contributing to Documentation
+
+**⚠️ Before pushing documentation changes, run pre-lint validation:**
+
+```bash
+# Validate documentation structure and links
+uv run tooling/validate_docs.py
+
+# Pre-lint check (catches build errors before push)
+uv run tooling/pre_lint_docs.py
+```
+
+See [tooling/README.md](./tooling/README.md) for detailed documentation validation guide.
 
 ## Development
 
