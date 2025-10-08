@@ -54,6 +54,62 @@ This directory contains records of architectural decisions made for Prism.
   - Optional per-namespace caching
   - Cache invalidation strategies
 
+### Implementation & Development Patterns
+
+#### Go (Tooling & CLI)
+
+- [ADR-012: Go for Tooling and CLI Utilities](./012-go-for-tooling.md) - **Accepted**
+  - Single-binary distribution for CLI tools
+  - Fast compile times for rapid iteration
+  - Protobuf interoperability with Rust proxy
+
+- [ADR-013: Go Error Handling Strategy](./013-go-error-handling-strategy.md) - **Accepted**
+  - Modern error wrapping with `fmt.Errorf` and `%w`
+  - Sentinel errors for well-known conditions
+  - Fail-fast principle with early error reporting
+
+- [ADR-014: Go Concurrency Patterns](./014-go-concurrency-patterns.md) - **Accepted**
+  - Fork-join concurrency model with worker pools
+  - Context-based cancellation
+  - Channel patterns for communication
+
+- [ADR-015: Go Testing Strategy](./015-go-testing-strategy.md) - **Accepted**
+  - Three-tier testing (unit, integration, E2E)
+  - 80%+ code coverage requirement
+  - Proxy integration test harness
+
+- [ADR-016: Go CLI and Configuration Management](./016-go-cli-configuration.md) - **Accepted**
+  - Cobra for CLI framework
+  - Viper for configuration management
+  - Layered configuration (flags > env > file > defaults)
+
+- [ADR-017: Go Structured Logging with slog](./017-go-structured-logging.md) - **Accepted**
+  - Standard library slog for zero dependencies
+  - Context propagation pattern
+  - JSON output for production
+
+#### Rust (Proxy Core)
+
+- [ADR-018: Rust Error Handling Strategy](./018-rust-error-handling-strategy.md) - **Accepted**
+  - thiserror for domain errors, anyhow for application code
+  - Error context propagation
+  - Type-safe error conversion
+
+- [ADR-019: Rust Async Concurrency Patterns](./019-rust-async-concurrency-patterns.md) - **Accepted**
+  - Tokio async runtime with work-stealing scheduler
+  - Task spawning, channels, and select patterns
+  - Connection pooling with sqlx
+
+- [ADR-020: Rust Testing Strategy](./020-rust-testing-strategy.md) - **Accepted**
+  - Three-tier testing with async support
+  - Property-based testing with proptest
+  - Criterion benchmarks
+
+- [ADR-021: Rust Structured Logging with Tracing](./021-rust-structured-logging.md) - **Accepted**
+  - tracing ecosystem for structured logging
+  - Span instrumentation for request correlation
+  - OpenTelemetry integration
+
 ## Status Definitions
 
 - **Proposed**: Under discussion, not yet decided
@@ -80,6 +136,7 @@ Proposed → Reviewed → Accepted → Implemented
 
 ## Recent Changes
 
+- 2025-10-07: ADRs 012-021 added (Go and Rust implementation patterns)
 - 2025-10-05: ADRs 001-010 accepted (initial architecture)
 - 2025-10-05: Created ADR index
 
@@ -94,3 +151,8 @@ ADRs are tagged for easy filtering:
 - `#testing` - Testing strategies
 - `#operations` - Deployment, monitoring, ops
 - `#dx` - Developer experience
+- `#go` - Go-specific patterns and practices
+- `#rust` - Rust-specific patterns and practices
+- `#concurrency` - Concurrent programming patterns
+- `#error-handling` - Error handling strategies
+- `#logging` - Logging and observability
