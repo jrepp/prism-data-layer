@@ -2,6 +2,116 @@
 
 This directory contains records of architectural decisions made for Prism.
 
+## High-Level Architecture
+
+```mermaid
+graph TB
+    subgraph "Client Applications"
+        App1[Application 1<br/>user-api]
+        App2[Application 2<br/>analytics]
+        App3[Application 3<br/>billing]
+    end
+
+    subgraph "Admin Layer"
+        AdminCLI[Admin CLI<br/>prism-admin]
+        AdminUI[Admin UI<br/>FastAPI + gRPC-Web]
+    end
+
+    subgraph "Authentication"
+        OIDC[OIDC Provider<br/>Okta/Auth0]
+        CA[Certificate Authority<br/>mTLS Certs]
+        Vault[HashiCorp Vault<br/>Backend Credentials]
+    end
+
+    subgraph "Prism Gateway"
+        direction TB
+        DataPlane[Data Plane<br/>:8980<br/>gRPC API]
+        AdminAPI[Admin API<br/>:8981<br/>gRPC]
+        AuthZ[Authorization<br/>Namespace ACLs]
+        Cache[Cache Layer<br/>Look-aside]
+        Router[Backend Router<br/>Plugin Manager]
+        Observability[Observability<br/>OpenTelemetry]
+    end
+
+    subgraph "Backend Plugins"
+        direction LR
+        PG[Postgres Plugin<br/>KeyValue DAL]
+        Kafka[Kafka Plugin<br/>TimeSeries DAL]
+        Redis[Redis Plugin<br/>Cache DAL]
+        NATS[NATS Plugin<br/>PubSub DAL]
+        SQLite[SQLite Plugin<br/>Local Testing]
+    end
+
+    subgraph "Data Stores"
+        PGStore[(PostgreSQL)]
+        KafkaStore[(Kafka Cluster)]
+        RedisStore[(Redis)]
+        NATSStore[(NATS)]
+        SQLiteStore[(SQLite)]
+    end
+
+    App1 -->|mTLS| DataPlane
+    App2 -->|mTLS| DataPlane
+    App3 -->|mTLS| DataPlane
+
+    CA -.->|Issue Certs| App1
+    CA -.->|Issue Certs| App2
+    CA -.->|Issue Certs| App3
+
+    AdminCLI -->|OIDC JWT| AdminAPI
+    AdminUI -->|OIDC JWT| AdminAPI
+    OIDC -.->|Device Flow| AdminCLI
+    OIDC -.->|OAuth2| AdminUI
+
+    DataPlane --> AuthZ
+    AuthZ --> Cache
+    Cache --> Router
+    Router --> PG
+    Router --> Kafka
+    Router --> Redis
+    Router --> NATS
+    Router --> SQLite
+
+    DataPlane -.-> Observability
+    AdminAPI -.-> Observability
+
+    AdminAPI --> Router
+
+    Vault -.->|Dynamic Creds| PG
+    Vault -.->|SASL/SCRAM| Kafka
+    Vault -.->|ACL Password| Redis
+    Vault -.->|JWT/NKey| NATS
+
+    PG --> PGStore
+    Kafka --> KafkaStore
+    Redis --> RedisStore
+    NATS --> NATSStore
+    SQLite --> SQLiteStore
+
+    classDef client fill:#e1f5ff,stroke:#0288d1
+    classDef admin fill:#fff3e0,stroke:#f57c00
+    classDef gateway fill:#f3e5f5,stroke:#7b1fa2
+    classDef plugin fill:#e8f5e9,stroke:#388e3c
+    classDef store fill:#fce4ec,stroke:#c2185b
+    classDef auth fill:#fff9c4,stroke:#f9a825
+
+    class App1,App2,App3 client
+    class AdminCLI,AdminUI admin
+    class DataPlane,AdminAPI,AuthZ,Cache,Router,Observability gateway
+    class PG,Kafka,Redis,NATS,SQLite plugin
+    class PGStore,KafkaStore,RedisStore,NATSStore,SQLiteStore store
+    class OIDC,CA,Vault auth
+```
+
+**Key Architecture Principles:**
+
+1. **Performance First** (ADR-001): Rust proxy for 10-100x performance vs JVM alternatives
+2. **Client-Originated Configuration** (ADR-002): Applications declare requirements, Prism provisions
+3. **Pluggable Backends** (ADR-005, ADR-025): Container-based plugins with standard interfaces
+4. **Security by Design** (ADR-007, RFC-010, RFC-011): mTLS for clients, Vault-managed backend credentials
+5. **Observability** (ADR-008, ADR-029): OpenTelemetry from day one with protocol recording
+6. **Local-First Testing** (ADR-004): Real backends (SQLite, local Kafka) instead of mocks
+
 ## Index
 
 ### Core Architecture

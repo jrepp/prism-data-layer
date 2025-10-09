@@ -1,0 +1,20 @@
+# PostgreSQL Plugin Configuration
+# Based on RFC-011 and ADR-025
+
+plugin:
+  name: postgres
+  version: 0.1.0
+
+control_plane:
+  port: 9090
+
+backend:
+  # Database connection (can be overridden by DATABASE_URL env var)
+  database_url: "postgres://prism:password@localhost:5432/prism"
+
+  # Connection pool size
+  pool_size: 10
+
+  # Vault-managed credentials (RFC-011)
+  vault_enabled: false
+  vault_path: "database/creds/postgres-main"
