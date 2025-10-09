@@ -143,8 +143,8 @@ const config: Config = {
     navbar: {
       title: 'Prism',
       logo: {
-        alt: 'Prism Logo',
-        src: 'img/logo.svg',
+        alt: 'Prism Data Gateway Logo',
+        src: 'img/prism-logo.png',
       },
       items: navItems,
     },
