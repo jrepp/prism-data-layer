@@ -317,7 +317,7 @@ Proposed → Reviewed → Accepted → Implemented
 
 ## Recent Changes
 
-- 2025-10-09: ADR-040 added (uv run --with pattern for prismctl)
+- 2025-10-09: ADR-040 added (Go binary for admin CLI prismctl)
 - 2025-10-09: High-level architecture diagram added to index
 - 2025-10-08: Converted all ADRs to YAML frontmatter format
 - 2025-10-08: ADRs 027-030 added (Admin interface, protocol/schema recording)
