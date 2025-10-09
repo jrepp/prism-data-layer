@@ -12,6 +12,26 @@ Quick access to recently updated documentation. Changes listed in reverse chrono
 
 ### 2025-10-09
 
+#### MEMO-006: Backend Interface Decomposition and Schema Registry (NEW)
+**Link**: [MEMO-006](/memos/MEMO-006-backend-interface-decomposition-schema-registry)
+
+**Summary**: Comprehensive architectural guide for decomposing backends into thin, composable proto service interfaces and establishing schema registry for patterns and slots:
+- **Design Decision**: Use explicit interface flavors (not capability flags) for type safety
+- 45 thin interfaces across 10 data models (KeyValue, PubSub, Stream, Queue, List, Set, SortedSet, TimeSeries, Graph, Document)
+- Each data model has multiple interfaces: Basic (required), Scan, TTL, Transactional, Batch, etc.
+- Backend implementation matrix showing interface composition (Redis: 16 interfaces, Postgres: 16 different mix, MemStore: 2 minimal)
+- Pattern schemas with slots requiring specific interface combinations
+- Schema registry filesystem layout (registry/interfaces/, registry/backends/, registry/patterns/)
+- Configuration generator workflow with validation
+- Examples: Redis implements keyvalue_basic + keyvalue_scan + keyvalue_ttl + keyvalue_transactional + keyvalue_batch
+- Capabilities expressed through interface presence (TTL support = implements keyvalue_ttl interface)
+
+**Key Innovation**: Thin interfaces enable type-safe backend composition. Pattern slots specify required interfaces (e.g., Multicast Registry needs keyvalue_basic + keyvalue_scan for registry slot). No runtime capability checks - compiler enforces contracts.
+
+**Impact**: Enables straightforward config generation, backend substitutability, and clear contracts for what each backend supports. Foundation for schema-driven pattern composition.
+
+---
+
 #### MEMO-005: Client Protocol Design Philosophy - Composition vs Use-Case Specificity (NEW)
 **Link**: [MEMO-005](/memos/MEMO-005-client-protocol-design-philosophy)
 
