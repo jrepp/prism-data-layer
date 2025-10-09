@@ -279,6 +279,6 @@ The watcher is designed for local development. For CI/CD, use the Makefile:
 ## References
 
 - [fsnotify](https://github.com/fsnotify/fsnotify) - File system notifications
-- [ADR-025: Container Plugin Model](/docs-cms/adr/025-container-plugin-model.md)
-- [ADR-026: Distroless Container Images](/docs-cms/adr/026-distroless-container-images.md)
+- [ADR-025: Container Plugin Model](/docs-cms/adr/ADR-025-container-plugin-model.md)
+- [ADR-026: Distroless Container Images](/docs-cms/adr/ADR-026-distroless-container-images.md)
 - [Podman Documentation](https://docs.podman.io/)

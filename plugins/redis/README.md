@@ -286,7 +286,7 @@ ACL: ~cache:* +get +set +del +expire +mget
 ## References
 
 - [RFC-011: Data Proxy Authentication](/docs-cms/rfcs/RFC-011-data-proxy-authentication.md)
-- [ADR-010: Caching Layer Design](/docs-cms/adr/010-caching-layer.md)
-- [ADR-025: Container Plugin Model](/docs-cms/adr/025-container-plugin-model.md)
-- [ADR-026: Distroless Container Images](/docs-cms/adr/026-distroless-container-images.md)
+- [ADR-010: Caching Layer Design](/docs-cms/adr/ADR-010-caching-layer.md)
+- [ADR-025: Container Plugin Model](/docs-cms/adr/ADR-025-container-plugin-model.md)
+- [ADR-026: Distroless Container Images](/docs-cms/adr/ADR-026-distroless-container-images.md)
 - [Redis ACL](https://redis.io/docs/management/security/acl/)
