@@ -97,3 +97,10 @@ tmp/
 temp/
 *.tmp
 *.bak
+
+# === Docusaurus Build Output ===
+# GitHub Pages builds this automatically
+docs/
+docusaurus/.docusaurus/
+docusaurus/build/
+docusaurus/node_modules/

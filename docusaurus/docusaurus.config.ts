@@ -81,6 +81,7 @@ const config: Config = {
   ],
 
   themes: [
+    '@docusaurus/theme-mermaid',
     [
       require.resolve("@easyops-cn/docusaurus-search-local"),
       {
@@ -106,6 +107,11 @@ const config: Config = {
       },
     ],
   ],
+
+  // Enable Mermaid
+  markdown: {
+    mermaid: true,
+  },
 
   themeConfig: {
     // Replace with your project's social card
@@ -178,6 +184,7 @@ const config: Config = {
     prism: {
       theme: prismThemes.github,
       darkTheme: prismThemes.dracula,
+      additionalLanguages: ['bash', 'rust', 'python', 'protobuf', 'yaml', 'toml', 'sql', 'json'],
     },
   } satisfies Preset.ThemeConfig,
 };
