@@ -262,10 +262,10 @@ graph TB
   - Vanilla JavaScript frontend with Tailwind CSS
   - Browser-accessible administration
 
-- [ADR-040: uv run --with Pattern for Admin CLI](./040-uv-run-with-pattern.md) - **Accepted**
-  - Python CLI with uv run --with prismctl pattern
-  - Zero installation, secure package verification
-  - Standard plugin images in ~/.prism directory
+- [ADR-040: Go Binary for Admin CLI (prismctl)](./040-go-binary-admin-cli.md) - **Accepted**
+  - Single-binary Go CLI with Cobra/Viper framework
+  - 12ms startup vs 230ms for Python (20x faster)
+  - Cross-platform builds via GitHub releases
 
 ### Observability & Schema Management
 
