@@ -13,7 +13,7 @@ export const navItems = [
     position: 'left' as const,
   },
   {
-    to: '/docs/CHANGELOG',
+    to: '/docs/changelog',
     label: 'What\'s New',
     position: 'left' as const,
   },
@@ -61,7 +61,7 @@ export const footerLinks = [
       },
       {
         label: 'What\'s New',
-        to: '/docs/CHANGELOG',
+        to: '/docs/changelog',
       },
       {
         label: 'ADRs',
