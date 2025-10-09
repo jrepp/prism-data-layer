@@ -14,20 +14,21 @@ Strategic guide for implementing backend plugins in priority order, with analysi
 
 ## Backend Implementability Matrix
 
-Comprehensive comparison of all backends discussed for Prism, ranked by ease of implementation.
+Comprehensive comparison of all backends discussed for Prism, prioritized by internal needs and ranked by ease of implementation.
 
-### Comparison Table
+### Comparison Table (Internal Priority Order)
 
-| Rank | Backend | Go SDK Quality | Data Models | Test Difficulty | Protocol Complexity | Implementability Score |
-|------|---------|---------------|-------------|-----------------|-------------------|----------------------|
-| 1 | **Redis** | ⭐⭐⭐⭐⭐ Excellent (go-redis) | KeyValue, Cache | ⭐⭐⭐⭐⭐ Easy (testcontainers) | ⭐⭐⭐⭐⭐ Simple (RESP) | **95/100** |
-| 2 | **PostgreSQL** | ⭐⭐⭐⭐⭐ Excellent (pgx, pq) | Relational, JSON | ⭐⭐⭐⭐⭐ Easy (testcontainers) | ⭐⭐⭐⭐ Moderate (SQL) | **93/100** |
-| 3 | **SQLite** | ⭐⭐⭐⭐⭐ Excellent (mattn/go-sqlite3) | Relational | ⭐⭐⭐⭐⭐ Trivial (embedded) | ⭐⭐⭐⭐⭐ Simple (SQL) | **92/100** |
-| 4 | **NATS** | ⭐⭐⭐⭐⭐ Excellent (nats.go - official) | PubSub, Queue | ⭐⭐⭐⭐⭐ Easy (lightweight) | ⭐⭐⭐⭐⭐ Simple (text protocol) | **90/100** |
-| 5 | **Kafka** | ⭐⭐⭐⭐ Good (segmentio/kafka-go, confluent-kafka-go) | Event Streaming | ⭐⭐⭐⭐ Moderate (testcontainers, slow startup) | ⭐⭐⭐ Complex (wire protocol) | **78/100** |
-| 6 | **S3/MinIO** | ⭐⭐⭐⭐⭐ Excellent (aws-sdk-go-v2, minio-go) | Object Storage | ⭐⭐⭐⭐ Moderate (MinIO for local) | ⭐⭐⭐⭐ Simple (REST API) | **85/100** |
-| 7 | **ClickHouse** | ⭐⭐⭐ Good (clickhouse-go) | Columnar/TimeSeries | ⭐⭐⭐ Moderate (testcontainers) | ⭐⭐⭐ Moderate (custom protocol) | **70/100** |
-| 8 | **Neptune** | ⭐⭐ Fair (gremlin-go, AWS SDK) | Graph (Gremlin/SPARQL) | ⭐⭐ Hard (AWS-only, no local) | ⭐⭐ Complex (Gremlin) | **50/100** |
+| Rank | Backend | Go SDK Quality | Data Models | Test Difficulty | Protocol Complexity | Implementability Score | Priority |
+|------|---------|---------------|-------------|-----------------|-------------------|----------------------|----------|
+| 0 | **MemStore (In-Memory)** | ⭐⭐⭐⭐⭐ Native (sync.Map) | KeyValue | ⭐⭐⭐⭐⭐ Instant (no deps) | ⭐⭐⭐⭐⭐ Trivial (Go map) | **100/100** | **🔥 Internal - Testing** |
+| 1 | **Kafka** | ⭐⭐⭐⭐ Good (segmentio/kafka-go) | Event Streaming | ⭐⭐⭐⭐ Moderate (testcontainers) | ⭐⭐⭐ Complex (wire protocol) | **78/100** | **🔥 Internal - Messaging** |
+| 2 | **NATS** | ⭐⭐⭐⭐⭐ Excellent (nats.go - official) | PubSub, Queue | ⭐⭐⭐⭐⭐ Easy (lightweight) | ⭐⭐⭐⭐⭐ Simple (text protocol) | **90/100** | **🔥 Internal - PubSub** |
+| 3 | **PostgreSQL** | ⭐⭐⭐⭐⭐ Excellent (pgx, pq) | Relational, JSON | ⭐⭐⭐⭐⭐ Easy (testcontainers) | ⭐⭐⭐⭐ Moderate (SQL) | **93/100** | **🔥 Internal - Relational** |
+| 4 | **Neptune** | ⭐⭐ Fair (gremlin-go, AWS SDK) | Graph (Gremlin/SPARQL) | ⭐⭐ Hard (AWS-only, no local) | ⭐⭐ Complex (Gremlin) | **50/100** | **🔥 Internal - Graph** |
+| 5 | **Redis** | ⭐⭐⭐⭐⭐ Excellent (go-redis) | KeyValue, Cache | ⭐⭐⭐⭐⭐ Easy (testcontainers) | ⭐⭐⭐⭐⭐ Simple (RESP) | **95/100** | External |
+| 6 | **SQLite** | ⭐⭐⭐⭐⭐ Excellent (mattn/go-sqlite3) | Relational | ⭐⭐⭐⭐⭐ Trivial (embedded) | ⭐⭐⭐⭐⭐ Simple (SQL) | **92/100** | External |
+| 7 | **S3/MinIO** | ⭐⭐⭐⭐⭐ Excellent (aws-sdk-go-v2, minio-go) | Object Storage | ⭐⭐⭐⭐ Moderate (MinIO for local) | ⭐⭐⭐⭐ Simple (REST API) | **85/100** | External |
+| 8 | **ClickHouse** | ⭐⭐⭐ Good (clickhouse-go) | Columnar/TimeSeries | ⭐⭐⭐ Moderate (testcontainers) | ⭐⭐⭐ Moderate (custom protocol) | **70/100** | External |
 
 ### Scoring Criteria
 
@@ -40,7 +41,124 @@ Comprehensive comparison of all backends discussed for Prism, ranked by ease of 
 
 ## Detailed Backend Analysis
 
-### 1. Redis (Score: 95/100) - Highest Priority
+### 0. MemStore (Score: 100/100) - Simplest Possible Plugin 🔥 **INTERNAL PRIORITY**
+
+**Why Implement First:**
+- **Zero dependencies**: Pure Go, uses `sync.Map` for thread-safe storage
+- **Instant startup**: No containers, no external processes
+- **Perfect for testing**: Fastest possible feedback loop
+- **Reference implementation**: Demonstrates plugin interface patterns
+
+**Go Implementation:**
+```go
+// plugins/memstore/store.go
+package memstore
+
+import (
+    "context"
+    "sync"
+    "time"
+)
+
+// MemStore implements a thread-safe in-memory key-value store
+type MemStore struct {
+    data   sync.Map
+    expiry sync.Map
+}
+
+func NewMemStore() *MemStore {
+    return &MemStore{}
+}
+
+func (m *MemStore) Set(ctx context.Context, key string, value []byte, ttl time.Duration) error {
+    m.data.Store(key, value)
+
+    if ttl > 0 {
+        m.expiry.Store(key, time.Now().Add(ttl))
+    }
+
+    return nil
+}
+
+func (m *MemStore) Get(ctx context.Context, key string) ([]byte, error) {
+    // Check expiry
+    if exp, ok := m.expiry.Load(key); ok {
+        if time.Now().After(exp.(time.Time)) {
+            m.data.Delete(key)
+            m.expiry.Delete(key)
+            return nil, ErrKeyNotFound
+        }
+    }
+
+    value, ok := m.data.Load(key)
+    if !ok {
+        return nil, ErrKeyNotFound
+    }
+
+    return value.([]byte), nil
+}
+
+func (m *MemStore) Delete(ctx context.Context, key string) error {
+    m.data.Delete(key)
+    m.expiry.Delete(key)
+    return nil
+}
+```
+
+**Data Models Supported:**
+- KeyValue (primary use case)
+- TTL support for expiration
+- PubSub (can add channels with Go channels)
+
+**Testing Strategy:**
+```go
+func TestMemStore(t *testing.T) {
+    store := NewMemStore()
+
+    // No setup needed - instant!
+    ctx := context.Background()
+
+    // Test basic operations
+    store.Set(ctx, "key1", []byte("value1"), 0)
+    value, err := store.Get(ctx, "key1")
+    assert.NoError(t, err)
+    assert.Equal(t, []byte("value1"), value)
+
+    // Test TTL
+    store.Set(ctx, "key2", []byte("value2"), 100*time.Millisecond)
+    time.Sleep(200 * time.Millisecond)
+    _, err = store.Get(ctx, "key2")
+    assert.Error(t, err) // Should be expired
+}
+```
+
+**Demo Plugin Operations:**
+- `GET`, `SET`, `DEL` (basic operations)
+- `EXPIRE` (TTL support)
+- `KEYS` (list all keys)
+- `FLUSH` (clear all data)
+
+**RFC-015 Test Coverage:**
+- Authentication: N/A (in-process)
+- Concurrency: Thread-safe via sync.Map
+- Error handling: Key not found, expired keys
+- Performance: Sub-microsecond latency
+
+**Use Cases:**
+- **Rapid prototyping**: Test plugin patterns without external dependencies
+- **CI/CD**: Fastest possible test execution
+- **Learning**: Reference implementation for new backend developers
+- **Development**: Local testing without Docker
+
+**Performance Characteristics:**
+- Write latency: **&lt;1μs** (microsecond)
+- Read latency: **&lt;1μs**
+- Throughput: **1M+ operations/sec** (single instance)
+- Memory: **~10MB baseline** (scales with data)
+
+---
+
+### 1. Redis (Score: 95/100) - Highest Implementability
 
 **Why Implement First:**
 - **Simplest protocol**: RESP (REdis Serialization Protocol) is text-based and trivial to implement
@@ -496,73 +614,129 @@ func NewNeptuneInstance(t *testing.T) *NeptuneInstance {
 
 ---
 
-## Recommended Implementation Order
+## Recommended Implementation Order (Internal Priority)
 
-### Phase 1: Foundation (Weeks 1-4)
+### Phase 0: Baseline Plugin (Week 1) 🔥 **INTERNAL**
 
-**Priority:** Redis → SQLite → PostgreSQL
-
-**Rationale:**
-- **Redis**: Simplest protocol, fastest tests, builds confidence
-- **SQLite**: Zero dependencies, perfect for demos
-- **PostgreSQL**: Production-ready relational backend
-
-**Deliverables:**
-- 3 fully tested plugins with RFC-015 test suites
-- Reusable authentication suite validated
-- testcontainers harness proven
-- Demo showing pattern composition
-
-### Phase 2: Messaging (Weeks 5-8)
-
-**Priority:** NATS → Kafka
+**Priority:** MemStore
 
 **Rationale:**
-- **NATS**: Modern, lightweight, Go-native
-- **Kafka**: Industry standard, validates complex protocols
+- **Zero external dependencies**: Pure Go implementation
+- **Fastest feedback loop**: No container startup time
+- **Reference implementation**: Establishes plugin patterns
+- **Testing foundation**: Validates RFC-015 test framework immediately
 
 **Deliverables:**
-- PubSub and queue patterns working
-- Consumer group testing
-- Exactly-once semantics verified
+- Complete in-memory plugin with RFC-015 test suite
+- Plugin interface patterns documented
+- Thread-safe concurrent operations verified
+- Sub-microsecond latency baseline established
 
-### Phase 3: Storage (Weeks 9-10)
+### Phase 1: Internal Messaging (Weeks 2-6) 🔥 **INTERNAL**
 
-**Priority:** S3/MinIO
+**Priority:** Kafka → NATS
 
 **Rationale:**
-- Essential for Claim Check pattern
-- Large payload handling
+- **Kafka**: Internal event streaming requirement, production-critical
+- **NATS**: Internal pub/sub messaging, lightweight alternative
+- **Both needed**: Different use cases, complementary patterns
 
 **Deliverables:**
-- Object storage backend
+- Kafka plugin with consumer groups, partitioning, exactly-once
+- NATS plugin with JetStream support
+- PubSub and queue patterns working end-to-end
+- High-throughput verification (10k+ rps)
+
+### Phase 2: Internal Data Storage (Weeks 7-10) 🔥 **INTERNAL**
+
+**Priority:** PostgreSQL → Neptune
+
+**Rationale:**
+- **PostgreSQL**: Internal relational data requirement, ACID transactions
+- **Neptune**: Internal graph data requirement, specialized use case
+- **Production parity**: Both backends mirror production environment
+
+**Deliverables:**
+- PostgreSQL plugin with transaction support, LISTEN/NOTIFY, JSON
+- Neptune plugin with Gremlin traversals (AWS SDK)
+- Outbox pattern implementation (PostgreSQL)
+- Graph query patterns (Neptune)
+
+### Phase 3: External/Supporting Backends (Weeks 11-14)
+
+**Priority:** Redis → SQLite → S3/MinIO
+
+**Rationale:**
+- **Redis**: General-purpose cache, widely used
+- **SQLite**: Embedded testing, CI/CD optimization
+- **S3/MinIO**: Claim Check pattern support
+
+**Deliverables:**
+- Redis plugin for caching patterns
+- SQLite plugin for embedded demos
+- S3/MinIO plugin for large payload handling
 - Claim Check pattern implementation
-- Multipart upload support
 
-### Phase 4: Analytics (Weeks 11-12)
+### Phase 4: Analytics (Weeks 15-16)
 
 **Priority:** ClickHouse
 
 **Rationale:**
-- Differentiation for observability use cases
+- Observability and metrics use cases
 - TimeSeries data model
+- Optional: Lower priority than internal needs
 
 **Deliverables:**
-- Columnar storage backend
-- Metrics aggregation
-
-### Phase 5: Advanced (Future)
-
-**Priority:** Neptune (deferred)
-
-**Rationale:**
-- Specialized use case
-- Complex testing requirements
-- Lower immediate value
+- ClickHouse plugin for analytical queries
+- Metrics aggregation patterns
+- Batch insert optimization
 
 ---
 
 ## Demo Plugin Configurations
+
+### Demo 0: MemStore In-Memory KeyValue (Simplest) 🔥 **INTERNAL**
+
+**Purpose**: Demonstrate simplest possible plugin with zero external dependencies
+
+```yaml
+# config/demo-memstore.yaml
+namespaces:
+  - name: dev-cache
+    pattern: keyvalue
+
+    needs:
+      latency: &lt;1μs
+      ttl: true
+      persistence: false
+
+backend:
+  type: memstore
+  # No configuration needed - runs in-process
+```
+
+**Client Code:**
+```go
+// Demo: Instant GET/SET operations
+client.Set("session:abc123", sessionData, 5*time.Minute)
+value := client.Get("session:abc123")
+
+// No Docker, no containers, no startup time
+```
+
+**Test Focus:**
+- Zero-dependency testing
+- Thread-safe concurrency (sync.Map)
+- TTL expiration
+- Performance baseline (&lt;1μs latency)
+
+**Use Cases:**
+- **CI/CD**: Fastest test execution (no container overhead)
+- **Learning**: Reference implementation for new plugin developers
+- **Rapid prototyping**: Test proxy and client patterns instantly
+- **Local dev**: No Docker required
+
+---
 
 ### Demo 1: Redis KeyValue Store
 
@@ -878,25 +1052,32 @@ go get github.com/testcontainers/testcontainers-go
 
 ## Summary
 
-**Implementation Priority:**
-1. ✅ **Redis** (Score: 95) - Start here, builds confidence
-2. ✅ **PostgreSQL** (Score: 93) - Production-ready relational
-3. ✅ **SQLite** (Score: 92) - Perfect for demos and CI
-4. ⏭️ **NATS** (Score: 90) - Modern messaging
-5. ⏭️ **Kafka** (Score: 78) - Event streaming standard
-6. ⏭️ **S3/MinIO** (Score: 85) - Essential for Claim Check
-7. ⏭️ **ClickHouse** (Score: 70) - Analytics use case
-8. 🔮 **Neptune** (Score: 50) - Defer until others stable
+**Implementation Priority (Internal Needs First):**
+
+**Internal Priority (Must Have):**
+0. 🔥 **MemStore** (Score: 100) - Start here, zero dependencies, instant testing
+1. 🔥 **Kafka** (Score: 78) - Internal messaging requirement, event streaming
+2. 🔥 **NATS** (Score: 90) - Internal pub/sub requirement, lightweight
+3. 🔥 **PostgreSQL** (Score: 93) - Internal relational data, ACID transactions
+4. 🔥 **Neptune** (Score: 50) - Internal graph data requirement
+
+**External/Supporting (Nice to Have):**
+5. ⏭️ **Redis** (Score: 95) - General caching, external clients
+6. ⏭️ **SQLite** (Score: 92) - Embedded testing, CI/CD optimization
+7. ⏭️ **S3/MinIO** (Score: 85) - Claim Check pattern support
+8. ⏭️ **ClickHouse** (Score: 70) - Analytics and observability
 
 **Key Takeaways:**
-- Focus on Redis, PostgreSQL, SQLite first (highest implementability)
-- Use testcontainers for all backends except SQLite (embedded)
-- Build acceptance tests alongside plugin implementation
-- Create demos showing pattern composition
-- Validate RFC-015 framework with simple backends before complex ones
+- **Start with MemStore**: Zero external dependencies, establishes plugin patterns
+- **Prioritize internal needs**: Kafka, NATS, PostgreSQL, Neptune are production-critical
+- **Use testcontainers**: For all backends except MemStore (in-process) and SQLite (embedded)
+- **Build acceptance tests**: Alongside plugin implementation using RFC-015 framework
+- **Validate patterns early**: MemStore enables immediate pattern validation without infrastructure
+- **Phase external backends**: Redis, SQLite, S3, ClickHouse after internal needs satisfied
 
 ---
 
 ## Revision History
 
+- 2025-10-09: Re-prioritized backends based on internal needs (Kafka, NATS, Neptune, PostgreSQL first); added MemStore in-memory plugin as simplest reference implementation
 - 2025-10-09: Initial draft with backend comparison matrix, implementability scoring, and demo plugin configurations
