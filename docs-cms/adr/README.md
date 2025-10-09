@@ -267,6 +267,11 @@ graph TB
   - 12ms startup vs 230ms for Python (20x faster)
   - Cross-platform builds via GitHub releases
 
+- [ADR-045: prismctl Stack Management Subcommand](./ADR-045-prismctl-stack-management.md) - **Accepted**
+  - Stack management integrated into prismctl
+  - Pluggable infrastructure providers (Hashicorp, Docker Compose, AWS, Kubernetes)
+  - Single `go install` for complete tooling
+
 ### Observability & Schema Management
 
 - [ADR-029: Protocol Recording with Protobuf Tagging](./ADR-029-protocol-recording-protobuf-tags.md) - **Accepted**
@@ -339,9 +344,11 @@ Proposed → Reviewed → Accepted → Implemented
 
 ## Recent Changes
 
+- 2025-10-09: ADR-045 added (prismctl stack management subcommand)
+- 2025-10-09: ADR-040 updated to reference ADR-045 for bootstrap
 - 2025-10-09: ADRs 041-044 added (Graph databases, SQS, plugin capabilities, Gremlin)
 - 2025-10-09: ADR-040 added (Go binary for admin CLI prismctl)
-- 2025-10-09: High-level architecture diagram added to index
+- 2025-10-09: High-level architecture diagram added to index with dark mode fixes
 - 2025-10-08: Converted all ADRs to YAML frontmatter format
 - 2025-10-08: ADRs 027-030 added (Admin interface, protocol/schema recording)
 - 2025-10-07: ADRs 022-026 added (Client configuration, interfaces, deployment)

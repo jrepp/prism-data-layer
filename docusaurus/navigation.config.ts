@@ -13,7 +13,7 @@ export const navItems = [
     position: 'left' as const,
   },
   {
-    to: '/docs-cms/CHANGELOG',
+    to: '/docs/CHANGELOG',
     label: 'Latest Changes',
     position: 'left' as const,
   },

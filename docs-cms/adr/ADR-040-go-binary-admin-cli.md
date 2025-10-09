@@ -274,25 +274,31 @@ logging:
 3. Config file (`~/.prism/config.yaml`)
 4. Defaults
 
-### Bootstrap Script
+### Bootstrap and Installation
 
-Keep bootstrap as Python (via `uv run`) since it's a **one-time setup**:
+**Superseded by ADR-045**: Bootstrap is now handled by `prismctl stack init`.
 
 ```bash
-# Bootstrap once
-uv run tooling/bootstrap.py
-# Creates ~/.prism directory and manifests
+# Install prismctl (includes bootstrap functionality)
+go install github.com/jrepp/prism-data-layer/tools/cmd/prismctl@latest
 
-# Then use Go CLI repeatedly
+# Initialize environment
+prismctl stack init
+# Creates ~/.prism directory, config, and stack manifests
+
+# Start infrastructure
+prismctl stack start
+
+# Use prismctl for admin operations
 prismctl namespace list
 prismctl health
 ```
 
 Rationale:
-- Bootstrap is infrequent (once per user/machine)
-- Python allows easy file generation and templating
-- No need for fast startup on setup script
-- Keeps Go CLI focused on runtime operations
+- Single binary handles both bootstrap and runtime operations
+- No Python dependency for environment setup
+- Consistent `go install` installation method
+- See ADR-045 for stack management details
 
 ### Plugin Management
 
@@ -402,8 +408,8 @@ func loadPluginManifest(name string) (*PluginManifest, error) {
 
 1. **Rename**: `tools/cmd/prism-admin` → `tools/cmd/prismctl`
 2. **Update**: Binary name from `prism-admin` to `prismctl`
-3. **Keep**: Bootstrap script as Python (one-time setup)
-4. **Add**: Plugin management commands to prismctl
+3. **Add**: Plugin management commands to prismctl
+4. **Add**: Stack management subcommand (see ADR-045)
 5. **Document**: Installation and usage in README
 6. **Release**: Automated builds via GitHub Actions
 
@@ -416,8 +422,10 @@ func loadPluginManifest(name string) (*PluginManifest, error) {
 - ADR-012: Go for Tooling
 - ADR-016: Go CLI and Configuration Management
 - ADR-025: Container Plugin Model
+- ADR-045: prismctl Stack Management Subcommand
 - RFC-010: Admin Protocol with OIDC
 
 ## Revision History
 
 - 2025-10-09: Initial acceptance with Go binary approach
+- 2025-10-09: Updated to reference ADR-045 for stack management (bootstrap now via prismctl)
