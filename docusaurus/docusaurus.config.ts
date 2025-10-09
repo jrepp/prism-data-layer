@@ -2,8 +2,30 @@ import {themes as prismThemes} from 'prism-react-renderer';
 import type {Config} from '@docusaurus/types';
 import type * as Preset from '@docusaurus/preset-classic';
 import {navItems, footerLinks} from './navigation.config';
+import {execSync} from 'child_process';
 
 // This runs in Node.js - Don't use client-side code here (browser APIs, JSX...)
+
+// Get build metadata
+const getCommitHash = (): string => {
+  try {
+    return execSync('git rev-parse HEAD').toString().trim();
+  } catch {
+    return 'dev';
+  }
+};
+
+const getVersion = (): string => {
+  try {
+    return execSync('git describe --tags --always').toString().trim();
+  } catch {
+    return '0.1.0';
+  }
+};
+
+const getBuildTime = (): string => {
+  return new Date().toISOString();
+};
 
 const config: Config = {
   title: 'Prism',
@@ -21,9 +43,12 @@ const config: Config = {
   // For GitHub pages deployment, it is often '/<projectName>/'
   baseUrl: '/prism-data-layer/',
 
-  // Set custom build output directory
+  // Set custom build output directory and metadata
   customFields: {
     buildOutputDir: '../docs',
+    version: getVersion(),
+    buildTime: getBuildTime(),
+    commitHash: getCommitHash(),
   },
 
   // GitHub pages deployment config.

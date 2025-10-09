@@ -1,0 +1,37 @@
+.buildInfo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  color: var(--ifm-navbar-link-color);
+  padding: 0 1rem;
+  white-space: nowrap;
+}
+
+.version {
+  font-weight: 600;
+  color: var(--ifm-color-primary);
+}
+
+.buildTime {
+  opacity: 0.8;
+}
+
+.commit {
+  font-family: var(--ifm-font-family-monospace);
+  font-size: 0.8rem;
+  opacity: 0.7;
+}
+
+.separator {
+  opacity: 0.5;
+}
+
+/* Responsive: hide build time on small screens */
+@media (max-width: 996px) {
+  .buildTime,
+  .commit,
+  .separator {
+    display: none;
+  }
+}
