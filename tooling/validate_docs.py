@@ -40,6 +40,7 @@ class LinkType(Enum):
     INTERNAL_DOC = "internal_doc"      # ./relative.md or /docs/path.md
     INTERNAL_ADR = "internal_adr"      # ADR cross-references
     INTERNAL_RFC = "internal_rfc"      # RFC cross-references
+    DOCUSAURUS_PLUGIN = "docusaurus_plugin"  # Cross-plugin links (e.g., /prism-data-layer/netflix/...)
     EXTERNAL = "external"              # http(s)://
     ANCHOR = "anchor"                  # #section
     UNKNOWN = "unknown"
@@ -259,6 +260,9 @@ class PrismDocValidator:
             return LinkType.EXTERNAL
         elif target.startswith('#'):
             return LinkType.ANCHOR
+        elif target.startswith('/prism-data-layer/'):
+            # Docusaurus cross-plugin links (e.g., /prism-data-layer/netflix/scale)
+            return LinkType.DOCUSAURUS_PLUGIN
         elif 'adr/' in target or target.startswith('./') and 'docs/adr' in str(source_path):
             return LinkType.INTERNAL_ADR
         elif 'rfc' in target.lower() or target.startswith('./') and 'docs/rfcs' in str(source_path):
@@ -278,6 +282,11 @@ class PrismDocValidator:
                 continue
 
             if link.link_type == LinkType.ANCHOR:
+                link.is_valid = True
+                continue
+
+            if link.link_type == LinkType.DOCUSAURUS_PLUGIN:
+                # Cross-plugin links are valid (e.g., /prism-data-layer/netflix/...)
                 link.is_valid = True
                 continue
 
