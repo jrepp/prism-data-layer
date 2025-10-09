@@ -12,6 +12,25 @@ Quick access to recently updated documentation. Changes listed in reverse chrono
 
 ### 2025-10-09
 
+#### MEMO-005: Client Protocol Design Philosophy - Composition vs Use-Case Specificity (NEW)
+**Link**: [MEMO-005](/memos/MEMO-005-client-protocol-design-philosophy)
+
+**Summary**: Comprehensive memo resolving the architectural tension between composable primitives (RFC-014) and use-case-specific protocols (RFC-017), covering:
+- Context comparison: RFC-014 composable primitives vs RFC-017 use-case patterns
+- Four design principles (push complexity down, developer comprehension, schema evolution, keep proxy small)
+- Proposed layered API architecture: Layer 1 (generic primitives) + Layer 2 (use-case patterns)
+- Pattern coordinators as plugins (not core proxy) for independent evolution
+- Configuration examples showing per-namespace choice of primitives vs patterns
+- Decision matrix comparing primitives-only, patterns-only, and layered approaches
+- Implementation roadmap aligned with RFC-018 POCs
+- Success metrics for developer experience, system complexity, and pattern adoption
+
+**Key Innovation**: Applications choose per-namespace between Layer 1 (generic KeyValue, PubSub) for maximum control or Layer 2 (ergonomic Multicast Registry, Saga) for rapid development. Pattern coordinators are optional plugins that compose Layer 1 primitives, keeping core proxy small (~10k LOC) while providing self-documenting APIs for common use cases.
+
+**Impact**: Resolves "composition vs use-case" design question with both layers, addressing developer simplicity (Layer 2), proxy size (plugins), and flexibility (Layer 1).
+
+---
+
 #### MEMO-003: Documentation-First Development Approach (NEW)
 **Link**: [MEMO-003](/memos/MEMO-003-documentation-first-development)
 
