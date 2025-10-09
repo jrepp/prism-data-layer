@@ -93,7 +93,7 @@ Dedicated backend clusters per shard:
 |-----------|-----------|---------|
 | **Product** | Different products have different scale/SLAs | Playback (low latency) vs Analytics (high throughput) |
 | **Feature** | Experimental features shouldn't affect stable | Canary testing new cache strategy |
-| **SLA Tier** | Different availability/latency requirements | P99 <10ms vs P99 <100ms |
+| **SLA Tier** | Different availability/latency requirements | P99 &lt;10ms vs P99 &lt;100ms |
 | **Region** | Regulatory/latency requirements | US-West vs EU (GDPR) |
 | **Environment** | Dev/staging/prod isolation | Prevents test traffic affecting prod |
 
@@ -101,12 +101,12 @@ Dedicated backend clusters per shard:
 
 **Shard proactively when**:
 - Traffic exceeds 10K RPS for a single namespace
-- P99 latency SLA is <50ms (needs dedicated resources)
+- P99 latency SLA is &lt;50ms (needs dedicated resources)
 - Product has distinct backend requirements (different databases)
 - Regulatory isolation required (GDPR, HIPAA)
 
 **Delay sharding when**:
-- Total traffic <1K RPS across all namespaces
+- Total traffic &lt;1K RPS across all namespaces
 - Products have similar SLAs and resource profiles
 - Operational overhead of managing multiple instances outweighs benefits
 

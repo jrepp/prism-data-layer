@@ -38,7 +38,7 @@ namespaces:
 
 ### Requirements
 
-- **Fast reads**: Lookup namespace config in <1ms
+- **Fast reads**: Lookup namespace config in &lt;1ms
 - **Transactional writes**: Atomic updates prevent corruption
 - **Query support**: Filter by backend, tags, status, etc.
 - **Version history**: Track config changes over time
@@ -221,8 +221,8 @@ impl ConfigStore {
 - Zero operational overhead
 
 **Performance**:
-- Reads: <0.1ms for indexed queries
-- Writes: <1ms with WAL mode
+- Reads: &lt;0.1ms for indexed queries
+- Writes: &lt;1ms with WAL mode
 - Concurrent reads: unlimited (with WAL mode)
 - File size: ~10KB per namespace (1000 namespaces = 10MB)
 
@@ -291,7 +291,7 @@ impl ConfigStore {
 
 ### Positive
 
-- **Fast lookups**: O(log n) index scans, <1ms latency
+- **Fast lookups**: O(log n) index scans, &lt;1ms latency
 - **Atomic updates**: Transactions prevent config corruption
 - **Rich queries**: SQL enables filtering, aggregation, joins
 - **Audit trail**: History table tracks all changes

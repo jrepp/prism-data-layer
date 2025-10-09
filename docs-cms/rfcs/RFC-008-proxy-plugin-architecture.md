@@ -344,7 +344,7 @@ pub async fn handle_get(&self, req: &ExecuteRequest) -> Result<ExecuteResponse> 
 - In-process plugin: ~0.1ms overhead vs direct backend call
 - Sidecar plugin (Unix socket): ~1-2ms overhead
 - Remote plugin (gRPC/mTLS): ~5-10ms overhead
-- Zero-copy path (>1MB payloads): Negligible overhead regardless of size
+- Zero-copy path (&gt;1MB payloads): Negligible overhead regardless of size
 
 ### When Zero-Copy Matters
 
@@ -355,7 +355,7 @@ pub async fn handle_get(&self, req: &ExecuteRequest) -> Result<ExecuteResponse> 
 - Batch operations: Multi-get, bulk inserts
 
 **Low-value use cases** (protobuf Any is fine):
-- KeyValue operations: Small keys/values (<10KB)
+- KeyValue operations: Small keys/values (&lt;10KB)
 - Session management: Session tokens, metadata
 - Configuration updates: Namespace settings
 
