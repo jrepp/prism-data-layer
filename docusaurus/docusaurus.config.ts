@@ -144,7 +144,7 @@ const config: Config = {
       title: 'Prism',
       logo: {
         alt: 'Prism Data Gateway Logo',
-        src: 'img/prism-logo.png',
+        src: 'img/prism-logo-transparent.png',
       },
       items: navItems,
     },
