@@ -16,6 +16,27 @@ This RFC documents high-level distributed reliability patterns that push complex
 
 ---
 
+## Implementation Priority
+
+Patterns are ordered by complexity and value. Prism will implement in this order:
+
+| Priority | Pattern | Complexity | Value | Status |
+|----------|---------|------------|-------|--------|
+| **P0** | Claim Check | Low | High | Planned for Phase 1 |
+| **P0** | Outbox | Low | High | Planned for Phase 1 |
+| **P1** | Write-Ahead Log | Medium | High | Planned for Phase 2 |
+| **P1** | Tiered Storage | Medium | Medium | Planned for Phase 2 |
+| **P1** | CDC | Medium | High | Planned for Phase 2 |
+| **P2** | Event Sourcing | High | Medium | Planned for Phase 3 |
+| **P2** | CQRS | High | Medium | Planned for Phase 3 |
+
+**Complexity ratings**:
+- **Low**: Single-backend or simple orchestration, &lt;1 week implementation
+- **Medium**: Multi-backend coordination, background workers, 2-4 weeks implementation
+- **High**: Complex state management, multiple projections, 4-8 weeks implementation
+
+---
+
 ## Pattern Catalog
 
 ### 1. Tiered Storage Pattern
@@ -57,7 +78,12 @@ This RFC documents high-level distributed reliability patterns that push complex
 namespaces:
   - name: user-activity-logs
     pattern: tiered-storage
-    backend: multi
+
+    # Reference store tracks which tier holds each key
+    reference_store:
+      backend: postgres
+      table: tier_metadata
+      # Schema: (key, tier, last_access, access_count, size)
 
     tiers:
       hot:
@@ -121,6 +147,8 @@ let log = client.get("user-activity-logs", "user:12345:2025-01-15").await?;
 
 **Solution**: Write to fast, durable append-only log first; apply to database asynchronously.
 
+**CRITICAL**: WAL requires a **durable** queue backend (Kafka, NATS JetStream). Basic NATS (in-memory) is NOT sufficient for WAL patterns as it doesn't provide durability guarantees.
+
 #### Architecture
 
 ```
@@ -156,14 +184,27 @@ namespaces:
     backend: postgres
 
     wal:
-      backend: kafka
+      backend: kafka  # or nats-jetstream (MUST be durable!)
       topic: order-wal
       retention: 604800  # 7 days
+      replication: 3  # Durability: survive 2 broker failures
 
       # Apply strategy
       apply_mode: async  # or sync, hybrid
       batch_size: 1000
       batch_timeout: 100ms
+
+      # Consumer-style compute (replay, compaction, transformations)
+      consumers:
+        - name: db-applier
+          type: database_writer
+          backend: postgres
+          parallelism: 4
+
+        - name: compactor
+          type: log_compactor
+          strategy: keep_latest  # For key-value style data
+          interval: 3600s  # Compact hourly
 
       # Crash recovery
       checkpoint_interval: 60s
@@ -856,6 +897,191 @@ tx.commit().await?;
 | **CDC** | Sync database to cache/search/warehouse | Postgres + Kafka → (Redis/ES/ClickHouse) | Medium |
 | **CQRS** | Different read/write scaling needs | Postgres + Elasticsearch | High |
 | **Outbox** | Transactional messaging | Postgres + Kafka | Low |
+
+---
+
+## Pattern Composition and Layering
+
+**Key Insight**: Patterns can be **layered together** to create powerful distributed systems. Prism supports composing multiple patterns in a single namespace.
+
+### Common Pattern Combinations
+
+#### 1. Claim Check + Pub/Sub Queue
+
+**Use Case**: Video processing pipeline where videos are too large for Kafka, but you want pub/sub semantics.
+
+```yaml
+namespaces:
+  - name: video-processing
+    patterns:
+      - claim-check   # Layer 1: Handle large payloads
+      - pub-sub       # Layer 2: Multiple consumers
+
+    backend: kafka
+
+    claim_check:
+      threshold: 1MB
+      storage:
+        backend: s3
+        bucket: video-processing
+      # Claim check field is automatically injected
+      claim_check_field: "s3_reference"
+
+    pub_sub:
+      consumer_groups:
+        - name: thumbnail-generator
+        - name: transcoder
+        - name: metadata-extractor
+```
+
+**How it works**:
+1. Producer publishes large video (50MB)
+2. Prism stores video in S3, generates `claim_check_id`
+3. Prism publishes lightweight message to Kafka: `{video_id: "abc", s3_reference: "s3://..."}`
+4. All consumer groups receive message with S3 reference
+5. Each consumer fetches video from S3 independently
+
+#### 2. Outbox + Claim Check
+
+**Use Case**: Transactionally publish large payloads (e.g., ML model weights after training).
+
+```yaml
+namespaces:
+  - name: ml-model-releases
+    patterns:
+      - outbox       # Layer 1: Transactional guarantees
+      - claim-check  # Layer 2: Handle large model files
+
+    database:
+      backend: postgres
+
+    outbox:
+      table: model_outbox
+
+    claim_check:
+      threshold: 10MB
+      storage:
+        backend: s3
+        bucket: ml-models
+      claim_check_field: "model_s3_path"
+
+    publisher:
+      destination:
+        backend: kafka
+        topic: model-releases
+```
+
+**How it works**:
+1. Application saves model metadata + model weights to outbox table (single transaction)
+2. Outbox publisher polls for new entries
+3. For each entry, Prism checks if payload &gt; 10MB
+4. If yes, stores model weights in S3, updates outbox entry with S3 path
+5. Publishes Kafka event with S3 reference
+6. Consumers receive lightweight event, fetch model from S3
+
+#### 3. WAL + Tiered Storage
+
+**Use Case**: High-throughput writes with automatic hot/warm/cold tiering.
+
+```yaml
+namespaces:
+  - name: user-activity
+    patterns:
+      - write-ahead-log  # Layer 1: Fast, durable writes
+      - tiered-storage   # Layer 2: Cost-optimized storage
+
+    wal:
+      backend: kafka
+      topic: activity-wal
+      consumers:
+        - name: tier-applier
+          type: tiered_storage_writer
+
+    reference_store:
+      backend: postgres
+      table: activity_tiers
+
+    tiers:
+      hot:
+        backend: redis
+        ttl: 86400
+      warm:
+        backend: postgres
+        ttl: 2592000
+      cold:
+        backend: s3
+```
+
+**How it works**:
+1. Application writes activity log (fast Kafka append)
+2. WAL consumer reads from Kafka
+3. Based on data freshness, writes to appropriate tier (hot = Redis)
+4. Background tier migration moves data: hot → warm → cold
+5. Reads check reference store to find current tier
+
+#### 4. CDC + CQRS
+
+**Use Case**: Keep read models in sync with write model using change data capture.
+
+```yaml
+namespaces:
+  - name: product-catalog
+    patterns:
+      - cqrs  # Layer 1: Separate read/write models
+      - cdc   # Layer 2: Automatic sync via database WAL
+
+    write_model:
+      backend: postgres
+      tables: [products, categories]
+
+    cdc:
+      source:
+        backend: postgres
+        tables: [products, categories]
+      sink:
+        backend: kafka
+        topic_prefix: product-cdc
+
+    read_models:
+      - name: product-search
+        backend: elasticsearch
+        sync_from: product-cdc.products
+
+      - name: product-cache
+        backend: redis
+        sync_from: product-cdc.products
+```
+
+**How it works**:
+1. Application writes to Postgres (write model)
+2. CDC captures changes from Postgres WAL
+3. Publishes changes to Kafka topics
+4. Read models (Elasticsearch, Redis) consume from Kafka
+5. Each read model stays in sync automatically
+
+### Pattern Layering Guidelines
+
+**When to layer patterns:**
+- ✅ Patterns address different concerns (e.g., Claim Check = payload size, Pub/Sub = routing)
+- ✅ Later patterns build on earlier patterns (e.g., Outbox → Claim Check → Kafka)
+- ✅ Combined complexity is manageable (two low-complexity patterns = medium complexity)
+
+**When NOT to layer:**
+- ❌ Patterns conflict (e.g., Event Sourcing + CQRS both define event storage)
+- ❌ Over-engineering (don't layer patterns "just in case")
+- ❌ Combined complexity exceeds team capability
+
+**Pattern Compatibility Matrix:**
+
+| Pattern | Compatible With | Conflicts With |
+|---------|-----------------|----------------|
+| Claim Check | Pub/Sub, Outbox, CDC | - |
+| Outbox | Claim Check, CDC | Event Sourcing |
+| WAL | Tiered Storage, CDC | Event Sourcing |
+| Tiered Storage | WAL, Claim Check | - |
+| CDC | CQRS, Claim Check | - |
+| Event Sourcing | CQRS | Outbox, WAL |
+| CQRS | CDC, Event Sourcing | - |
 
 ---
 
