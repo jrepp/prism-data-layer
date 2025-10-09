@@ -1,3 +1,10 @@
+---
+title: "Netflix Data Gateway: Key Lessons"
+sidebar_label: "Summary"
+sidebar_position: 1
+tags: [netflix, data-gateway, lessons-learned, architecture]
+---
+
 Netflix's experience with its data access layer offers several key lessons, particularly in managing the scale and complexity of a global streaming service:
 1. The Necessity of Abstraction and Simplification:
 Managing Database API Complexity: Directly interacting with various native database APIs (e.g., Cassandra, DynamoDB) becomes challenging as these APIs evolve and introduce breaking changes. A robust data abstraction layer (DAL) is crucial to shield applications from these complexities and ensure stability.

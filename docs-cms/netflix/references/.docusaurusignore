@@ -1,0 +1,2 @@
+# Ignore PDF references in Docusaurus builds
+*.pdf

@@ -1,4 +1,11 @@
-https://netflixtechblog.com/building-a-resilient-data-platform-with-write-ahead-log-at-netflix-127b6712359a
+---
+title: "Netflix Write-Ahead Log (WAL)"
+sidebar_label: "Write-Ahead Log"
+sidebar_position: 5
+tags: [netflix, wal, resilience, durability]
+---
+
+**Source**: [Netflix Tech Blog](https://netflixtechblog.com/building-a-resilient-data-platform-with-write-ahead-log-at-netflix-127b6712359a)
 
 Netflix's Write-Ahead Log (WAL) is a distributed, generic platform built on the Data Gateway framework, designed to ensure durable, ordered, and reliable delivery of data mutations. It acts as a resilient buffer between a client application and a target datastore, absorbing and replaying data changes to protect against downstream failures and system inconsistencies. Unlike a traditional database WAL, Netflix's version is an abstracted, pluggable service that decouples the application from the underlying queueing and storage technologies. 
 Building a Resilient Data Platform with Write-Ahead Log at ...

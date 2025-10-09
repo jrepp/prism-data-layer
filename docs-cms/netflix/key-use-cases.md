@@ -1,3 +1,10 @@
+---
+title: "Netflix Data Gateway Use Cases"
+sidebar_label: "Use Cases"
+sidebar_position: 4
+tags: [netflix, use-cases, applications]
+---
+
 That's a very insightful observation, and it's mostly correct, but with an important distinction: Key-Value (KV) is the most prominent and mature abstraction built on the Data Gateway platform, but it is not the only one. The Data Gateway is a broader platform that enables the creation of various data abstraction layers to serve different use cases. 
 Here is a breakdown of the distinction:
 Data Gateway (The Platform): This is the underlying infrastructure that provides essential services for deploying and managing the data tier. It handles critical functions like protecting backend data stores, configuring data access, and ensuring secure communication.

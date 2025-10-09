@@ -1,3 +1,10 @@
+---
+title: "Netflix Data Abstractions"
+sidebar_label: "Abstractions"
+sidebar_position: 3
+tags: [netflix, abstractions, key-value, timeseries, counter, wal]
+---
+
 Besides Key-Value (KV) and TimeSeries, Netflix has built several other abstractions on its Data Gateway platform, including a Distributed Counter and a Write-Ahead Log (WAL). This highlights the platform's versatility, allowing for different data access patterns beyond the two most commonly cited examples. 
 Distributed Counter Abstraction
 The Distributed Counter Abstraction is a specialized service built on the Data Gateway to handle counting immutable events at a massive scale. 

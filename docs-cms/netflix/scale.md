@@ -1,3 +1,10 @@
+---
+title: "Netflix Data Gateway Scale Metrics"
+sidebar_label: "Scale"
+sidebar_position: 2
+tags: [netflix, scale, performance, metrics]
+---
+
 Netflix's Data Gateway approach has enabled the company to achieve massive scale across a number of dimensions, supporting a global user base and billions of requests daily. It is a critical component of Netflix's microservice infrastructure, providing abstractions that manage the complexity and performance of multiple data stores. 
 Here are some key indicators of the scale achieved:
 Traffic and throughput

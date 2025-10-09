@@ -1,3 +1,10 @@
+---
+title: "Schema Evolution & Data Migrations"
+sidebar_label: "Schema Evolution"
+sidebar_position: 6
+tags: [netflix, migration, schema, evolution]
+---
+
 Netflix's Data Gateway and the broader data platform handle schema evolution and data migrations by embracing abstraction, automation, and a schema-first, federated approach. The core principle is to manage these complex processes at the platform level, isolating application developers from the underlying database mechanics and changes. 
 Schema evolution at the application layer
 The Data Gateway provides a stable, versioned API contract to application developers, which decouples them from changes in the underlying database schemas.

@@ -1,3 +1,10 @@
+---
+title: "Dual-Write Migration Pattern"
+sidebar_label: "Dual-Write Migration"
+sidebar_position: 7
+tags: [netflix, migration, dual-write, cassandra]
+---
+
 An excellent example of the dual-write pattern is Netflix's migration of its invoicing data from a legacy MySQL database to a new Apache Cassandra instance. The Data Gateway played a central role in abstracting this process from the application services, allowing for a seamless, low-downtime transition. 
 The migration problem
 Netflix needed to migrate a large and high-change-rate invoicing dataset from its legacy MySQL database to a Cassandra instance. The main challenge was to perform this migration without disrupting customer access to their billing history. 

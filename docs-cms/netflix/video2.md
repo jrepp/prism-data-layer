@@ -1,3 +1,14 @@
+---
+title: "Real-Time Distributed Graph at Netflix (Video)"
+sidebar_label: "Video: Real-Time Graph"
+sidebar_position: 99
+tags: [netflix, video, graph, real-time, kafka, flink]
+---
+
+:::warning
+This is a summary and transcript from a conference talk.
+:::
+
 The video explains how Netflix built its Real-Time Distributed Graph (RDG) to handle the increasing complexity of its business, which now includes gaming, ad-supported plans, and live events, beyond its traditional streaming service.
 
 The RDG aims to:

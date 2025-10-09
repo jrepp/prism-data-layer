@@ -1,3 +1,14 @@
+---
+title: "Data Abstractions at Scale (Video Transcript)"
+sidebar_label: "Video: Data Abstractions"
+sidebar_position: 98
+tags: [netflix, video, transcript, abstractions]
+---
+
+:::warning
+This is a raw transcript from a conference talk. Content may be unformatted.
+:::
+
 This video explains how Netflix uses data abstraction layers to efficiently scale its applications and manage vast amounts of data across various use cases.
 
 The speaker, Vidya Arind, a staff engineer at Netflix, discusses:
