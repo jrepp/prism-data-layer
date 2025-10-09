@@ -358,7 +358,7 @@ prism-cli namespace delete json-test --force
 
 ### Test Categories
 
-1. **Smoke Tests** (Fast, <1s total)
+1. **Smoke Tests** (Fast, &lt;1s total)
    - `prism-cli --help`
    - `prism-cli --version`
    - Basic command validation

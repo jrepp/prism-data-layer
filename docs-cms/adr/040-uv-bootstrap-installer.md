@@ -528,7 +528,7 @@ curl -sSL https://raw.githubusercontent.com/.../install.sh | sh
 uv run --with prism-admin install
 ```
 
-**Result**: Working Prism environment in <2 minutes
+**Result**: Working Prism environment in &lt;2 minutes
 
 ### 2. Workshop / Demo
 

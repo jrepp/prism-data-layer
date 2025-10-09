@@ -3,43 +3,34 @@
  * This file serves as the single source of truth for all navigation items.
  */
 
-export interface NavItem {
-  to?: string;
-  href?: string;
-  label: string;
-  position: 'left' | 'right';
-  type?: string;
-  sidebarId?: string;
-}
-
 /**
  * Main navigation items for the navbar
  */
-export const navItems: NavItem[] = [
+export const navItems = [
   {
     to: '/docs/intro',
     label: 'Overview',
-    position: 'left',
+    position: 'left' as const,
   },
   {
     to: '/adr',
     label: 'ADRs',
-    position: 'left',
+    position: 'left' as const,
   },
   {
     to: '/rfc',
     label: 'RFCs',
-    position: 'left',
+    position: 'left' as const,
   },
   {
     to: '/memos',
     label: 'Memos',
-    position: 'left',
+    position: 'left' as const,
   },
   {
     href: 'https://github.com/jrepp/prism-data-layer',
     label: 'GitHub',
-    position: 'right',
+    position: 'right' as const,
   },
 ];
 
