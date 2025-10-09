@@ -2,6 +2,37 @@
 
 This file provides guidance to Claude Code when working with the Prism data access gateway.
 
+---
+
+## 🚨 CRITICAL REQUIREMENT: Documentation Validation 🚨
+
+**MANDATORY BEFORE ANY DOCUMENTATION PUSH OR COMMIT**
+
+```bash
+# THIS IS A BLOCKING REQUIREMENT - NEVER SKIP
+python3 tooling/validate_docs.py
+```
+
+**YOU MUST**:
+1. ✅ Run `python3 tooling/validate_docs.py` BEFORE committing documentation changes
+2. ✅ Fix ALL errors reported by validation
+3. ✅ Ensure validation passes with "SUCCESS" message
+4. ❌ NEVER commit/push documentation if validation fails
+5. ❌ NEVER skip validation "to save time" or "fix later"
+
+**Why this is non-negotiable**:
+- MDX compilation errors break GitHub Pages builds
+- Broken links create 404s for users
+- Unescaped `<` and `>` characters cause build failures
+- Pushing broken docs wastes CI/CD resources and delays deployment
+
+**If validation fails**:
+- Fix errors immediately
+- Re-run validation until it passes
+- Only then proceed with git commit/push
+
+---
+
 ## Project Purpose
 
 Prism is a high-performance data access layer gateway that sits between applications and heterogeneous data backends. Inspired by Netflix's Data Gateway but designed for superior performance and developer experience.
@@ -161,28 +192,34 @@ python -m tooling.deploy --env staging
 
 ### Documentation Tools
 
-**⚠️ CRITICAL WORKFLOW: Always run validation before pushing documentation!**
+**⚠️ CRITICAL WORKFLOW: Documentation Validation is MANDATORY**
+
+See the [CRITICAL REQUIREMENT section at the top of this file](#-critical-requirement-documentation-validation-) for full details.
 
 ```bash
-# REQUIRED before pushing documentation changes
-uv run tooling/validate_docs.py
+# 🚨 BLOCKING REQUIREMENT - Run before committing documentation
+python3 tooling/validate_docs.py
 
-# Quick check during development (skip slow build)
-uv run tooling/validate_docs.py --skip-build
+# Development iteration (faster, skip build)
+python3 tooling/validate_docs.py --skip-build
 
-# Verbose output for debugging
-uv run tooling/validate_docs.py --verbose
+# Verbose debugging
+python3 tooling/validate_docs.py --verbose
 ```
 
 **What validation checks**:
-- ✓ YAML frontmatter (required fields)
-- ✓ Internal/external links
-- ✓ MDX syntax compatibility (catches `<` and `>` issues)
-- ✓ Cross-plugin link problems
-- ✓ TypeScript compilation
-- ✓ Full Docusaurus build
+- ✓ YAML frontmatter (required fields: title, status, date, tags)
+- ✓ Internal/external links (no 404s)
+- ✓ MDX syntax compatibility (catches `<` and `>` issues that break builds)
+- ✓ Cross-plugin link problems (relative paths across plugins don't work)
+- ✓ TypeScript compilation (docusaurus config)
+- ✓ Full Docusaurus build (ensures GitHub Pages will succeed)
 
-**Why this matters**: MDX compilation errors and broken links will break the GitHub Pages deployment. Running validation locally catches these issues before they reach CI/CD.
+**REMEMBER**:
+- ❌ NEVER commit documentation without running validation first
+- ❌ NEVER push if validation fails
+- ✅ ALWAYS fix errors before proceeding
+- ✅ ALWAYS verify "SUCCESS" message before git commit
 
 **Other documentation tools**:
 ```bash
