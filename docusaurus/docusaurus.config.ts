@@ -70,10 +70,13 @@ const config: Config = {
       'classic',
       {
         docs: {
+          path: '../docs-cms',
           sidebarPath: './sidebars.ts',
-          // Use internal docs folder for general documentation
+          // Use docs-cms as centralized documentation source
+          // Exclude subdirectories that have their own plugins
+          exclude: ['**/adr/**', '**/rfcs/**', '**/memos/**', '**/netflix/**'],
           routeBasePath: 'docs',
-          editUrl: 'https://github.com/jrepp/prism-data-layer/tree/main/docusaurus/',
+          editUrl: 'https://github.com/jrepp/prism-data-layer/tree/main/docs-cms/',
         },
         blog: false, // Disable blog
         theme: {

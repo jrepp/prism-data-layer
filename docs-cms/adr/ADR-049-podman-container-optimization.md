@@ -598,7 +598,7 @@ go test -v ./...
 
 - [ADR-004: Local-First Testing](./ADR-004-local-first-testing.md) - Testing philosophy
 - [ADR-026: Distroless Container Images](./ADR-026-distroless-container-images.md) - Container security
-- [MEMO-004: Backend Plugin Implementation Guide](../memos/MEMO-004-backend-plugin-implementation-guide.md) - MemStore for instant testing
+- [MEMO-004: Backend Plugin Implementation Guide](/memos/MEMO-004-backend-plugin-implementation-guide) - MemStore for instant testing
 
 ## References
 

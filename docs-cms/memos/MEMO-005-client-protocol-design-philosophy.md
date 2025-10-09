@@ -486,10 +486,10 @@ coordinator_plugin: prism-multicast-registry:v1.2.0
 
 ## Related Documents
 
-- [RFC-014: Layered Data Access Patterns](../rfcs/RFC-014-layered-data-access-patterns.md) - Layer 1 primitives
-- [RFC-017: Multicast Registry Pattern](../rfcs/RFC-017-multicast-registry-pattern.md) - First Layer 2 pattern
-- [RFC-018: POC Implementation Strategy](../rfcs/RFC-018-poc-implementation-strategy.md) - Phased rollout plan
-- [RFC-008: Proxy Plugin Architecture](../rfcs/RFC-008-proxy-plugin-architecture.md) - Plugin system
+- [RFC-014: Layered Data Access Patterns](/rfc/RFC-014-layered-data-access-patterns) - Layer 1 primitives
+- [RFC-017: Multicast Registry Pattern](/rfc/RFC-017-multicast-registry-pattern) - First Layer 2 pattern
+- [RFC-018: POC Implementation Strategy](/rfc/RFC-018-poc-implementation-strategy) - Phased rollout plan
+- [RFC-008: Proxy Plugin Architecture](/rfc/RFC-008-proxy-plugin-architecture) - Plugin system
 
 ## Revision History
 

@@ -457,8 +457,8 @@ docker-compose -f docker-compose.signoz.yml up -d
 
 - [ADR-047: OpenTelemetry Tracing Integration](./ADR-047-opentelemetry-tracing-integration.md)
 - [ADR-046: Dex IDP for Local Identity Testing](./ADR-046-dex-idp-local-testing.md)
-- [RFC-016: Local Development Infrastructure](../rfcs/RFC-016-local-development-infrastructure.md) (this ADR's implementation guide)
-- [RFC-008: Proxy Plugin Architecture](../rfcs/RFC-008-proxy-plugin-architecture.md) (instrumentation points)
+- [RFC-016: Local Development Infrastructure](/rfc/RFC-016-local-development-infrastructure) (this ADR's implementation guide)
+- [RFC-008: Proxy Plugin Architecture](/rfc/RFC-008-proxy-plugin-architecture) (instrumentation points)
 
 ## References
 

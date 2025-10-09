@@ -945,8 +945,8 @@ pytest tests/poc1/test_keyvalue.py
 - [RFC-015: Plugin Acceptance Test Framework](./RFC-015-plugin-acceptance-test-framework.md) - Testing
 - [RFC-016: Local Development Infrastructure](./RFC-016-local-development-infrastructure.md) - Dev setup
 - [RFC-017: Multicast Registry Pattern](./RFC-017-multicast-registry-pattern.md) - POC 4 spec
-- [MEMO-004: Backend Plugin Implementation Guide](../memos/MEMO-004-backend-plugin-implementation-guide.md) - Backend priorities
-- [ADR-049: Podman and Container Optimization](../adr/ADR-049-podman-container-optimization.md) - Testing strategy
+- [MEMO-004: Backend Plugin Implementation Guide](/memos/MEMO-004-backend-plugin-implementation-guide) - Backend priorities
+- [ADR-049: Podman and Container Optimization](/adr/ADR-049-podman-container-optimization) - Testing strategy
 
 ## References
 
