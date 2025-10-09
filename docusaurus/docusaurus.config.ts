@@ -1,6 +1,7 @@
 import {themes as prismThemes} from 'prism-react-renderer';
 import type {Config} from '@docusaurus/types';
 import type * as Preset from '@docusaurus/preset-classic';
+import {navItems, footerLinks} from './navigation.config';
 
 // This runs in Node.js - Don't use client-side code here (browser APIs, JSX...)
 
@@ -88,6 +89,16 @@ const config: Config = {
         editUrl: 'https://github.com/jrepp/prism-data-layer/tree/main/docs-cms/',
       },
     ],
+    [
+      '@docusaurus/plugin-content-docs',
+      {
+        id: 'netflix',
+        path: '../docs-cms/netflix',
+        routeBasePath: 'netflix',
+        sidebarPath: './sidebars-netflix.ts',
+        editUrl: 'https://github.com/jrepp/prism-data-layer/tree/main/docs-cms/',
+      },
+    ],
   ],
 
   themes: [
@@ -135,69 +146,11 @@ const config: Config = {
         alt: 'Prism Logo',
         src: 'img/logo.svg',
       },
-      items: [
-        {
-          type: 'docSidebar',
-          sidebarId: 'tutorialSidebar',
-          position: 'left',
-          label: 'Overview',
-        },
-        {
-          to: '/adr',
-          label: 'ADRs',
-          position: 'left',
-        },
-        {
-          to: '/rfc',
-          label: 'RFCs',
-          position: 'left',
-        },
-        {
-          to: '/memos',
-          label: 'Memos',
-          position: 'left',
-        },
-        {
-          href: 'https://github.com/jrepp/prism-data-layer',
-          label: 'GitHub',
-          position: 'right',
-        },
-      ],
+      items: navItems,
     },
     footer: {
       style: 'dark',
-      links: [
-        {
-          title: 'Documentation',
-          items: [
-            {
-              label: 'Overview',
-              to: '/docs/intro',
-            },
-            {
-              label: 'ADRs',
-              to: '/adr',
-            },
-            {
-              label: 'RFCs',
-              to: '/rfc',
-            },
-            {
-              label: 'Memos',
-              to: '/memos',
-            },
-          ],
-        },
-        {
-          title: 'Project',
-          items: [
-            {
-              label: 'GitHub',
-              href: 'https://github.com/jrepp/prism-data-layer',
-            },
-          ],
-        },
-      ],
+      links: footerLinks,
       copyright: `Copyright © ${new Date().getFullYear()} Prism. Built with Docusaurus.`,
     },
     prism: {

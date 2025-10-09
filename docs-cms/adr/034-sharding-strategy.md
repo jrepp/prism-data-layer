@@ -288,8 +288,8 @@ spec:
 
 ## References
 
-- [Netflix Data Gateway Scale](../netflix/scale.md) - 8M QPS, 3500+ use cases
-- [Netflix Multi-Region Deployment](../netflix/key-use-cases.md)
+- [Netflix Data Gateway Scale](/prism-data-layer/netflix/scale) - 8M QPS, 3500+ use cases
+- [Netflix Multi-Region Deployment](/prism-data-layer/netflix/key-use-cases)
 - ADR-033: Capability API (shard discovery)
 - ADR-037: Kubernetes Operator (shard management automation)
 - RFC-008: Proxy Plugin Architecture (backend isolation per shard)
