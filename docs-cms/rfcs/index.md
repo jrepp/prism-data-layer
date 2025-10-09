@@ -97,6 +97,15 @@ RFCs serve to:
 
 ---
 
+### RFC-009: Distributed Reliability Data Patterns
+
+**Status**: Proposed
+**Summary**: High-level distributed reliability patterns that push complexity into the data access layer: Tiered Storage, Write-Ahead Log, Claim Check, Event Sourcing, Change Data Capture, CQRS, and Outbox patterns for building scalable, fault-tolerant systems.
+
+[Read RFC-009 →](./RFC-009-distributed-reliability-patterns.md)
+
+---
+
 ## Writing RFCs
 
 RFCs should include:
