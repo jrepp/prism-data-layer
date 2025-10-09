@@ -62,53 +62,143 @@ Modern distributed applications require complex reliability patterns, but implem
 
 This section shows **how application owners request high-level patterns** without needing to understand internal implementation. Each pattern maps to common application problems.
 
-### Pattern 1: High-Throughput Event Logging (WAL)
+### Pattern 1: Durable Operation Log (WAL - Write-Ahead Log)
 
 **Application Problem:**
-You need to log millions of events per second (analytics, telemetry, audit logs) with minimal latency. Traditional message queues become bottlenecks.
+You need **guaranteed durability** for operations - write operations must be persisted to disk before being acknowledged, and consumers must reliably process and acknowledge each operation. This is critical for financial transactions, order processing, audit logs, or any scenario where **operations cannot be lost**.
 
 **What You Get:**
-- Sub-millisecond write latency (append-only log)
-- High throughput (100k+ events/sec per connection)
-- Automatic tiered storage (hot → warm → cold)
-- Queryable history via time-range queries
+- **Durability guarantee**: Operations persisted to disk before acknowledgment
+- **Reliable consumption**: Consumers must explicitly acknowledge each operation
+- **Crash recovery**: Operations survive proxy/consumer crashes
+- **Replay capability**: Re-process operations from any point in the log
+- **Ordered processing**: Operations processed in write order
+
+**Why WAL is Critical for Reliability:**
+
+```mermaid
+sequenceDiagram
+    participant App as Application
+    participant Proxy as Prism Proxy
+    participant WAL as WAL (Disk)
+    participant Consumer as Consumer
+    participant Backend as Backend (Kafka)
+
+    Note over App,Backend: Write Path (Durability)
+    App->>Proxy: Publish operation
+    Proxy->>WAL: 1. Append to WAL (fsync)
+    WAL-->>Proxy: 2. Persisted to disk
+    Proxy-->>App: 3. Acknowledge (operation durable)
+
+    Note over Proxy,Backend: Async flush to backend
+    Proxy->>Backend: 4. Flush WAL → Kafka
+    Backend-->>Proxy: 5. Kafka acknowledged
+
+    Note over Consumer,Backend: Read Path (Reliable Consumption)
+    Consumer->>Backend: 6. Consume from Kafka
+    Backend-->>Consumer: 7. Operation data
+    Consumer->>Consumer: 8. Process operation
+    Consumer->>Backend: 9. Acknowledge (committed offset)
+
+    Note over App,Backend: Crash Recovery
+    Proxy->>WAL: On restart: Read uncommitted WAL entries
+    Proxy->>Backend: Replay to backend
+```
 
 **Client Configuration:**
 ```yaml
-# Simply declare your data access pattern
+# Declare what you need - Prism handles the rest
 namespaces:
-  - name: analytics-events
-    api: publisher  # High-throughput writes
+  - name: order-processing
+    pattern: durable-queue      # What pattern you need
 
-    # Prism automatically provisions WAL pattern
-    requirements:
-      write_rps: 100000         # → Prism adds WAL
-      retention: 90days         # → Prism adds Tiered Storage
-      query_by: timestamp       # → Prism adds time-range indexing
+    # Tell Prism what guarantees you need
+    needs:
+      durability: strong        # → Prism adds WAL with fsync
+      replay: enabled           # → Prism keeps committed log for replay
+      retention: 30days         # → Prism retains WAL for 30 days
+      ordered: true             # → Prism guarantees order
 ```
 
-**Client Code:**
+**Client Code (Producer):**
 ```python
-# Application just publishes - Prism handles WAL internally
-for event in event_stream:
-    client.publish("analytics", event)
-    # Prism: Appends to WAL, returns immediately
-    # Background: WAL flusher writes to Kafka
-    # Background: Tiered storage moves old data to S3
+# Application publishes operation - Prism ensures durability
+order = {"order_id": 12345, "amount": 99.99, "status": "pending"}
+
+# Operation is persisted to WAL BEFORE acknowledgment
+response = client.publish("orders", order)
+# At this point:
+#   ✓ Operation written to disk (survived crash)
+#   ✓ Will be delivered to consumers
+#   ✓ Can be replayed if needed
+
+print("Order persisted:", response.offset)
+```
+
+**Client Code (Consumer):**
+```python
+# Consumer must explicitly acknowledge each operation
+for operation in client.consume("orders"):
+    try:
+        # Process the operation
+        result = process_order(operation.payload)
+
+        # MUST acknowledge after successful processing
+        operation.ack()  # Commits offset, operation won't be redelivered
+
+    except Exception as e:
+        # On failure: don't ack, operation will be retried
+        logging.error(f"Failed to process order: {e}")
+        operation.nack()  # Explicit negative ack (immediate retry)
 ```
 
 **What Happens Internally:**
-1. **Layer 3**: Client calls `publish()`
-2. **Layer 2**: WAL pattern appends to local buffer (fast)
-3. **Layer 2**: Tiered Storage pattern moves old data to S3
-4. **Layer 1**: Background WAL flusher sends to Kafka
+
+1. **Write Path (Producer)**:
+   - **Layer 3**: Client calls `publish()`
+   - **Layer 2**: WAL pattern writes to local append-only log on disk
+   - **Layer 2**: Calls `fsync()` to ensure durability (survives crash)
+   - **Layer 3**: Returns acknowledgment to client
+   - **Background**: WAL flusher asynchronously sends to Kafka
+
+2. **Read Path (Consumer)**:
+   - **Layer 1**: Consumer reads from Kafka
+   - **Layer 2**: WAL pattern tracks consumer position
+   - **Consumer**: Processes operation
+   - **Consumer**: Calls `operation.ack()` to commit progress
+   - **Layer 2**: Updates consumer offset (operation marked consumed)
+
+3. **Crash Recovery**:
+   - **On proxy restart**: Read uncommitted WAL entries from disk
+   - **Layer 2**: Replay uncommitted operations to Kafka
+   - **Guarantee**: Zero lost operations
 
 **Real-World Example:**
 ```
-Problem: Logging 500k user click events/second
-Before Prism: Custom WAL implementation, 2000 LOC
-With Prism: 3 lines of config, 1 line of code
+Problem: E-commerce order processing - cannot lose orders
+Challenge: Proxy crashes between accepting order and publishing to Kafka
+
+Before Prism (without WAL):
+  1. Accept order HTTP request
+  2. Publish to Kafka
+  3. (CRASH HERE) → Order lost forever
+  4. Return 200 OK to customer
+  Result: Customer charged, order never processed
+
+With Prism WAL:
+  1. Accept order HTTP request
+  2. Write to WAL on disk (fsync)
+  3. Return 200 OK to customer (order persisted)
+  4. (CRASH HERE) → WAL entry on disk
+  5. On restart: Replay WAL → Kafka
+  Result: Zero lost orders, customer trust maintained
 ```
+
+**Performance Characteristics:**
+- Write latency: **2-5ms** (includes fsync to disk)
+- Throughput: **10k-50k operations/sec** per proxy instance
+- Durability: **Survives crashes, power loss**
+- Trade-off: Slightly higher latency vs in-memory queue, but **zero data loss**
 
 ### Pattern 2: Large Payload Pub/Sub (Claim Check)
 
@@ -125,9 +215,9 @@ You need to publish large files (videos, ML models, datasets) but message queues
 ```yaml
 namespaces:
   - name: video-processing
-    api: pubsub
+    pattern: pubsub
 
-    requirements:
+    needs:
       max_message_size: 5GB        # → Prism adds Claim Check
       storage_backend: s3          # → Prism configures S3 storage
       cleanup: on_consume          # → Prism auto-deletes after read
@@ -175,9 +265,9 @@ You need guaranteed message delivery when updating database - no lost messages, 
 ```yaml
 namespaces:
   - name: order-processing
-    api: queue
+    pattern: queue
 
-    requirements:
+    needs:
       consistency: strong          # → Prism adds Outbox pattern
       delivery_guarantee: exactly_once
 ```
@@ -227,7 +317,7 @@ You need to stream database changes to other systems (cache, search index, analy
 ```yaml
 namespaces:
   - name: user-profiles
-    api: reader  # Normal database reads/writes
+    pattern: reader  # Normal database reads/writes
 
     # Enable CDC streaming
     cdc:
@@ -291,9 +381,9 @@ You need BOTH transactional guarantees (outbox) AND large payload support (claim
 ```yaml
 namespaces:
   - name: ml-model-releases
-    api: pubsub
+    pattern: pubsub
 
-    requirements:
+    needs:
       consistency: strong           # → Prism adds Outbox
       max_message_size: 5GB        # → Prism adds Claim Check
       delivery_guarantee: exactly_once
@@ -352,7 +442,7 @@ You need fast cached reads but cache must stay fresh when database changes.
 ```yaml
 namespaces:
   - name: product-catalog
-    api: reader
+    pattern: reader
 
     # Enable caching with CDC invalidation
     cache:
@@ -413,7 +503,7 @@ Application owners declare **requirements**, Prism selects **patterns**:
 # Application declares "what" they need
 namespaces:
   - name: video-uploads
-    requirements:
+    needs:
       write_rps: 5000                    # High throughput
       max_message_size: 5GB              # Large payloads
       consistency: strong                # Transactional
@@ -1092,7 +1182,7 @@ Applications declare requirements; Prism selects patterns:
 # Application-facing configuration
 namespaces:
   - name: video-processing
-    requirements:
+    needs:
       message_size: 5GB              # Prism adds Claim Check
       consistency: strong            # Prism adds Outbox
       retention: 30 days             # Prism adds Tiered Storage
