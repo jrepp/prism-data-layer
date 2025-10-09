@@ -1,18 +1,21 @@
 ---
 id: rfc-006
-title: RFC-006 Python Admin CLI
+title: RFC-006 Admin CLI (prismctl)
 sidebar_label: RFC-006 Admin CLI
-status: Draft
+status: Superseded
 ---
 
-# RFC-006: Python Admin CLI
+# RFC-006: Admin CLI (prismctl)
 **Author**: System
 **Created**: 2025-10-08
-**Updated**: 2025-10-08
+**Updated**: 2025-10-09
+**Superseded By**: ADR-040 (Go Binary for Admin CLI)
+
+> **Note**: This RFC originally proposed a Python-based CLI. The implementation has shifted to **Go** for better performance, single-binary distribution, and consistency with backend plugins. See [ADR-040: Go Binary for Admin CLI](../adr/040-go-binary-admin-cli.md) for the accepted implementation approach. The functional specifications below remain valid regardless of implementation language.
 
 ## Abstract
 
-This RFC proposes a comprehensive Python-based command-line interface (CLI) for administering Prism data access gateway. The CLI provides operational visibility, configuration management, and troubleshooting capabilities before building a full web-based admin UI. By delivering CLI-first tooling, we enable automation, scripting, and CI/CD integration while validating the admin API design.
+This RFC proposes a comprehensive command-line interface (CLI) for administering Prism data access gateway, now implemented as **prismctl** (a Go binary). The CLI provides operational visibility, configuration management, and troubleshooting capabilities before building a full web-based admin UI. By delivering CLI-first tooling, we enable automation, scripting, and CI/CD integration while validating the admin API design.
 
 The CLI will interact with Prism's admin gRPC services (RFC-003) to manage namespaces, monitor sessions, inspect backend health, and configure data access patterns across all supported backends (Kafka, NATS, PostgreSQL, Redis, ClickHouse).
 
@@ -57,7 +60,7 @@ The CLI will interact with Prism's admin gRPC services (RFC-003) to manage names
 ```mermaid
 graph TB
     subgraph "Admin CLI"
-        CLI[prism CLI<br/>Click/Typer]
+        CLI[prismctl CLI<br/>Cobra/Viper]
         Formatter[Rich Formatter<br/>Tables/Trees/JSON]
         Client[gRPC Client<br/>Admin Service]
     end
@@ -141,13 +144,13 @@ prism
 
 ```bash
 # Preferred: Declarative mode from config file
-prism namespace create --config namespace.yaml
+prismctl namespace create --config namespace.yaml
 
 # Config file discovery (searches . and parent dirs for .config.yaml)
-prism namespace create my-app  # Uses .config.yaml from current or parent dir
+prismctl namespace create my-app  # Uses .config.yaml from current or parent dir
 
 # Inline configuration (for simple cases or scripting)
-prism namespace create my-app \
+prismctl namespace create my-app \
   --backend postgres \
   --pattern keyvalue \
   --consistency strong \
@@ -171,16 +174,16 @@ Admin endpoint: localhost:50052
 
 ```bash
 # Default table view
-prism namespace list
+prismctl namespace list
 
 # JSON output for scripting
-prism namespace list --output json
+prismctl namespace list --output json
 
 # Filter by backend
-prism namespace list --backend redis
+prismctl namespace list --backend redis
 
 # Show inactive namespaces
-prism namespace list --include-inactive
+prismctl namespace list --include-inactive
 ```
 
 **Output**:
@@ -198,13 +201,13 @@ prism namespace list --include-inactive
 #### Describe Namespace
 
 ```bash
-prism namespace describe my-app
+prismctl namespace describe my-app
 
 # Include recent errors
-prism namespace describe my-app --show-errors
+prismctl namespace describe my-app --show-errors
 
 # Include configuration
-prism namespace describe my-app --show-config
+prismctl namespace describe my-app --show-config
 ```
 
 **Output**:
@@ -242,13 +245,13 @@ Recent Errors (last 10):
 
 ```bash
 # Check all backends
-prism backend health
+prismctl backend health
 
 # Check specific backend
-prism backend health --backend postgres
+prismctl backend health --backend postgres
 
 # Detailed health check with diagnostics
-prism backend health --detailed
+prismctl backend health --detailed
 ```
 
 **Output**:
@@ -285,13 +288,13 @@ Backend Health Status
 
 ```bash
 # Show stats for all backends
-prism backend stats
+prismctl backend stats
 
 # Stats for specific namespace
-prism backend stats --namespace my-app
+prismctl backend stats --namespace my-app
 
 # Export to JSON
-prism backend stats --output json
+prismctl backend stats --output json
 ```
 
 ### Session Management
@@ -300,16 +303,16 @@ prism backend stats --output json
 
 ```bash
 # List all active sessions across all namespaces
-prism session list
+prismctl session list
 
 # Scope to specific namespace (preferred for focused inspection)
-prism session list --namespace my-app
+prismctl session list --namespace my-app
 
 # Scope using config file (.config.yaml must specify namespace)
-prism session list  # Auto-scopes if .config.yaml has namespace set
+prismctl session list  # Auto-scopes if .config.yaml has namespace set
 
 # Show long-running sessions
-prism session list --duration ">1h"
+prismctl session list --duration ">1h"
 ```
 
 **Output**:
@@ -327,13 +330,13 @@ prism session list --duration ">1h"
 
 ```bash
 # Live trace of session requests
-prism session trace sess-abc123
+prismctl session trace sess-abc123
 
 # Trace with filtering
-prism session trace sess-abc123 --min-latency 100ms
+prismctl session trace sess-abc123 --min-latency 100ms
 
 # Export trace to file
-prism session trace sess-abc123 --duration 60s --output trace.json
+prismctl session trace sess-abc123 --duration 60s --output trace.json
 ```
 
 **Output (live streaming)**:
@@ -359,26 +362,26 @@ Statistics:
 
 ```bash
 # Show proxy-wide configuration
-prism config show
+prismctl config show
 
 # Show namespace-specific config (scoped view)
-prism config show --namespace my-app
+prismctl config show --namespace my-app
 
 # Auto-scope using .config.yaml (if namespace specified in config)
-prism config show  # Uses namespace from .config.yaml if present
+prismctl config show  # Uses namespace from .config.yaml if present
 
 # Export configuration
-prism config show --output yaml > prism-config.yaml
+prismctl config show --output yaml > prism-config.yaml
 ```
 
 #### Validate Configuration
 
 ```bash
 # Validate config file before applying
-prism config validate prism-config.yaml
+prismctl config validate prism-config.yaml
 
 # Dry-run mode
-prism config validate prism-config.yaml --dry-run
+prismctl config validate prism-config.yaml --dry-run
 ```
 
 **Output**:
@@ -403,16 +406,16 @@ Safe to apply: Yes (with warnings)
 
 ```bash
 # Overall metrics across all namespaces
-prism metrics summary
+prismctl metrics summary
 
 # Namespace-specific metrics (scoped view)
-prism metrics summary --namespace my-app
+prismctl metrics summary --namespace my-app
 
 # Auto-scope using .config.yaml
-prism metrics summary  # Uses namespace from .config.yaml if present
+prismctl metrics summary  # Uses namespace from .config.yaml if present
 
 # Time range filtering
-prism metrics summary --since "1h ago" --namespace my-app
+prismctl metrics summary --since "1h ago" --namespace my-app
 ```
 
 **Output**:
@@ -446,10 +449,10 @@ Backend Health:
 
 ```bash
 # Prometheus format
-prism metrics export --format prometheus > metrics.prom
+prismctl metrics export --format prometheus > metrics.prom
 
 # JSON format with metadata
-prism metrics export --format json --include-metadata > metrics.json
+prismctl metrics export --format json --include-metadata > metrics.json
 ```
 
 ### Shadow Traffic
@@ -458,13 +461,13 @@ prism metrics export --format json --include-metadata > metrics.json
 
 ```bash
 # Enable shadow traffic for migration
-prism shadow enable my-app \
+prismctl shadow enable my-app \
   --source postgres \
   --target redis \
   --percentage 10
 
 # Gradual rollout
-prism shadow enable my-app \
+prismctl shadow enable my-app \
   --source postgres \
   --target redis \
   --ramp-up "10%,25%,50%,100%" \
@@ -487,14 +490,14 @@ Configuration:
     • 100% at 12:15:00 (+3h)
 
 ✓ Shadow traffic enabled
-  Monitor: prism shadow status my-app
-  Disable: prism shadow disable my-app
+  Monitor: prismctl shadow status my-app
+  Disable: prismctl shadow disable my-app
 ```
 
 #### Shadow Status
 
 ```bash
-prism shadow status my-app
+prismctl shadow status my-app
 ```
 
 **Output**:
@@ -538,14 +541,14 @@ For complete plugin development guide, see [RFC-008: Plugin Development Experien
 
 ```bash
 # List all installed plugins
-prism plugin list
+prismctl plugin list
 
 # Filter by status
-prism plugin list --status enabled
-prism plugin list --status disabled
+prismctl plugin list --status enabled
+prismctl plugin list --status disabled
 
 # Show plugin versions
-prism plugin list --show-versions
+prismctl plugin list --show-versions
 ```
 
 **Output**:
@@ -565,16 +568,16 @@ prism plugin list --show-versions
 
 ```bash
 # Install from registry (default: latest version)
-prism plugin install mongodb
+prismctl plugin install mongodb
 
 # Install specific version
-prism plugin install mongodb --version 1.0.0
+prismctl plugin install mongodb --version 1.0.0
 
 # Install from local path (development)
-prism plugin install --local /path/to/mongodb-plugin.so
+prismctl plugin install --local /path/to/mongodb-plugin.so
 
 # Install with custom config
-prism plugin install mongodb --config plugin-config.yaml
+prismctl plugin install mongodb --config plugin-config.yaml
 ```
 
 **Output**:
@@ -597,13 +600,13 @@ Ready to create namespaces with backend: mongodb
 
 ```bash
 # Update to latest version
-prism plugin update mongodb
+prismctl plugin update mongodb
 
 # Update to specific version
-prism plugin update mongodb --version 1.1.0
+prismctl plugin update mongodb --version 1.1.0
 
 # Dry-run mode (check compatibility without applying)
-prism plugin update mongodb --dry-run
+prismctl plugin update mongodb --dry-run
 ```
 
 **Output (with warnings)**:
@@ -634,13 +637,13 @@ Plugin 'mongodb' updated successfully (1.0.0 → 1.1.0)
 
 ```bash
 # Disable plugin (prevent new namespaces, keep existing running)
-prism plugin disable kafka
+prismctl plugin disable kafka
 
 # Enable previously disabled plugin
-prism plugin enable kafka
+prismctl plugin enable kafka
 
 # Force disable (stop all namespaces using this plugin)
-prism plugin disable kafka --force
+prismctl plugin disable kafka --force
 ```
 
 **Output**:
@@ -662,13 +665,13 @@ Plugin 'kafka' disabled successfully
 
 ```bash
 # View plugin health and detailed metrics
-prism plugin status mongodb
+prismctl plugin status mongodb
 
 # Include recent errors
-prism plugin status mongodb --show-errors
+prismctl plugin status mongodb --show-errors
 
 # Live monitoring mode
-prism plugin status mongodb --watch
+prismctl plugin status mongodb --watch
 ```
 
 **Output**:
@@ -707,13 +710,13 @@ Recent Errors (last 10):
 
 ```bash
 # Reload plugin code without restarting namespaces
-prism plugin reload mongodb
+prismctl plugin reload mongodb
 
 # Reload with validation
-prism plugin reload mongodb --validate
+prismctl plugin reload mongodb --validate
 
 # Reload and tail logs
-prism plugin reload mongodb --tail
+prismctl plugin reload mongodb --tail
 ```
 
 **Output**:
@@ -738,16 +741,16 @@ Reload time: 2.3s (zero downtime)
 
 ```bash
 # View recent logs
-prism plugin logs mongodb
+prismctl plugin logs mongodb
 
 # Follow logs (live tail)
-prism plugin logs mongodb --follow
+prismctl plugin logs mongodb --follow
 
 # Filter by log level
-prism plugin logs mongodb --level error
+prismctl plugin logs mongodb --level error
 
 # Show logs from specific time range
-prism plugin logs mongodb --since "1h ago"
+prismctl plugin logs mongodb --since "1h ago"
 ```
 
 **Output**:
@@ -773,13 +776,13 @@ prism-plugin-init --name mybackend --language rust
 
 # Test plugin locally (without Prism proxy)
 cd mybackend-plugin
-prism plugin test --config test-config.yaml
+prismctl plugin test --config test-config.yaml
 
 # Build and package plugin
-prism plugin build
+prismctl plugin build
 
 # Publish to registry (for distribution)
-prism plugin publish --registry https://plugins.prism.io
+prismctl plugin publish --registry https://plugins.prism.io
 ```
 
 See [RFC-008: Plugin Development Experience](./RFC-008-proxy-plugin-architecture.md#plugin-development-experience) for complete development guide.
@@ -827,48 +830,50 @@ service AdminService {
 
 ## Implementation
 
-### Technology Stack
+> **Note**: The implementation details below were from the original Python proposal. The actual implementation uses **Go** with Cobra/Viper framework. See [ADR-040](../adr/040-go-binary-admin-cli.md) for Go-specific implementation details.
 
-- **CLI Framework**: Click or Typer (Typer preferred for type safety)
-- **gRPC Client**: grpcio + protobuf-generated stubs
-- **Formatting**: Rich (tables, progress bars, colors, trees)
-- **Configuration**: YAML via PyYAML
-- **Testing**: pytest with fixtures for gRPC mocking
-- **Packaging**: Python package with entry point, distributed via uv
+### Technology Stack (Go Implementation - see ADR-040)
 
-### Project Structure
+- **CLI Framework**: Cobra (command structure) + Viper (configuration)
+- **gRPC Client**: google.golang.org/grpc + protobuf-generated stubs
+- **Formatting**: Custom table rendering (or external library like pterm)
+- **Configuration**: YAML via gopkg.in/yaml.v3
+- **Testing**: testscript for acceptance tests (see ADR-039)
+- **Distribution**: Single binary via GitHub releases
+
+### Project Structure (Go Implementation)
 
 ```
-prism-cli/
-├── pyproject.toml           # Package definition
-├── src/
-│   └── prism_cli/
-│       ├── __init__.py
-│       ├── main.py          # CLI entry point
-│       ├── commands/
-│       │   ├── __init__.py
-│       │   ├── namespace.py # Namespace commands
-│       │   ├── backend.py   # Backend commands
-│       │   ├── session.py   # Session commands
-│       │   ├── config.py    # Config commands
-│       │   ├── metrics.py   # Metrics commands
-│       │   └── shadow.py    # Shadow traffic commands
-│       ├── client/
-│       │   ├── __init__.py
-│       │   ├── admin.py     # Admin gRPC client wrapper
-│       │   └── auth.py      # Authentication helpers
-│       ├── formatters/
-│       │   ├── __init__.py
-│       │   ├── table.py     # Rich table formatters
-│       │   ├── tree.py      # Tree formatters
-│       │   └── json.py      # JSON output
-│       └── proto/           # Generated protobuf stubs
-│           └── admin_pb2.py
-└── tests/
-    ├── test_namespace.py
-    ├── test_backend.py
-    └── fixtures/
-        └── mock_grpc.py
+tools/
+├── cmd/
+│   └── prismctl/
+│       ├── main.go          # CLI entry point
+│       ├── root.go          # Root command + config
+│       ├── namespace.go     # Namespace commands
+│       ├── backend.go       # Backend commands
+│       ├── session.go       # Session commands
+│       ├── config.go        # Config commands
+│       ├── metrics.go       # Metrics commands
+│       ├── shadow.go        # Shadow traffic commands
+│       └── plugin.go        # Plugin management commands
+├── internal/
+│   ├── client/
+│   │   ├── admin.go         # Admin gRPC client wrapper
+│   │   └── auth.go          # Authentication helpers
+│   ├── formatters/
+│   │   ├── table.go         # Table formatters
+│   │   ├── tree.go          # Tree formatters
+│   │   └── json.go          # JSON output
+│   └── proto/               # Generated protobuf stubs
+│       └── admin.pb.go
+├── testdata/
+│   └── script/              # testscript acceptance tests
+│       ├── namespace_create.txtar
+│       ├── session_list.txtar
+│       └── ...
+├── acceptance_test.go       # testscript runner
+├── go.mod
+└── go.sum
 ```
 
 ### Example Implementation (Namespace Commands)
@@ -1195,16 +1200,16 @@ logging:
 ```bash
 # In project directory with .config.yaml (namespace: my-app):
 cd ~/projects/my-app
-prism session list          # Auto-scopes to my-app namespace
-prism metrics summary       # Shows metrics for my-app
-prism config show           # Shows my-app configuration
+prismctl session list          # Auto-scopes to my-app namespace
+prismctl metrics summary       # Shows metrics for my-app
+prismctl config show           # Shows my-app configuration
 
 # Override with --namespace flag:
-prism session list --namespace other-app
+prismctl session list --namespace other-app
 
 # Parent directory search:
 cd ~/projects/my-app/src/handlers
-prism session list          # Finds .config.yaml in ~/projects/my-app/
+prismctl session list          # Finds .config.yaml in ~/projects/my-app/
 ```
 
 ### Environment Variables
@@ -1323,21 +1328,21 @@ uv pip install -e .
 uv pip install prism-cli
 
 # Verify installation
-prism --version
-prism --help
+prismctl --version
+prismctl --help
 ```
 
 ### Shell Completion
 
 ```bash
 # Bash
-prism --install-completion bash
+prismctl --install-completion bash
 
 # Zsh
-prism --install-completion zsh
+prismctl --install-completion zsh
 
 # Fish
-prism --install-completion fish
+prismctl --install-completion fish
 ```
 
 ## Migration Path
@@ -1428,36 +1433,36 @@ CLI logs structured events:
 ### All Commands
 
 ```bash
-prism namespace create <name> [options]
-prism namespace list [options]
-prism namespace describe <name> [options]
-prism namespace update <name> [options]
-prism namespace delete <name> [options]
+prismctl namespace create <name> [options]
+prismctl namespace list [options]
+prismctl namespace describe <name> [options]
+prismctl namespace update <name> [options]
+prismctl namespace delete <name> [options]
 
-prism backend list [options]
-prism backend health [options]
-prism backend stats [options]
-prism backend test <backend> [options]
+prismctl backend list [options]
+prismctl backend health [options]
+prismctl backend stats [options]
+prismctl backend test <backend> [options]
 
-prism session list [options]
-prism session describe <session-id>
-prism session kill <session-id>
-prism session trace <session-id> [options]
+prismctl session list [options]
+prismctl session describe <session-id>
+prismctl session kill <session-id>
+prismctl session trace <session-id> [options]
 
-prism config show [options]
-prism config validate <file> [options]
-prism config apply <file> [options]
+prismctl config show [options]
+prismctl config validate <file> [options]
+prismctl config apply <file> [options]
 
-prism metrics summary [options]
-prism metrics namespace <name> [options]
-prism metrics export [options]
+prismctl metrics summary [options]
+prismctl metrics namespace <name> [options]
+prismctl metrics export [options]
 
-prism shadow enable <namespace> [options]
-prism shadow disable <namespace>
-prism shadow status <namespace>
+prismctl shadow enable <namespace> [options]
+prismctl shadow disable <namespace>
+prismctl shadow status <namespace>
 
-prism version
-prism help [command]
+prismctl version
+prismctl help [command]
 ```
 
 ### Global Options

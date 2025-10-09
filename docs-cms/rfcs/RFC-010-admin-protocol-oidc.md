@@ -104,7 +104,7 @@ sequenceDiagram
 
     Note over Admin,API: Initial Authentication
 
-    Admin->>CLI: prism-admin namespace list
+    Admin->>CLI: prismctl namespace list
     CLI->>CLI: Check token cache<br/>~/.prism/token
 
     alt Token missing or expired
@@ -156,7 +156,7 @@ sequenceDiagram
   "payload": {
     "iss": "https://idp.example.com",
     "sub": "user:alice@company.com",
-    "aud": "prism-admin-api",
+    "aud": "prismctl-api",
     "exp": 1696867200,
     "iat": 1696863600,
     "email": "alice@company.com",
@@ -379,7 +379,7 @@ sequenceDiagram
 
     Note over User,API: First-time Setup
 
-    User->>CLI: prism-admin login
+    User->>CLI: prismctl login
     CLI->>OIDC: Device code flow
     OIDC-->>CLI: device_code, verification_uri
 
@@ -396,7 +396,7 @@ sequenceDiagram
 
     Note over User,API: Subsequent Commands
 
-    User->>CLI: prism-admin namespace list
+    User->>CLI: prismctl namespace list
     CLI->>CLI: Load ~/.prism/token
     CLI->>CLI: Check expiry
 
@@ -630,7 +630,7 @@ CREATE TABLE admin_audit_log (
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: prism-admin-policy
+  name: prismctl-policy
 spec:
   podSelector:
     matchLabels:
@@ -705,7 +705,7 @@ services:
     environment:
       PRISM_ADMIN_PORT: 8981
       PRISM_OIDC_ISSUER: https://idp.example.com
-      PRISM_OIDC_AUDIENCE: prism-admin-api
+      PRISM_OIDC_AUDIENCE: prismctl-api
       PRISM_OIDC_JWKS_URI: https://idp.example.com/.well-known/jwks.json
     networks:
       - internal  # Admin API not exposed publicly
@@ -748,7 +748,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: prism-admin
+  name: prismctl
 spec:
   type: ClusterIP  # Internal only
   selector:

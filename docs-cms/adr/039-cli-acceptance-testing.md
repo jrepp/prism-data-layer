@@ -8,7 +8,7 @@ tags: [testing, cli, go, acceptance-testing, developer-experience]
 
 ## Context
 
-The Prism admin CLI (`prism-cli`, `prism-migrate`, `prism-bench`) requires comprehensive testing to ensure:
+The Prism admin CLI (`prismctl`) requires comprehensive testing to ensure:
 
 1. **Shell-Based Acceptance Tests**: Verify CLI behavior as users would invoke it from the shell
 2. **Realistic Integration**: Test actual compiled binaries, not just function calls
@@ -31,13 +31,13 @@ Use **testscript** for CLI acceptance tests, supplemented with table-driven Go t
 
 ```txtar
 # Test: Basic namespace creation
-prism-cli namespace create test-ns --backend sqlite
+prismctl namespace create test-ns --backend sqlite
 stdout 'Created namespace "test-ns"'
 ! stderr .
 [exit 0]
 
 # Verify namespace exists
-prism-cli namespace list
+prismctl namespace list
 stdout 'test-ns.*sqlite'
 ```
 
@@ -66,7 +66,7 @@ stdout 'test-ns.*sqlite'
 ```bash
 # test_namespace.bats
 @test "create namespace" {
-  run prism-cli namespace create test-ns --backend sqlite
+  run prismctl namespace create test-ns --backend sqlite
   [ "$status" -eq 0 ]
   [[ "$output" =~ "Created namespace" ]]
 }
@@ -98,7 +98,7 @@ func TestNamespaceCreate(t *testing.T) {
 
     for _, tt := range tests {
         t.Run(tt.name, func(t *testing.T) {
-            cmd := exec.Command("prism-cli", tt.args...)
+            cmd := exec.Command("prismctl", tt.args...)
             out, err := cmd.CombinedOutput()
             // assertions...
         })
@@ -122,7 +122,7 @@ func TestNamespaceCreate(t *testing.T) {
 ```go
 var _ = Describe("Namespace", func() {
     It("creates a namespace", func() {
-        session := RunCommand("prism-cli", "namespace", "create", "test-ns")
+        session := RunCommand("prismctl", "namespace", "create", "test-ns")
         Eventually(session).Should(gexec.Exit(0))
         Expect(session.Out).To(gbytes.Say("Created"))
     })
@@ -155,7 +155,7 @@ var _ = Describe("Namespace", func() {
 ```
 tools/
 ├── cmd/
-│   └── prism-cli/
+│   └── prismctl/
 │       ├── main.go
 │       ├── namespace.go
 │       └── ...
@@ -189,7 +189,7 @@ import (
 
 func TestMain(m *testing.M) {
     os.Exit(testscript.RunMain(m, map[string]func() int{
-        "prism-cli": mainCLI,
+        "prismctl": mainCLI,
     }))
 }
 
@@ -220,7 +220,7 @@ func mainCLI() int {
 # testdata/script/namespace_create.txtar
 
 # Test: Create a namespace with explicit configuration
-prism-cli namespace create my-app \
+prismctl namespace create my-app \
   --backend sqlite \
   --pattern keyvalue \
   --consistency strong
@@ -229,22 +229,22 @@ stdout 'Created namespace "my-app"'
 ! stderr 'error'
 
 # Test: List namespaces to verify creation
-prism-cli namespace list
+prismctl namespace list
 stdout 'my-app.*sqlite.*keyvalue'
 
 # Test: Describe namespace
-prism-cli namespace describe my-app
+prismctl namespace describe my-app
 stdout 'Namespace: my-app'
 stdout 'Backend: sqlite'
 stdout 'Pattern: keyvalue'
 stdout 'Consistency: strong'
 
 # Test: Delete namespace
-prism-cli namespace delete my-app --force
+prismctl namespace delete my-app --force
 stdout 'Deleted namespace "my-app"'
 
 # Verify deletion
-prism-cli namespace list
+prismctl namespace list
 ! stdout 'my-app'
 ```
 
@@ -263,12 +263,12 @@ backend:
   pattern: keyvalue
 
 # Test: CLI discovers config automatically
-prism-cli namespace create my-project
+prismctl namespace create my-project
 stdout 'Created namespace "my-project"'
 stdout 'Backend: postgres'
 
 # Test: CLI respects config for scoped commands
-prism-cli config show
+prismctl config show
 stdout 'namespace: my-project'
 stdout 'backend:.*postgres'
 ```
@@ -279,13 +279,13 @@ stdout 'backend:.*postgres'
 # testdata/script/shadow_traffic.txtar
 
 # Setup: Create source namespace
-prism-cli namespace create prod-app --backend postgres
+prismctl namespace create prod-app --backend postgres
 
 # Setup: Create target namespace
-prism-cli namespace create prod-app-new --backend redis
+prismctl namespace create prod-app-new --backend redis
 
 # Test: Enable shadow traffic
-prism-cli shadow enable prod-app \
+prismctl shadow enable prod-app \
   --target prod-app-new \
   --percentage 10
 
@@ -293,18 +293,18 @@ stdout 'Shadow traffic enabled'
 stdout '10% traffic to prod-app-new'
 
 # Test: Check shadow status
-prism-cli shadow status prod-app
+prismctl shadow status prod-app
 stdout 'Status: Active'
 stdout 'Target: prod-app-new'
 stdout '10%.*redis'
 
 # Test: Disable shadow traffic
-prism-cli shadow disable prod-app
+prismctl shadow disable prod-app
 stdout 'Shadow traffic disabled'
 
 # Cleanup
-prism-cli namespace delete prod-app --force
-prism-cli namespace delete prod-app-new --force
+prismctl namespace delete prod-app --force
+prismctl namespace delete prod-app-new --force
 ```
 
 ### Error Handling Test
@@ -313,23 +313,23 @@ prism-cli namespace delete prod-app-new --force
 # testdata/script/namespace_errors.txtar
 
 # Test: Create namespace with invalid backend
-! prism-cli namespace create bad-ns --backend invalid-backend
+! prismctl namespace create bad-ns --backend invalid-backend
 stderr 'error: unsupported backend "invalid-backend"'
 [exit 1]
 
 # Test: Delete non-existent namespace
-! prism-cli namespace delete does-not-exist
+! prismctl namespace delete does-not-exist
 stderr 'error: namespace "does-not-exist" not found'
 [exit 1]
 
 # Test: Create duplicate namespace
-prism-cli namespace create duplicate --backend sqlite
-! prism-cli namespace create duplicate --backend sqlite
+prismctl namespace create duplicate --backend sqlite
+! prismctl namespace create duplicate --backend sqlite
 stderr 'error: namespace "duplicate" already exists'
 [exit 1]
 
 # Cleanup
-prism-cli namespace delete duplicate --force
+prismctl namespace delete duplicate --force
 ```
 
 ### JSON Output Test
@@ -338,20 +338,20 @@ prism-cli namespace delete duplicate --force
 # testdata/script/json_output.txtar
 
 # Create test namespace
-prism-cli namespace create json-test --backend sqlite
+prismctl namespace create json-test --backend sqlite
 
 # Test: JSON output format
-prism-cli namespace list --output json
+prismctl namespace list --output json
 stdout '{"namespaces":\['
 stdout '{"name":"json-test"'
 stdout '"backend":"sqlite"'
 
 # Test: Parse JSON with jq (if available)
-[exec:jq] prism-cli namespace list --output json
+[exec:jq] prismctl namespace list --output json
 stdout '"name":.*"json-test"'
 
 # Cleanup
-prism-cli namespace delete json-test --force
+prismctl namespace delete json-test --force
 ```
 
 ## Testing Strategy
@@ -359,8 +359,8 @@ prism-cli namespace delete json-test --force
 ### Test Categories
 
 1. **Smoke Tests** (Fast, &lt;1s total)
-   - `prism-cli --help`
-   - `prism-cli --version`
+   - `prismctl --help`
+   - `prismctl --version`
    - Basic command validation
 
 2. **Unit Tests** (Go table-driven tests)
@@ -422,7 +422,7 @@ jobs:
           go-version: '1.22'
 
       - name: Build CLI
-        run: cd tools && go build ./cmd/prism-cli
+        run: cd tools && go build ./cmd/prismctl
 
       - name: Run acceptance tests
         run: cd tools && go test -v ./acceptance_test.go
