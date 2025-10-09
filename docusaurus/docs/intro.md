@@ -13,7 +13,7 @@ Welcome to the Prism Data Access Layer documentation. Prism is a high-performanc
 
 Stay up to date with the latest changes, new features, and improvements:
 
-**[View Recent Changes →](https://github.com/jrepp/prism-data-layer/blob/main/docs-cms/CHANGELOG.md)**
+**[View Recent Changes →](/docs/CHANGELOG)**
 
 Recent highlights:
 - RFC-014: Layered Data Access Patterns

@@ -93,6 +93,321 @@ graph TB
     Health --> NATS
 ```
 
+## Authentication
+
+The Admin CLI requires authentication to access the Prism Admin API. We use **OIDC (OpenID Connect)** with the **device code flow** for command-line SSO authentication.
+
+### Device Code Flow (OAuth 2.0)
+
+The device code flow is designed for CLI applications and devices without browsers. The user authenticates via a web browser while the CLI polls for completion.
+
+```mermaid
+sequenceDiagram
+    participant User as Administrator
+    participant CLI as prismctl
+    participant OIDC as OIDC Provider<br/>(Okta/Auth0/Dex)
+    participant API as Admin API
+
+    Note over User,API: Initial Login
+
+    User->>CLI: prismctl login
+    CLI->>OIDC: POST /oauth/device/code<br/>{client_id, scope}
+
+    OIDC-->>CLI: {<br/>  device_code,<br/>  user_code: "ABCD-1234",<br/>  verification_uri,<br/>  interval: 5<br/>}
+
+    CLI->>User: Please visit:<br/>https://idp.example.com/activate<br/>and enter code: ABCD-1234
+
+    User->>OIDC: Navigate to verification_uri
+    OIDC->>User: Show login page
+    User->>OIDC: Enter user_code: ABCD-1234
+    OIDC->>User: Show consent screen<br/>(Scopes: admin:read, admin:write)
+    User->>OIDC: Approve
+
+    loop Poll every 5 seconds (max 5 minutes)
+        CLI->>OIDC: POST /oauth/token<br/>{device_code, grant_type}
+
+        alt User approved
+            OIDC-->>CLI: {<br/>  access_token (JWT),<br/>  refresh_token,<br/>  expires_in: 3600<br/>}
+            CLI->>CLI: Save to ~/.prism/token
+            CLI-->>User: ✓ Authenticated as alice@company.com
+        else Still pending
+            OIDC-->>CLI: {error: "authorization_pending"}
+        else User denied
+            OIDC-->>CLI: {error: "access_denied"}
+        end
+    end
+
+    Note over User,API: Authenticated Requests
+
+    User->>CLI: prismctl namespace list
+    CLI->>CLI: Load ~/.prism/token
+
+    alt Token valid
+        CLI->>API: gRPC: ListNamespaces()<br/>metadata: authorization: Bearer <jwt>
+        API->>API: Validate JWT signature<br/>Check expiry<br/>Extract claims (email, groups, scopes)
+        API-->>CLI: NamespacesResponse
+        CLI-->>User: Display namespaces
+    else Token expired
+        CLI->>OIDC: POST /oauth/token<br/>{refresh_token, grant_type}
+        OIDC-->>CLI: New access_token
+        CLI->>CLI: Update ~/.prism/token
+        CLI->>API: Retry with new token
+    end
+```
+
+### Login Command
+
+```bash
+# Interactive login (device code flow)
+prismctl login
+
+# Or specify OIDC issuer explicitly
+prismctl login --issuer https://idp.example.com
+
+# Local development with Dex (see ADR-046)
+prismctl login --local
+```
+
+**Output**:
+```
+Opening browser for authentication...
+
+Visit: https://idp.example.com/activate
+Enter code: WXYZ-1234
+
+Waiting for authentication...
+```
+
+*Browser opens automatically to verification URL*
+
+```
+✓ Authenticated as alice@company.com
+Token expires in 1 hour
+Token cached to ~/.prism/token
+
+You can now use prismctl commands:
+  prismctl namespace list
+  prismctl backend health
+  prismctl session list
+```
+
+### Token Storage
+
+Tokens are securely stored in `~/.prism/token`:
+
+```json
+{
+  "access_token": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "refresh_token": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "token_type": "Bearer",
+  "expires_at": "2025-10-09T15:30:00Z",
+  "issued_at": "2025-10-09T14:30:00Z",
+  "issuer": "https://idp.example.com",
+  "principal": "alice@company.com",
+  "groups": ["platform-team", "admins"]
+}
+```
+
+**Security**:
+- File permissions: `0600` (owner read/write only)
+- Tokens expire after 1 hour
+- Refresh tokens extend session to 7 days
+- Automatic refresh on expiry
+
+### Logout Command
+
+```bash
+# Logout (delete cached token)
+prismctl logout
+
+# Verify logged out
+prismctl namespace list
+# → Error: Not authenticated. Run 'prismctl login' to authenticate.
+```
+
+### Authentication Modes
+
+| Mode | Use Case | Command | Token Source |
+|------|----------|---------|--------------|
+| **Interactive** | Developer workstation | `prismctl login` | Device code flow |
+| **Service Account** | CI/CD, automation | `PRISM_TOKEN=<jwt> prismctl ...` | Environment variable |
+| **Local (Dex)** | Local development | `prismctl login --local` | Dex IDP (see ADR-046) |
+| **Custom Issuer** | Enterprise SSO | `prismctl login --issuer <url>` | Custom OIDC provider |
+
+### Service Account Authentication
+
+For automation (CI/CD pipelines, cron jobs), use service account tokens:
+
+```bash
+# Export token from secret manager
+export PRISM_TOKEN=$(vault kv get -field=token prism/ci-service)
+
+# Use prismctl with service account token
+prismctl namespace list
+# CLI detects PRISM_TOKEN and uses it instead of cached token
+```
+
+**Service Account Token Claims**:
+```json
+{
+  "iss": "https://idp.example.com",
+  "sub": "service:prism-ci",
+  "aud": "prismctl-api",
+  "exp": 1696867200,
+  "iat": 1696863600,
+  "email": "ci-service@prism.local",
+  "groups": ["ci-automation"],
+  "scope": "admin:read admin:write"
+}
+```
+
+### Authentication Flow Implementation
+
+The CLI authentication is implemented in the Admin gRPC client wrapper:
+
+```go
+// internal/client/auth.go
+package client
+
+import (
+    "context"
+    "encoding/json"
+    "fmt"
+    "os"
+    "path/filepath"
+    "time"
+
+    "golang.org/x/oauth2"
+)
+
+type TokenCache struct {
+    AccessToken  string    `json:"access_token"`
+    RefreshToken string    `json:"refresh_token"`
+    TokenType    string    `json:"token_type"`
+    ExpiresAt    time.Time `json:"expires_at"`
+    IssuedAt     time.Time `json:"issued_at"`
+    Issuer       string    `json:"issuer"`
+    Principal    string    `json:"principal"`
+    Groups       []string  `json:"groups"`
+}
+
+func LoadToken() (*TokenCache, error) {
+    // Check environment variable first
+    if token := os.Getenv("PRISM_TOKEN"); token != "" {
+        return &TokenCache{
+            AccessToken: token,
+            TokenType:   "Bearer",
+        }, nil
+    }
+
+    // Load from cache file
+    home, err := os.UserHomeDir()
+    if err != nil {
+        return nil, err
+    }
+
+    tokenPath := filepath.Join(home, ".prism", "token")
+    data, err := os.ReadFile(tokenPath)
+    if err != nil {
+        return nil, fmt.Errorf("not authenticated: %w", err)
+    }
+
+    var cache TokenCache
+    if err := json.Unmarshal(data, &cache); err != nil {
+        return nil, err
+    }
+
+    // Check if token expired
+    if time.Now().After(cache.ExpiresAt) {
+        // Try to refresh
+        return refreshToken(&cache)
+    }
+
+    return &cache, nil
+}
+
+func SaveToken(cache *TokenCache) error {
+    home, err := os.UserHomeDir()
+    if err != nil {
+        return err
+    }
+
+    prismDir := filepath.Join(home, ".prism")
+    if err := os.MkdirAll(prismDir, 0700); err != nil {
+        return err
+    }
+
+    tokenPath := filepath.Join(prismDir, "token")
+    data, err := json.MarshalIndent(cache, "", "  ")
+    if err != nil {
+        return err
+    }
+
+    // Write with restricted permissions (0600)
+    return os.WriteFile(tokenPath, data, 0600)
+}
+
+func refreshToken(cache *TokenCache) (*TokenCache, error) {
+    if cache.RefreshToken == "" {
+        return nil, fmt.Errorf("no refresh token available")
+    }
+
+    // Use oauth2 library to refresh
+    config := &oauth2.Config{
+        ClientID: "prismctl",
+        Endpoint: oauth2.Endpoint{
+            TokenURL: cache.Issuer + "/oauth/token",
+        },
+    }
+
+    token := &oauth2.Token{
+        RefreshToken: cache.RefreshToken,
+    }
+
+    src := config.TokenSource(context.Background(), token)
+    newToken, err := src.Token()
+    if err != nil {
+        return nil, fmt.Errorf("failed to refresh token: %w", err)
+    }
+
+    cache.AccessToken = newToken.AccessToken
+    cache.ExpiresAt = newToken.Expiry
+    cache.IssuedAt = time.Now()
+
+    // Save updated token
+    if err := SaveToken(cache); err != nil {
+        return nil, err
+    }
+
+    return cache, nil
+}
+```
+
+### Local Development with Dex
+
+For local testing without cloud OIDC providers, use Dex (see ADR-046):
+
+```bash
+# Start Dex in Docker Compose
+docker-compose up -d dex
+
+# Login with local Dex
+prismctl login --local
+# Opens: http://localhost:5556/auth
+
+# Login with test user
+# Email: admin@prism.local
+# Password: password
+
+# Token cached, ready to use
+prismctl namespace list
+```
+
+**References**:
+- RFC-010: Admin Protocol with OIDC Authentication (complete OIDC specification)
+- ADR-046: Dex IDP for Local Identity Testing (local development setup)
+- [OAuth 2.0 Device Authorization Grant (RFC 8628)](https://datatracker.ietf.org/doc/html/rfc8628)
+
 ### Command Structure
 
 ```
@@ -317,13 +632,13 @@ prismctl session list --duration ">1h"
 
 **Output**:
 ```
-┏━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━━━━━━━┓
-┃ Session ID    ┃ Namespace      ┃ Duration   ┃ Requests   ┃ RPS        ┃
-┡━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━╇━━━━━━━━━━━━╇━━━━━━━━━━━━┩
-│ sess-abc123   │ user-profiles  │ 2h 34m     │ 456,789    │ 45         │
-│ sess-def456   │ event-stream   │ 45m        │ 123,456    │ 234        │
-│ sess-ghi789   │ session-cache  │ 12m        │ 89,012     │ 567        │
-└───────────────┴────────────────┴────────────┴────────────┴────────────┘
+┏━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━━━━━━━┓
+┃ Session ID    ┃ Principal            ┃ Namespace      ┃ Duration   ┃ Requests   ┃ RPS        ┃
+┡━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━╇━━━━━━━━━━━━╇━━━━━━━━━━━━┩
+│ sess-abc123   │ alice@company.com    │ user-profiles  │ 2h 34m     │ 456,789    │ 45         │
+│ sess-def456   │ user-api.prod (svc)  │ event-stream   │ 45m        │ 123,456    │ 234        │
+│ sess-ghi789   │ bob@company.com      │ session-cache  │ 12m        │ 89,012     │ 567        │
+└───────────────┴──────────────────────┴────────────────┴────────────┴────────────┴────────────┘
 ```
 
 #### Trace Session
@@ -460,28 +775,30 @@ prismctl metrics export --format json --include-metadata > metrics.json
 #### Enable Shadow Traffic
 
 ```bash
-# Enable shadow traffic for migration
-prismctl shadow enable my-app \
-  --source postgres \
-  --target redis \
+# Enable shadow traffic for Postgres version upgrade (14 → 16)
+prismctl shadow enable user-profiles \
+  --source postgres-14-primary \
+  --target postgres-16-replica \
   --percentage 10
 
-# Gradual rollout
-prismctl shadow enable my-app \
-  --source postgres \
-  --target redis \
+# Gradual rollout with automatic ramp-up
+prismctl shadow enable user-profiles \
+  --source postgres-14-primary \
+  --target postgres-16-replica \
   --ramp-up "10%,25%,50%,100%" \
   --interval 1h
 ```
 
 **Output**:
 ```
-Enabling shadow traffic for namespace 'my-app'
+Enabling shadow traffic for namespace 'user-profiles'
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
+Migration: Postgres 14 → Postgres 16 upgrade
+
 Configuration:
-  Source: postgres
-  Target: redis
+  Source: postgres-14-primary (current production)
+  Target: postgres-16-replica (upgrade candidate)
   Initial Percentage: 10%
   Ramp-up Schedule:
     • 10% at 09:15:00 (now)
@@ -490,43 +807,51 @@ Configuration:
     • 100% at 12:15:00 (+3h)
 
 ✓ Shadow traffic enabled
-  Monitor: prismctl shadow status my-app
-  Disable: prismctl shadow disable my-app
+  Monitor: prismctl shadow status user-profiles
+  Disable: prismctl shadow disable user-profiles
 ```
 
 #### Shadow Status
 
 ```bash
-prismctl shadow status my-app
+prismctl shadow status user-profiles
 ```
 
 **Output**:
 ```
-Shadow Traffic Status: my-app
+Shadow Traffic Status: user-profiles
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Migration: Postgres 14 → Postgres 16 upgrade
 
 Status: Active
 Current Stage: 25% traffic to target
 Next Stage: 50% at 11:15:00 (+45m)
 
 Backends:
-  Source: postgres
-  Target: redis
+  Source: postgres-14-primary (Postgres 14.10)
+  Target: postgres-16-replica (Postgres 16.1)
 
 Traffic Distribution:
   ┌────────────────────────────────────────┐
-  │ ████████████████████████████           │ 75% → postgres (source)
-  │ ████████                               │ 25% → redis (target)
+  │ ████████████████████████████           │ 75% → postgres-14-primary
+  │ ████████                               │ 25% → postgres-16-replica
   └────────────────────────────────────────┘
 
 Comparison Metrics:
-  ┏━━━━━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━━━━━━━┓
-  ┃ Metric     ┃ Source     ┃ Target     ┃ Delta      ┃
-  ┡━━━━━━━━━━━━╇━━━━━━━━━━━━╇━━━━━━━━━━━━╇━━━━━━━━━━━━┩
-  │ P50        │ 2.3ms      │ 0.8ms      │ -65%       │
-  │ P99        │ 12.7ms     │ 3.2ms      │ -75%       │
-  │ Error Rate │ 0.02%      │ 0.01%      │ -50%       │
-  └────────────┴────────────┴────────────┴────────────┘
+  ┏━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━┓
+  ┃ Metric     ┃ PG 14 (Source)     ┃ PG 16 (Target)     ┃ Delta      ┃
+  ┡━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━┩
+  │ P50        │ 2.3ms              │ 2.1ms              │ -9%        │
+  │ P99        │ 12.7ms             │ 11.8ms             │ -7%        │
+  │ Error Rate │ 0.02%              │ 0.01%              │ -50%       │
+  │ QPS        │ 1,234              │ 1,234              │ 0%         │
+  └────────────┴────────────────────┴────────────────────┴────────────┘
+
+Query Compatibility:
+  ✓ All queries compatible with PG 16
+  ✓ No deprecated features detected
+  ✓ Performance parity achieved
 
 ✓ Target performing well, ready for next stage
 ```

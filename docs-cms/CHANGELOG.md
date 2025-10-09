@@ -12,8 +12,71 @@ Quick access to recently updated documentation. Changes listed in reverse chrono
 
 ### 2025-10-09
 
-#### RFC-014: Layered Data Access Patterns (NEW)
-**Link**: [RFC-014](./rfcs/RFC-014-layered-data-access-patterns.md)
+#### MEMO-003: Documentation-First Development Approach (NEW)
+**Link**: [MEMO-003](/memos/MEMO-003-documentation-first-development)
+
+**Summary**: Comprehensive memo defining the documentation-first development approach used in Prism, covering:
+- Definition and core principles (Design in Documentation → Review → Implement → Validate)
+- Notable improvements over code-first workflows with concrete examples
+- Expected outcomes (faster reviews, better designs, reduced rework)
+- Strategies for success (blocking requirements, design tool, living documentation)
+- Validation and quality assurance (tooling/validate_docs.py)
+- Metrics and success criteria (documentation coverage, build success rate, review velocity)
+- Proposed improvements (code example validation, decision graph visualization, RFC-driven task generation)
+
+**Impact**: Establishes documentation-first as the core development methodology, with validation tooling as a blocking requirement before commits.
+
+---
+
+#### RFC-011: Data Proxy Authentication - Secrets Provider Abstraction (EXPANDED)
+**Link**: [RFC-011](/rfc/RFC-011-data-proxy-authentication)
+
+**Summary**: Major expansion adding comprehensive secrets provider abstraction:
+- Pluggable SecretsProvider trait supporting multiple secret management services
+- Four provider implementations: HashiCorp Vault, AWS Secrets Manager, Google Secret Manager, Azure Key Vault
+- Provider comparison matrix (dynamic credentials, auto-rotation, versioning, audit logging, cost)
+- Multi-provider hybrid cloud deployment patterns
+- Configuration examples for each provider
+- Credential management with automatic caching and renewal
+
+**Impact**: Enables secure credential management across cloud providers and on-premises deployments with consistent abstraction layer.
+
+---
+
+#### RFC-006: Admin CLI - OIDC Authentication (EXPANDED)
+**Link**: [RFC-006](/rfc/rfc-006)
+
+**Summary**: Added comprehensive OIDC authentication section covering:
+- Device code flow (OAuth 2.0) for command-line SSO authentication
+- Mermaid sequence diagram showing complete authentication flow
+- Login/logout commands with token caching (~/.prism/token)
+- Token storage security (file permissions 0600, automatic refresh)
+- Authentication modes (interactive, service account, local Dex, custom issuer)
+- Go implementation examples for token management
+- Local development with Dex (references ADR-046)
+- Principal column added to session list output
+- Shadow traffic example updated to Postgres version upgrade (14 → 16) use case
+
+**Impact**: Complete CLI authentication specification enabling secure admin access with OIDC integration and local testing support.
+
+---
+
+#### ADR-046: Dex IDP for Local Identity Testing (NEW)
+**Link**: [ADR-046](/adr/ADR-046-dex-idp-local-testing)
+
+**Summary**: New ADR proposing Dex as the local OIDC provider for development and testing:
+- Self-hosted OIDC provider for local development (no cloud dependencies)
+- Docker Compose integration with test user configuration
+- Full OIDC spec support including device code flow
+- Integration with prismctl for local authentication
+- Testing workflow with realistic OIDC flows
+
+**Impact**: Enables local development and testing of authentication features without external OIDC provider dependencies.
+
+---
+
+#### RFC-014: Layered Data Access Patterns - Client Pattern Catalog (EXPANDED)
+**Link**: [RFC-014](/rfc/RFC-014-layered-data-access-patterns)
 
 **Summary**: New RFC defining how Prism separates client API from backend implementation through pattern composition. Covers:
 - Three-layer architecture (Client API, Pattern Composition, Backend Execution)
@@ -28,7 +91,7 @@ Quick access to recently updated documentation. Changes listed in reverse chrono
 ---
 
 #### RFC-011: Data Proxy Authentication - Open Questions Expanded
-**Link**: [RFC-011](./rfcs/RFC-011-data-proxy-authentication.md)
+**Link**: [RFC-011](/rfc/RFC-011-data-proxy-authentication)
 
 **Summary**: Added comprehensive feedback to open questions:
 - Certificate Authority: Use Vault for certificate management
@@ -42,7 +105,7 @@ Quick access to recently updated documentation. Changes listed in reverse chrono
 ---
 
 #### RFC-010: Admin Protocol with OIDC - Multi-Provider Support
-**Link**: [RFC-010](./rfcs/RFC-010-admin-protocol-oidc.md)
+**Link**: [RFC-010](/rfc/RFC-010-admin-protocol-oidc)
 
 **Summary**: Expanded open questions with detailed answers:
 - OIDC Provider Support: AWS Cognito, Azure AD, Google, Okta, Auth0, Dex
@@ -56,7 +119,7 @@ Quick access to recently updated documentation. Changes listed in reverse chrono
 ---
 
 #### RFC-009: Distributed Reliability Patterns - Change Notification Graph
-**Link**: [RFC-009](./rfcs/RFC-009-distributed-reliability-patterns.md)
+**Link**: [RFC-009](/rfc/RFC-009-distributed-reliability-patterns)
 
 **Summary**: Added change notification flow diagram to CDC pattern showing:
 - Change type classification (INSERT, UPDATE, DELETE, SCHEMA)
@@ -73,7 +136,7 @@ Quick access to recently updated documentation. Changes listed in reverse chrono
 ### 2025-10-08
 
 #### RFC-009: Distributed Reliability Patterns (INITIAL)
-**Link**: [RFC-009](./rfcs/RFC-009-distributed-reliability-patterns.md)
+**Link**: [RFC-009](/rfc/RFC-009-distributed-reliability-patterns)
 
 **Summary**: Initial RFC documenting 7 distributed reliability patterns:
 1. Tiered Storage - Hot/warm/cold data lifecycle
@@ -91,7 +154,7 @@ Quick access to recently updated documentation. Changes listed in reverse chrono
 ### 2025-10-07
 
 #### RFC-001: Prism Architecture (INITIAL)
-**Link**: [RFC-001](./rfcs/RFC-001-prism-architecture.md)
+**Link**: [RFC-001](/rfc/RFC-001-prism-architecture)
 
 **Summary**: Foundational architecture RFC defining:
 - System components and layered interface hierarchy
@@ -106,7 +169,7 @@ Quick access to recently updated documentation. Changes listed in reverse chrono
 ---
 
 #### RFC-002: Data Layer Interface Specification (INITIAL)
-**Link**: [RFC-002](./rfcs/RFC-002-data-layer-interface.md)
+**Link**: [RFC-002](/rfc/RFC-002-data-layer-interface)
 
 **Summary**: Complete gRPC interface specification covering:
 - Session Service (authentication, heartbeat, lifecycle)

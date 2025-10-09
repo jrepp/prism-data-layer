@@ -553,9 +553,425 @@ sequenceDiagram
     end
 ```
 
+## Secrets Provider Abstraction
+
+To support multiple secret management services (Vault, AWS Secrets Manager, Google Secret Manager, Azure Key Vault), Prism implements a pluggable secrets provider architecture.
+
+### Secrets Provider Interface
+
+```rust
+#[async_trait]
+pub trait SecretsProvider: Send + Sync {
+    /// Fetch credentials for a backend
+    async fn get_credentials(&self, path: &str) -> Result<Credentials>;
+
+    /// Renew a credential lease (if supported)
+    async fn renew_credentials(&self, lease_id: &str) -> Result<()>;
+
+    /// Check if provider supports dynamic credentials
+    fn supports_dynamic_credentials(&self) -> bool;
+
+    /// Get provider metadata
+    fn provider_type(&self) -> &str;
+}
+
+pub struct Credentials {
+    pub username: Option<String>,
+    pub password: Option<String>,
+    pub api_key: Option<String>,
+    pub certificate: Option<String>,
+    pub private_key: Option<String>,
+    pub jwt_token: Option<String>,
+    pub metadata: HashMap<String, String>,
+    pub lease_id: Option<String>,
+    pub expires_at: Option<DateTime<Utc>>,
+}
+```
+
+### Provider Implementations
+
+#### HashiCorp Vault Provider
+
+```rust
+use vaultrs::client::VaultClient;
+
+pub struct VaultProvider {
+    client: VaultClient,
+    namespace: Option<String>,
+}
+
+#[async_trait]
+impl SecretsProvider for VaultProvider {
+    async fn get_credentials(&self, path: &str) -> Result<Credentials> {
+        let response: VaultCredResponse = self.client
+            .read(path)
+            .await?;
+
+        Ok(Credentials {
+            username: Some(response.data.username),
+            password: Some(response.data.password),
+            lease_id: Some(response.lease_id),
+            expires_at: Some(Utc::now() + Duration::seconds(response.lease_duration)),
+            metadata: response.metadata,
+            ..Default::default()
+        })
+    }
+
+    async fn renew_credentials(&self, lease_id: &str) -> Result<()> {
+        self.client.renew_lease(lease_id).await?;
+        Ok(())
+    }
+
+    fn supports_dynamic_credentials(&self) -> bool {
+        true  // Vault supports dynamic credential generation
+    }
+
+    fn provider_type(&self) -> &str {
+        "vault"
+    }
+}
+```
+
+#### AWS Secrets Manager Provider
+
+```rust
+use aws_sdk_secretsmanager::Client as SecretsManagerClient;
+use aws_sdk_secretsmanager::types::SecretString;
+
+pub struct AwsSecretsProvider {
+    client: SecretsManagerClient,
+    region: String,
+}
+
+#[async_trait]
+impl SecretsProvider for AwsSecretsProvider {
+    async fn get_credentials(&self, path: &str) -> Result<Credentials> {
+        // path format: "arn:aws:secretsmanager:region:account:secret:name"
+        // or simple: "prism/postgres-main"
+        let response = self.client
+            .get_secret_value()
+            .secret_id(path)
+            .send()
+            .await?;
+
+        let secret_string = response.secret_string()
+            .ok_or(Error::MissingSecretValue)?;
+
+        // Parse JSON secret
+        let secret_data: SecretData = serde_json::from_str(secret_string)?;
+
+        Ok(Credentials {
+            username: secret_data.username,
+            password: secret_data.password,
+            api_key: secret_data.api_key,
+            expires_at: None,  // AWS Secrets Manager doesn't auto-expire
+            metadata: secret_data.metadata.unwrap_or_default(),
+            ..Default::default()
+        })
+    }
+
+    async fn renew_credentials(&self, _lease_id: &str) -> Result<()> {
+        // AWS Secrets Manager doesn't support dynamic credential renewal
+        Ok(())
+    }
+
+    fn supports_dynamic_credentials(&self) -> bool {
+        false  // Static secrets only
+    }
+
+    fn provider_type(&self) -> &str {
+        "aws-secrets-manager"
+    }
+}
+
+#[derive(Deserialize)]
+struct SecretData {
+    username: Option<String>,
+    password: Option<String>,
+    api_key: Option<String>,
+    metadata: Option<HashMap<String, String>>,
+}
+```
+
+#### Google Secret Manager Provider
+
+```rust
+use google_secretmanager::v1::SecretManagerServiceClient;
+
+pub struct GcpSecretsProvider {
+    client: SecretManagerServiceClient,
+    project_id: String,
+}
+
+#[async_trait]
+impl SecretsProvider for GcpSecretsProvider {
+    async fn get_credentials(&self, path: &str) -> Result<Credentials> {
+        // path format: "projects/{project}/secrets/{secret}/versions/latest"
+        // or simple: "prism-postgres-main" (auto-expanded)
+        let name = if path.starts_with("projects/") {
+            path.to_string()
+        } else {
+            format!("projects/{}/secrets/{}/versions/latest",
+                self.project_id, path)
+        };
+
+        let response = self.client
+            .access_secret_version(&name)
+            .await?;
+
+        let payload = response.payload
+            .ok_or(Error::MissingPayload)?;
+
+        let secret_string = String::from_utf8(payload.data)?;
+        let secret_data: SecretData = serde_json::from_str(&secret_string)?;
+
+        Ok(Credentials {
+            username: secret_data.username,
+            password: secret_data.password,
+            api_key: secret_data.api_key,
+            expires_at: None,
+            metadata: secret_data.metadata.unwrap_or_default(),
+            ..Default::default()
+        })
+    }
+
+    async fn renew_credentials(&self, _lease_id: &str) -> Result<()> {
+        // GCP Secret Manager doesn't support dynamic renewal
+        Ok(())
+    }
+
+    fn supports_dynamic_credentials(&self) -> bool {
+        false
+    }
+
+    fn provider_type(&self) -> &str {
+        "gcp-secret-manager"
+    }
+}
+```
+
+#### Azure Key Vault Provider
+
+```rust
+use azure_security_keyvault::KeyvaultClient;
+use azure_identity::DefaultAzureCredential;
+
+pub struct AzureKeyVaultProvider {
+    client: KeyvaultClient,
+    vault_url: String,
+}
+
+#[async_trait]
+impl SecretsProvider for AzureKeyVaultProvider {
+    async fn get_credentials(&self, path: &str) -> Result<Credentials> {
+        // path format: "prism-postgres-main"
+        let response = self.client
+            .get_secret(&self.vault_url, path)
+            .await?;
+
+        let secret_value = response.value()
+            .ok_or(Error::MissingSecretValue)?;
+
+        let secret_data: SecretData = serde_json::from_str(secret_value)?;
+
+        Ok(Credentials {
+            username: secret_data.username,
+            password: secret_data.password,
+            api_key: secret_data.api_key,
+            expires_at: response.attributes().expires_on(),
+            metadata: secret_data.metadata.unwrap_or_default(),
+            ..Default::default()
+        })
+    }
+
+    async fn renew_credentials(&self, _lease_id: &str) -> Result<()> {
+        // Azure Key Vault doesn't support dynamic renewal
+        Ok(())
+    }
+
+    fn supports_dynamic_credentials(&self) -> bool {
+        false
+    }
+
+    fn provider_type(&self) -> &str {
+        "azure-keyvault"
+    }
+}
+```
+
+### Provider Comparison
+
+| Feature | Vault | AWS Secrets | GCP Secret | Azure Key Vault |
+|---------|-------|-------------|------------|-----------------|
+| **Dynamic Credentials** | ✅ Yes | ❌ No | ❌ No | ❌ No |
+| **Auto-Rotation** | ✅ Yes (TTL) | ⚠️ Manual | ⚠️ Manual | ⚠️ Manual |
+| **Versioning** | ✅ Yes | ✅ Yes | ✅ Yes | ✅ Yes |
+| **Audit Logging** | ✅ Yes | ✅ CloudTrail | ✅ Cloud Audit | ✅ Monitor Logs |
+| **IAM Integration** | ⚠️ Policies | ✅ Native IAM | ✅ Native IAM | ✅ Native RBAC |
+| **Multi-Cloud** | ✅ Yes | ❌ AWS Only | ❌ GCP Only | ❌ Azure Only |
+| **Self-Hosted** | ✅ Yes | ❌ No | ❌ No | ❌ No |
+| **Cost** | Free (OSS) | $0.40/secret/month | $0.06/10k accesses | ~$0.03/10k ops |
+
+### Provider Selection Strategy
+
+```rust
+pub enum ProviderConfig {
+    Vault {
+        address: String,
+        token_path: String,
+        namespace: Option<String>,
+    },
+    AwsSecretsManager {
+        region: String,
+        role_arn: Option<String>,
+    },
+    GcpSecretManager {
+        project_id: String,
+        service_account: Option<String>,
+    },
+    AzureKeyVault {
+        vault_url: String,
+        tenant_id: String,
+        client_id: Option<String>,
+    },
+}
+
+pub fn create_provider(config: &ProviderConfig) -> Result<Arc<dyn SecretsProvider>> {
+    match config {
+        ProviderConfig::Vault { address, token_path, namespace } => {
+            let token = std::fs::read_to_string(token_path)?;
+            let client = VaultClient::new(address, &token, namespace.as_deref())?;
+            Ok(Arc::new(VaultProvider { client, namespace: namespace.clone() }))
+        }
+        ProviderConfig::AwsSecretsManager { region, role_arn } => {
+            let aws_config = aws_config::from_env()
+                .region(region)
+                .load()
+                .await;
+            let client = SecretsManagerClient::new(&aws_config);
+            Ok(Arc::new(AwsSecretsProvider { client, region: region.clone() }))
+        }
+        ProviderConfig::GcpSecretManager { project_id, service_account } => {
+            let client = SecretManagerServiceClient::new().await?;
+            Ok(Arc::new(GcpSecretsProvider { client, project_id: project_id.clone() }))
+        }
+        ProviderConfig::AzureKeyVault { vault_url, tenant_id, client_id } => {
+            let credential = DefaultAzureCredential::new()?;
+            let client = KeyvaultClient::new(vault_url, credential)?;
+            Ok(Arc::new(AzureKeyVaultProvider { client, vault_url: vault_url.clone() }))
+        }
+    }
+}
+```
+
+### Credential Manager with Multiple Providers
+
+```rust
+pub struct CredentialManager {
+    provider: Arc<dyn SecretsProvider>,
+    credentials: Arc<RwLock<HashMap<String, BackendCredentials>>>,
+    refresh_interval: Duration,
+}
+
+impl CredentialManager {
+    pub fn new(provider: Arc<dyn SecretsProvider>) -> Self {
+        Self {
+            provider,
+            credentials: Arc::new(RwLock::new(HashMap::new())),
+            refresh_interval: Duration::minutes(30),
+        }
+    }
+
+    pub async fn get_credentials(&self, backend_id: &str, path: &str) -> Result<BackendCredentials> {
+        // Check cache
+        {
+            let cache = self.credentials.read().await;
+            if let Some(cached) = cache.get(backend_id) {
+                // For static providers, use longer cache TTL
+                let cache_valid = if self.provider.supports_dynamic_credentials() {
+                    cached.expires_at > Utc::now() + Duration::minutes(5)
+                } else {
+                    cached.expires_at > Utc::now()
+                };
+
+                if cache_valid {
+                    return Ok(cached.clone());
+                }
+            }
+        }
+
+        // Fetch from provider
+        let creds = self.provider.get_credentials(path).await?;
+
+        let backend_creds = BackendCredentials {
+            backend_type: backend_id.to_string(),
+            username: creds.username.unwrap_or_default(),
+            password: creds.password.unwrap_or_default(),
+            api_key: creds.api_key,
+            certificate: creds.certificate,
+            lease_id: creds.lease_id.clone(),
+            expires_at: creds.expires_at.unwrap_or_else(|| {
+                // For static providers, cache for 24 hours
+                Utc::now() + Duration::hours(24)
+            }),
+        };
+
+        // Update cache
+        {
+            let mut cache = self.credentials.write().await;
+            cache.insert(backend_id.to_string(), backend_creds.clone());
+        }
+
+        // Schedule renewal if provider supports dynamic credentials
+        if self.provider.supports_dynamic_credentials() {
+            if let Some(lease_id) = &creds.lease_id {
+                self.schedule_renewal(backend_id, lease_id).await;
+            }
+        }
+
+        Ok(backend_creds)
+    }
+
+    async fn schedule_renewal(&self, backend_id: &str, lease_id: &str) {
+        let provider = self.provider.clone();
+        let lease_id = lease_id.to_string();
+        let backend_id = backend_id.to_string();
+        let interval = self.refresh_interval;
+
+        tokio::spawn(async move {
+            loop {
+                tokio::time::sleep(interval).await;
+
+                match provider.renew_credentials(&lease_id).await {
+                    Ok(_) => {
+                        tracing::info!(
+                            backend_id = %backend_id,
+                            lease_id = %lease_id,
+                            provider = %provider.provider_type(),
+                            "Renewed backend credentials"
+                        );
+                    }
+                    Err(e) => {
+                        tracing::error!(
+                            backend_id = %backend_id,
+                            provider = %provider.provider_type(),
+                            error = %e,
+                            "Failed to renew credentials, will fetch new ones"
+                        );
+                        break;
+                    }
+                }
+            }
+        });
+    }
+}
+```
+
 ## Configuration
 
-### Proxy Configuration
+### Proxy Configuration with Secrets Providers
+
+#### Option 1: HashiCorp Vault (Recommended for Dynamic Credentials)
 
 ```yaml
 # prism-proxy.yaml
@@ -571,7 +987,7 @@ input_auth:
   client_cert_required: true
   verify_depth: 3
 
-# Output Authentication
+# Output Authentication with Vault
 output_auth:
   credential_provider: vault
   vault:
@@ -609,6 +1025,239 @@ backends:
     connection:
       servers: [nats://nats-1:4222, nats://nats-2:4222]
       tls_required: true
+```
+
+#### Option 2: AWS Secrets Manager (AWS Native)
+
+```yaml
+# prism-proxy.yaml
+data_port: 8980
+admin_port: 8981
+
+# Input Authentication
+input_auth:
+  type: mtls
+  ca_cert: /etc/prism/certs/ca.crt
+  server_cert: /etc/prism/certs/server.crt
+  server_key: /etc/prism/certs/server.key
+  client_cert_required: true
+
+# Output Authentication with AWS Secrets Manager
+output_auth:
+  credential_provider: aws-secrets-manager
+  aws:
+    region: us-east-1
+    # Uses IAM role attached to EC2/ECS/EKS for authentication
+
+backends:
+  - name: postgres-main
+    type: postgres
+    auth:
+      type: aws-secret
+      # Can use ARN or friendly name
+      path: arn:aws:secretsmanager:us-east-1:123456789012:secret:prism/postgres-main
+      # Or: path: prism/postgres-main
+    connection:
+      host: postgres.internal
+      port: 5432
+      database: users
+      ssl_mode: require
+
+  - name: kafka-events
+    type: kafka
+    auth:
+      type: aws-secret
+      path: prism/kafka-producer
+    connection:
+      brokers: [kafka-1:9092, kafka-2:9092, kafka-3:9092]
+      security_protocol: SASL_SSL
+      sasl_mechanism: SCRAM-SHA-512
+```
+
+**AWS Secrets Manager Secret Format** (JSON):
+```json
+{
+  "username": "prism-postgres-user",
+  "password": "securepassword123",
+  "metadata": {
+    "backend_type": "postgres",
+    "environment": "production"
+  }
+}
+```
+
+#### Option 3: Google Secret Manager (GCP Native)
+
+```yaml
+# prism-proxy.yaml
+data_port: 8980
+admin_port: 8981
+
+# Input Authentication
+input_auth:
+  type: mtls
+  ca_cert: /etc/prism/certs/ca.crt
+  server_cert: /etc/prism/certs/server.crt
+  server_key: /etc/prism/certs/server.key
+  client_cert_required: true
+
+# Output Authentication with Google Secret Manager
+output_auth:
+  credential_provider: gcp-secret-manager
+  gcp:
+    project_id: prism-production-123456
+    # Uses Workload Identity or service account for authentication
+
+backends:
+  - name: postgres-main
+    type: postgres
+    auth:
+      type: gcp-secret
+      # Can use full path or friendly name
+      path: projects/prism-production-123456/secrets/prism-postgres-main/versions/latest
+      # Or: path: prism-postgres-main (auto-expanded)
+    connection:
+      host: postgres.internal
+      port: 5432
+      database: users
+      ssl_mode: require
+
+  - name: kafka-events
+    type: kafka
+    auth:
+      type: gcp-secret
+      path: prism-kafka-producer
+    connection:
+      brokers: [kafka-1:9092, kafka-2:9092, kafka-3:9092]
+      security_protocol: SASL_SSL
+      sasl_mechanism: SCRAM-SHA-512
+```
+
+#### Option 4: Azure Key Vault (Azure Native)
+
+```yaml
+# prism-proxy.yaml
+data_port: 8980
+admin_port: 8981
+
+# Input Authentication
+input_auth:
+  type: mtls
+  ca_cert: /etc/prism/certs/ca.crt
+  server_cert: /etc/prism/certs/server.crt
+  server_key: /etc/prism/certs/server.key
+  client_cert_required: true
+
+# Output Authentication with Azure Key Vault
+output_auth:
+  credential_provider: azure-keyvault
+  azure:
+    vault_url: https://prism-prod.vault.azure.net
+    tenant_id: 12345678-1234-1234-1234-123456789012
+    # Uses Managed Identity or Service Principal for authentication
+
+backends:
+  - name: postgres-main
+    type: postgres
+    auth:
+      type: azure-secret
+      path: prism-postgres-main
+    connection:
+      host: postgres.internal
+      port: 5432
+      database: users
+      ssl_mode: require
+
+  - name: kafka-events
+    type: kafka
+    auth:
+      type: azure-secret
+      path: prism-kafka-producer
+    connection:
+      brokers: [kafka-1:9092, kafka-2:9092, kafka-3:9092]
+      security_protocol: SASL_SSL
+      sasl_mechanism: SCRAM-SHA-512
+```
+
+### Multi-Provider Deployment (Hybrid Cloud)
+
+For hybrid cloud deployments, you can configure different providers per backend:
+
+```yaml
+# prism-proxy.yaml
+data_port: 8980
+admin_port: 8981
+
+# Input Authentication
+input_auth:
+  type: mtls
+  ca_cert: /etc/prism/certs/ca.crt
+  server_cert: /etc/prism/certs/server.crt
+  server_key: /etc/prism/certs/server.key
+  client_cert_required: true
+
+# Output Authentication - Multiple Providers
+output_auth:
+  providers:
+    # Vault for dynamic credentials (on-prem backends)
+    - name: vault-onprem
+      type: vault
+      vault:
+        address: https://vault.internal:8200
+        token_path: /var/run/secrets/vault-token
+        namespace: prism-prod
+
+    # AWS Secrets for AWS backends
+    - name: aws-prod
+      type: aws-secrets-manager
+      aws:
+        region: us-east-1
+
+    # GCP Secrets for GCP backends
+    - name: gcp-prod
+      type: gcp-secret-manager
+      gcp:
+        project_id: prism-production-123456
+
+backends:
+  # On-prem Postgres using Vault dynamic credentials
+  - name: postgres-main
+    type: postgres
+    auth:
+      provider: vault-onprem
+      type: vault-dynamic
+      path: database/creds/postgres-main
+    connection:
+      host: postgres.internal
+      port: 5432
+      database: users
+      ssl_mode: require
+
+  # AWS RDS using AWS Secrets Manager
+  - name: rds-analytics
+    type: postgres
+    auth:
+      provider: aws-prod
+      type: aws-secret
+      path: prism/rds-analytics
+    connection:
+      host: analytics.abc123.us-east-1.rds.amazonaws.com
+      port: 5432
+      database: analytics
+      ssl_mode: require
+
+  # GCP Cloud SQL using GCP Secret Manager
+  - name: cloudsql-reports
+    type: postgres
+    auth:
+      provider: gcp-prod
+      type: gcp-secret
+      path: prism-cloudsql-reports
+    connection:
+      host: /cloudsql/prism-prod:us-central1:reports
+      port: 5432
+      database: reports
+      ssl_mode: require
 ```
 
 ## Security Considerations
@@ -746,3 +1395,4 @@ async fn test_mtls_authentication() {
 
 - 2025-10-09: Initial draft with mTLS and backend authentication flows
 - 2025-10-09: Expanded open questions with feedback on Vault CA, credential caching (24hr default), per-credential connection pooling, fallback auth strategies, and observability metrics
+- 2025-10-09: Added secrets provider abstraction supporting HashiCorp Vault, AWS Secrets Manager, Google Secret Manager, and Azure Key Vault with pluggable architecture, provider comparison matrix, and multi-provider hybrid cloud deployment patterns
