@@ -14,17 +14,20 @@
 }
 
 .buildTime {
-  opacity: 0.8;
+  opacity: 0.85;
+  font-weight: 500;
 }
 
 .commit {
   font-family: var(--ifm-font-family-monospace);
   font-size: 0.8rem;
-  opacity: 0.7;
+  opacity: 0.80;
+  font-weight: 500;
 }
 
 .separator {
-  opacity: 0.5;
+  opacity: 0.6;
+  font-weight: 600;
 }
 
 /* Responsive: hide build time on small screens */
