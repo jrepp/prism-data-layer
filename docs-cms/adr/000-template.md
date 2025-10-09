@@ -3,7 +3,7 @@ title: "ADR-XXX: [Short Title]"
 status: [Proposed | Accepted | Deprecated | Superseded by ADR-YYY]
 date: YYYY-MM-DD
 deciders: [Names/Roles]
-tags: ['[backend | proxy | security | performance | testing | ...]']
+tags: [backend, proxy, security, performance, testing]
 ---
 
 ## Context

@@ -181,6 +181,22 @@ class PrismDocValidator:
                 tags_str = tags_match.group(1)
                 tags = [t.strip().strip('"').strip("'") for t in tags_str.split(',')]
 
+                # Validate tags format
+                for tag in tags:
+                    if not tag:
+                        error = "Empty tag found in frontmatter tags array"
+                        self.log(f"   ⚠️  {file_path.name}: {error}")
+                        doc = Document(file_path=file_path, doc_type=doc_type, title=title, status=status, date=date, tags=tags)
+                        doc.errors.append(error)
+                        return doc
+                    # Check for invalid characters (tags should be lowercase, hyphenated)
+                    if not re.match(r'^[a-z0-9\-]+$', tag):
+                        error = f"Invalid tag '{tag}' - tags should be lowercase, hyphenated (e.g., 'data-access', 'backend')"
+                        self.log(f"   ⚠️  {file_path.name}: {error}")
+                        doc = Document(file_path=file_path, doc_type=doc_type, title=title, status=status, date=date, tags=tags)
+                        doc.errors.append(error)
+                        return doc
+
             doc = Document(
                 file_path=file_path,
                 doc_type=doc_type,
@@ -581,6 +597,21 @@ class PrismDocValidator:
         lines.append(f"\n📋 Link Types:")
         for link_type, count in sorted(link_counts.items(), key=lambda x: x[1], reverse=True):
             lines.append(f"   {link_type.value}: {count}")
+
+        # Tags summary (union of all tags)
+        all_tags: Dict[str, int] = {}
+        for doc in self.documents:
+            for tag in doc.tags:
+                all_tags[tag] = all_tags.get(tag, 0) + 1
+
+        if all_tags:
+            lines.append(f"\n🏷️  Tags (union across all documents): {len(all_tags)} unique tags")
+            # Show top 15 tags by usage
+            sorted_tags = sorted(all_tags.items(), key=lambda x: x[1], reverse=True)
+            for tag, count in sorted_tags[:15]:
+                lines.append(f"   {tag}: {count} document(s)")
+            if len(sorted_tags) > 15:
+                lines.append(f"   ... and {len(sorted_tags) - 15} more tags")
 
         # Document errors
         if docs_with_errors > 0:
