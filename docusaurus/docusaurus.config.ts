@@ -78,6 +78,16 @@ const config: Config = {
         editUrl: 'https://github.com/jrepp/prism-data-layer/tree/main/docs-cms/',
       },
     ],
+    [
+      '@docusaurus/plugin-content-docs',
+      {
+        id: 'memos',
+        path: '../docs-cms/memos',
+        routeBasePath: 'memos',
+        sidebarPath: './sidebars-memos.ts',
+        editUrl: 'https://github.com/jrepp/prism-data-layer/tree/main/docs-cms/',
+      },
+    ],
   ],
 
   themes: [
@@ -143,6 +153,11 @@ const config: Config = {
           position: 'left',
         },
         {
+          to: '/memos',
+          label: 'Memos',
+          position: 'left',
+        },
+        {
           href: 'https://github.com/jrepp/prism-data-layer',
           label: 'GitHub',
           position: 'right',
@@ -166,6 +181,10 @@ const config: Config = {
             {
               label: 'RFCs',
               to: '/rfc',
+            },
+            {
+              label: 'Memos',
+              to: '/memos',
             },
           ],
         },
