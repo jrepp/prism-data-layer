@@ -41,7 +41,7 @@ The CLI will interact with Prism's admin gRPC services (RFC-003) to manage names
 - Support all operations defined in RFC-003 Admin gRPC API
 - Enable automation and scripting for operational workflows
 - Deliver excellent developer experience with rich formatting and feedback
-- Support both interactive and non-interactive (CI/CD) usage modes
+- Support YAML-first configuration with automatic config file discovery
 - Integrate with existing Python tooling ecosystem (uv, pytest)
 
 ## Non-Goals
@@ -131,13 +131,13 @@ prism
 #### Create Namespace
 
 ```bash
-# Interactive mode with prompts
-prism namespace create --interactive
-
-# Declarative mode from config file
+# Preferred: Declarative mode from config file
 prism namespace create --config namespace.yaml
 
-# Inline configuration
+# Config file discovery (searches . and parent dirs for .config.yaml)
+prism namespace create my-app  # Uses .config.yaml from current or parent dir
+
+# Inline configuration (for simple cases or scripting)
 prism namespace create my-app \
   --backend postgres \
   --pattern keyvalue \
@@ -290,11 +290,14 @@ prism backend stats --output json
 #### List Sessions
 
 ```bash
-# List all active sessions
+# List all active sessions across all namespaces
 prism session list
 
-# Filter by namespace
+# Scope to specific namespace (preferred for focused inspection)
 prism session list --namespace my-app
+
+# Scope using config file (.config.yaml must specify namespace)
+prism session list  # Auto-scopes if .config.yaml has namespace set
 
 # Show long-running sessions
 prism session list --duration ">1h"
@@ -346,11 +349,14 @@ Statistics:
 #### Show Configuration
 
 ```bash
-# Show proxy configuration
+# Show proxy-wide configuration
 prism config show
 
-# Show namespace-specific config
+# Show namespace-specific config (scoped view)
 prism config show --namespace my-app
+
+# Auto-scope using .config.yaml (if namespace specified in config)
+prism config show  # Uses namespace from .config.yaml if present
 
 # Export configuration
 prism config show --output yaml > prism-config.yaml
@@ -387,14 +393,17 @@ Safe to apply: Yes (with warnings)
 #### Metrics Summary
 
 ```bash
-# Overall metrics
+# Overall metrics across all namespaces
 prism metrics summary
 
-# Namespace-specific metrics
-prism metrics namespace my-app
+# Namespace-specific metrics (scoped view)
+prism metrics summary --namespace my-app
 
-# Time range
-prism metrics summary --since "1h ago"
+# Auto-scope using .config.yaml
+prism metrics summary  # Uses namespace from .config.yaml if present
+
+# Time range filtering
+prism metrics summary --since "1h ago" --namespace my-app
 ```
 
 **Output**:
@@ -614,24 +623,37 @@ console = Console()
 @app.command()
 def create(
     name: str = typer.Argument(..., help="Namespace name"),
-    backend: str = typer.Option(..., help="Backend type (postgres, redis, etc.)"),
-    pattern: str = typer.Option(..., help="Data access pattern"),
+    backend: str = typer.Option(None, help="Backend type (postgres, redis, etc.)"),
+    pattern: str = typer.Option(None, help="Data access pattern"),
     consistency: str = typer.Option("eventual", help="Consistency level"),
     cache_ttl: Optional[int] = typer.Option(None, help="Cache TTL in seconds"),
-    config: Optional[str] = typer.Option(None, help="Path to config file"),
-    interactive: bool = typer.Option(False, help="Interactive mode"),
+    config: Optional[str] = typer.Option(None, help="Path to config file (or .config.yaml)"),
 ):
-    """Create a new namespace."""
+    """Create a new namespace.
+
+    Prefers YAML configuration. If --config not specified, searches for .config.yaml
+    in current directory and parent directories.
+    """
     client = AdminClient()
 
+    # Load config from file (explicit or discovered)
+    if config:
+        config_data = load_yaml_config(config)
+    else:
+        config_data = discover_config()  # Search for .config.yaml
+
+    # Override with CLI args if provided
+    config_data.update({
+        k: v for k, v in {
+            'backend': backend,
+            'pattern': pattern,
+            'consistency': consistency,
+            'cache_ttl': cache_ttl,
+        }.items() if v is not None
+    })
+
     try:
-        namespace = client.create_namespace(
-            name=name,
-            backend=backend,
-            pattern=pattern,
-            consistency=consistency,
-            cache_ttl=cache_ttl,
-        )
+        namespace = client.create_namespace(name=name, **config_data)
 
         # Display result
         table = Table(title="Namespace Created")
@@ -856,10 +878,34 @@ The CLI validates the admin API design and provides immediate value. Web UI deve
 
 ## Configuration
 
-### CLI Configuration File
+### Configuration File Discovery
 
+The CLI follows a hierarchical configuration search strategy:
+
+1. **Explicit `--config` flag**: Highest priority, direct path to config file
+2. **`.config.yaml` in current directory**: Checked first for project-specific config
+3. **`.config.yaml` in parent directories**: Walks up the tree to find inherited config
+4. **`~/.prism/config.yaml`**: User-level global configuration
+5. **Command-line arguments**: Override any config file settings
+
+**Example `.config.yaml` (project-level)**:
 ```yaml
-# ~/.prism/config.yaml
+# .config.yaml - Project configuration for my-app namespace
+namespace: my-app  # Default namespace for scoped commands
+endpoint: localhost:50052
+
+backend:
+  type: postgres
+  pattern: keyvalue
+  consistency: strong
+  cache_ttl: 300
+
+# Sessions, config, metrics will auto-scope to this namespace unless --namespace specified
+```
+
+**Example `~/.prism/config.yaml` (user-level)**:
+```yaml
+# ~/.prism/config.yaml - Global CLI configuration
 default_endpoint: localhost:50052
 auth:
   method: mtls
@@ -878,6 +924,22 @@ timeouts:
 logging:
   level: info
   file: ~/.prism/cli.log
+```
+
+**Usage pattern**:
+```bash
+# In project directory with .config.yaml (namespace: my-app):
+cd ~/projects/my-app
+prism session list          # Auto-scopes to my-app namespace
+prism metrics summary       # Shows metrics for my-app
+prism config show           # Shows my-app configuration
+
+# Override with --namespace flag:
+prism session list --namespace other-app
+
+# Parent directory search:
+cd ~/projects/my-app/src/handlers
+prism session list          # Finds .config.yaml in ~/projects/my-app/
 ```
 
 ### Environment Variables
@@ -901,7 +963,7 @@ export PRISM_OUTPUT_FORMAT="json"
 ### UX Enhancements
 
 - **Rich Formatting**: Colors, tables, trees, progress bars
-- **Interactive Prompts**: When `--interactive` flag used
+- **Config File Discovery**: Automatic `.config.yaml` lookup in current and parent directories
 - **Smart Defaults**: Sensible defaults for all optional parameters
 - **Helpful Errors**: Clear error messages with suggested fixes
 - **Autocomplete**: Shell completion for commands and options
