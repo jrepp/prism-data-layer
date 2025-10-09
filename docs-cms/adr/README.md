@@ -13,7 +13,7 @@ graph TB
     end
 
     subgraph "Admin Layer"
-        AdminCLI[Admin CLI<br/>prism-admin]
+        AdminCLI[Admin CLI<br/>prismctl]
         AdminUI[Admin UI<br/>FastAPI + gRPC-Web]
     end
 
@@ -261,6 +261,11 @@ graph TB
   - Vanilla JavaScript frontend with Tailwind CSS
   - Browser-accessible administration
 
+- [ADR-040: uv run --with Pattern for Admin CLI](./040-uv-run-with-pattern.md) - **Accepted**
+  - Python CLI with uv run --with prismctl pattern
+  - Zero installation, secure package verification
+  - Standard plugin images in ~/.prism directory
+
 ### Observability & Schema Management
 
 - [ADR-029: Protocol Recording with Protobuf Tagging](./029-protocol-recording-protobuf-tags.md) - **Accepted**
@@ -311,6 +316,8 @@ Proposed → Reviewed → Accepted → Implemented
 
 ## Recent Changes
 
+- 2025-10-09: ADR-040 added (uv run --with pattern for prismctl)
+- 2025-10-09: High-level architecture diagram added to index
 - 2025-10-08: Converted all ADRs to YAML frontmatter format
 - 2025-10-08: ADRs 027-030 added (Admin interface, protocol/schema recording)
 - 2025-10-07: ADRs 022-026 added (Client configuration, interfaces, deployment)
@@ -352,3 +359,7 @@ ADRs are tagged for easy filtering:
 - `#registry` - Schema and service registries
 - `#debugging` - Debugging tools and techniques
 - `#evolution` - System evolution and migration
+- `#python` - Python-specific patterns and tooling
+- `#uv` - uv package manager and tooling
+- `#cli` - Command-line interface design
+- `#tooling` - Development and operational tooling

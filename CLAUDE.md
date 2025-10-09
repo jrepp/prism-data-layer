@@ -72,18 +72,21 @@ Keep the tree shallow for easy navigation:
 prism/
 ├── CLAUDE.md              # This file - project guidance
 ├── README.md              # Quick start and overview
-├── docs/                  # Deep-dive documentation
+├── docs-cms/              # Documentation source (version controlled)
 │   ├── adr/               # Architecture Decision Records
-│   ├── requirements/      # Requirements documents
-│   └── netflix/           # Reference materials (PDFs, transcripts)
-├── admin/                 # Ember-based admin UI
+│   ├── rfcs/              # Request for Comments
+│   └── memos/             # Design memos
+├── docusaurus/            # Docusaurus site configuration
+├── docs/                  # Built docs (GitHub Pages)
+├── admin/                 # FastAPI-based admin UI
+├── cli/                   # Python admin CLI (prismctl)
 ├── proxy/                 # Rust high-performance gateway
-├── backends/              # Backend implementations
-│   ├── kafka/
-│   ├── nats/
-│   ├── postgres/
-│   ├── sqlite/
-│   └── neptune/
+├── plugins/               # Go backend plugins (containers)
+│   ├── core/              # Shared plugin package
+│   ├── postgres/          # PostgreSQL plugin
+│   ├── kafka/             # Kafka plugin
+│   ├── redis/             # Redis plugin
+│   └── watcher/           # File watcher for hot reload
 ├── proto/                 # Protobuf definitions (source of truth)
 ├── tooling/               # Python utilities for repo management
 ├── tests/                 # Integration and load tests
@@ -147,9 +150,20 @@ Custom tags enable:
 # Install uv for Python dependency management
 curl -LsSf https://astral.sh/uv/install.sh | sh
 
-# Bootstrap the environment
+# Bootstrap the environment (creates ~/.prism directory)
 uv sync
-python -m tooling.bootstrap
+uv run tooling/bootstrap.py
+```
+
+The bootstrap script creates:
+```
+~/.prism/
+├── config.yaml          # Admin CLI configuration
+├── token                # OIDC token cache
+└── plugins/             # Standard plugin manifests
+    ├── postgres.yaml    # PostgreSQL plugin spec
+    ├── kafka.yaml       # Kafka plugin spec
+    └── redis.yaml       # Redis plugin spec
 ```
 
 ### Testing Philosophy
@@ -170,17 +184,27 @@ python -m tooling.test.load-test --scenario high-throughput
 ### Common Commands
 
 ```bash
-# Generate code from proto definitions
-python -m tooling.codegen
+# Admin CLI (no installation required - ADR-040)
+uv run --with prismctl prism namespace list
+uv run --with prismctl prism health
+
+# Or create an alias for convenience
+alias prism="uv run --with prismctl prism"
+
+# Build backend plugins
+cd plugins && make build
+
+# Watch plugins for changes and auto-rebuild
+cd plugins && go run ./watcher --reload
 
 # Run proxy locally
 cd proxy && cargo run --release
 
 # Run admin UI
-cd admin && ember serve
+cd admin && npm run dev
 
 # Deploy to staging
-python -m tooling.deploy --env staging
+uv run tooling/deploy.py --env staging
 ```
 
 ## Automation with uv
