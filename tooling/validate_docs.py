@@ -600,6 +600,13 @@ class PrismDocValidator:
                     lines.append(f"   Line {link.line_number}: {link.target}")
                     lines.append(f"      → {link.error_message}")
 
+        # Validation-level errors (TypeScript, build, etc.)
+        if self.errors:
+            lines.append(f"\n❌ VALIDATION ERRORS ({len(self.errors)}):")
+            lines.append("-"*80)
+            for error in self.errors:
+                lines.append(f"   ✗ {error}")
+
         # Final status
         lines.append("\n" + "="*80)
         if docs_with_errors == 0 and broken_links == 0 and not self.errors:
