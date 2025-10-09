@@ -58,6 +58,375 @@ Modern distributed applications require complex reliability patterns, but implem
 - Arbitrary pattern composition (only compatible patterns can layer)
 - Application-level customization of patterns (Prism controls implementation)
 
+## Client Pattern Catalog
+
+This section shows **how application owners request high-level patterns** without needing to understand internal implementation. Each pattern maps to common application problems.
+
+### Pattern 1: High-Throughput Event Logging (WAL)
+
+**Application Problem:**
+You need to log millions of events per second (analytics, telemetry, audit logs) with minimal latency. Traditional message queues become bottlenecks.
+
+**What You Get:**
+- Sub-millisecond write latency (append-only log)
+- High throughput (100k+ events/sec per connection)
+- Automatic tiered storage (hot → warm → cold)
+- Queryable history via time-range queries
+
+**Client Configuration:**
+```yaml
+# Simply declare your data access pattern
+namespaces:
+  - name: analytics-events
+    api: publisher  # High-throughput writes
+
+    # Prism automatically provisions WAL pattern
+    requirements:
+      write_rps: 100000         # → Prism adds WAL
+      retention: 90days         # → Prism adds Tiered Storage
+      query_by: timestamp       # → Prism adds time-range indexing
+```
+
+**Client Code:**
+```python
+# Application just publishes - Prism handles WAL internally
+for event in event_stream:
+    client.publish("analytics", event)
+    # Prism: Appends to WAL, returns immediately
+    # Background: WAL flusher writes to Kafka
+    # Background: Tiered storage moves old data to S3
+```
+
+**What Happens Internally:**
+1. **Layer 3**: Client calls `publish()`
+2. **Layer 2**: WAL pattern appends to local buffer (fast)
+3. **Layer 2**: Tiered Storage pattern moves old data to S3
+4. **Layer 1**: Background WAL flusher sends to Kafka
+
+**Real-World Example:**
+```
+Problem: Logging 500k user click events/second
+Before Prism: Custom WAL implementation, 2000 LOC
+With Prism: 3 lines of config, 1 line of code
+```
+
+### Pattern 2: Large Payload Pub/Sub (Claim Check)
+
+**Application Problem:**
+You need to publish large files (videos, ML models, datasets) but message queues have size limits (Kafka: 10MB, NATS: 8MB).
+
+**What You Get:**
+- Publish files up to 5GB through standard `publish()` API
+- Automatic storage management (S3/Blob)
+- Transparent retrieval for subscribers
+- Automatic cleanup after consumption
+
+**Client Configuration:**
+```yaml
+namespaces:
+  - name: video-processing
+    api: pubsub
+
+    requirements:
+      max_message_size: 5GB        # → Prism adds Claim Check
+      storage_backend: s3          # → Prism configures S3 storage
+      cleanup: on_consume          # → Prism auto-deletes after read
+```
+
+**Client Code:**
+```python
+# Publisher: Send large video file (no special handling)
+video_bytes = open("movie.mp4", "rb").read()  # 2.5GB
+client.publish("videos", video_bytes)
+# Prism: Detects size > threshold, stores in S3, publishes reference
+
+# Subscriber: Receive full video (transparent retrieval)
+event = client.subscribe("videos")
+video_bytes = event.payload  # Full 2.5GB reconstructed
+process_video(video_bytes)
+# Prism: Fetches from S3, deletes S3 object after consumption
+```
+
+**What Happens Internally:**
+1. **Layer 3**: Client calls `publish(2.5GB payload)`
+2. **Layer 2**: Claim Check detects size > 1MB threshold
+3. **Layer 2**: Stores payload in S3, generates claim check ID
+4. **Layer 1**: Publishes lightweight message to Kafka (just metadata)
+
+**Real-World Example:**
+```
+Problem: ML team publishes 50GB model weights per training run
+Before Prism: Manual S3 upload + manual message with S3 key
+With Prism: Standard publish() API, Prism handles everything
+```
+
+### Pattern 3: Transactional Messaging (Outbox)
+
+**Application Problem:**
+You need guaranteed message delivery when updating database - no lost messages, no duplicates, even if Kafka is down.
+
+**What You Get:**
+- Atomic database update + message publish
+- Guaranteed delivery (survives crashes, Kafka outages)
+- Exactly-once semantics
+- No dual-write problems
+
+**Client Configuration:**
+```yaml
+namespaces:
+  - name: order-processing
+    api: queue
+
+    requirements:
+      consistency: strong          # → Prism adds Outbox pattern
+      delivery_guarantee: exactly_once
+```
+
+**Client Code:**
+```python
+# Application code: Atomically update DB and publish event
+with client.transaction() as tx:
+    # 1. Update database
+    tx.execute("UPDATE orders SET status='completed' WHERE id=$1", order_id)
+
+    # 2. Publish event (atomic with DB update)
+    tx.publish("order-events", {"order_id": order_id, "status": "completed"})
+
+    # If commit succeeds, event WILL be published eventually
+    # If commit fails, event is NOT published
+    tx.commit()
+
+# Prism handles background publishing from outbox table
+```
+
+**What Happens Internally:**
+1. **Layer 3**: Client calls `tx.publish()`
+2. **Layer 2**: Outbox pattern inserts into `outbox` table (same transaction)
+3. **Layer 1**: Transaction commits to Postgres
+4. **Background**: Outbox publisher polls table, publishes to Kafka, marks published
+
+**Real-World Example:**
+```
+Problem: E-commerce order completion must trigger notification
+Before Prism: Dual write bug caused missed notifications
+With Prism: Outbox pattern guarantees delivery
+```
+
+### Pattern 4: Change Data Capture with Kafka (CDC + Outbox)
+
+**Application Problem:**
+You need to stream database changes to other systems (cache, search index, analytics) without dual writes.
+
+**What You Get:**
+- Automatic capture of database changes (INSERT/UPDATE/DELETE)
+- Stream changes to Kafka for consumption
+- No application code changes required
+- Guaranteed ordering per key
+
+**Client Configuration:**
+```yaml
+namespaces:
+  - name: user-profiles
+    api: reader  # Normal database reads/writes
+
+    # Enable CDC streaming
+    cdc:
+      enabled: true
+      source: postgres             # → Prism captures PostgreSQL WAL
+      destination: kafka           # → Prism streams to Kafka
+      topic: user-profile-changes
+
+      # What to capture
+      tables: [user_profiles]
+      operations: [INSERT, UPDATE, DELETE]
+```
+
+**Client Code:**
+```python
+# Application: Normal database operations (no CDC code!)
+client.update("user_profiles", user_id, {"email": "new@email.com"})
+
+# Prism automatically publishes CDC event to Kafka:
+# {
+#   "operation": "UPDATE",
+#   "table": "user_profiles",
+#   "before": {"email": "old@email.com"},
+#   "after": {"email": "new@email.com"},
+#   "timestamp": "2025-10-09T10:30:00Z"
+# }
+
+# Other systems consume from Kafka:
+def cache_invalidator():
+    for change in kafka.consume("user-profile-changes"):
+        if change.operation in ["UPDATE", "DELETE"]:
+            redis.delete(f"user:{change.after.id}:profile")
+```
+
+**What Happens Internally:**
+1. **Layer 3**: Client calls `update()`
+2. **Layer 1**: Postgres executes UPDATE
+3. **Layer 2**: CDC pattern captures WAL entry
+4. **Layer 2**: Transforms WAL → CDC event
+5. **Layer 1**: Publishes to Kafka topic
+
+**Real-World Example:**
+```
+Problem: Keep Elasticsearch search index synced with PostgreSQL
+Before Prism: Dual write (update DB, update ES) - race conditions
+With Prism: CDC automatically streams changes, ES consumes
+```
+
+### Pattern 5: Transactional Large Payloads (Outbox + Claim Check)
+
+**Application Problem:**
+You need BOTH transactional guarantees (outbox) AND large payload support (claim check) - ML model releases, video uploads with metadata.
+
+**What You Get:**
+- Atomic transaction (if commit succeeds, event will be published)
+- Large payload support (up to 5GB)
+- No Kafka/NATS size limits
+- Exactly-once delivery
+
+**Client Configuration:**
+```yaml
+namespaces:
+  - name: ml-model-releases
+    api: pubsub
+
+    requirements:
+      consistency: strong           # → Prism adds Outbox
+      max_message_size: 5GB        # → Prism adds Claim Check
+      delivery_guarantee: exactly_once
+```
+
+**Client Code:**
+```python
+# Application: Publish large model with transactional guarantee
+model_weights = load_model("model-v2.weights")  # 2GB
+
+with client.transaction() as tx:
+    # Update model registry
+    tx.execute("""
+        INSERT INTO model_registry (name, version, status)
+        VALUES ($1, $2, 'published')
+    """, "my-model", "v2")
+
+    # Publish model (2GB payload, transactional)
+    tx.publish("model-releases", {
+        "model_name": "my-model",
+        "version": "v2",
+        "weights": model_weights  # 2GB
+    })
+
+    tx.commit()
+# If commit succeeds: model will be published
+# If commit fails: S3 object is cleaned up, no message sent
+```
+
+**What Happens Internally:**
+1. **Layer 3**: Client calls `tx.publish(2GB)`
+2. **Layer 2**: Claim Check stores 2GB in S3
+3. **Layer 2**: Outbox inserts `{claim_check_id}` into outbox table
+4. **Layer 1**: Transaction commits to Postgres
+5. **Background**: Outbox publisher sends lightweight Kafka message
+
+**Real-World Example:**
+```
+Problem: ML platform releases 50GB models, needs atomic model registry + notification
+Before Prism: Manual S3 + outbox implementation, 500 LOC
+With Prism: Standard transactional API, Prism composes patterns
+```
+
+### Pattern 6: Cached Reads with Auto-Invalidation (Cache + CDC)
+
+**Application Problem:**
+You need fast cached reads but cache must stay fresh when database changes.
+
+**What You Get:**
+- Lightning-fast reads (Redis cache)
+- Automatic cache invalidation on updates
+- No stale data
+- No application cache management code
+
+**Client Configuration:**
+```yaml
+namespaces:
+  - name: product-catalog
+    api: reader
+
+    # Enable caching with CDC invalidation
+    cache:
+      enabled: true
+      backend: redis
+      ttl: 900  # 15 min fallback
+
+    cdc:
+      enabled: true
+      destination: cache_invalidator
+      operations: [UPDATE, DELETE]
+```
+
+**Client Code:**
+```python
+# Application: Just read - Prism handles caching
+product = client.get("products", product_id)
+# First read: Cache miss → Query Postgres → Populate cache
+# Subsequent reads: Cache hit → Return from Redis (sub-ms)
+
+# Another service updates product
+other_service.update("products", product_id, {"price": 29.99})
+# Prism CDC: Detects change, invalidates cache automatically
+
+# Next read: Cache miss (invalidated) → Fresh data from Postgres
+product = client.get("products", product_id)  # Gets updated price
+```
+
+**What Happens Internally:**
+1. **Read Path**: Client → Check Redis → (miss) → Query Postgres → Cache in Redis
+2. **Write Path**: Update Postgres → CDC captures change → Invalidate Redis key
+3. **Next Read**: Cache miss → Fresh data
+
+**Real-World Example:**
+```
+Problem: Product catalog with millions of reads/sec, frequent price updates
+Before Prism: Manual cache + manual invalidation, stale data bugs
+With Prism: Declare cache + CDC, Prism handles everything
+```
+
+### Pattern Selection Guide
+
+| Use Case | Recommended Pattern | Configuration |
+|----------|-------------------|---------------|
+| **High-volume logging** | WAL + Tiered Storage | `write_rps: 100k+`, `retention: 90days` |
+| **Large files (videos, models)** | Claim Check | `max_message_size: >1MB` |
+| **Transactional events** | Outbox | `consistency: strong` |
+| **Database change streaming** | CDC | `cdc.enabled: true` |
+| **Large + transactional** | Outbox + Claim Check | Both requirements |
+| **Fast cached reads** | Cache + CDC | `cache.enabled: true`, `cdc.enabled: true` |
+| **Event sourcing** | WAL + Event Store | `audit: true`, `replay: enabled` |
+
+### How Prism Selects Patterns
+
+Application owners declare **requirements**, Prism selects **patterns**:
+
+```yaml
+# Application declares "what" they need
+namespaces:
+  - name: video-uploads
+    requirements:
+      write_rps: 5000                    # High throughput
+      max_message_size: 5GB              # Large payloads
+      consistency: strong                # Transactional
+      retention: 30days                  # Long-term storage
+
+# Prism generates "how" to implement it
+# Internally translates to:
+#   patterns: [WAL, Outbox, Claim Check, Tiered Storage]
+#   backend: [Kafka, S3, Postgres]
+```
+
+Application owners **never write pattern composition logic** - they declare needs, Prism handles the rest.
+
 ## Architecture Overview
 
 ### Proxy Internal Structure
