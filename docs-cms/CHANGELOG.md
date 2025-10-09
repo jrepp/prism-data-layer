@@ -13,7 +13,7 @@ Quick access to recently updated documentation. Changes listed in reverse chrono
 ### 2025-10-09
 
 #### RFC-014: Layered Data Access Patterns (NEW)
-**Link**: [RFC-014](/rfc/RFC-014-layered-data-access-patterns)
+**Link**: [RFC-014](./rfcs/RFC-014-layered-data-access-patterns.md)
 
 **Summary**: New RFC defining how Prism separates client API from backend implementation through pattern composition. Covers:
 - Three-layer architecture (Client API, Pattern Composition, Backend Execution)
@@ -28,7 +28,7 @@ Quick access to recently updated documentation. Changes listed in reverse chrono
 ---
 
 #### RFC-011: Data Proxy Authentication - Open Questions Expanded
-**Link**: [RFC-011](/rfc/RFC-011-data-proxy-authentication)
+**Link**: [RFC-011](./rfcs/RFC-011-data-proxy-authentication.md)
 
 **Summary**: Added comprehensive feedback to open questions:
 - Certificate Authority: Use Vault for certificate management
@@ -42,7 +42,7 @@ Quick access to recently updated documentation. Changes listed in reverse chrono
 ---
 
 #### RFC-010: Admin Protocol with OIDC - Multi-Provider Support
-**Link**: [RFC-010](/rfc/RFC-010-admin-protocol-oidc)
+**Link**: [RFC-010](./rfcs/RFC-010-admin-protocol-oidc.md)
 
 **Summary**: Expanded open questions with detailed answers:
 - OIDC Provider Support: AWS Cognito, Azure AD, Google, Okta, Auth0, Dex
@@ -56,7 +56,7 @@ Quick access to recently updated documentation. Changes listed in reverse chrono
 ---
 
 #### RFC-009: Distributed Reliability Patterns - Change Notification Graph
-**Link**: [RFC-009](/rfc/RFC-009-distributed-reliability-patterns)
+**Link**: [RFC-009](./rfcs/RFC-009-distributed-reliability-patterns.md)
 
 **Summary**: Added change notification flow diagram to CDC pattern showing:
 - Change type classification (INSERT, UPDATE, DELETE, SCHEMA)
@@ -73,7 +73,7 @@ Quick access to recently updated documentation. Changes listed in reverse chrono
 ### 2025-10-08
 
 #### RFC-009: Distributed Reliability Patterns (INITIAL)
-**Link**: [RFC-009](/rfc/RFC-009-distributed-reliability-patterns)
+**Link**: [RFC-009](./rfcs/RFC-009-distributed-reliability-patterns.md)
 
 **Summary**: Initial RFC documenting 7 distributed reliability patterns:
 1. Tiered Storage - Hot/warm/cold data lifecycle
@@ -91,7 +91,7 @@ Quick access to recently updated documentation. Changes listed in reverse chrono
 ### 2025-10-07
 
 #### RFC-001: Prism Architecture (INITIAL)
-**Link**: [RFC-001](/rfc/RFC-001-prism-architecture)
+**Link**: [RFC-001](./rfcs/RFC-001-prism-architecture.md)
 
 **Summary**: Foundational architecture RFC defining:
 - System components and layered interface hierarchy
@@ -106,7 +106,7 @@ Quick access to recently updated documentation. Changes listed in reverse chrono
 ---
 
 #### RFC-002: Data Layer Interface Specification (INITIAL)
-**Link**: [RFC-002](/rfc/RFC-002-data-layer-interface)
+**Link**: [RFC-002](./rfcs/RFC-002-data-layer-interface.md)
 
 **Summary**: Complete gRPC interface specification covering:
 - Session Service (authentication, heartbeat, lifecycle)
