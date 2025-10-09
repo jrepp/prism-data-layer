@@ -118,10 +118,19 @@ prism
 │   ├── summary     # Overall metrics summary
 │   ├── namespace   # Namespace-level metrics
 │   └── export      # Export metrics (Prometheus format)
-└── shadow
-    ├── enable      # Enable shadow traffic
-    ├── disable     # Disable shadow traffic
-    └── status      # Show shadow traffic status
+├── shadow
+│   ├── enable      # Enable shadow traffic
+│   ├── disable     # Disable shadow traffic
+│   └── status      # Show shadow traffic status
+└── plugin
+    ├── list        # List installed plugins
+    ├── install     # Install plugin from registry
+    ├── update      # Update plugin version
+    ├── enable      # Enable plugin
+    ├── disable     # Disable plugin
+    ├── status      # Show plugin health and metrics
+    ├── reload      # Hot-reload plugin code
+    └── logs        # View plugin logs
 ```
 
 ## Command Specifications
@@ -518,6 +527,262 @@ Comparison Metrics:
 
 ✓ Target performing well, ready for next stage
 ```
+
+### Plugin Management
+
+Plugin commands manage backend plugins (installation, updates, health monitoring, hot-reload).
+
+For complete plugin development guide, see [RFC-008: Plugin Development Experience](./RFC-008-proxy-plugin-architecture.md#plugin-development-experience).
+
+#### List Plugins
+
+```bash
+# List all installed plugins
+prism plugin list
+
+# Filter by status
+prism plugin list --status enabled
+prism plugin list --status disabled
+
+# Show plugin versions
+prism plugin list --show-versions
+```
+
+**Output**:
+```
+┏━━━━━━━━━━━━━━┳━━━━━━━━━┳━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━┓
+┃ Plugin       ┃ Version ┃ Status   ┃ Namespaces       ┃ Health     ┃
+┡━━━━━━━━━━━━━━╇━━━━━━━━━╇━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━┩
+│ postgres     │ 1.2.0   │ enabled  │ 45 namespaces    │ ✓ Healthy  │
+│ redis        │ 2.1.3   │ enabled  │ 123 namespaces   │ ✓ Healthy  │
+│ kafka        │ 3.0.1   │ enabled  │ 18 namespaces    │ ⚠ Degraded │
+│ clickhouse   │ 1.5.0   │ disabled │ 0 namespaces     │ - Disabled │
+│ mongodb      │ 0.9.0   │ enabled  │ 7 namespaces     │ ✓ Healthy  │
+└──────────────┴─────────┴──────────┴──────────────────┴────────────┘
+```
+
+#### Install Plugin
+
+```bash
+# Install from registry (default: latest version)
+prism plugin install mongodb
+
+# Install specific version
+prism plugin install mongodb --version 1.0.0
+
+# Install from local path (development)
+prism plugin install --local /path/to/mongodb-plugin.so
+
+# Install with custom config
+prism plugin install mongodb --config plugin-config.yaml
+```
+
+**Output**:
+```
+Installing plugin: mongodb
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✓ Downloaded mongodb-plugin v1.0.0 (5.2 MB)
+✓ Verified plugin signature
+✓ Loaded plugin library
+✓ Initialized plugin
+✓ Health check passed
+
+Plugin 'mongodb' installed successfully
+Supported operations: get, set, query, aggregate
+Ready to create namespaces with backend: mongodb
+```
+
+#### Update Plugin
+
+```bash
+# Update to latest version
+prism plugin update mongodb
+
+# Update to specific version
+prism plugin update mongodb --version 1.1.0
+
+# Dry-run mode (check compatibility without applying)
+prism plugin update mongodb --dry-run
+```
+
+**Output (with warnings)**:
+```
+Updating plugin: mongodb (1.0.0 → 1.1.0)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+⚠ Warning: 7 namespaces using this plugin will be restarted
+  - mongodb-cache
+  - user-sessions
+  - product-catalog
+  - (4 more...)
+
+✓ Downloaded mongodb-plugin v1.1.0 (5.3 MB)
+✓ Verified plugin signature
+
+Proceed with update? [y/N]: y
+
+✓ Stopped old plugin instances
+✓ Loaded new plugin version
+✓ Migrated plugin state
+✓ Restarted namespaces (7/7 healthy)
+
+Plugin 'mongodb' updated successfully (1.0.0 → 1.1.0)
+```
+
+#### Enable/Disable Plugin
+
+```bash
+# Disable plugin (prevent new namespaces, keep existing running)
+prism plugin disable kafka
+
+# Enable previously disabled plugin
+prism plugin enable kafka
+
+# Force disable (stop all namespaces using this plugin)
+prism plugin disable kafka --force
+```
+
+**Output**:
+```
+Disabling plugin: kafka
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+⚠ 18 namespaces currently using this plugin
+
+Actions:
+  ✓ Prevent new namespaces from using kafka backend
+  ✓ Existing namespaces will continue running
+  ⚠ Use --force to stop all kafka namespaces
+
+Plugin 'kafka' disabled successfully
+```
+
+#### Plugin Status
+
+```bash
+# View plugin health and detailed metrics
+prism plugin status mongodb
+
+# Include recent errors
+prism plugin status mongodb --show-errors
+
+# Live monitoring mode
+prism plugin status mongodb --watch
+```
+
+**Output**:
+```
+Plugin Status: mongodb (v1.0.0)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Health: ✓ Healthy
+Status: Enabled
+Deployment: Sidecar (gRPC: localhost:50105)
+
+Namespaces Using Plugin: 7
+  ├─ mongodb-cache (active, 1234 RPS)
+  ├─ user-sessions (active, 567 RPS)
+  └─ ... (5 more)
+
+Performance Metrics (Last 5 minutes):
+  Requests: 456,789 total (98.5% success rate)
+  Latency:
+    P50: 2.1ms
+    P99: 8.3ms
+    P999: 24.7ms
+  Connections: 45 active, 12 idle
+
+Resource Usage:
+  CPU: 1.2 cores (30% of limit)
+  Memory: 1.8 GB (22% of limit)
+  Network: 245 MB/s in, 312 MB/s out
+
+Recent Errors (last 10):
+  [09:15:23] Connection timeout to mongodb-1 (1 occurrence)
+  [09:12:45] Query timeout for aggregate operation (3 occurrences)
+```
+
+#### Hot-Reload Plugin
+
+```bash
+# Reload plugin code without restarting namespaces
+prism plugin reload mongodb
+
+# Reload with validation
+prism plugin reload mongodb --validate
+
+# Reload and tail logs
+prism plugin reload mongodb --tail
+```
+
+**Output**:
+```
+Reloading plugin: mongodb
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✓ Built new plugin binary
+✓ Verified plugin signature
+✓ Validated plugin compatibility
+✓ Loaded new plugin instance
+✓ Migrated active connections (45 connections)
+✓ Switched traffic to new instance
+✓ Drained old instance
+
+Plugin 'mongodb' reloaded successfully
+Namespaces affected: 7 (all healthy)
+Reload time: 2.3s (zero downtime)
+```
+
+#### View Plugin Logs
+
+```bash
+# View recent logs
+prism plugin logs mongodb
+
+# Follow logs (live tail)
+prism plugin logs mongodb --follow
+
+# Filter by log level
+prism plugin logs mongodb --level error
+
+# Show logs from specific time range
+prism plugin logs mongodb --since "1h ago"
+```
+
+**Output**:
+```
+Tailing logs: mongodb (Ctrl+C to stop)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+09:15:23.456 INFO  Initialized connection pool (size: 20)
+09:15:23.789 INFO  Health check passed
+09:15:24.123 DEBUG Executing query: {"op": "find", "collection": "users"}
+09:15:24.156 DEBUG Query completed in 33ms
+09:15:25.234 WARN  Connection to mongodb-1 timeout, retrying...
+09:15:25.567 INFO  Connection re-established
+```
+
+### Plugin Development Workflow
+
+For developers creating new plugins, the CLI provides scaffolding and testing tools:
+
+```bash
+# Create new plugin from template
+prism-plugin-init --name mybackend --language rust
+
+# Test plugin locally (without Prism proxy)
+cd mybackend-plugin
+prism plugin test --config test-config.yaml
+
+# Build and package plugin
+prism plugin build
+
+# Publish to registry (for distribution)
+prism plugin publish --registry https://plugins.prism.io
+```
+
+See [RFC-008: Plugin Development Experience](./RFC-008-proxy-plugin-architecture.md#plugin-development-experience) for complete development guide.
 
 ## Protobuf Integration
 

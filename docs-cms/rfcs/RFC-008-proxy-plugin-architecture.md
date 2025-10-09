@@ -913,6 +913,257 @@ Netflix's Data Gateway provides valuable insights for plugin architecture design
 - [WebAssembly Component Model](https://github.com/WebAssembly/component-model)
 - [Linux Capabilities](https://man7.org/linux/man-pages/man7/capabilities.7.html)
 
+## Plugin Development Experience
+
+### Design Goals for Plugin Authors
+
+Making plugins easy to create is critical for Prism's success. We prioritize:
+
+1. **Minimal Boilerplate**: Plugin shell generates 80% of code
+2. **Strong Typing**: Protobuf schemas prevent API mismatches
+3. **Local Testing**: Test plugins without full Prism deployment
+4. **Fast Iteration**: Hot-reload during development
+5. **Clear Documentation**: Examples for common patterns
+
+### Plugin Shell: `prism-plugin-init`
+
+**Quick Start** - Create a new plugin in 30 seconds:
+
+```bash
+# Create new plugin from template
+prism-plugin-init --name mongodb --language rust
+
+# Generated structure:
+mongodb-plugin/
+├── Cargo.toml
+├── src/
+│   ├── lib.rs          # Plugin entry point (implements BackendPlugin trait)
+│   ├── config.rs       # Backend configuration (auto-generated from proto)
+│   ├── client.rs       # MongoDB client wrapper
+│   └── operations/     # Operation handlers
+│       ├── get.rs
+│       ├── set.rs
+│       └── query.rs
+├── proto/
+│   └── mongodb_config.proto  # Configuration schema
+├── tests/
+│   ├── integration_test.rs
+│   └── fixtures/
+└── README.md
+```
+
+**Template provides**:
+- gRPC service implementation skeleton
+- Configuration parsing (protobuf → struct)
+- Connection pool setup
+- Health check implementation
+- Metrics reporting
+- Error handling patterns
+- Integration test scaffolding
+
+### Plugin SDK (`prism-plugin-sdk`)
+
+Rust SDK provides helpers for common patterns:
+
+```rust
+use prism_plugin_sdk::prelude::*;
+
+#[plugin]
+pub struct MongoDbPlugin {
+    #[config]
+    config: MongoDbConfig,  // Auto-parsed from InitializeRequest
+
+    #[client]
+    client: MongoClient,  // Auto-initialized from config
+
+    #[pool(size = 20)]
+    pool: ConnectionPool,  // Connection pooling helper
+}
+
+#[async_trait]
+impl BackendPlugin for MongoDbPlugin {
+    // SDK provides default implementations for health_check, metrics
+
+    #[operation("get")]
+    async fn handle_get(&self, params: GetParams) -> PluginResult<GetResponse> {
+        // SDK handles:
+        // - Protobuf deserialization (params)
+        // - Error mapping (PluginResult → gRPC status codes)
+        // - Metrics recording (latency, errors)
+        // - Tracing context propagation
+
+        let doc = self.client.find_one(params.key).await?;
+        Ok(GetResponse { value: doc })
+    }
+}
+```
+
+**SDK Features**:
+- **Macros**: `#[plugin]`, `#[operation]` reduce boilerplate
+- **Connection Pooling**: Automatic pool management
+- **Metrics**: Auto-record latency, errors, throughput
+- **Health Checks**: Default implementation with customization hooks
+- **Testing Utilities**: Mock proxy, request builders
+
+### Development Workflow
+
+**Local Testing Without Prism**:
+
+```bash
+# 1. Start plugin in standalone mode
+cargo run --bin mongodb-plugin-server
+
+# 2. Test with grpcurl
+grpcurl -plaintext -d '{"namespace": "test", "config": {...}}' \
+  localhost:50100 prism.plugin.BackendPlugin/Initialize
+
+# 3. Send operations
+grpcurl -plaintext -d '{"operation": "get", "params": {"key": "foo"}}' \
+  localhost:50100 prism.plugin.BackendPlugin/Execute
+```
+
+**Integration Testing**:
+
+```rust
+#[tokio::test]
+async fn test_get_operation() {
+    // SDK provides test harness
+    let mut plugin = MongoDbPlugin::test_instance().await;
+
+    // Initialize with test config
+    plugin.initialize(test_config()).await.unwrap();
+
+    // Execute operation
+    let response = plugin.get("test-key").await.unwrap();
+
+    assert_eq!(response.value, expected_value);
+}
+```
+
+**Hot-Reload During Development**:
+
+```bash
+# Watch for changes and reload plugin
+cargo watch -x 'build --release' -s 'prism plugin reload mongodb'
+```
+
+### Language Support Strategy
+
+**Priority 1: Rust** (Best Performance + Isolation)
+- In-process: Shared library (cdylib)
+- Out-of-process: Standalone binary with gRPC server
+- **Best for**: High-performance backends (Redis, PostgreSQL)
+
+**Priority 2: Go** (Good Performance + Ecosystem)
+- Out-of-process only: gRPC server
+- **Best for**: Kafka, ClickHouse (existing Go SDKs)
+
+**Priority 3: Python** (Rapid Development)
+- Out-of-process only: gRPC server
+- **Best for**: Prototyping, ML backends, custom integrations
+
+**Template Availability**:
+```bash
+prism-plugin-init --name mybackend --language [rust|go|python]
+```
+
+Each template includes:
+- gRPC service implementation
+- Connection pool patterns
+- Configuration management
+- Testing framework
+- Dockerfile for containerization
+
+### Plugin Isolation Strategy
+
+**Security Isolation** (Prevents malicious plugins):
+
+| Mechanism | In-Process | Sidecar | Remote |
+|-----------|-----------|---------|--------|
+| **Process Boundary** | ❌ Shared | ✅ Separate | ✅ Separate |
+| **Memory Isolation** | ❌ Shared | ✅ Isolated | ✅ Isolated |
+| **Resource Limits** | ❌ Shared | ✅ cgroups | ✅ K8s limits |
+| **Credential Access** | ⚠️ Restricted | ✅ Isolated | ✅ Isolated |
+
+**Recommendation**: Use sidecar/remote for untrusted plugins.
+
+**Performance Isolation** (Prevents noisy neighbor):
+
+```yaml
+# Kubernetes resource limits per plugin
+apiVersion: v1
+kind: Pod
+metadata:
+  name: clickhouse-plugin
+spec:
+  containers:
+  - name: plugin
+    image: prism/clickhouse-plugin
+    resources:
+      requests:
+        cpu: "1"
+        memory: "2Gi"
+      limits:
+        cpu: "4"        # Prevent CPU starvation of other plugins
+        memory: "8Gi"   # Prevent OOM affecting proxy
+```
+
+**Network Isolation** (Prevents cross-plugin communication):
+
+```yaml
+# NetworkPolicy: Plugin can only talk to proxy and backend
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: clickhouse-plugin-netpol
+spec:
+  podSelector:
+    matchLabels:
+      app: clickhouse-plugin
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          app: prism-proxy  # Only proxy can call plugin
+  egress:
+  - to:
+    - podSelector:
+        matchLabels:
+          app: clickhouse  # Plugin can only call ClickHouse
+```
+
+### Plugin Administration
+
+Plugin management commands are provided via the Prism Admin CLI. See [RFC-006 Plugin Administration](#) for full CLI specification.
+
+**Quick examples**:
+
+```bash
+# List installed plugins
+prism plugin list
+
+# Install plugin from registry
+prism plugin install mongodb --version 1.2.0
+
+# Update plugin
+prism plugin update mongodb --version 1.3.0
+
+# Enable/disable plugin
+prism plugin disable kafka
+prism plugin enable kafka
+
+# View plugin health and metrics
+prism plugin status mongodb
+
+# Hot-reload plugin code
+prism plugin reload mongodb
+```
+
+For detailed plugin admin commands, see [RFC-006 Section: Plugin Management](./RFC-006-python-admin-cli.md#plugin-management).
+
 ## Appendix: Plugin Development Guide
 
 ### Creating a New Plugin
