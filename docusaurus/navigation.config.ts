@@ -13,11 +13,6 @@ export const navItems = [
     position: 'left' as const,
   },
   {
-    to: '/docs/CHANGELOG',
-    label: 'Latest Changes',
-    position: 'left' as const,
-  },
-  {
     to: '/adr',
     label: 'ADRs',
     position: 'left' as const,
