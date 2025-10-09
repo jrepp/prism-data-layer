@@ -1077,6 +1077,30 @@ go get github.com/testcontainers/testcontainers-go
 
 ---
 
+## Related Documents
+
+- [RFC-015: Plugin Acceptance Test Framework](../rfcs/RFC-015-plugin-acceptance-test-framework.md) - Testing framework referenced throughout
+- [ADR-004: Local-First Testing](../adr/ADR-004-local-first-testing.md) - Testing philosophy
+- [RFC-008: Proxy Plugin Architecture](../rfcs/RFC-008-proxy-plugin-architecture.md) - Plugin interface design
+
+## References
+
+### Go SDK Documentation
+- [go-redis](https://github.com/redis/go-redis)
+- [pgx PostgreSQL driver](https://github.com/jackc/pgx)
+- [NATS Go client](https://github.com/nats-io/nats.go)
+- [segmentio/kafka-go](https://github.com/segmentio/kafka-go)
+- [testcontainers-go](https://github.com/testcontainers/testcontainers-go)
+
+### Backend Documentation
+- [Redis Documentation](https://redis.io/docs/)
+- [PostgreSQL Documentation](https://www.postgresql.org/docs/)
+- [NATS Documentation](https://docs.nats.io/)
+- [Apache Kafka Documentation](https://kafka.apache.org/documentation/)
+- [AWS Neptune Documentation](https://docs.aws.amazon.com/neptune/)
+
+---
+
 ## Revision History
 
 - 2025-10-09: Re-prioritized backends based on internal needs (Kafka, NATS, Neptune, PostgreSQL first); added MemStore in-memory plugin as simplest reference implementation
