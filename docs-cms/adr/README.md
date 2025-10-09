@@ -88,13 +88,13 @@ graph TB
     NATS --> NATSStore
     SQLite --> SQLiteStore
 
-    %% Use CSS classes for theme-aware colors (defined in custom.css)
-    classDef client fill:var(--mermaid-client-fill),stroke:var(--mermaid-client-stroke),stroke-width:2px
-    classDef admin fill:var(--mermaid-admin-fill),stroke:var(--mermaid-admin-stroke),stroke-width:2px
-    classDef gateway fill:var(--mermaid-gateway-fill),stroke:var(--mermaid-gateway-stroke),stroke-width:2px
-    classDef plugin fill:var(--mermaid-plugin-fill),stroke:var(--mermaid-plugin-stroke),stroke-width:2px
-    classDef store fill:var(--mermaid-store-fill),stroke:var(--mermaid-store-stroke),stroke-width:2px
-    classDef auth fill:var(--mermaid-auth-fill),stroke:var(--mermaid-auth-stroke),stroke-width:2px
+    %% Spectrum-inspired colors for diagram components
+    classDef client fill:#dbeafe,stroke:#3b82f6,stroke-width:2px
+    classDef admin fill:#fef3c7,stroke:#f59e0b,stroke-width:2px
+    classDef gateway fill:#e9d5ff,stroke:#a855f7,stroke-width:2px
+    classDef plugin fill:#d1fae5,stroke:#10b981,stroke-width:2px
+    classDef store fill:#fce7f3,stroke:#ec4899,stroke-width:2px
+    classDef auth fill:#fef9c3,stroke:#eab308,stroke-width:2px
 
     class App1,App2,App3 client
     class AdminCLI,AdminUI admin
