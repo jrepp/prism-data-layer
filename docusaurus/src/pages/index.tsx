@@ -17,16 +17,24 @@ function HomepageHeader() {
           {siteConfig.title}
         </Heading>
         <p className="hero__subtitle">{siteConfig.tagline}</p>
+        <p className={styles.heroDescription}>
+          Unify your data access. One API, any backend. Blazing fast.
+        </p>
         <div className={styles.buttons}>
           <Link
             className="button button--primary button--lg"
-            to="/adr">
-            View Architecture →
+            to="/docs/intro">
+            Get Started →
           </Link>
           <Link
             className="button button--secondary button--lg"
-            to="/rfc">
-            Read RFCs
+            to="/adr">
+            View Architecture
+          </Link>
+          <Link
+            className="button button--secondary button--lg"
+            href="https://github.com/jrepp/prism-data-layer/blob/main/docs-cms/CHANGELOG.md">
+            What's New
           </Link>
         </div>
       </div>

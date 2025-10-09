@@ -13,6 +13,11 @@ export const navItems = [
     position: 'left' as const,
   },
   {
+    href: 'https://github.com/jrepp/prism-data-layer/blob/main/docs-cms/CHANGELOG.md',
+    label: 'What\'s New',
+    position: 'left' as const,
+  },
+  {
     to: '/adr',
     label: 'ADRs',
     position: 'left' as const,
@@ -53,6 +58,10 @@ export const footerLinks = [
       {
         label: 'Overview',
         to: '/docs/intro',
+      },
+      {
+        label: 'What\'s New',
+        href: 'https://github.com/jrepp/prism-data-layer/blob/main/docs-cms/CHANGELOG.md',
       },
       {
         label: 'ADRs',

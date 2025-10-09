@@ -5,7 +5,23 @@ sidebar_position: 1
 
 # Prism Documentation
 
+**Unify your data access. One API, any backend. Blazing fast.**
+
 Welcome to the Prism Data Access Layer documentation. Prism is a high-performance data access gateway that provides a unified, client-configurable interface to heterogeneous data backends.
+
+## 🆕 What's New
+
+Stay up to date with the latest changes, new features, and improvements:
+
+**[View Recent Changes →](https://github.com/jrepp/prism-data-layer/blob/main/docs-cms/CHANGELOG.md)**
+
+Recent highlights:
+- RFC-014: Layered Data Access Patterns
+- Enhanced Admin Protocol with OIDC (RFC-010)
+- Data Proxy Authentication improvements (RFC-011)
+- Distributed Reliability Patterns (RFC-009)
+
+---
 
 ## What is Prism?
 
