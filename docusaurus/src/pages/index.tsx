@@ -34,7 +34,7 @@ function HomepageHeader() {
           <Link
             className="button button--secondary button--lg"
             href="https://github.com/jrepp/prism-data-layer/blob/main/docs-cms/CHANGELOG.md">
-            What's New
+            Changelog
           </Link>
         </div>
       </div>
