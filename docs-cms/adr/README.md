@@ -279,6 +279,28 @@ graph TB
   - Compatibility checking (backward, forward, full)
   - Automated migration generation
 
+### Graph Databases & Plugin Capabilities
+
+- [ADR-041: Graph Database Backend Support](./041-graph-database-backend.md) - **Accepted**
+  - Unified Graph Data Abstraction Layer
+  - Comparison rubric: Neptune, Neo4j, ArangoDB, JanusGraph, DGraph
+  - Backend selection guidance
+
+- [ADR-042: AWS SQS Queue Backend Plugin](./042-sqs-queue-backend.md) - **Accepted**
+  - Standard and FIFO queue support
+  - Dead letter queue integration
+  - Batch operations for cost optimization
+
+- [ADR-043: Plugin Capability Discovery System](./043-plugin-capability-discovery.md) - **Accepted**
+  - Protobuf-based capability metadata
+  - Runtime capability querying and validation
+  - Automated plugin selection based on requirements
+
+- [ADR-044: TinkerPop/Gremlin Generic Plugin](./044-tinkerpop-gremlin-plugin.md) - **Accepted**
+  - Generic Gremlin plugin for multiple backends
+  - Neptune, JanusGraph, Cosmos DB, TinkerGraph support
+  - Capability auto-detection per backend
+
 ## Status Definitions
 
 - **Proposed**: Under discussion, not yet decided
@@ -317,6 +339,7 @@ Proposed → Reviewed → Accepted → Implemented
 
 ## Recent Changes
 
+- 2025-10-09: ADRs 041-044 added (Graph databases, SQS, plugin capabilities, Gremlin)
 - 2025-10-09: ADR-040 added (Go binary for admin CLI prismctl)
 - 2025-10-09: High-level architecture diagram added to index
 - 2025-10-08: Converted all ADRs to YAML frontmatter format
