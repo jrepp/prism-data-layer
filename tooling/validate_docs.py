@@ -263,6 +263,9 @@ class PrismDocValidator:
         elif target.startswith('/prism-data-layer/'):
             # Docusaurus cross-plugin links (e.g., /prism-data-layer/netflix/scale)
             return LinkType.DOCUSAURUS_PLUGIN
+        elif target.startswith(('/adr/', '/rfc/', '/memos/', '/docs/', '/netflix/')):
+            # Docusaurus plugin routes (e.g., /adr/ADR-046, /rfc/RFC-001, /memos/MEMO-003)
+            return LinkType.DOCUSAURUS_PLUGIN
         elif 'adr/' in target or target.startswith('./') and 'docs/adr' in str(source_path):
             return LinkType.INTERNAL_ADR
         elif 'rfc' in target.lower() or target.startswith('./') and 'docs/rfcs' in str(source_path):
