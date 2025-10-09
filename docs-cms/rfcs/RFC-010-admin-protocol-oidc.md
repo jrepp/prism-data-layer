@@ -801,10 +801,285 @@ func TestAdminProtocol(t *testing.T) {
 ## Open Questions
 
 1. **OIDC Provider Choice**: Support multiple providers (Okta, Auth0, Google, Azure AD)?
+   - **Feedback**: Yes, support AWS Cognito, Azure AD, Google, Okta, Auth0, and Dex
+   - Multi-provider support enables flexibility across different organizational setups
+   - Implementation approach:
+     - OIDC discovery endpoint (`.well-known/openid-configuration`) for automatic configuration
+     - Provider-specific configuration overrides for edge cases
+     - Common JWT validation logic across all providers
+   - **Provider Matrix**:
+     - **AWS Cognito**: User pools, federated identities, integrates with AWS IAM
+     - **Azure AD**: Enterprise identity, conditional access policies, group claims
+     - **Google Workspace**: Google SSO, organization-wide policies
+     - **Okta**: Enterprise SSO, MFA, rich group/role management
+     - **Auth0**: Developer-friendly, custom rules, social logins
+     - **Dex**: Self-hosted, LDAP/SAML connector, Kubernetes-native
+   - **Recommended**: Start with Dex (self-hosted, testing) and one enterprise provider (Okta/Azure AD)
+
 2. **Token Caching**: How long to cache validated JWTs before re-validating?
+   - **Feedback**: Is that up to us? Make it configurable, default to 24 hours. Do we have support for refreshing tokens?
+   - **Token Validation Caching**:
+     - Validated JWTs can be cached to reduce JWKS fetches and validation overhead
+     - Cache keyed by token hash, value contains validated claims
+     - **Recommended**: Cache until token expiry (not beyond), configurable max TTL
+     - Default: Cache for min(token.exp - now, 24 hours)
+   - **JWKS Caching**:
+     - Public keys from JWKS endpoint should be cached aggressively
+     - **Recommended**: Cache for 24 hours with background refresh
+     - Invalidate on signature validation failure (key rotation)
+   - **Refresh Token Support**:
+     - Yes, implement refresh token flow for long-lived CLI sessions
+     - Flow: When access_token expires, use refresh_token to get new access_token
+     - Refresh tokens stored securely in `~/.prism/token` (mode 0600)
+     - Configuration:
+       ```yaml
+       token_cache:
+         jwt_validation_ttl: 24h  # How long to cache validated JWTs
+         jwks_cache_ttl: 24h      # How long to cache public keys
+         auto_refresh: true       # Automatically refresh expired tokens
+       ```
+   - **Security Trade-offs**:
+     - Longer caching = better performance, but delayed revocation
+     - Shorter caching = more validation overhead, but faster revocation response
+     - **Recommended**: Default 24h for trusted environments, 1h for high-security
+
 3. **Offline Access**: Support for offline token validation (signed JWTs)?
+   - **Feedback**: Yes, discuss how, tradeoffs, and tech needed
+   - **Offline Validation Benefits**:
+     - No dependency on OIDC provider for every request (reduces latency)
+     - Proxy continues working during identity provider outage
+     - Reduces load on identity provider
+   - **How to Implement**:
+     - Cache JWKS (public keys) locally with periodic refresh
+     - Validate JWT signature using cached public keys
+     - Check standard claims (iss, aud, exp, nbf) locally
+     - **No online validation** = Can't check real-time revocation
+   - **Technology Stack**:
+     ```rust
+     use jsonwebtoken::{decode, DecodingKey, Validation, Algorithm};
+     use reqwest::Client;
+
+     pub struct OfflineValidator {
+         jwks_cache: Arc<RwLock<HashMap<String, Jwk>>>,
+         issuer: String,
+         audience: String,
+     }
+
+     impl OfflineValidator {
+         pub async fn validate(&self, token: &str) -> Result<Claims> {
+             let header = decode_header(token)?;
+             let kid = header.kid.ok_or(Error::MissingKeyId)?;
+
+             // Use cached key
+             let jwks = self.jwks_cache.read().await;
+             let jwk = jwks.get(&kid).ok_or(Error::UnknownKey)?;
+
+             // Validate offline (no network call)
+             let key = DecodingKey::from_jwk(jwk)?;
+             let mut validation = Validation::new(Algorithm::RS256);
+             validation.set_issuer(&[&self.issuer]);
+             validation.set_audience(&[&self.audience]);
+
+             let token_data = decode::<Claims>(token, &key, &validation)?;
+             Ok(token_data.claims)
+         }
+
+         // Periodic background refresh of JWKS
+         pub async fn refresh_jwks(&self) -> Result<()> {
+             let jwks_uri = format!("{}/.well-known/jwks.json", self.issuer);
+             let jwks: JwkSet = reqwest::get(&jwks_uri).await?.json().await?;
+
+             let mut cache = self.jwks_cache.write().await;
+             for jwk in jwks.keys {
+                 if let Some(kid) = &jwk.common.key_id {
+                     cache.insert(kid.clone(), jwk);
+                 }
+             }
+             Ok(())
+         }
+     }
+     ```
+   - **Trade-offs**:
+     - ✅ **Pros**: Lower latency, no OIDC dependency per-request, better availability
+     - ❌ **Cons**: Can't detect real-time revocation, stale keys if JWKS refresh fails
+   - **Security Considerations**:
+     - **Risk**: Revoked tokens remain valid until expiry
+     - **Mitigation**:
+       - Use short-lived access tokens (1 hour)
+       - Implement token revocation list (check periodically)
+       - Alert on JWKS refresh failures
+   - **Recommended**: Enable offline validation with 1-hour token expiry and background JWKS refresh every 6 hours
+
 4. **Multi-Tenancy**: How to map OIDC tenants to Prism namespaces?
+   - **Feedback**: Provide some options with tradeoffs
+   - **Option 1: Group-Based Mapping**
+     - Use OIDC group claims to authorize namespace access
+     - Example: Group `platform-team` → Can access all namespaces
+     - Example: Group `team-analytics` → Can access `analytics` namespace
+     - Configuration:
+       ```yaml
+       namespace_access:
+         analytics:
+           groups: ["team-analytics", "platform-team"]
+         user-profiles:
+           groups: ["team-users", "platform-team"]
+       ```
+     - **Pros**: Simple, leverages existing IdP groups, easy to understand
+     - **Cons**: Tight coupling to IdP group structure, requires group sync
+   - **Option 2: Claim-Based Mapping**
+     - Custom JWT claims define namespace access
+     - Example: `"namespaces": ["analytics", "user-profiles"]`
+     - IdP adds custom claims during token issuance
+     - Configuration:
+       ```rust
+       let authorized_namespaces = claims.custom
+           .get("namespaces")
+           .and_then(|v| v.as_array())
+           .map(|arr| arr.iter().filter_map(|v| v.as_str()).collect())
+           .unwrap_or_default();
+       ```
+     - **Pros**: Explicit, no group interpretation needed, flexible
+     - **Cons**: Requires custom IdP configuration, claim size limits
+   - **Option 3: Dynamic RBAC with External Policy**
+     - JWT provides identity, external policy engine (OPA/Cedar) decides access
+     - Policy checks: `allow if user.email in namespace.allowed_users`
+     - Configuration:
+       ```rego
+       # OPA policy
+       allow {
+           input.user.email == "alice@company.com"
+           input.namespace == "analytics"
+       }
+
+       allow {
+           "platform-team" in input.user.groups
+       }
+       ```
+     - **Pros**: Most flexible, centralized policy management, audit trail
+     - **Cons**: Additional dependency (OPA), higher latency, more complex
+   - **Option 4: Tenant-Scoped OIDC Providers**
+     - Each tenant has separate OIDC provider/application
+     - Token issuer determines namespace access
+     - Example: `iss: https://tenant-analytics.idp.com` → `analytics` namespace
+     - Configuration:
+       ```yaml
+       namespaces:
+         analytics:
+           oidc_issuer: https://tenant-analytics.idp.com
+         user-profiles:
+           oidc_issuer: https://tenant-users.idp.com
+       ```
+     - **Pros**: Strong isolation, tenant-specific policies, clear boundaries
+     - **Cons**: Complex setup, multiple IdP integrations, higher overhead
+   - **Comparison Table**:
+     | Approach | Complexity | Flexibility | Isolation | Performance |
+     |----------|-----------|------------|-----------|-------------|
+     | Group-Based | Low | Medium | Low | High |
+     | Claim-Based | Medium | High | Medium | High |
+     | External Policy | High | Very High | Medium | Medium |
+     | Tenant-Scoped | Very High | Low | Very High | Medium |
+   - **Recommended**: Start with **Group-Based** for simplicity, evolve to **External Policy (OPA)** for enterprise multi-tenancy
+
 5. **Service Accounts**: Best practices for automation tokens?
+   - **Feedback**: Include some recommendations and tradeoffs
+   - **Recommendation 1: OAuth2 Client Credentials Flow**
+     - Service accounts use client_id/client_secret to obtain tokens
+     - No user interaction required (headless authentication)
+     - Flow:
+       ```bash
+       curl -X POST https://idp.example.com/oauth/token \
+         -H "Content-Type: application/x-www-form-urlencoded" \
+         -d "grant_type=client_credentials" \
+         -d "client_id=prism-ci-service" \
+         -d "client_secret=<secret>" \
+         -d "scope=admin:read admin:write"
+       ```
+     - Configuration:
+       ```yaml
+       # CI/CD environment
+       PRISM_CLIENT_ID=prism-ci-service
+       PRISM_CLIENT_SECRET=<secret>
+
+       # CLI auto-detects and uses client credentials
+       prismctl --auth=client-credentials namespace list
+       ```
+     - **Pros**: Standard OAuth2 flow, widely supported, short-lived tokens
+     - **Cons**: Secret management required, no refresh tokens (must re-authenticate)
+   - **Recommendation 2: Long-Lived API Keys**
+     - Prism issues API keys directly (bypass OIDC for service accounts)
+     - Keys stored in database, validated by Prism (not IdP)
+     - Flow:
+       ```bash
+       # Generate key (admin operation)
+       prismctl serviceaccount create ci-deploy --scopes admin:write
+       # Returns: prism_key_abc123...
+
+       # Use key
+       export PRISM_API_KEY=prism_key_abc123...
+       prismctl namespace create prod-analytics
+       ```
+     - Configuration:
+       ```sql
+       CREATE TABLE service_accounts (
+           id UUID PRIMARY KEY,
+           name VARCHAR(255) NOT NULL,
+           key_hash VARCHAR(255) NOT NULL,  -- bcrypt hash
+           scopes TEXT[] NOT NULL,
+           created_at TIMESTAMPTZ NOT NULL,
+           expires_at TIMESTAMPTZ,
+           last_used_at TIMESTAMPTZ
+       );
+       ```
+     - **Pros**: Simple, no IdP dependency, fine-grained scopes
+     - **Cons**: Not standard OAuth2, custom implementation, key rotation complexity
+   - **Recommendation 3: Kubernetes Service Account Tokens**
+     - For K8s deployments, use projected service account tokens
+     - Tokens automatically rotated by Kubernetes
+     - Flow:
+       ```yaml
+       # Pod spec
+       volumes:
+       - name: prism-token
+         projected:
+           sources:
+           - serviceAccountToken:
+               audience: prism-admin-api
+               expirationSeconds: 3600
+               path: token
+
+       # Mount at /var/run/secrets/prism/token
+       # CLI auto-detects and uses
+       ```
+     - **Pros**: Automatic rotation, no secret management, K8s-native
+     - **Cons**: K8s-only, requires TokenRequest API, audience configuration
+   - **Recommendation 4: Short-Lived Tokens with Secure Storage**
+     - Store client credentials in secret manager (Vault/AWS Secrets Manager)
+     - Fetch credentials at runtime, obtain token, use, discard
+     - Configuration:
+       ```bash
+       # Fetch from Vault
+       export PRISM_CLIENT_SECRET=$(vault kv get -field=secret prism/ci-service)
+
+       # Obtain token (automatically by CLI)
+       prismctl namespace list
+       ```
+     - **Pros**: Secrets never stored on disk, audit trail in secret manager
+     - **Cons**: Dependency on secret manager, additional latency
+   - **Comparison Table**:
+     | Approach | Security | Ease of Use | Rotation | K8s Native |
+     |----------|---------|------------|----------|-----------|
+     | Client Credentials | Medium | High | Manual | No |
+     | API Keys | Low-Medium | Very High | Manual | No |
+     | K8s SA Tokens | High | High | Automatic | Yes |
+     | Secret Manager | High | Medium | Automatic | No |
+   - **Recommended Practices**:
+     - ✅ Use **Client Credentials** for general automation (CI/CD, scripts)
+     - ✅ Use **K8s SA Tokens** for in-cluster automation (CronJobs, Operators)
+     - ✅ Use **Secret Manager** for high-security environments
+     - ❌ Avoid long-lived API keys unless absolutely necessary
+     - ✅ Implement token rotation (max 90 days)
+     - ✅ Audit service account usage regularly
+     - ✅ Use least-privilege scopes (e.g., `admin:read` for monitoring)
 
 ## References
 
@@ -819,3 +1094,4 @@ func TestAdminProtocol(t *testing.T) {
 ## Revision History
 
 - 2025-10-09: Initial draft with OIDC flows and sequence diagrams
+- 2025-10-09: Expanded open questions with feedback on multi-provider support (AWS/Azure/Google/Okta/Auth0/Dex), token caching (24h default with refresh token support), offline validation with JWKS caching, multi-tenancy mapping options (group/claim/OPA/tenant-scoped), and service account best practices (client credentials/API keys/K8s tokens/secret manager)

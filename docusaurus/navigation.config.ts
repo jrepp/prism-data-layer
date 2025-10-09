@@ -13,6 +13,11 @@ export const navItems = [
     position: 'left' as const,
   },
   {
+    to: '/docs-cms/CHANGELOG',
+    label: 'Latest Changes',
+    position: 'left' as const,
+  },
+  {
     to: '/adr',
     label: 'ADRs',
     position: 'left' as const,
@@ -34,7 +39,7 @@ export const navItems = [
   {
     type: 'html' as any,
     position: 'right' as const,
-    value: '<a href="https://github.com/jrepp/prism-data-layer/actions/workflows/docs.yml" target="_blank" rel="noopener noreferrer" title="Documentation Build Status" style="display: flex; align-items: center; padding: 0 0.5rem;"><img src="https://github.com/jrepp/prism-data-layer/actions/workflows/docs.yml/badge.svg" alt="Docs Build Status" style="margin: 0;" /></a>',
+    value: '<a href="https://github.com/jrepp/prism-data-layer/actions/workflows/docs.yml" target="_blank" rel="noopener noreferrer" title="Docs Build" style="display: flex; align-items: center; padding: 0 0.5rem;"><img src="https://github.com/jrepp/prism-data-layer/actions/workflows/docs.yml/badge.svg" alt="Build" style="margin: 0;" /></a>',
   },
   {
     href: 'https://github.com/jrepp/prism-data-layer',

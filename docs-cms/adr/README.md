@@ -88,13 +88,13 @@ graph TB
     NATS --> NATSStore
     SQLite --> SQLiteStore
 
-    %% Spectrum-inspired colors for diagram components
-    classDef client fill:#dbeafe,stroke:#3b82f6,stroke-width:2px
-    classDef admin fill:#fef3c7,stroke:#f59e0b,stroke-width:2px
-    classDef gateway fill:#e9d5ff,stroke:#a855f7,stroke-width:2px
-    classDef plugin fill:#d1fae5,stroke:#10b981,stroke-width:2px
-    classDef store fill:#fce7f3,stroke:#ec4899,stroke-width:2px
-    classDef auth fill:#fef9c3,stroke:#eab308,stroke-width:2px
+    %% Dark mode compatible colors
+    classDef client fill:#1e40af,stroke:#60a5fa,stroke-width:2px,color:#fff
+    classDef admin fill:#b45309,stroke:#fbbf24,stroke-width:2px,color:#fff
+    classDef gateway fill:#7c3aed,stroke:#c084fc,stroke-width:2px,color:#fff
+    classDef plugin fill:#047857,stroke:#34d399,stroke-width:2px,color:#fff
+    classDef store fill:#be123c,stroke:#fb7185,stroke-width:2px,color:#fff
+    classDef auth fill:#ca8a04,stroke:#fde047,stroke-width:2px,color:#fff
 
     class App1,App2,App3 client
     class AdminCLI,AdminUI admin

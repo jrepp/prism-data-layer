@@ -493,6 +493,61 @@ for event in events {
 
 **Solution**: Capture database transaction log; stream changes as events.
 
+#### Change Notification Flow
+
+```mermaid
+graph TD
+    DB[(PostgreSQL<br/>Write-Ahead Log)]
+    CDC[Prism CDC Connector<br/>Change Capture]
+    Kafka[Kafka Topics<br/>Change Events]
+
+    subgraph Notification Consumers
+        Cache[Cache Invalidator<br/>Redis]
+        Search[Search Indexer<br/>Elasticsearch]
+        Analytics[Analytics Loader<br/>ClickHouse]
+        Webhook[Webhook Notifier<br/>External APIs]
+        Audit[Audit Logger<br/>Compliance DB]
+    end
+
+    subgraph Change Types
+        Insert[INSERT Events]
+        Update[UPDATE Events]
+        Delete[DELETE Events]
+        Schema[SCHEMA Changes]
+    end
+
+    DB -->|Logical Replication| CDC
+    CDC -->|Parse & Transform| Insert
+    CDC -->|Parse & Transform| Update
+    CDC -->|Parse & Transform| Delete
+    CDC -->|DDL Capture| Schema
+
+    Insert --> Kafka
+    Update --> Kafka
+    Delete --> Kafka
+    Schema --> Kafka
+
+    Kafka -->|Subscribe: users table| Cache
+    Kafka -->|Subscribe: all tables| Search
+    Kafka -->|Subscribe: analytics tables| Analytics
+    Kafka -->|Filter: critical changes| Webhook
+    Kafka -->|Subscribe: all changes| Audit
+
+    Cache -.->|INVALIDATE user:123| CacheHit[Fast Reads]
+    Search -.->|INDEX document| SearchResults[Full-Text Search]
+    Analytics -.->|LOAD batch| Reports[Business Intelligence]
+    Webhook -.->|POST /webhook| External[External Systems]
+    Audit -.->|APPEND change| Compliance[Compliance Reports]
+```
+
+**Key Change Notification Patterns:**
+
+1. **Cache Invalidation**: UPDATE/DELETE → Invalidate cache entries
+2. **Search Indexing**: INSERT/UPDATE → Update search index
+3. **Analytics Sync**: All changes → Append to data warehouse
+4. **Webhook Notifications**: Filtered changes → Notify external systems
+5. **Audit Trail**: All changes → Append to immutable log
+
 #### Architecture
 
 ```
@@ -1164,3 +1219,4 @@ prism_outbox_publish_latency_ms{namespace="order-service"} 45
 ## Revision History
 
 - 2025-10-08: Initial draft documenting 7 distributed reliability patterns
+- 2025-10-09: Added change notification flow diagram to CDC pattern showing notification consumers and change types

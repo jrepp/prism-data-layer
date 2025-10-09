@@ -685,10 +685,53 @@ async fn test_mtls_authentication() {
 ## Open Questions
 
 1. **Certificate Authority**: Use company CA or service mesh (Linkerd/Istio)?
+   - **Feedback**: Use Vault for certificate management and issuance
+   - Vault PKI can act as an internal CA for mTLS certificates
+   - Integrates with existing credential management workflow
+   - Consider: Vault PKI vs external service mesh CA integration
+
 2. **Credential Caching**: How long to cache backend credentials?
+   - **Feedback**: Make it configurable, default to 24 hours
+   - Cache duration should balance security (shorter = better) with Vault load (longer = fewer requests)
+   - Consider per-backend configuration (e.g., high-security backends use shorter TTL)
+   - Implement proactive renewal before expiry to avoid cache misses
+
 3. **Connection Pooling**: Pool connections per backend or per credential?
+   - **Feedback**: Pool per-credential to avoid leaking data between connections if using multi-tenancy pattern
+   - Per-credential pooling provides isolation when multiple namespaces share a backend
+   - Prevents credential contamination across tenants
+   - Trade-off: More connection pools = higher resource usage
+   - Consider: Connection pool size limits and monitoring
+
 4. **Fallback Auth**: What to do when Vault is unavailable?
+   - **Feedback**: Can we cache auth temporarily? What are the security risks and tradeoffs?
+   - Options to explore:
+     - Cache credentials beyond TTL during Vault outage (security risk: revocation won't work)
+     - Fail closed (deny all requests) vs fail open (use cached credentials)
+     - Emergency static credentials (break-glass scenario)
+   - Security considerations:
+     - Cached credentials can't be rotated during outage
+     - Risk of using revoked credentials
+     - Audit trail gaps if Vault unavailable
+   - Recommended: Fail closed with configurable grace period for cached credentials
+   - Document incident response procedure for Vault outage
+
 5. **Observability**: How to monitor credential rotation and health?
+   - **Feedback**: Use stats for credential events and general usage (no PII)
+   - Report credential TTL in session establishment
+   - Consider refresh tokens and how they fit
+   - Metrics to expose:
+     - `credential.fetch.count` - Number of credential fetches from Vault
+     - `credential.renewal.count` - Successful/failed renewals
+     - `credential.ttl.seconds` - Remaining TTL of cached credentials
+     - `credential.cache.hit_rate` - Cache hit/miss ratio
+     - `connection.pool.size` - Per-credential pool sizes
+     - `session.establishment.duration` - Time to establish authenticated session
+   - Logs (no PII):
+     - Credential fetch/renewal events with backend ID and lease ID
+     - Certificate rotation events
+     - Authentication failures (client identity but not credentials)
+   - Consider: Refresh token pattern for long-lived sessions to reduce Vault load
 
 ## References
 
@@ -702,3 +745,4 @@ async fn test_mtls_authentication() {
 ## Revision History
 
 - 2025-10-09: Initial draft with mTLS and backend authentication flows
+- 2025-10-09: Expanded open questions with feedback on Vault CA, credential caching (24hr default), per-credential connection pooling, fallback auth strategies, and observability metrics
