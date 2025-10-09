@@ -37,6 +37,26 @@
 
   /* Darker hero gradient for dark mode */
   --ifm-hero-background: linear-gradient(135deg, #4338ca 0%, #581c87 100%);
+
+  /* Spectrum-inspired colors for diagrams (dark mode) - higher saturation, darker fills */
+  --mermaid-client-fill: #1e3a8a;
+  --mermaid-client-stroke: #60a5fa;
+  --mermaid-admin-fill: #78350f;
+  --mermaid-admin-stroke: #fbbf24;
+  --mermaid-gateway-fill: #581c87;
+  --mermaid-gateway-stroke: #c084fc;
+  --mermaid-plugin-fill: #064e3b;
+  --mermaid-plugin-stroke: #34d399;
+  --mermaid-store-fill: #831843;
+  --mermaid-store-stroke: #f472b6;
+  --mermaid-auth-fill: #713f12;
+  --mermaid-auth-stroke: #facc15;
+
+  /* Base colors for dark mode */
+  --mermaid-node-bg: #1f2937;
+  --mermaid-node-border: #374151;
+  --mermaid-text-color: #f3f4f6;
+  --mermaid-line-color: #9ca3af;
 }
 
 /* Enhanced hero section styling */
@@ -80,4 +100,95 @@
   color: var(--ifm-color-primary-dark);
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* Mermaid diagram theming for Prism - Light Mode */
+:root {
+  /* Spectrum-inspired colors for diagrams (light mode) */
+  --mermaid-client-fill: #dbeafe;
+  --mermaid-client-stroke: #3b82f6;
+  --mermaid-admin-fill: #fef3c7;
+  --mermaid-admin-stroke: #f59e0b;
+  --mermaid-gateway-fill: #e9d5ff;
+  --mermaid-gateway-stroke: #a855f7;
+  --mermaid-plugin-fill: #d1fae5;
+  --mermaid-plugin-stroke: #10b981;
+  --mermaid-store-fill: #fce7f3;
+  --mermaid-store-stroke: #ec4899;
+  --mermaid-auth-fill: #fef9c3;
+  --mermaid-auth-stroke: #eab308;
+
+  /* Base colors */
+  --mermaid-node-bg: #ffffff;
+  --mermaid-node-border: #e5e7eb;
+  --mermaid-text-color: #1f2937;
+  --mermaid-line-color: #6b7280;
+}
+
+/* Apply mermaid colors to SVG elements */
+.mermaid .client {
+  fill: var(--mermaid-client-fill) !important;
+  stroke: var(--mermaid-client-stroke) !important;
+}
+
+.mermaid .admin {
+  fill: var(--mermaid-admin-fill) !important;
+  stroke: var(--mermaid-admin-stroke) !important;
+}
+
+.mermaid .gateway {
+  fill: var(--mermaid-gateway-fill) !important;
+  stroke: var(--mermaid-gateway-stroke) !important;
+}
+
+.mermaid .plugin {
+  fill: var(--mermaid-plugin-fill) !important;
+  stroke: var(--mermaid-plugin-stroke) !important;
+}
+
+.mermaid .store {
+  fill: var(--mermaid-store-fill) !important;
+  stroke: var(--mermaid-store-stroke) !important;
+}
+
+.mermaid .auth {
+  fill: var(--mermaid-auth-fill) !important;
+  stroke: var(--mermaid-auth-stroke) !important;
+}
+
+/* Base node and text styling */
+.mermaid .node rect,
+.mermaid .node circle,
+.mermaid .node ellipse,
+.mermaid .node polygon {
+  stroke-width: 2px !important;
+}
+
+.mermaid .nodeLabel,
+.mermaid .edgeLabel {
+  color: var(--mermaid-text-color) !important;
+  fill: var(--mermaid-text-color) !important;
+}
+
+.mermaid .edgePath .path {
+  stroke: var(--mermaid-line-color) !important;
+  stroke-width: 2px !important;
+}
+
+/* Subgraph (cluster) styling */
+.mermaid .cluster rect {
+  fill: transparent !important;
+  stroke: var(--mermaid-node-border) !important;
+  stroke-width: 2px !important;
+  stroke-dasharray: 5, 5 !important;
+}
+
+.mermaid .cluster .label {
+  fill: var(--mermaid-text-color) !important;
+  font-weight: 600 !important;
+}
+
+/* Ensure good contrast for all text */
+.mermaid text {
+  fill: var(--mermaid-text-color) !important;
 }
