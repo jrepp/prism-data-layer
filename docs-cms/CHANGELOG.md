@@ -83,7 +83,7 @@ Quick access to recently updated documentation. Changes listed in reverse chrono
 ---
 
 #### RFC-006: Admin CLI - OIDC Authentication (EXPANDED)
-**Link**: [RFC-006](/rfc/rfc-006)
+**Link**: [RFC-006](/rfc/RFC-006-python-admin-cli)
 
 **Summary**: Added comprehensive OIDC authentication section covering:
 - Device code flow (OAuth 2.0) for command-line SSO authentication
