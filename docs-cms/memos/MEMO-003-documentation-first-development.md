@@ -236,7 +236,7 @@ python3 tooling/validate_docs.py --skip-build
 **The Solution**: Beautiful, fast, mobile-friendly site published automatically.
 
 **Benefits**:
-- ✅ **Shareable URLs**: Send `https://team.github.io/prism/rfc/RFC-010` to stakeholders
+- ✅ **Shareable URLs**: Send `https://team.github.io/prism/rfc/rfc-010` to stakeholders
 - ✅ **Professional appearance**: Builds trust with users and management
 - ✅ **Fast**: Static site generation = instant load times
 - ✅ **Accessible**: Mobile-friendly, screen reader compatible
@@ -255,7 +255,7 @@ User sees:
 ```text
 
 **After** (GitHub Pages):
-"Check out the RFC at: https://team.github.io/prism/rfc/RFC-014"
+"Check out the RFC at: https://team.github.io/prism/rfc/rfc-014"
 
 User sees:
 - Beautiful, professional layout

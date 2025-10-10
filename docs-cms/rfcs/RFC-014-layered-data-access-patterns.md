@@ -211,7 +211,7 @@ You need to publish large files (videos, ML models, datasets) but message queues
 - Automatic cleanup after consumption
 
 **Client Configuration:**
-```yaml
+```text
 namespaces:
   - name: video-processing
     pattern: pubsub
@@ -223,7 +223,7 @@ namespaces:
 ```
 
 **Client Code:**
-```python
+```text
 # Publisher: Send large video file (no special handling)
 video_bytes = open("movie.mp4", "rb").read()  # 2.5GB
 client.publish("videos", video_bytes)
@@ -311,7 +311,7 @@ You need to stream database changes to other systems (cache, search index, analy
 - Guaranteed ordering per key
 
 **Client Configuration:**
-```yaml
+```text
 namespaces:
   - name: user-profiles
     pattern: reader  # Normal database reads/writes
@@ -329,7 +329,7 @@ namespaces:
 ```
 
 **Client Code:**
-```python
+```text
 # Application: Normal database operations (no CDC code!)
 client.update("user_profiles", user_id, {"email": "new@email.com"})
 
@@ -434,7 +434,7 @@ You need fast cached reads but cache must stay fresh when database changes.
 - No application cache management code
 
 **Client Configuration:**
-```yaml
+```text
 namespaces:
   - name: product-catalog
     pattern: reader
@@ -452,7 +452,7 @@ namespaces:
 ```
 
 **Client Code:**
-```python
+```text
 # Application: Just read - Prism handles caching
 product = client.get("products", product_id)
 # First read: Cache miss → Query Postgres → Populate cache
@@ -1373,7 +1373,7 @@ This RFC builds on and connects:
 
 ### Namespace Pattern Configuration
 
-```yaml
+```text
 namespaces:
   - name: video-processing
 
@@ -1425,7 +1425,7 @@ namespaces:
 
 Prism validates pattern compatibility at namespace creation:
 
-```rust
+```text
 pub fn validate_pattern_chain(
     api: ClientApi,
     patterns: &[PatternConfig],
@@ -1464,7 +1464,7 @@ pub fn validate_pattern_chain(
 
 ### Unit Tests: Individual Patterns
 
-```rust
+```text
 #[tokio::test]
 async fn test_claim_check_pattern_threshold() {
     let storage = Arc::new(MockObjectStorage::new());
@@ -1500,7 +1500,7 @@ async fn test_claim_check_pattern_threshold() {
 
 ### Integration Tests: Pattern Chains
 
-```rust
+```text
 #[tokio::test]
 async fn test_outbox_claim_check_chain() {
     let db = setup_test_db().await;
@@ -1536,7 +1536,7 @@ async fn test_outbox_claim_check_chain() {
 
 ### End-to-End Tests
 
-```python
+```text
 def test_e2e_large_payload_pubsub():
     # Setup Prism with Outbox + Claim Check
     prism = PrismTestServer(config={
@@ -1594,7 +1594,7 @@ def test_e2e_large_payload_pubsub():
 
 Start with one pattern per namespace:
 
-```yaml
+```text
 # Before: Direct Kafka
 backend: kafka
 
@@ -1609,7 +1609,7 @@ backend: kafka
 
 Add second compatible pattern:
 
-```yaml
+```text
 patterns:
   - type: outbox         # Transactional guarantees
   - type: claim-check    # Large payload handling
@@ -1620,7 +1620,7 @@ backend: kafka
 
 Layer 3+ patterns for advanced use cases:
 
-```yaml
+```text
 patterns:
   - type: outbox
   - type: claim-check

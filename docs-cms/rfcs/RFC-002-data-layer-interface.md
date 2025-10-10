@@ -1147,7 +1147,21 @@ service MyService {
 
 ## 9. Client Libraries
 
-### 9.1 Generated Clients
+### 9.1 Repository Location
+
+**GitHub Repository**: `https://github.com/jrepp/prism-data-layer`
+
+All externally-facing Go library packages are published from this repository. When importing Prism SDK components, use the GitHub module path:
+
+```
+import (
+    "github.com/jrepp/prism-data-layer/plugin-sdk/auth"
+    "github.com/jrepp/prism-data-layer/plugin-sdk/authz"
+    "github.com/jrepp/prism-data-layer/plugin-sdk/plugin"
+)
+```text
+
+### 9.2 Generated Clients
 
 All languages get generated clients:
 
@@ -1162,7 +1176,7 @@ buf generate --template buf.gen.go.yaml
 buf generate --template buf.gen.python.yaml
 ```text
 
-### 9.2 Client Patterns
+### 9.3 Client Patterns
 
 **Connection Management:**
 ```

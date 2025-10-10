@@ -128,7 +128,7 @@ message Edge {
 - Need multi-model (property + RDF)
 - Willing to pay premium for managed service
 
-**See**: [RFC-013: Neptune Graph Backend Implementation](/prism-data-layer/rfc/RFC-013-neptune-graph-backend)
+**See**: [RFC-013: Neptune Graph Backend Implementation](/prism-data-layer/rfc/rfc-013-neptune-graph-backend)
 
 #### Neo4j ✅ **Recommended for Self-Hosted / Multi-Cloud**
 

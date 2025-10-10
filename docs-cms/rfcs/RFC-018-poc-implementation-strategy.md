@@ -939,13 +939,13 @@ pytest tests/poc1/test_keyvalue.py
 
 ## Related Documents
 
-- [RFC-008: Proxy Plugin Architecture](./RFC-008-proxy-plugin-architecture.md) - Foundation
-- [RFC-014: Layered Data Access Patterns](./RFC-014-layered-data-access-patterns.md) - Client patterns
-- [RFC-015: Plugin Acceptance Test Framework](./RFC-015-plugin-acceptance-test-framework.md) - Testing
-- [RFC-016: Local Development Infrastructure](./RFC-016-local-development-infrastructure.md) - Dev setup
-- [RFC-017: Multicast Registry Pattern](./RFC-017-multicast-registry-pattern.md) - POC 4 spec
-- [MEMO-004: Backend Plugin Implementation Guide](/memos/MEMO-004-backend-plugin-implementation-guide) - Backend priorities
-- [ADR-049: Podman and Container Optimization](/adr/ADR-049-podman-container-optimization) - Testing strategy
+- [RFC-008: Proxy Plugin Architecture](/rfc/rfc-008) - Foundation
+- [RFC-014: Layered Data Access Patterns](/rfc/rfc-014) - Client patterns
+- [RFC-015: Plugin Acceptance Test Framework](/rfc/rfc-015) - Testing
+- [RFC-016: Local Development Infrastructure](/rfc/rfc-016) - Dev setup
+- [RFC-017: Multicast Registry Pattern](/rfc/rfc-017) - POC 4 spec
+- [MEMO-004: Backend Plugin Implementation Guide](/memos/memo-004-backend-plugin-implementation-guide) - Backend priorities
+- [ADR-049: Podman and Container Optimization](/adr/adr-049-podman-container-optimization) - Testing strategy
 
 ## References
 

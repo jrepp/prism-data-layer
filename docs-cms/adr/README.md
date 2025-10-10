@@ -122,50 +122,50 @@ graph TB
 
 ### Core Architecture
 
-- [ADR-001: Rust for the Proxy Implementation](./ADR-001-rust-for-proxy.md) - **Accepted**
+- [ADR-001: Rust for the Proxy Implementation](/adr/adr-001) - **Accepted**
   - 10-100x performance improvement over JVM alternatives
   - Predictable latency without GC pauses
 
-- [ADR-002: Client-Originated Configuration](./ADR-002-client-originated-configuration.md) - **Accepted**
+- [ADR-002: Client-Originated Configuration](/adr/adr-002) - **Accepted**
   - Applications declare requirements in protobuf
   - Prism auto-provisions backends and capacity
 
-- [ADR-003: Protobuf as Single Source of Truth](./ADR-003-protobuf-single-source-of-truth.md) - **Accepted**
+- [ADR-003: Protobuf as Single Source of Truth](/adr/adr-003) - **Accepted**
   - All data models, APIs, and configs generated from proto
   - Custom options for PII, indexing, capacity hints
 
-- [ADR-004: Local-First Testing Strategy](./ADR-004-local-first-testing.md) - **Accepted**
+- [ADR-004: Local-First Testing Strategy](/adr/adr-004) - **Accepted**
   - Real backends (Postgres, Kafka, NATS) in Docker Compose
   - No mocks; same tests locally and in CI
 
 ### Backend & Data Layer
 
-- [ADR-005: Backend Plugin Architecture](./ADR-005-backend-plugin-architecture.md) - **Accepted**
+- [ADR-005: Backend Plugin Architecture](/adr/adr-005) - **Accepted**
   - Trait-based plugin system for swappable backends
   - Unified interface for KeyValue, TimeSeries, Graph abstractions
 
-- [ADR-006: Namespace and Multi-Tenancy](./ADR-006-namespace-multi-tenancy.md) - **Accepted**
+- [ADR-006: Namespace and Multi-Tenancy](/adr/adr-006) - **Accepted**
   - Namespace-based isolation for data partitioning
   - Single-tenant shards for fault isolation
 
 ### Security & Operations
 
-- [ADR-007: Authentication and Authorization](./ADR-007-authentication-authorization.md) - **Accepted**
+- [ADR-007: Authentication and Authorization](/adr/adr-007) - **Accepted**
   - mTLS for service-to-service
   - OAuth2/JWT for user-facing APIs
   - Namespace-level authorization policies
 
-- [ADR-008: Observability Strategy](./ADR-008-observability-strategy.md) - **Accepted**
+- [ADR-008: Observability Strategy](/adr/adr-008) - **Accepted**
   - OpenTelemetry from day one
   - Structured logging, distributed tracing, Prometheus metrics
 
-- [ADR-009: Shadow Traffic for Migrations](./ADR-009-shadow-traffic-migrations.md) - **Accepted**
+- [ADR-009: Shadow Traffic for Migrations](/adr/adr-009) - **Accepted**
   - Dual-write pattern for zero-downtime migrations
   - Comparison testing and validation
 
 ### Performance & Reliability
 
-- [ADR-010: Caching Layer Design](./ADR-010-caching-layer.md) - **Accepted**
+- [ADR-010: Caching Layer Design](/adr/adr-010) - **Accepted**
   - Look-aside cache pattern
   - Optional per-namespace caching
   - Cache invalidation strategies
@@ -174,139 +174,139 @@ graph TB
 
 #### Go (Tooling & CLI)
 
-- [ADR-012: Go for Tooling and CLI Utilities](./ADR-012-go-for-tooling.md) - **Accepted**
+- [ADR-012: Go for Tooling and CLI Utilities](/adr/adr-012) - **Accepted**
   - Single-binary distribution for CLI tools
   - Fast compile times for rapid iteration
   - Protobuf interoperability with Rust proxy
 
-- [ADR-013: Go Error Handling Strategy](./ADR-013-go-error-handling-strategy.md) - **Accepted**
+- [ADR-013: Go Error Handling Strategy](/adr/adr-013) - **Accepted**
   - Modern error wrapping with `fmt.Errorf` and `%w`
   - Sentinel errors for well-known conditions
   - Fail-fast principle with early error reporting
 
-- [ADR-014: Go Concurrency Patterns](./ADR-014-go-concurrency-patterns.md) - **Accepted**
+- [ADR-014: Go Concurrency Patterns](/adr/adr-014) - **Accepted**
   - Fork-join concurrency model with worker pools
   - Context-based cancellation
   - Channel patterns for communication
 
-- [ADR-015: Go Testing Strategy](./ADR-015-go-testing-strategy.md) - **Accepted**
+- [ADR-015: Go Testing Strategy](/adr/adr-015) - **Accepted**
   - Three-tier testing (unit, integration, E2E)
   - 80%+ code coverage requirement
   - Proxy integration test harness
 
-- [ADR-016: Go CLI and Configuration Management](./ADR-016-go-cli-configuration.md) - **Accepted**
+- [ADR-016: Go CLI and Configuration Management](/adr/adr-016) - **Accepted**
   - Cobra for CLI framework
   - Viper for configuration management
   - Layered configuration (flags > env > file > defaults)
 
-- [ADR-017: Go Structured Logging with slog](./ADR-017-go-structured-logging.md) - **Accepted**
+- [ADR-017: Go Structured Logging with slog](/adr/adr-017) - **Accepted**
   - Standard library slog for zero dependencies
   - Context propagation pattern
   - JSON output for production
 
 #### Rust (Proxy Core)
 
-- [ADR-018: Rust Error Handling Strategy](./ADR-018-rust-error-handling-strategy.md) - **Accepted**
+- [ADR-018: Rust Error Handling Strategy](/adr/adr-018) - **Accepted**
   - thiserror for domain errors, anyhow for application code
   - Error context propagation
   - Type-safe error conversion
 
-- [ADR-019: Rust Async Concurrency Patterns](./ADR-019-rust-async-concurrency-patterns.md) - **Accepted**
+- [ADR-019: Rust Async Concurrency Patterns](/adr/adr-019) - **Accepted**
   - Tokio async runtime with work-stealing scheduler
   - Task spawning, channels, and select patterns
   - Connection pooling with sqlx
 
-- [ADR-020: Rust Testing Strategy](./ADR-020-rust-testing-strategy.md) - **Accepted**
+- [ADR-020: Rust Testing Strategy](/adr/adr-020) - **Accepted**
   - Three-tier testing with async support
   - Property-based testing with proptest
   - Criterion benchmarks
 
-- [ADR-021: Rust Structured Logging with Tracing](./ADR-021-rust-structured-logging.md) - **Accepted**
+- [ADR-021: Rust Structured Logging with Tracing](/adr/adr-021) - **Accepted**
   - tracing ecosystem for structured logging
   - Span instrumentation for request correlation
   - OpenTelemetry integration
 
 ### Client Configuration & Interface Design
 
-- [ADR-022: Dynamic Client Configuration System](./ADR-022-dynamic-client-configuration.md) - **Accepted**
+- [ADR-022: Dynamic Client Configuration System](/adr/adr-022) - **Accepted**
   - Separation of server and client configuration
   - Named configurations and inline descriptors
   - Protobuf-based configuration with runtime discovery
 
-- [ADR-023: gRPC-First Interface Design](./ADR-023-grpc-first-interface-design.md) - **Accepted**
+- [ADR-023: gRPC-First Interface Design](/adr/adr-023) - **Accepted**
   - gRPC over HTTP/2 for all client-server communication
   - Service-per-pattern organization
   - Streaming support for pagination and pub/sub
 
-- [ADR-024: Layered Interface Hierarchy](./ADR-024-layered-interface-hierarchy.md) - **Accepted**
+- [ADR-024: Layered Interface Hierarchy](/adr/adr-024) - **Accepted**
   - Session layer as foundation (auth, audit, state)
   - Use-case layers: Queue, PubSub, Reader, Transact
   - Progressive disclosure of complexity
 
 ### Deployment & Operations
 
-- [ADR-025: Container Plugin Model](./ADR-025-container-plugin-model.md) - **Accepted**
+- [ADR-025: Container Plugin Model](/adr/adr-025) - **Accepted**
   - Backend-specific containers with standard interfaces
   - Horizontal scaling per plugin type
   - Publisher, Consumer, Processor, Listener roles
 
-- [ADR-026: Distroless Container Images](./ADR-026-distroless-container-images.md) - **Accepted**
+- [ADR-026: Distroless Container Images](/adr/adr-026) - **Accepted**
   - Google Distroless for minimal attack surface
   - Multi-stage builds for small images
   - Debug variants with busybox for troubleshooting
 
 ### Admin & Operations Management
 
-- [ADR-027: Admin API via gRPC](./ADR-027-admin-api-grpc.md) - **Accepted**
+- [ADR-027: Admin API via gRPC](/adr/adr-027) - **Accepted**
   - Separate admin service on port 8981
   - Config, session, namespace, and backend management
   - RBAC and audit logging
 
-- [ADR-028: Admin UI with FastAPI and gRPC-Web](./ADR-028-admin-ui-fastapi-grpc-web.md) - **Accepted**
+- [ADR-028: Admin UI with FastAPI and gRPC-Web](/adr/adr-028) - **Accepted**
   - FastAPI serving static files and gRPC-Web proxy
   - Vanilla JavaScript frontend with Tailwind CSS
   - Browser-accessible administration
 
-- [ADR-040: Go Binary for Admin CLI (prismctl)](./ADR-040-go-binary-admin-cli.md) - **Accepted**
+- [ADR-040: Go Binary for Admin CLI (prismctl)](/adr/adr-040) - **Accepted**
   - Single-binary Go CLI with Cobra/Viper framework
   - 12ms startup vs 230ms for Python (20x faster)
   - Cross-platform builds via GitHub releases
 
-- [ADR-045: prismctl Stack Management Subcommand](./ADR-045-prismctl-stack-management.md) - **Accepted**
+- [ADR-045: prismctl Stack Management Subcommand](/adr/adr-045) - **Accepted**
   - Stack management integrated into prismctl
   - Pluggable infrastructure providers (Hashicorp, Docker Compose, AWS, Kubernetes)
   - Single `go install` for complete tooling
 
 ### Observability & Schema Management
 
-- [ADR-029: Protocol Recording with Protobuf Tagging](./ADR-029-protocol-recording-protobuf-tags.md) - **Accepted**
+- [ADR-029: Protocol Recording with Protobuf Tagging](/adr/adr-029) - **Accepted**
   - Custom protobuf options for protocol recording
   - Sampling and queryable storage
   - Interceptor-based recording
 
-- [ADR-030: Schema Recording with Protobuf Tagging](./ADR-030-schema-recording-protobuf-tags.md) - **Accepted**
+- [ADR-030: Schema Recording with Protobuf Tagging](/adr/adr-030) - **Accepted**
   - Schema registry with version tracking
   - Compatibility checking (backward, forward, full)
   - Automated migration generation
 
 ### Graph Databases & Plugin Capabilities
 
-- [ADR-041: Graph Database Backend Support](./ADR-041-graph-database-backend.md) - **Accepted**
+- [ADR-041: Graph Database Backend Support](/adr/adr-041) - **Accepted**
   - Unified Graph Data Abstraction Layer
   - Comparison rubric: Neptune, Neo4j, ArangoDB, JanusGraph, DGraph
   - Backend selection guidance
 
-- [ADR-042: AWS SQS Queue Backend Plugin](./ADR-042-sqs-queue-backend.md) - **Accepted**
+- [ADR-042: AWS SQS Queue Backend Plugin](/adr/adr-042) - **Accepted**
   - Standard and FIFO queue support
   - Dead letter queue integration
   - Batch operations for cost optimization
 
-- [ADR-043: Plugin Capability Discovery System](./ADR-043-plugin-capability-discovery.md) - **Accepted**
+- [ADR-043: Plugin Capability Discovery System](/adr/adr-043) - **Accepted**
   - Protobuf-based capability metadata
   - Runtime capability querying and validation
   - Automated plugin selection based on requirements
 
-- [ADR-044: TinkerPop/Gremlin Generic Plugin](./ADR-044-tinkerpop-gremlin-plugin.md) - **Accepted**
+- [ADR-044: TinkerPop/Gremlin Generic Plugin](/adr/adr-044) - **Accepted**
   - Generic Gremlin plugin for multiple backends
   - Neptune, JanusGraph, Cosmos DB, TinkerGraph support
   - Capability auto-detection per backend

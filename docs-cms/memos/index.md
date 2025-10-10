@@ -15,7 +15,7 @@ Technical memos provide detailed implementation diagrams, flow charts, and visua
 **Date**: 2025-10-08
 **Summary**: Complete sequence diagram showing Write-Ahead Log transaction lifecycle including authentication, authorization, write operations, async database application, session management, disconnection scenarios, and crash recovery.
 
-[Read MEMO-001 →](./MEMO-001-wal-transaction-flow.md)
+[Read MEMO-001 →](/memos/memo-001)
 
 ---
 

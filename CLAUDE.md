@@ -124,9 +124,25 @@ prism/
 - `docs-cms/memos/` - Technical memos with diagrams
 - `docs-cms/netflix/` - Netflix Data Gateway research notes
 
-**Cross-plugin links**: Use absolute paths for links between ADR/RFC/memos:
-- ✅ `[RFC-015](/rfc/RFC-015-plugin-acceptance-test-framework)` (correct)
-- ❌ `../rfcs/RFC-015-plugin-acceptance-test-framework.md` (broken in Docusaurus)
+**Documentation link format** (CRITICAL for Docusaurus):
+
+Docusaurus uses **lowercase IDs from frontmatter** (e.g., `id: rfc-015`) to generate URLs.
+
+✅ **Correct format** (absolute path + lowercase):
+- `[RFC-015](/rfc/rfc-015)` - matches frontmatter `id: rfc-015`
+- `[ADR-001](/adr/adr-001)` - matches frontmatter `id: adr-001`
+- `[MEMO-004](/memos/memo-004)` - matches frontmatter `id: memo-004`
+
+❌ **Wrong formats** (will break):
+- `./RFC-015-plugin-acceptance-test-framework.md` - relative paths don't work
+- `../rfcs/RFC-015-plugin-acceptance-test-framework.md` - cross-plugin relative paths fail
+- `/rfc/RFC-015` - uppercase doesn't match frontmatter ID
+
+**Fix broken links automatically**:
+```bash
+# Converts relative .md links and uppercase IDs to correct format
+uv run tooling/fix_doc_links.py
+```
 
 ## Core Requirements
 
@@ -296,6 +312,9 @@ cd docusaurus && npm run serve
 
 # Convert documents to frontmatter format (if needed)
 uv run tooling/convert_to_frontmatter.py
+
+# Fix broken doc links (relative paths, wrong case)
+uv run tooling/fix_doc_links.py
 ```
 
 ### Git Hooks
@@ -339,6 +358,300 @@ When adding new tooling:
 - **Fast**: Sub-second cold starts
 - **Portable**: Works on any system with uv installed
 - **CI-friendly**: Easy GitHub Actions integration
+
+## Test-Driven Development (TDD) Workflow
+
+**CRITICAL**: All Go code MUST be developed using TDD with mandatory code coverage tracking.
+
+### Core Principles
+
+1. **Write Tests First** (Red Phase)
+   - Define test case for new feature BEFORE implementation
+   - Run test (should fail - no implementation yet)
+   - Commit: "Add failing test for <feature>"
+
+2. **Implement Minimal Code** (Green Phase)
+   - Write simplest code to make test pass
+   - Run test (should pass)
+   - Commit: "Implement <feature> to pass tests (coverage: XX%)"
+
+3. **Refactor** (Refactor Phase)
+   - Improve code quality
+   - Run tests (should still pass)
+   - Commit: "Refactor <feature> for clarity (coverage: XX%)"
+
+### Code Coverage Requirements
+
+**MANDATORY**: All Go components must meet coverage thresholds before merge.
+
+| Component Type | Minimum Coverage | Target Coverage |
+|----------------|------------------|-----------------|
+| Core Plugin SDK | 85% | 90%+ |
+| Plugins (complex) | 80% | 85%+ |
+| Plugins (simple) | 85% | 90%+ |
+| Utilities | 90% | 95%+ |
+
+**Enforcement**: CI builds FAIL if coverage drops below minimum.
+
+### Coverage Commands
+
+```bash
+# Generate coverage report for a package
+go test -coverprofile=coverage.out ./...
+go tool cover -html=coverage.out -o coverage.html
+go tool cover -func=coverage.out | grep total
+
+# Makefile targets (use these in CI)
+make coverage-sdk        # Core Plugin SDK
+make coverage-memstore   # MemStore plugin
+make coverage-redis      # Redis plugin
+make coverage-kafka      # Kafka plugin
+make coverage-all        # All components
+
+# CI enforcement example
+make coverage-sdk
+COVERAGE=$(go tool cover -func=coverage.out | grep total | awk '{print $3}' | sed 's/%//')
+if (( $(echo "$COVERAGE < 85" | bc -l) )); then
+  echo "SDK coverage ${COVERAGE}% < 85%"
+  exit 1
+fi
+```
+
+### TDD Development Cycle Example
+
+```bash
+# 1. Write test first (Red)
+cat > storage/keyvalue_test.go <<EOF
+func TestKeyValueStore_SetGet(t *testing.T) {
+    store := NewKeyValueStore()
+    err := store.Set("key1", []byte("value1"), 0)
+    if err != nil {
+        t.Fatalf("Set failed: %v", err)
+    }
+    value, found := store.Get("key1")
+    if !found {
+        t.Fatal("Key not found")
+    }
+    if string(value) != "value1" {
+        t.Errorf("Expected value1, got %s", value)
+    }
+}
+EOF
+
+# 2. Run test (should fail - no implementation)
+go test ./storage
+# FAIL: undefined: NewKeyValueStore
+
+# 3. Implement minimal code (Green)
+cat > storage/keyvalue.go <<EOF
+package storage
+
+import "sync"
+
+type KeyValueStore struct {
+    data sync.Map
+}
+
+func NewKeyValueStore() *KeyValueStore {
+    return &KeyValueStore{}
+}
+
+func (kv *KeyValueStore) Set(key string, value []byte, ttl int64) error {
+    kv.data.Store(key, value)
+    return nil
+}
+
+func (kv *KeyValueStore) Get(key string) ([]byte, bool) {
+    value, ok := kv.data.Load(key)
+    if !ok {
+        return nil, false
+    }
+    return value.([]byte), true
+}
+EOF
+
+# 4. Run test (should pass)
+go test ./storage
+# PASS
+
+# 5. Check coverage
+go test -cover ./storage
+# coverage: 85.7% of statements
+
+# 6. Commit with coverage in message
+git add storage/
+git commit -m "Implement KeyValue storage (coverage: 85.7%)"
+```
+
+### Coverage in Pull Requests
+
+Every PR MUST include coverage report in description:
+
+```markdown
+## Coverage Report
+
+| Component | Coverage | Change | Status |
+|-----------|----------|--------|--------|
+| Core SDK | 87.3% | +2.1% | ✅ Pass (>85%) |
+| MemStore | 89.1% | +3.4% | ✅ Pass (>85%) |
+| Redis | 82.5% | +1.8% | ✅ Pass (>80%) |
+| Kafka | 78.2% | -1.2% | ❌ Fail (<80%) |
+
+**Action Required**: Kafka coverage dropped below 80%. Need to add tests for error handling paths.
+```
+
+### CI/CD Coverage Enforcement
+
+```yaml
+# .github/workflows/ci.yml
+name: CI with Coverage
+
+on: [push, pull_request]
+
+jobs:
+  test-and-coverage:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-go@v4
+        with:
+          go-version: '1.21'
+
+      - name: Run tests with coverage
+        run: make coverage-all
+
+      - name: Enforce coverage thresholds
+        run: |
+          # Core SDK: 85% minimum
+          cd plugins/core
+          COVERAGE=$(go test -coverprofile=coverage.out ./... && \
+                     go tool cover -func=coverage.out | grep total | \
+                     awk '{print $3}' | sed 's/%//')
+          if (( $(echo "$COVERAGE < 85" | bc -l) )); then
+            echo "❌ Core SDK coverage ${COVERAGE}% < 85%"
+            exit 1
+          fi
+          echo "✅ Core SDK coverage ${COVERAGE}% >= 85%"
+
+          # MemStore: 85% minimum
+          cd ../memstore
+          COVERAGE=$(go test -coverprofile=coverage.out ./... && \
+                     go tool cover -func=coverage.out | grep total | \
+                     awk '{print $3}' | sed 's/%//')
+          if (( $(echo "$COVERAGE < 85" | bc -l) )); then
+            echo "❌ MemStore coverage ${COVERAGE}% < 85%"
+            exit 1
+          fi
+          echo "✅ MemStore coverage ${COVERAGE}% >= 85%"
+
+          # Redis/Kafka: 80% minimum (more complex, lower threshold)
+          # ... similar checks
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          files: ./coverage.out
+          fail_ci_if_error: true
+```
+
+### When to Write Tests
+
+**ALWAYS write tests for**:
+- Public API functions and methods
+- Business logic and algorithms
+- Error handling paths
+- Edge cases (nil, empty, boundary values)
+- Concurrent operations (use `-race` detector)
+
+**Optional tests for**:
+- Simple getters/setters (but consider coverage impact)
+- Trivial type conversions
+- Generated code (protobuf)
+
+**NEVER skip tests for**:
+- Storage operations (Set, Get, Delete, etc.)
+- Network operations (connection pools, retries)
+- Lifecycle hooks (startup, shutdown)
+- Authorization checks
+- Data serialization/deserialization
+
+### Coverage Gap Analysis
+
+Use coverage reports to identify untested code:
+
+```bash
+# Generate HTML coverage report
+go test -coverprofile=coverage.out ./...
+go tool cover -html=coverage.out -o coverage.html
+
+# Open in browser and look for RED lines (untested code)
+open coverage.html
+
+# Example output:
+#   storage/keyvalue.go:42: untested error path
+#   storage/keyvalue.go:67: untested TTL cleanup logic
+```
+
+Add tests to cover red lines until coverage meets threshold.
+
+### Race Detection
+
+**MANDATORY**: Run all tests with race detector in CI.
+
+```bash
+# Local development
+go test -race ./...
+
+# CI enforcement
+- name: Run tests with race detector
+  run: go test -race -v ./...
+```
+
+Race detector MUST be clean (no data races) before merge.
+
+### Benchmarking (Optional but Recommended)
+
+Write benchmarks for performance-critical paths:
+
+```go
+func BenchmarkKeyValueStore_Set(b *testing.B) {
+    store := NewKeyValueStore()
+    for i := 0; i < b.N; i++ {
+        store.Set(fmt.Sprintf("key%d", i), []byte("value"), 0)
+    }
+}
+
+func BenchmarkKeyValueStore_Get(b *testing.B) {
+    store := NewKeyValueStore()
+    store.Set("key", []byte("value"), 0)
+
+    b.ResetTimer()
+    for i := 0; i < b.N; i++ {
+        store.Get("key")
+    }
+}
+```
+
+Run benchmarks to validate performance claims:
+
+```bash
+go test -bench=. -benchmem ./...
+
+# Example output:
+# BenchmarkKeyValueStore_Set-8     5000000    230 ns/op    48 B/op   2 allocs/op
+# BenchmarkKeyValueStore_Get-8    10000000    156 ns/op     0 B/op   0 allocs/op
+```
+
+### Summary: TDD Checklist
+
+Before committing code:
+
+- [ ] All tests written BEFORE implementation
+- [ ] All tests passing (`go test ./...`)
+- [ ] Coverage meets minimum threshold (`make coverage-<component>`)
+- [ ] Race detector clean (`go test -race ./...`)
+- [ ] Coverage percentage in commit message
+- [ ] PR includes coverage report
 
 ## Architecture Decision Records (ADRs)
 

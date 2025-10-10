@@ -12,8 +12,222 @@ Quick access to recently updated documentation. Changes listed in reverse chrono
 
 ### 2025-10-09
 
+#### RFC-022: Core Pattern SDK - Build System and Tooling Added (MAJOR UPDATE)
+**Link**: [RFC-022](/rfc/rfc-022)
+
+**Summary**: Major update transforming RFC-022 from physical code layout to comprehensive build system and tooling guide:
+- **Terminology Update**: Renamed from "Plugin SDK" to "Pattern SDK" to reflect pattern layer sophistication
+- **Module Path Change**: `github.com/prism/plugin-sdk` → `github.com/prism/pattern-sdk`
+- **Directory Structure**: `examples/` → `patterns/` to emphasize pattern implementations
+- **Comprehensive Makefile System**: Hierarchical Makefiles for SDK and individual patterns
+  - Root Makefile: `all`, `build`, `test`, `test-unit`, `test-integration`, `lint`, `proto`, `clean`, `coverage`, `validate`, `fmt`
+  - Pattern-specific Makefiles: Build, test, lint, run, docker, clean targets
+  - Build targets reference table with usage guidance
+- **Compile-Time Validation**: Interface implementation checks, pattern interface validation, slot configuration validation
+  - `interfaces/assertions.go`: Compile-time type assertions for all interfaces
+  - `tools/validate-interfaces.sh`: Validates all patterns compile successfully
+  - `tools/validate-slots/main.go`: YAML-based slot configuration validator
+- **Linting Configuration**: Complete `.golangci.yml` with 12+ enabled linters
+  - errcheck, gosimple, govet, ineffassign, staticcheck, typecheck, unused, gofmt, goimports, misspell, goconst, gocyclo, lll, dupl, gosec, revive
+  - Test file exclusions, generated file exclusions
+  - Pre-commit hook: `.githooks/pre-commit` runs format, lint, validate, test-unit
+- **Testing Infrastructure**: Comprehensive test organization and coverage gates
+  - Unit tests vs integration tests (build tags)
+  - Testcontainers integration (`testing/containers.go`)
+  - 80% coverage threshold enforcement
+  - Benchmark tests with pattern examples
+  - Extended CI/CD workflow with validation, lint, unit, integration, coverage gates
+
+**Key Innovation**: Build system treats patterns as first-class sophisticated implementations, not simple "plugins". Comprehensive tooling ensures quality gates (lint, validate, test, coverage) are enforced at every stage. Makefile-based workflow enables fast iteration with incremental builds and caching. Compile-time validation catches configuration errors before runtime.
+
+**Impact**: Establishes production-grade build infrastructure for Pattern SDK. Pattern authors get consistent Makefile targets, automated validation, and quality gates. Pre-commit hooks prevent broken code from being committed. Coverage gates ensure test quality. Testcontainers enable realistic integration testing. Complements RFC-025 (pattern architecture) by focusing on build system and tooling rather than concurrency primitives.
+
+---
+
+#### MEMO-009: Topaz Local Authorizer Configuration for Development and Integration Testing (NEW)
+**Link**: [MEMO-009](/memos/memo-009)
+
+**Summary**: Comprehensive guide for configuring Topaz as local authorizer across two scenarios:
+- **Development Iteration**: Fast, lightweight authorization during local development with Docker Compose
+- **Integration Testing**: Realistic authorization testing in CI/CD with testcontainers
+- Local infrastructure layer: Reusable components (Topaz, Dex, Vault, Signoz) running independently
+- Seed data setup with bootstrap script creating test users (dev@local.prism, admin@local.prism) and groups
+- Policy files for main authorization (prism.rego) and namespace isolation
+- Developer workflow: Docker Compose startup, directory bootstrap, policy hot-reload
+- Integration testing: Go testcontainers setup, GitHub Actions CI/CD configuration
+- Troubleshooting guide: 4 common issues with diagnosis and solutions
+- Pattern SDK integration: Configuration for local Topaz with enforcement modes
+- Comparison table: Development vs Integration Testing vs Production configurations
+
+**Key Innovation**: Topaz as local infrastructure layer component enables fast development iteration (&lt;3s startup) and realistic integration testing (&lt;5s per test suite) without external dependencies. Bootstrap script provides reproducible test data. Policy hot-reload eliminates restart cycles.
+
+**Impact**: Completes local development stack for authorization testing. Patterns can develop against realistic authorization without cloud services. testcontainers integration ensures CI/CD tests match production behavior. Establishes reusable local infrastructure pattern for other services (Dex, Vault, Signoz).
+
+---
+
+#### RFC-025: Pattern SDK Architecture - Pattern Lifecycle Management Added (MAJOR UPDATE)
+**Link**: [RFC-025](/rfc/rfc-025-pattern-sdk-architecture)
+
+**Summary**: Major expansion adding comprehensive pattern lifecycle management to Pattern SDK architecture:
+- **Slot Matching via Config**: Backends validated against union of required interfaces at pattern slots
+  - SlotConfig defines interface requirements (keyvalue_basic + keyvalue_scan)
+  - SlotMatcher validates backends implement ALL required interfaces before assignment
+  - Fail-fast validation: Pattern won't start if slots improperly configured
+  - Optional slots supported (e.g., durability slot for event replay)
+- **Lifecycle Isolation**: Pattern main separated from program main
+  - SDK handles: config loading, backend initialization, slot validation, signal handling
+  - Pattern implements: Initialize, Start, Shutdown, HealthCheck
+  - Simple cmd/main.go just calls lifecycle.Run(pattern)
+- **Graceful Shutdown with Bounded Timeout**: Configurable cleanup timeouts
+  - graceful_timeout: 30s (pattern drains in-flight requests)
+  - shutdown_timeout: 35s (hard deadline for forced exit)
+  - Pattern drains worker pools, closes connections, waits for background goroutines
+  - Exit codes: 0 (clean), 1 (errors), 2 (timeout forced)
+- **Signal Handling at SDK Level**: OS signals intercepted by SDK
+  - SIGTERM/SIGINT → SDK creates shutdown context → calls pattern.Shutdown(ctx)
+  - Pattern isolated from signal complexity
+  - Consistent signal handling across all patterns
+- **Complete Example**: Multicast Registry pattern showing full lifecycle integration
+  - Initialize: Extracts validated backends from slots, creates concurrency primitives
+  - Start: Launches worker pool, health check loop, blocks until stop signal
+  - Shutdown: Drains workers, closes backends, bounded by context timeout
+  - HealthCheck: Circuit breaker-protected backend health verification
+
+**Key Innovation**: Slot-based configuration with interface validation eliminates runtime errors from misconfigured backends. Lifecycle isolation keeps patterns focused on business logic while SDK handles cross-cutting concerns. Bounded graceful shutdown ensures clean deployments in Kubernetes (pod termination respects shutdown_timeout).
+
+**Impact**: Patterns become significantly simpler to implement (no signal handling, config parsing, slot validation). Slot matcher prevents "backend doesn't support X interface" runtime errors. Graceful shutdown with hard timeout prevents hung deployments. Foundation for production-grade pattern implementations in POC phases.
+
+---
+
+### 2025-10-09 (Earlier)
+
+#### RFC-019: Plugin SDK Authorization Layer - Token Validation Pushed to Plugins with Vault Integration (ARCHITECTURAL UPDATE)
+**Link**: [RFC-019](/rfc/rfc-019-plugin-sdk-authorization-layer)
+
+**Summary**: Major architectural update reflecting critical design decision to push token validation and credential exchange to plugins (not proxy):
+- **Architectural Rationale**: Token validation is high-latency (~10-50ms) per-session operation, not per-request
+- **Proxy Role Change**: Proxy now passes tokens through without validation (stateless forwarding)
+- **Plugin-Side Validation**: Plugins validate tokens once per session, then cache validation result
+- **Vault Integration**: Complete implementation of token exchange for per-session backend credentials
+  - Plugins exchange validated user JWT for Vault token
+  - Vault token used to fetch dynamic backend credentials (username/password)
+  - Per-session credentials enable user-specific audit trails in backend logs
+  - Automatic credential renewal every lease_duration/2 (background goroutine)
+- **VaultClient Implementation**: Complete Go SDK code for JWT login, credential fetching, lease renewal
+- **Credential Lifecycle**: Mermaid diagram showing session setup → token exchange → credential renewal → session teardown
+- **Configuration Examples**: YAML showing Vault address, JWT auth path, secret path, renewal intervals
+- **Vault Policy Examples**: HCL policy for plugin access to database credentials and lease renewal
+- **Benefits**: Per-user audit trails, fine-grained ACLs, automatic rotation, rate limiting per user
+
+**Key Innovation**: Token validation amortized over session lifetime (validate once, reuse claims). Vault provides dynamic, short-lived credentials (1h TTL) with user-specific ACLs generated on-demand. Backend logs show which user accessed what data (not just "plugin user"). Zero shared long-lived credentials - breach of one session doesn't compromise others.
+
+**Impact**: Enables true zero-trust architecture with per-session credential isolation. Backend databases can enforce row-level security using Vault-generated credentials. Plugin-side validation creates defense-in-depth even if proxy bypassed. Vault manages entire credential lifecycle (generation, renewal, revocation). Foundation for multi-tenant data access with user attribution.
+
+---
+
+#### RFC-002: Data Layer Interface Specification - Code Fence Formatting Fixes (UPDATED)
+**Link**: [RFC-002](/rfc/rfc-002-data-layer-interface)
+
+**Summary**: Fixed 4 MDX code fence validation errors identified by documentation validation tooling:
+- Line 1156: Fixed closing fence with ```go → ``` (removed language identifier from closing fence)
+- Line 1162: Fixed opening fence missing language → added ```text
+- Line 1168: Fixed closing fence with ```bash → ``` (removed language identifier from closing fence)
+- Line 1177: Fixed opening fence missing language → added ```text
+- Applied state machine-based Python script to distinguish opening fences (require language) from closing fences (must be plain)
+- All 4 errors resolved, documentation now passes MDX compilation
+
+**Impact**: RFC-002 now compiles correctly in Docusaurus build. Fixes broken GitHub Pages deployment. Ensures code examples display properly with correct syntax highlighting.
+
+---
+
+#### RFC-023: Publish Snapshotter Plugin - Write-Only Event Buffering with Pagination (NEW)
+**Link**: [RFC-023](/rfc/rfc-023-publish-snapshotter-plugin)
+
+**Summary**: Comprehensive RFC defining publish snapshotter plugin architecture for write-only event capture with intelligent buffering:
+- **Write-Only API**: Satisfies PubSub publish interface only (no subscription)
+- Intelligent buffering with configurable thresholds (event count, size, age)
+- Page-based commits to object storage (S3, MinIO, local filesystem)
+- Index publishing to KeyValue/TimeSeries/Document backends for discovery
+- Session disconnect handling with guaranteed zero data loss
+- Format flexibility: Protobuf or NDJSON serialization with optional compression (gzip/zstd)
+- Two backend slots: storage_object (new interface) + index backend (KeyValue/TimeSeries/Document)
+- Complete page lifecycle: buffer → serialize → compress → write → index → clear
+- Query and replay capabilities using index metadata
+- Performance characteristics: 10,000 events/page, 300s max age, &lt;1GB RAM per 1000 writers
+- Configuration examples: development (MemStore + local filesystem), production (Redis + MinIO), large scale (ClickHouse + S3)
+
+**Key Innovation**: Write-only event capture decouples data producers from consumers, enabling durable event archival without active subscribers. Two-slot architecture separates storage (object storage) from indexing (KeyValue/TimeSeries) for flexibility. Page-based commits provide efficient large-file writes while maintaining discoverability through side-channel index.
+
+**Impact**: Enables audit logging, event archival, data lake ingestion, session recording, and metrics collection patterns without requiring active consumers. Zero data loss guarantee even on disconnects. Object storage economics (cheap, durable) combined with queryable index. Adds new storage_object interface to MEMO-006 catalog.
+
+---
+
+#### RFC-022: Core Plugin SDK Physical Code Layout (NEW)
+**Link**: [RFC-022](/rfc/rfc-022-core-plugin-sdk-code-layout)
+
+**Summary**: Comprehensive RFC defining physical code layout for publishable Go SDK (`github.com/prism/plugin-sdk`) for building backend plugins:
+- **Package Structure**: 9 packages (auth, authz, audit, plugin, interfaces, storage, observability, testing, errors)
+- Clean separation: Authentication (JWT/OIDC), authorization (Topaz), audit logging, lifecycle management
+- Interface contracts matching protobuf service definitions (KeyValue, PubSub, Stream, Queue, etc.)
+- Observability built-in: structured logging (Zap), Prometheus metrics, OpenTelemetry tracing
+- Testing utilities: mock implementations for auth/authz/audit, test server helpers
+- Minimal external dependencies: gRPC, protobuf, JWT libraries, Topaz SDK, Zap, Prometheus, OTel
+- Semantic versioning strategy with Go modules (v0.x.x pre-1.0, v1.x.x stable, v2.x.x breaking)
+- Complete example: MemStore plugin using SDK (150 lines vs 500+ without SDK)
+- Automated releases with GitHub Actions
+- godoc-friendly documentation with usage examples per package
+
+**Key Innovation**: Batteries-included SDK enables plugin authors to focus on backend-specific logic while SDK handles cross-cutting concerns (auth, authz, audit, observability, lifecycle). Defense-in-depth authorization built into SDK following RFC-019 patterns. Reusable abstractions eliminate code duplication across plugins.
+
+**Impact**: Accelerates plugin development with consistent patterns. Ensures all plugins enforce authorization, emit audit logs, and expose observability metrics. Reduces security vulnerabilities through centralized auth logic. Single SDK version bump propagates improvements to all plugins. Foundation for POC 1 implementation (RFC-021).
+
+---
+
+#### RFC-021: POC 1 - Three Minimal Plugins Implementation Plan (COMPLETE REWRITE)
+**Link**: [RFC-021](/rfc/rfc-021-poc1-three-plugins-implementation)
+
+**Summary**: Complete rewrite of POC 1 implementation plan based on user feedback for focused, test-driven approach:
+- **Scope Changes**: Removed Admin API (use prismctl CLI), removed Python client library, split into 3 minimal plugins
+- Three focused plugins: MemStore (in-memory, 6 interfaces), Redis (external, 8 interfaces), Kafka (streaming, 7 interfaces)
+- Core Plugin SDK skeleton: Reusable Go library from RFC-022 with auth/authz/audit stubs
+- Load testing tool: Go CLI (prism-load) for parallel request generation with configurable concurrency, duration, RPS
+- Optimized builds: Static linking (`CGO_ENABLED=0`), scratch-based Docker images (&lt;10MB target)
+- TDD workflow: Write tests FIRST, achieve 80%+ code coverage (SDK: 85%+, plugins: 80%+)
+- Go module caching: Shared GOMODCACHE and GOCACHE across monorepo to avoid duplicate builds
+- Plugin lifecycle diagram: 4 phases (startup, request handling, health checks, shutdown)
+- 8 work streams with dependencies: Protobuf (1 day), SDK (2 days), Proxy (3 days), 3 plugins (2 days each), Load tester (1 day), Build optimization (1 day)
+- Timeline: 2 weeks (10 working days) with parallelizable work streams
+- Success criteria: All tests pass, 80%+ coverage, &lt;5ms P99 latency, &lt;10MB Docker images
+
+**Key Innovation**: Walking Skeleton approach proves architecture end-to-end with minimal scope. Three focused plugins demonstrate SDK reusability and different backend patterns (in-process, external cache, external streaming). TDD workflow with mandatory code coverage gates ensures quality from day one. Load testing validates performance claims early.
+
+**Impact**: Clear, achievable POC scope replacing original overly-complex plan. SDK skeleton provides foundation for all future plugins. Static linking enables lightweight deployments. TDD discipline establishes engineering culture. Load tester enables continuous performance validation. Coverage thresholds prevent quality regressions.
+
+---
+
+#### RFC-015: Plugin Acceptance Test Framework - Interface-Based Testing (COMPLETE REWRITE)
+**Link**: [RFC-015](/rfc/rfc-015-plugin-acceptance-test-framework)
+
+**Summary**: Complete rewrite aligning with MEMO-006 interface decomposition principles, shifting from backend-type testing to interface-based testing:
+- **Interface Compliance**: 45 interface test suites (one per interface from MEMO-006 catalog)
+- Cross-backend test reuse: Same test suite validates multiple backends implementing same interface
+- Registry-driven testing: Backends declare interfaces in `registry/backends/*.yaml`, tests verify claims
+- Compliance matrix: Automated validation that backends implement all declared interfaces
+- Test organization: `tests/acceptance/interfaces/{datamodel}/{interface}_test.go` structure
+- testcontainers integration: Real backend instances (Redis, Postgres, Kafka) for integration testing
+- Example test suites: KeyValueBasicTestSuite (10 tests), KeyValueScanTestSuite (6 tests)
+- GitHub Actions CI: Matrix strategy runs interface × backend combinations (45 interfaces × 4 backends = 180 jobs)
+- Backend registry loading: `LoadBackendRegistry()` reads YAML declarations, `FindBackendsImplementing()` filters by interface
+- Makefile targets: `test-compliance`, `test-compliance-redis`, `test-interface INTERFACE=keyvalue_basic`
+
+**Key Innovation**: Interface-based testing enables test code reuse across backends. Single `KeyValueBasicTestSuite` validates Redis, PostgreSQL, DynamoDB, MemStore - reduces 1500 lines (duplicated) to 100 lines (shared). Registry-driven execution ensures only declared interfaces are tested (no false failures).
+
+**Impact**: Dramatically reduces test maintenance burden. Establishes clear interface contracts through executable specifications. Backend registry becomes single source of truth for capabilities. Compliance matrix provides confidence that backends satisfy declared interfaces. Foundation for plugin acceptance testing in CI/CD pipeline.
+
+---
+
 #### RFC-020: Streaming HTTP Listener - API-Specific Adapter Pattern (NEW)
-**Link**: [RFC-020](/rfc/RFC-020-streaming-http-listener-api-adapter)
+**Link**: [RFC-020](/rfc/rfc-020-streaming-http-listener-api-adapter)
 
 **Summary**: Comprehensive RFC defining streaming HTTP listener architecture that bridges external HTTP/JSON protocols to Prism's internal gRPC/Protobuf layer:
 - **API-Specific Adapters**: Each adapter implements ONE external API contract (MCP, Agent-to-Agent, custom APIs)
@@ -34,7 +248,7 @@ Quick access to recently updated documentation. Changes listed in reverse chrono
 ---
 
 #### ADR-050: Topaz for Policy-Based Authorization (NEW)
-**Link**: [ADR-050](/adr/ADR-050-topaz-policy-authorization)
+**Link**: [ADR-050](/adr/adr-050-topaz-policy-authorization)
 
 **Summary**: Architecture decision to use Topaz by Aserto for fine-grained policy-based authorization:
 - **Topaz Selection**: Evaluated OPA alone, cloud IAM, Zanzibar systems (SpiceDB, Ory Keto) - Topaz chosen for best balance
@@ -55,7 +269,7 @@ Quick access to recently updated documentation. Changes listed in reverse chrono
 ---
 
 #### RFC-019: Plugin SDK Authorization Layer (NEW)
-**Link**: [RFC-019](/rfc/RFC-019-plugin-sdk-authorization-layer)
+**Link**: [RFC-019](/rfc/rfc-019-plugin-sdk-authorization-layer)
 
 **Summary**: Standardized authorization layer in Prism core plugin SDK enabling backend plugins to validate tokens and enforce policies:
 - **Defense-in-Depth**: Authorization enforced at proxy AND plugin layers
@@ -76,7 +290,7 @@ Quick access to recently updated documentation. Changes listed in reverse chrono
 ---
 
 #### MEMO-006: Backend Interface Decomposition and Schema Registry (NEW)
-**Link**: [MEMO-006](/memos/MEMO-006-backend-interface-decomposition-schema-registry)
+**Link**: [MEMO-006](/memos/memo-006-backend-interface-decomposition-schema-registry)
 
 **Summary**: Comprehensive architectural guide for decomposing backends into thin, composable proto service interfaces and establishing schema registry for patterns and slots:
 - **Design Decision**: Use explicit interface flavors (not capability flags) for type safety
@@ -96,7 +310,7 @@ Quick access to recently updated documentation. Changes listed in reverse chrono
 ---
 
 #### MEMO-005: Client Protocol Design Philosophy - Composition vs Use-Case Specificity (NEW)
-**Link**: [MEMO-005](/memos/MEMO-005-client-protocol-design-philosophy)
+**Link**: [MEMO-005](/memos/memo-005-client-protocol-design-philosophy)
 
 **Summary**: Comprehensive memo resolving the architectural tension between composable primitives (RFC-014) and use-case-specific protocols (RFC-017), covering:
 - Context comparison: RFC-014 composable primitives vs RFC-017 use-case patterns
@@ -115,7 +329,7 @@ Quick access to recently updated documentation. Changes listed in reverse chrono
 ---
 
 #### MEMO-003: Documentation-First Development Approach (NEW)
-**Link**: [MEMO-003](/memos/MEMO-003-documentation-first-development)
+**Link**: [MEMO-003](/memos/memo-003-documentation-first-development)
 
 **Summary**: Comprehensive memo defining the documentation-first development approach used in Prism, covering:
 - Definition and core principles (Design in Documentation → Review → Implement → Validate)
@@ -131,7 +345,7 @@ Quick access to recently updated documentation. Changes listed in reverse chrono
 ---
 
 #### RFC-011: Data Proxy Authentication - Secrets Provider Abstraction (EXPANDED)
-**Link**: [RFC-011](/rfc/RFC-011-data-proxy-authentication)
+**Link**: [RFC-011](/rfc/rfc-011-data-proxy-authentication)
 
 **Summary**: Major expansion adding comprehensive secrets provider abstraction:
 - Pluggable SecretsProvider trait supporting multiple secret management services
@@ -146,7 +360,7 @@ Quick access to recently updated documentation. Changes listed in reverse chrono
 ---
 
 #### RFC-006: Admin CLI - OIDC Authentication (EXPANDED)
-**Link**: [RFC-006](/rfc/RFC-006-python-admin-cli)
+**Link**: [RFC-006](/rfc/rfc-006-python-admin-cli)
 
 **Summary**: Added comprehensive OIDC authentication section covering:
 - Device code flow (OAuth 2.0) for command-line SSO authentication
@@ -164,7 +378,7 @@ Quick access to recently updated documentation. Changes listed in reverse chrono
 ---
 
 #### ADR-046: Dex IDP for Local Identity Testing (NEW)
-**Link**: [ADR-046](/adr/ADR-046-dex-idp-local-testing)
+**Link**: [ADR-046](/adr/adr-046-dex-idp-local-testing)
 
 **Summary**: New ADR proposing Dex as the local OIDC provider for development and testing:
 - Self-hosted OIDC provider for local development (no cloud dependencies)
@@ -178,7 +392,7 @@ Quick access to recently updated documentation. Changes listed in reverse chrono
 ---
 
 #### RFC-014: Layered Data Access Patterns - Client Pattern Catalog (EXPANDED)
-**Link**: [RFC-014](/rfc/RFC-014-layered-data-access-patterns)
+**Link**: [RFC-014](/rfc/rfc-014-layered-data-access-patterns)
 
 **Summary**: New RFC defining how Prism separates client API from backend implementation through pattern composition. Covers:
 - Three-layer architecture (Client API, Pattern Composition, Backend Execution)
@@ -193,7 +407,7 @@ Quick access to recently updated documentation. Changes listed in reverse chrono
 ---
 
 #### RFC-011: Data Proxy Authentication - Open Questions Expanded
-**Link**: [RFC-011](/rfc/RFC-011-data-proxy-authentication)
+**Link**: [RFC-011](/rfc/rfc-011-data-proxy-authentication)
 
 **Summary**: Added comprehensive feedback to open questions:
 - Certificate Authority: Use Vault for certificate management
@@ -207,7 +421,7 @@ Quick access to recently updated documentation. Changes listed in reverse chrono
 ---
 
 #### RFC-010: Admin Protocol with OIDC - Multi-Provider Support
-**Link**: [RFC-010](/rfc/RFC-010-admin-protocol-oidc)
+**Link**: [RFC-010](/rfc/rfc-010-admin-protocol-oidc)
 
 **Summary**: Expanded open questions with detailed answers:
 - OIDC Provider Support: AWS Cognito, Azure AD, Google, Okta, Auth0, Dex
@@ -221,7 +435,7 @@ Quick access to recently updated documentation. Changes listed in reverse chrono
 ---
 
 #### RFC-009: Distributed Reliability Patterns - Change Notification Graph
-**Link**: [RFC-009](/rfc/RFC-009-distributed-reliability-patterns)
+**Link**: [RFC-009](/rfc/rfc-009-distributed-reliability-patterns)
 
 **Summary**: Added change notification flow diagram to CDC pattern showing:
 - Change type classification (INSERT, UPDATE, DELETE, SCHEMA)
@@ -238,7 +452,7 @@ Quick access to recently updated documentation. Changes listed in reverse chrono
 ### 2025-10-08
 
 #### RFC-009: Distributed Reliability Patterns (INITIAL)
-**Link**: [RFC-009](/rfc/RFC-009-distributed-reliability-patterns)
+**Link**: [RFC-009](/rfc/rfc-009-distributed-reliability-patterns)
 
 **Summary**: Initial RFC documenting 7 distributed reliability patterns:
 1. Tiered Storage - Hot/warm/cold data lifecycle
@@ -256,7 +470,7 @@ Quick access to recently updated documentation. Changes listed in reverse chrono
 ### 2025-10-07
 
 #### RFC-001: Prism Architecture (INITIAL)
-**Link**: [RFC-001](/rfc/RFC-001-prism-architecture)
+**Link**: [RFC-001](/rfc/rfc-001-prism-architecture)
 
 **Summary**: Foundational architecture RFC defining:
 - System components and layered interface hierarchy
@@ -271,7 +485,7 @@ Quick access to recently updated documentation. Changes listed in reverse chrono
 ---
 
 #### RFC-002: Data Layer Interface Specification (INITIAL)
-**Link**: [RFC-002](/rfc/RFC-002-data-layer-interface)
+**Link**: [RFC-002](/rfc/rfc-002-data-layer-interface)
 
 **Summary**: Complete gRPC interface specification covering:
 - Session Service (authentication, heartbeat, lifecycle)

@@ -1,513 +1,230 @@
 ---
 id: rfc-015
-title: "RFC-015: Plugin Acceptance Test Framework (Go Implementation)"
-status: Draft
+title: "RFC-015: Plugin Acceptance Test Framework (Interface-Based Testing)"
+status: Proposed
 date: 2025-10-09
-author: System
+author: Platform Team
 created: 2025-10-09
 updated: 2025-10-09
-tags: [testing, plugins, go, acceptance, quality-assurance]
+tags: [testing, plugins, interfaces, acceptance, quality-assurance]
 ---
 
-# RFC-015: Plugin Acceptance Test Framework (Go Implementation)
-
-**Status**: Draft
-**Author**: System
-**Created**: 2025-10-09
-**Updated**: 2025-10-09
+# RFC-015: Plugin Acceptance Test Framework (Interface-Based Testing)
 
 ## Abstract
 
-This RFC defines a comprehensive **acceptance test framework** for Prism backend plugins implemented in Go. The framework provides:
+This RFC defines a comprehensive **acceptance test framework** for Prism backend plugins based on **interface compliance** rather than backend types. Following MEMO-006's interface decomposition principles, the framework tests plugins against the thin, composable interfaces they claim to implement (e.g., `keyvalue_basic`, `pubsub_persistent`, `stream_consumer_groups`) rather than treating backends as monolithic units.
 
-1. **Reusable Authentication Test Suite**: Verify all plugins handle credentials, authentication failures, and credential rotation consistently
-2. **Per-Backend Verification Tests**: Test each plugin implementation against real backend instances (PostgreSQL, Kafka, Redis, etc.)
-3. **Test Harness with testcontainers**: Automatically spin up real backend instances for integration testing
-4. **CI/CD Integration**: Automated testing on every commit with version matrix support
+**Key Innovation**: Backends declare which interfaces they implement in `registry/backends/*.yaml`. Tests verify each interface independently, enabling fine-grained validation and clear contracts.
 
-The framework ensures **cross-plugin consistency** (all plugins handle common concerns identically) and **per-backend correctness** (each plugin correctly implements its specific protocol).
+The framework provides:
+1. **Interface Compliance Test Suites**: Reusable tests for each of the 45 backend interfaces
+2. **Backend Verification Matrix**: Automated validation that backends implement their declared interfaces
+3. **Test Harness with testcontainers**: Real backend instances for integration testing
+4. **CI/CD Integration**: Interface compliance checked on every commit
 
 ## Motivation
 
 ### Problem Statement
 
-Backend plugins are critical infrastructure components that must:
-- Correctly implement backend-specific wire protocols
-- Handle authentication consistently across all backends
-- Gracefully handle connection failures and credential rotation
-- Maintain backward compatibility across versions
-- Work correctly with multiple backend versions
+MEMO-006 decomposes backends into thin interfaces (e.g., Redis implements 16 interfaces across 6 data models), but without interface-level testing, we can't verify compliance:
 
-**Without a comprehensive acceptance test framework**, we risk:
-- Inconsistent authentication behavior across plugins
-- Protocol implementation bugs discovered in production
-- Breaking changes introduced during refactoring
-- Compatibility issues with new backend versions
+**Current Approach (Backend-Type Testing)**:
+```go
+func TestPostgresPlugin(t *testing.T) {
+    // Tests all PostgreSQL features mixed together
+    testInsert(t)        // keyvalue_basic
+    testJSONTypes(t)     // document_basic
+    testTransactions(t)  // keyvalue_transactional
+    testListenNotify(t)  // pubsub_basic (LISTEN/NOTIFY)
+}
+```
+
+**Problems**:
+- Monolithic tests obscure which interface is being tested
+- Can't reuse tests across backends (PostgreSQL and Redis both implement `keyvalue_basic` but have separate test suites)
+- No clear mapping between test failures and interface violations
+- Hard to verify partial interface implementations
+
+**MEMO-006 Approach (Interface-Based Testing)**:
+```go
+// Test keyvalue_basic interface (works for ANY backend implementing it)
+func TestKeyValueBasicInterface(t *testing.T, backend TestBackend) {
+    // Tests ONLY keyvalue_basic operations
+    testSet(t, backend)
+    testGet(t, backend)
+    testDelete(t, backend)
+    testExists(t, backend)
+}
+
+// Run for all backends implementing keyvalue_basic
+for backend := range FindBackendsImplementing("keyvalue_basic") {
+    t.Run(backend.Name, func(t *testing.T) {
+        TestKeyValueBasicInterface(t, backend)
+    })
+}
+```
 
 ### Goals
 
-1. **Consistent Authentication**: All plugins handle auth identically
-2. **Real Backend Testing**: Test against actual instances, not mocks
-3. **Version Matrix**: Verify compatibility with multiple backend versions
-4. **CI/CD Ready**: Automated testing on every commit
-5. **Reusable Test Suites**: Share test code across all plugin implementations
-6. **Fast Feedback**: Tests complete in &lt;5 minutes per backend
-7. **Documentation**: Tests serve as examples for plugin developers
+1. **Interface Compliance**: Test each interface independently (45 interface test suites)
+2. **Cross-Backend Reuse**: Same test suite verifies Redis, PostgreSQL, DynamoDB for `keyvalue_basic`
+3. **Explicit Contracts**: Interface tests define the exact behavior backends must implement
+4. **Registry-Driven**: Backends declare interfaces in `registry/backends/*.yaml`, tests verify claims
+5. **Incremental Implementation**: Backends can implement subsets of interfaces (MemStore implements 6, Redis implements 16)
+6. **CI/CD Ready**: Automated interface compliance matrix on every commit
 
 ### Non-Goals
 
-- **Not load testing**: Performance benchmarks are separate (see RFC-009)
-- **Not end-to-end testing**: Focus on plugin-backend interaction only
-- **Not chaos testing**: Reliability testing covered separately
+- **Not load testing**: Performance benchmarks are separate (covered in other RFCs)
+- **Not pattern testing**: Pattern composition tested separately (RFC-014)
+- **Not end-to-end testing**: Focus on plugin-backend interface compliance only
 
 ## Architecture Overview
 
-### Test Framework Components
+### Interface-Based Test Structure
 
-Plugin Acceptance Test Framework
-├── Test Harness (harness/)
+Following MEMO-006's 45 interface catalog, the framework provides test suites for each interface:
+
+```text
+tests/acceptance/
+├── harness/
 │   ├── plugin_harness.go         # Plugin lifecycle management
 │   ├── backend_manager.go        # testcontainers integration
-│   └── test_runner.go            # Test execution engine
+│   └── interface_registry.go     # Load backend interface declarations
 │
-├── Reusable Test Suites (suites/)
-│   ├── auth_suite.go             # Authentication tests (ALL plugins)
-│   ├── lifecycle_suite.go        # Initialize/Health/Shutdown tests
-│   └── common_suite.go           # Common operation patterns
+├── interfaces/                    # Interface compliance test suites
+│   ├── keyvalue/
+│   │   ├── keyvalue_basic_test.go        # Test keyvalue_basic interface
+│   │   ├── keyvalue_scan_test.go         # Test keyvalue_scan interface
+│   │   ├── keyvalue_ttl_test.go          # Test keyvalue_ttl interface
+│   │   ├── keyvalue_transactional_test.go
+│   │   ├── keyvalue_batch_test.go
+│   │   └── keyvalue_cas_test.go
+│   │
+│   ├── pubsub/
+│   │   ├── pubsub_basic_test.go          # Test pubsub_basic interface
+│   │   ├── pubsub_wildcards_test.go      # Test pubsub_wildcards interface
+│   │   ├── pubsub_persistent_test.go     # Test pubsub_persistent interface
+│   │   ├── pubsub_filtering_test.go
+│   │   └── pubsub_ordering_test.go
+│   │
+│   ├── stream/
+│   │   ├── stream_basic_test.go
+│   │   ├── stream_consumer_groups_test.go
+│   │   ├── stream_replay_test.go
+│   │   ├── stream_retention_test.go
+│   │   └── stream_partitioning_test.go
+│   │
+│   ├── queue/
+│   │   ├── queue_basic_test.go
+│   │   ├── queue_visibility_test.go
+│   │   ├── queue_dead_letter_test.go
+│   │   ├── queue_priority_test.go
+│   │   └── queue_delayed_test.go
+│   │
+│   ├── list/
+│   │   ├── list_basic_test.go
+│   │   ├── list_indexing_test.go
+│   │   ├── list_range_test.go
+│   │   └── list_blocking_test.go
+│   │
+│   ├── set/
+│   │   ├── set_basic_test.go
+│   │   ├── set_operations_test.go
+│   │   ├── set_cardinality_test.go
+│   │   └── set_random_test.go
+│   │
+│   ├── sortedset/
+│   │   ├── sortedset_basic_test.go
+│   │   ├── sortedset_range_test.go
+│   │   ├── sortedset_rank_test.go
+│   │   ├── sortedset_operations_test.go
+│   │   └── sortedset_lex_test.go
+│   │
+│   ├── timeseries/
+│   │   ├── timeseries_basic_test.go
+│   │   ├── timeseries_aggregation_test.go
+│   │   ├── timeseries_retention_test.go
+│   │   └── timeseries_interpolation_test.go
+│   │
+│   ├── graph/
+│   │   ├── graph_basic_test.go
+│   │   ├── graph_traversal_test.go
+│   │   ├── graph_query_test.go
+│   │   └── graph_analytics_test.go
+│   │
+│   └── document/
+│       ├── document_basic_test.go
+│       ├── document_query_test.go
+│       └── document_indexing_test.go
 │
-├── Backend Verification (verification/)
-│   ├── postgres/
-│   │   ├── postgres_suite.go     # PostgreSQL-specific tests
-│   │   └── fixtures.go           # Test data
-│   ├── kafka/
-│   │   ├── kafka_suite.go        # Kafka-specific tests
-│   │   └── fixtures.go
-│   ├── redis/
-│   │   ├── redis_suite.go        # Redis-specific tests
-│   │   └── fixtures.go
-│   └── ...
+├── instances/                     # Backend testcontainers
+│   ├── redis_instance.go
+│   ├── postgres_instance.go
+│   ├── kafka_instance.go
+│   ├── memstore_instance.go
+│   └── backend_interface.go       # Common interface
 │
-└── Backend Instances (instances/)
-    ├── postgres_instance.go      # PostgreSQL testcontainer
-    ├── kafka_instance.go         # Kafka testcontainer
-    ├── redis_instance.go         # Redis testcontainer
-    └── backend_interface.go      # Common interface
-```text
+└── matrix/
+    ├── compliance_matrix_test.go  # Run interface tests for all backends
+    └── registry_validator_test.go # Verify backend registry declarations
+```
 
 ### Test Execution Flow
 
-```
+```mermaid
 sequenceDiagram
-    participant TestRunner
-    participant PluginHarness
-    participant BackendInstance
-    participant Plugin
-    participant Backend
+    participant Registry as Backend Registry
+    participant Matrix as Compliance Matrix
+    participant Harness as Test Harness
+    participant Backend as Backend Instance
+    participant Test as Interface Test Suite
 
-    TestRunner->>BackendInstance: Start container
-    activate BackendInstance
-    BackendInstance->>Backend: docker run postgres:16
-    Backend-->>BackendInstance: Container ready
-    BackendInstance-->>TestRunner: Connection config
+    Registry->>Matrix: Load registry/backends/redis.yaml
+    Registry->>Matrix: Redis claims: keyvalue_basic, keyvalue_scan, ...
 
-    TestRunner->>PluginHarness: NewHarness(backend_type)
-    activate PluginHarness
-    PluginHarness->>Plugin: Load plugin binary
-    Plugin-->>PluginHarness: Plugin loaded
+    Matrix->>Harness: Start Redis testcontainer
+    activate Harness
+    Harness->>Backend: docker run redis:7.2
+    Backend-->>Harness: Container ready
 
-    TestRunner->>PluginHarness: RunAuthSuite()
-    PluginHarness->>Plugin: Initialize(valid_creds)
-    Plugin->>Backend: Connect
-    Backend-->>Plugin: Connected
-    Plugin-->>PluginHarness: InitializeResponse{success=true}
-    PluginHarness-->>TestRunner: Auth tests PASS
+    Matrix->>Test: Run KeyValueBasicTest(redis)
+    Test->>Backend: Set("key1", "value1")
+    Backend-->>Test: OK
+    Test->>Backend: Get("key1")
+    Backend-->>Test: "value1"
+    Test->>Backend: Delete("key1")
+    Backend-->>Test: OK
+    Test->>Backend: Exists("key1")
+    Backend-->>Test: false
+    Test-->>Matrix: ✓ keyvalue_basic PASS
 
-    TestRunner->>PluginHarness: RunBackendSuite()
-    PluginHarness->>Plugin: Execute(operation="query")
-    Plugin->>Backend: SELECT * FROM users
-    Backend-->>Plugin: Result rows
-    Plugin-->>PluginHarness: ExecuteResponse{result=<data>}
-    PluginHarness-->>TestRunner: Backend tests PASS
+    Matrix->>Test: Run KeyValueScanTest(redis)
+    Test->>Backend: Set("user:1", "alice")
+    Test->>Backend: Set("user:2", "bob")
+    Test->>Backend: Scan("user:")
+    Backend-->>Test: ["user:1", "user:2"]
+    Test-->>Matrix: ✓ keyvalue_scan PASS
 
-    TestRunner->>PluginHarness: Shutdown()
-    PluginHarness->>Plugin: Shutdown()
-    Plugin->>Backend: Close connections
-    deactivate PluginHarness
+    Matrix->>Harness: Stop Redis
+    Harness->>Backend: docker stop
+    deactivate Harness
 
-    TestRunner->>BackendInstance: Stop()
-    BackendInstance->>Backend: docker stop
-    deactivate BackendInstance
-```text
-
-## Reusable Authentication Test Suite
-
-### Overview
-
-The **Authentication Test Suite** verifies that all plugins handle credential passing, authentication failures, and credential rotation identically. This suite runs against **every plugin** to ensure consistent behavior.
-
-### Implementation
-
+    Matrix->>Registry: ✓ Redis implements all claimed interfaces
 ```
-// tests/acceptance/suites/auth_suite.go
 
-package suites
+## Interface Compliance Test Suites
+
+### Example: KeyValue Basic Interface
+
+```go
+// tests/acceptance/interfaces/keyvalue/keyvalue_basic_test.go
+
+package keyvalue
 
 import (
 	"context"
-	"testing"
-	"time"
-
-	"github.com/prism/plugin-core/proto"
-	"github.com/prism/tests/acceptance/harness"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-)
-
-// AuthTestSuite provides reusable authentication tests for all plugins
-type AuthTestSuite struct {
-	harness *harness.PluginHarness
-	t       *testing.T
-}
-
-// NewAuthTestSuite creates a new authentication test suite
-func NewAuthTestSuite(t *testing.T, h *harness.PluginHarness) *AuthTestSuite {
-	return &AuthTestSuite{
-		harness: h,
-		t:       t,
-	}
-}
-
-// Run executes all authentication tests
-func (s *AuthTestSuite) Run() {
-	s.t.Run("ValidCredentials", s.TestValidCredentials)
-	s.t.Run("InvalidCredentials", s.TestInvalidCredentials)
-	s.t.Run("MissingCredentials", s.TestMissingCredentials)
-	s.t.Run("EmptyCredentials", s.TestEmptyCredentials)
-	s.t.Run("CredentialRotation", s.TestCredentialRotation)
-	s.t.Run("ConnectionPoolAuth", s.TestConnectionPoolAuth)
-	s.t.Run("ExpiredCredentials", s.TestExpiredCredentials)
-}
-
-// TestValidCredentials verifies plugin initializes successfully with valid credentials
-func (s *AuthTestSuite) TestValidCredentials() {
-	ctx := context.Background()
-
-	// Get valid credentials from test backend
-	creds := s.harness.Backend.ValidCredentials()
-
-	// Initialize plugin with valid credentials
-	req := &proto.InitializeRequest{
-		Namespace:   "test-auth-valid",
-		BackendType: s.harness.BackendType,
-		Config:      s.harness.Backend.DefaultConfig(),
-		Credentials: creds,
-	}
-
-	resp, err := s.harness.Plugin.Initialize(ctx, req)
-	require.NoError(s.t, err, "Plugin should initialize successfully with valid credentials")
-	assert.True(s.t, resp.Success, "InitializeResponse.Success should be true")
-	assert.Empty(s.t, resp.Error, "InitializeResponse.Error should be empty")
-
-	// Verify plugin is operational
-	healthResp, err := s.harness.Plugin.HealthCheck(ctx, &proto.HealthCheckRequest{})
-	require.NoError(s.t, err, "Health check should succeed")
-	assert.Equal(s.t, proto.HealthCheckResponse_HEALTHY, healthResp.Status)
-}
-
-// TestInvalidCredentials verifies plugin fails gracefully with wrong credentials
-func (s *AuthTestSuite) TestInvalidCredentials() {
-	ctx := context.Background()
-
-	// Use invalid credentials
-	invalidCreds := map[string]string{
-		"username": "invalid_user",
-		"password": "wrong_password",
-	}
-
-	req := &proto.InitializeRequest{
-		Namespace:   "test-auth-invalid",
-		BackendType: s.harness.BackendType,
-		Config:      s.harness.Backend.DefaultConfig(),
-		Credentials: invalidCreds,
-	}
-
-	resp, err := s.harness.Plugin.Initialize(ctx, req)
-
-	// Plugin should return error in response, not panic
-	if err == nil {
-		assert.False(s.t, resp.Success, "InitializeResponse.Success should be false for invalid credentials")
-		assert.NotEmpty(s.t, resp.Error, "InitializeResponse.Error should describe authentication failure")
-	} else {
-		// Or return gRPC error with UNAUTHENTICATED code
-		assert.Contains(s.t, err.Error(), "authentication", "Error should mention authentication failure")
-	}
-}
-
-// TestMissingCredentials verifies plugin detects missing required credentials
-func (s *AuthTestSuite) TestMissingCredentials() {
-	ctx := context.Background()
-
-	// Initialize with empty credentials map
-	req := &proto.InitializeRequest{
-		Namespace:   "test-auth-missing",
-		BackendType: s.harness.BackendType,
-		Config:      s.harness.Backend.DefaultConfig(),
-		Credentials: map[string]string{}, // Empty
-	}
-
-	resp, err := s.harness.Plugin.Initialize(ctx, req)
-
-	// Should fail with clear error message
-	if err == nil {
-		assert.False(s.t, resp.Success, "Should reject missing credentials")
-		assert.Contains(s.t, resp.Error, "credentials", "Error should mention missing credentials")
-	} else {
-		assert.Contains(s.t, err.Error(), "credentials", "Error should mention missing credentials")
-	}
-}
-
-// TestEmptyCredentials verifies plugin detects empty credential values
-func (s *AuthTestSuite) TestEmptyCredentials() {
-	ctx := context.Background()
-
-	// Credentials with empty values
-	emptyCreds := map[string]string{
-		"username": "",
-		"password": "",
-	}
-
-	req := &proto.InitializeRequest{
-		Namespace:   "test-auth-empty",
-		BackendType: s.harness.BackendType,
-		Config:      s.harness.Backend.DefaultConfig(),
-		Credentials: emptyCreds,
-	}
-
-	resp, err := s.harness.Plugin.Initialize(ctx, req)
-
-	// Should reject empty credential values
-	if err == nil {
-		assert.False(s.t, resp.Success, "Should reject empty credential values")
-		assert.NotEmpty(s.t, resp.Error)
-	} else {
-		assert.Error(s.t, err, "Should return error for empty credentials")
-	}
-}
-
-// TestCredentialRotation verifies plugin handles credential rotation gracefully
-func (s *AuthTestSuite) TestCredentialRotation() {
-	ctx := context.Background()
-
-	// Initialize with valid credentials
-	validCreds := s.harness.Backend.ValidCredentials()
-	req := &proto.InitializeRequest{
-		Namespace:   "test-auth-rotation",
-		BackendType: s.harness.BackendType,
-		Config:      s.harness.Backend.DefaultConfig(),
-		Credentials: validCreds,
-	}
-
-	resp, err := s.harness.Plugin.Initialize(ctx, req)
-	require.NoError(s.t, err)
-	require.True(s.t, resp.Success, "Initial initialization should succeed")
-
-	// Execute operation to verify plugin works
-	execReq := &proto.ExecuteRequest{
-		Operation: s.harness.Backend.BasicOperation(),
-		Params:    s.harness.Backend.BasicParams(),
-	}
-	execResp, err := s.harness.Plugin.Execute(ctx, execReq)
-	require.NoError(s.t, err, "Operation should succeed with valid credentials")
-	require.True(s.t, execResp.Success)
-
-	// Simulate credential rotation in backend
-	s.harness.Backend.RotateCredentials()
-
-	// Old credentials should now fail
-	execResp, err = s.harness.Plugin.Execute(ctx, execReq)
-	// Plugin should detect expired/invalid credentials
-	if err == nil {
-		assert.False(s.t, execResp.Success, "Operation should fail after credential rotation")
-		assert.NotEmpty(s.t, execResp.Error, "Should describe authentication failure")
-	} else {
-		assert.Contains(s.t, err.Error(), "auth", "Error should indicate authentication problem")
-	}
-
-	// Reinitialize with new credentials
-	newCreds := s.harness.Backend.ValidCredentials()
-	req.Credentials = newCreds
-	resp, err = s.harness.Plugin.Initialize(ctx, req)
-	require.NoError(s.t, err)
-	require.True(s.t, resp.Success, "Re-initialization should succeed with new credentials")
-
-	// Operation should now work again
-	execResp, err = s.harness.Plugin.Execute(ctx, execReq)
-	require.NoError(s.t, err, "Operation should succeed after re-initialization")
-	assert.True(s.t, execResp.Success)
-}
-
-// TestConnectionPoolAuth verifies connection pool authenticates all connections
-func (s *AuthTestSuite) TestConnectionPoolAuth() {
-	ctx := context.Background()
-
-	// Initialize plugin with connection pool size > 1
-	validCreds := s.harness.Backend.ValidCredentials()
-	config := s.harness.Backend.PooledConfig(10) // 10 connections
-
-	req := &proto.InitializeRequest{
-		Namespace:   "test-auth-pool",
-		BackendType: s.harness.BackendType,
-		Config:      config,
-		Credentials: validCreds,
-	}
-
-	resp, err := s.harness.Plugin.Initialize(ctx, req)
-	require.NoError(s.t, err)
-	require.True(s.t, resp.Success)
-
-	// Execute operations concurrently to use multiple pool connections
-	concurrency := 20 // More than pool size to force connection reuse
-	errChan := make(chan error, concurrency)
-
-	for i := 0; i < concurrency; i++ {
-		go func(idx int) {
-			execReq := &proto.ExecuteRequest{
-				Operation: s.harness.Backend.BasicOperation(),
-				Params:    s.harness.Backend.ParamsForKey(idx),
-			}
-
-			execResp, err := s.harness.Plugin.Execute(ctx, execReq)
-			if err != nil {
-				errChan <- err
-				return
-			}
-			if !execResp.Success {
-				errChan <- assert.AnError
-				return
-			}
-			errChan <- nil
-		}(i)
-	}
-
-	// Wait for all operations to complete
-	for i := 0; i < concurrency; i++ {
-		err := <-errChan
-		assert.NoError(s.t, err, "All pooled connections should authenticate successfully")
-	}
-}
-
-// TestExpiredCredentials verifies plugin detects and reports expired credentials
-func (s *AuthTestSuite) TestExpiredCredentials() {
-	// Skip if backend doesn't support credential expiration
-	if !s.harness.Backend.SupportsCredentialExpiration() {
-		s.t.Skip("Backend does not support credential expiration")
-	}
-
-	ctx := context.Background()
-
-	// Create credentials that expire quickly
-	expirableCreds := s.harness.Backend.ExpirableCredentials(2 * time.Second)
-
-	req := &proto.InitializeRequest{
-		Namespace:   "test-auth-expiration",
-		BackendType: s.harness.BackendType,
-		Config:      s.harness.Backend.DefaultConfig(),
-		Credentials: expirableCreds,
-	}
-
-	resp, err := s.harness.Plugin.Initialize(ctx, req)
-	require.NoError(s.t, err)
-	require.True(s.t, resp.Success)
-
-	// Operation should work initially
-	execReq := &proto.ExecuteRequest{
-		Operation: s.harness.Backend.BasicOperation(),
-		Params:    s.harness.Backend.BasicParams(),
-	}
-	execResp, err := s.harness.Plugin.Execute(ctx, execReq)
-	require.NoError(s.t, err)
-	require.True(s.t, execResp.Success)
-
-	// Wait for credentials to expire
-	time.Sleep(3 * time.Second)
-
-	// Operation should now fail with authentication error
-	execResp, err = s.harness.Plugin.Execute(ctx, execReq)
-	if err == nil {
-		assert.False(s.t, execResp.Success, "Operation should fail with expired credentials")
-		assert.Contains(s.t, execResp.Error, "auth", "Error should indicate authentication problem")
-	} else {
-		assert.Contains(s.t, err.Error(), "auth", "Error should indicate authentication problem")
-	}
-}
-```text
-
-### Authentication Suite Usage
-
-The authentication suite runs automatically for every plugin:
-
-```
-// tests/acceptance/postgres_test.go
-
-func TestPostgresPlugin_Authentication(t *testing.T) {
-	// Start PostgreSQL test instance
-	backend := instances.NewPostgresInstance(t)
-	defer backend.Stop()
-
-	// Create plugin harness
-	harness := harness.NewPluginHarness(t, "postgres", backend)
-	defer harness.Cleanup()
-
-	// Run authentication test suite
-	authSuite := suites.NewAuthTestSuite(t, harness)
-	authSuite.Run()
-}
-```text
-
-## Per-Backend Verification Tests
-
-### Backend-Specific Test Interface
-
-Each backend implements a verification suite that tests protocol-specific features:
-
-```
-// tests/acceptance/verification/backend_suite.go
-
-package verification
-
-import (
-	"context"
-	"testing"
-
-	"github.com/prism/tests/acceptance/harness"
-)
-
-// BackendVerificationSuite defines tests for backend-specific features
-type BackendVerificationSuite interface {
-	// Basic CRUD operations
-	TestBasicOperations(t *testing.T)
-
-	// Error handling and edge cases
-	TestErrorHandling(t *testing.T)
-
-	// Concurrent operations
-	TestConcurrency(t *testing.T)
-
-	// Backend-specific features
-	TestBackendSpecificFeatures(t *testing.T)
-}
-```text
-
-### PostgreSQL Verification Suite
-
-```
-// tests/acceptance/verification/postgres/postgres_suite.go
-
-package postgres
-
-import (
-	"context"
-	"encoding/json"
 	"testing"
 
 	"github.com/prism/plugin-core/proto"
@@ -516,1187 +233,739 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// PostgresVerificationSuite tests PostgreSQL-specific features
-type PostgresVerificationSuite struct {
+// KeyValueBasicTestSuite verifies keyvalue_basic interface compliance
+type KeyValueBasicTestSuite struct {
 	harness *harness.PluginHarness
 	t       *testing.T
 }
 
-func NewPostgresVerificationSuite(t *testing.T, h *harness.PluginHarness) *PostgresVerificationSuite {
-	return &PostgresVerificationSuite{
+// NewKeyValueBasicTestSuite creates interface test suite
+func NewKeyValueBasicTestSuite(t *testing.T, h *harness.PluginHarness) *KeyValueBasicTestSuite {
+	return &KeyValueBasicTestSuite{
 		harness: h,
 		t:       t,
 	}
 }
 
-func (s *PostgresVerificationSuite) Run() {
-	s.t.Run("BasicOperations", s.TestBasicOperations)
-	s.t.Run("ErrorHandling", s.TestErrorHandling)
-	s.t.Run("Concurrency", s.TestConcurrency)
-	s.t.Run("BackendSpecificFeatures", s.TestBackendSpecificFeatures)
-}
-
-func (s *PostgresVerificationSuite) TestBasicOperations() {
-	s.t.Run("Insert", s.testInsert)
-	s.t.Run("Select", s.testSelect)
-	s.t.Run("Update", s.testUpdate)
+// Run executes all keyvalue_basic interface tests
+func (s *KeyValueBasicTestSuite) Run() {
+	s.t.Run("Set", s.testSet)
+	s.t.Run("Get", s.testGet)
 	s.t.Run("Delete", s.testDelete)
-	s.t.Run("Transaction", s.testTransaction)
+	s.t.Run("Exists", s.testExists)
+	s.t.Run("SetGetDelete", s.testSetGetDelete)
+	s.t.Run("GetNonExistent", s.testGetNonExistent)
+	s.t.Run("DeleteNonExistent", s.testDeleteNonExistent)
+	s.t.Run("ExistsNonExistent", s.testExistsNonExistent)
+	s.t.Run("OverwriteValue", s.testOverwriteValue)
+	s.t.Run("ConcurrentSets", s.testConcurrentSets)
 }
 
-func (s *PostgresVerificationSuite) testInsert() {
+// testSet verifies Set operation
+func (s *KeyValueBasicTestSuite) testSet() {
 	ctx := context.Background()
 
-	// Insert data via plugin
-	params := map[string]interface{}{
-		"table": "users",
-		"data": map[string]interface{}{
-			"id":    1,
-			"name":  "Alice",
-			"email": "alice@example.com",
-		},
+	req := &proto.KeyValueSetRequest{
+		Namespace: "test",
+		Key:       "test-key",
+		Value:     []byte("test-value"),
 	}
 
-	paramsJSON, err := json.Marshal(params)
-	require.NoError(s.t, err)
-
-	execReq := &proto.ExecuteRequest{
-		Operation: "insert",
-		Params:    &proto.ExecuteRequest_RawParams{RawParams: paramsJSON},
-	}
-
-	resp, err := s.harness.Plugin.Execute(ctx, execReq)
-	require.NoError(s.t, err)
-	assert.True(s.t, resp.Success, "Insert should succeed")
-
-	// Verify data exists in actual PostgreSQL instance
-	pgBackend := s.harness.Backend.(*instances.PostgresInstance)
-	row := pgBackend.QueryOne("SELECT id, name, email FROM users WHERE id = 1")
-
-	assert.Equal(s.t, 1, row["id"])
-	assert.Equal(s.t, "Alice", row["name"])
-	assert.Equal(s.t, "alice@example.com", row["email"])
+	resp, err := s.harness.Plugin.KeyValueSet(ctx, req)
+	require.NoError(s.t, err, "Set should succeed")
+	assert.True(s.t, resp.Success, "Set response should indicate success")
 }
 
-func (s *PostgresVerificationSuite) testSelect() {
+// testGet verifies Get operation
+func (s *KeyValueBasicTestSuite) testGet() {
 	ctx := context.Background()
 
-	// Seed data directly in PostgreSQL
-	pgBackend := s.harness.Backend.(*instances.PostgresInstance)
-	pgBackend.Exec("INSERT INTO users (id, name, email) VALUES (2, 'Bob', 'bob@example.com')")
-
-	// Query via plugin
-	params := map[string]interface{}{
-		"table": "users",
-		"where": "id = 2",
+	// First, set a value
+	setReq := &proto.KeyValueSetRequest{
+		Namespace: "test",
+		Key:       "get-test-key",
+		Value:     []byte("get-test-value"),
 	}
-
-	paramsJSON, err := json.Marshal(params)
+	_, err := s.harness.Plugin.KeyValueSet(ctx, setReq)
 	require.NoError(s.t, err)
 
-	execReq := &proto.ExecuteRequest{
-		Operation: "select",
-		Params:    &proto.ExecuteRequest_RawParams{RawParams: paramsJSON},
+	// Then, get it back
+	getReq := &proto.KeyValueGetRequest{
+		Namespace: "test",
+		Key:       "get-test-key",
 	}
-
-	resp, err := s.harness.Plugin.Execute(ctx, execReq)
-	require.NoError(s.t, err)
-	assert.True(s.t, resp.Success)
-
-	// Parse result
-	var result []map[string]interface{}
-	err = json.Unmarshal(resp.GetRawResult(), &result)
-	require.NoError(s.t, err)
-
-	require.Len(s.t, result, 1, "Should return exactly one row")
-	assert.Equal(s.t, "Bob", result[0]["name"])
-	assert.Equal(s.t, "bob@example.com", result[0]["email"])
+	getResp, err := s.harness.Plugin.KeyValueGet(ctx, getReq)
+	require.NoError(s.t, err, "Get should succeed")
+	assert.Equal(s.t, []byte("get-test-value"), getResp.Value, "Value should match what was set")
 }
 
-func (s *PostgresVerificationSuite) testTransaction() {
+// testDelete verifies Delete operation
+func (s *KeyValueBasicTestSuite) testDelete() {
 	ctx := context.Background()
 
-	// Start transaction via plugin
-	beginReq := &proto.ExecuteRequest{
-		Operation: "begin_transaction",
+	// Set a value
+	setReq := &proto.KeyValueSetRequest{
+		Namespace: "test",
+		Key:       "delete-test-key",
+		Value:     []byte("delete-test-value"),
 	}
-	beginResp, err := s.harness.Plugin.Execute(ctx, beginReq)
+	_, err := s.harness.Plugin.KeyValueSet(ctx, setReq)
 	require.NoError(s.t, err)
-	require.True(s.t, beginResp.Success)
 
-	// Extract transaction ID from response
-	var beginResult map[string]interface{}
-	err = json.Unmarshal(beginResp.GetRawResult(), &beginResult)
-	require.NoError(s.t, err)
-	txnID := beginResult["transaction_id"].(string)
-
-	// Insert within transaction
-	insertParams := map[string]interface{}{
-		"transaction_id": txnID,
-		"table":          "users",
-		"data": map[string]interface{}{
-			"id":    10,
-			"name":  "Transactional User",
-			"email": "txn@example.com",
-		},
+	// Delete it
+	delReq := &proto.KeyValueDeleteRequest{
+		Namespace: "test",
+		Key:       "delete-test-key",
 	}
-	insertJSON, _ := json.Marshal(insertParams)
-	insertReq := &proto.ExecuteRequest{
-		Operation: "insert",
-		Params:    &proto.ExecuteRequest_RawParams{RawParams: insertJSON},
-	}
-	insertResp, err := s.harness.Plugin.Execute(ctx, insertReq)
-	require.NoError(s.t, err)
-	require.True(s.t, insertResp.Success)
-
-	// Verify data NOT visible outside transaction
-	pgBackend := s.harness.Backend.(*instances.PostgresInstance)
-	row := pgBackend.QueryOne("SELECT id FROM users WHERE id = 10")
-	assert.Nil(s.t, row, "Data should not be visible outside transaction")
-
-	// Commit transaction
-	commitParams := map[string]interface{}{"transaction_id": txnID}
-	commitJSON, _ := json.Marshal(commitParams)
-	commitReq := &proto.ExecuteRequest{
-		Operation: "commit_transaction",
-		Params:    &proto.ExecuteRequest_RawParams{RawParams: commitJSON},
-	}
-	commitResp, err := s.harness.Plugin.Execute(ctx, commitReq)
-	require.NoError(s.t, err)
-	require.True(s.t, commitResp.Success)
-
-	// Now data should be visible
-	row = pgBackend.QueryOne("SELECT id, name FROM users WHERE id = 10")
-	assert.NotNil(s.t, row, "Data should be visible after commit")
-	assert.Equal(s.t, "Transactional User", row["name"])
+	delResp, err := s.harness.Plugin.KeyValueDelete(ctx, delReq)
+	require.NoError(s.t, err, "Delete should succeed")
+	assert.True(s.t, delResp.Found, "Delete should report key was found")
 }
 
-func (s *PostgresVerificationSuite) TestBackendSpecificFeatures() {
-	s.t.Run("PreparedStatements", s.testPreparedStatements)
-	s.t.Run("JSONTypes", s.testJSONTypes)
-	s.t.Run("ArrayTypes", s.testArrayTypes)
-	s.t.Run("ListenNotify", s.testListenNotify)
-}
-
-func (s *PostgresVerificationSuite) testPreparedStatements() {
+// testExists verifies Exists operation
+func (s *KeyValueBasicTestSuite) testExists() {
 	ctx := context.Background()
 
-	// Execute same query multiple times
-	for i := 0; i < 100; i++ {
-		params := map[string]interface{}{
-			"sql":    "SELECT * FROM users WHERE id = $1",
-			"params": []interface{}{i},
-		}
-		paramsJSON, _ := json.Marshal(params)
-
-		execReq := &proto.ExecuteRequest{
-			Operation: "query",
-			Params:    &proto.ExecuteRequest_RawParams{RawParams: paramsJSON},
-		}
-
-		_, err := s.harness.Plugin.Execute(ctx, execReq)
-		require.NoError(s.t, err)
+	// Set a value
+	setReq := &proto.KeyValueSetRequest{
+		Namespace: "test",
+		Key:       "exists-test-key",
+		Value:     []byte("exists-test-value"),
 	}
-
-	// Get plugin metrics
-	healthReq := &proto.HealthCheckRequest{}
-	healthResp, err := s.harness.Plugin.HealthCheck(ctx, healthReq)
+	_, err := s.harness.Plugin.KeyValueSet(ctx, setReq)
 	require.NoError(s.t, err)
 
-	// Verify prepared statements are being used
-	// (Implementation-specific: check metrics or logs)
-	assert.Equal(s.t, proto.HealthCheckResponse_HEALTHY, healthResp.Status)
-	// Additional assertions based on plugin metrics...
+	// Check existence
+	existsReq := &proto.KeyValueExistsRequest{
+		Namespace: "test",
+		Key:       "exists-test-key",
+	}
+	existsResp, err := s.harness.Plugin.KeyValueExists(ctx, existsReq)
+	require.NoError(s.t, err, "Exists should succeed")
+	assert.True(s.t, existsResp.Exists, "Key should exist")
 }
 
-func (s *PostgresVerificationSuite) testJSONTypes() {
+// testSetGetDelete verifies full lifecycle
+func (s *KeyValueBasicTestSuite) testSetGetDelete() {
+	ctx := context.Background()
+	key := "lifecycle-key"
+	value := []byte("lifecycle-value")
+
+	// Set
+	setReq := &proto.KeyValueSetRequest{
+		Namespace: "test",
+		Key:       key,
+		Value:     value,
+	}
+	_, err := s.harness.Plugin.KeyValueSet(ctx, setReq)
+	require.NoError(s.t, err)
+
+	// Get
+	getReq := &proto.KeyValueGetRequest{
+		Namespace: "test",
+		Key:       key,
+	}
+	getResp, err := s.harness.Plugin.KeyValueGet(ctx, getReq)
+	require.NoError(s.t, err)
+	assert.Equal(s.t, value, getResp.Value)
+
+	// Delete
+	delReq := &proto.KeyValueDeleteRequest{
+		Namespace: "test",
+		Key:       key,
+	}
+	delResp, err := s.harness.Plugin.KeyValueDelete(ctx, delReq)
+	require.NoError(s.t, err)
+	assert.True(s.t, delResp.Found)
+
+	// Verify deleted
+	existsReq := &proto.KeyValueExistsRequest{
+		Namespace: "test",
+		Key:       key,
+	}
+	existsResp, err := s.harness.Plugin.KeyValueExists(ctx, existsReq)
+	require.NoError(s.t, err)
+	assert.False(s.t, existsResp.Exists, "Key should not exist after delete")
+}
+
+// testGetNonExistent verifies Get returns NotFound for missing keys
+func (s *KeyValueBasicTestSuite) testGetNonExistent() {
 	ctx := context.Background()
 
-	// Insert JSON data
-	jsonData := map[string]interface{}{
-		"name":    "Charlie",
-		"age":     30,
-		"hobbies": []string{"reading", "cycling"},
+	getReq := &proto.KeyValueGetRequest{
+		Namespace: "test",
+		Key:       "non-existent-key",
 	}
 
-	params := map[string]interface{}{
-		"table": "users",
-		"data": map[string]interface{}{
-			"id":       20,
-			"name":     "Charlie",
-			"metadata": jsonData,
-		},
-	}
-	paramsJSON, _ := json.Marshal(params)
-
-	execReq := &proto.ExecuteRequest{
-		Operation: "insert",
-		Params:    &proto.ExecuteRequest_RawParams{RawParams: paramsJSON},
-	}
-
-	resp, err := s.harness.Plugin.Execute(ctx, execReq)
-	require.NoError(s.t, err)
-	require.True(s.t, resp.Success)
-
-	// Query back and verify JSON preserved
-	pgBackend := s.harness.Backend.(*instances.PostgresInstance)
-	row := pgBackend.QueryOne("SELECT metadata FROM users WHERE id = 20")
-
-	var metadata map[string]interface{}
-	err = json.Unmarshal([]byte(row["metadata"].(string)), &metadata)
-	require.NoError(s.t, err)
-	assert.Equal(s.t, float64(30), metadata["age"])
+	_, err := s.harness.Plugin.KeyValueGet(ctx, getReq)
+	assert.Error(s.t, err, "Get on non-existent key should return error")
+	// Should be gRPC NotFound status code
 }
 
-func (s *PostgresVerificationSuite) testListenNotify() {
+// testDeleteNonExistent verifies Delete returns Found=false for missing keys
+func (s *KeyValueBasicTestSuite) testDeleteNonExistent() {
 	ctx := context.Background()
 
-	// Subscribe to PostgreSQL notifications
-	params := map[string]interface{}{
-		"channel": "test_notifications",
-	}
-	paramsJSON, _ := json.Marshal(params)
-
-	subscribeReq := &proto.ExecuteRequest{
-		Operation: "listen",
-		Params:    &proto.ExecuteRequest_RawParams{RawParams: paramsJSON},
+	delReq := &proto.KeyValueDeleteRequest{
+		Namespace: "test",
+		Key:       "non-existent-key",
 	}
 
-	resp, err := s.harness.Plugin.Execute(ctx, subscribeReq)
-	require.NoError(s.t, err)
-	require.True(s.t, resp.Success)
-
-	// Send notification via PostgreSQL directly
-	pgBackend := s.harness.Backend.(*instances.PostgresInstance)
-	pgBackend.Exec("NOTIFY test_notifications, 'hello'")
-
-	// Poll for notification via plugin
-	pollReq := &proto.ExecuteRequest{
-		Operation: "poll_notifications",
-		Params:    &proto.ExecuteRequest_RawParams{RawParams: paramsJSON},
-	}
-
-	pollResp, err := s.harness.Plugin.Execute(ctx, pollReq)
-	require.NoError(s.t, err)
-	require.True(s.t, pollResp.Success)
-
-	// Verify notification received
-	var notifications []map[string]interface{}
-	err = json.Unmarshal(pollResp.GetRawResult(), &notifications)
-	require.NoError(s.t, err)
-	require.NotEmpty(s.t, notifications, "Should receive notification")
-	assert.Equal(s.t, "hello", notifications[0]["payload"])
+	delResp, err := s.harness.Plugin.KeyValueDelete(ctx, delReq)
+	require.NoError(s.t, err, "Delete should not error on non-existent key")
+	assert.False(s.t, delResp.Found, "Delete should report key was not found")
 }
 
-func (s *PostgresVerificationSuite) TestErrorHandling() {
-	s.t.Run("InvalidSQL", s.testInvalidSQL)
-	s.t.Run("ConstraintViolation", s.testConstraintViolation)
-	s.t.Run("ConnectionLoss", s.testConnectionLoss)
-}
-
-func (s *PostgresVerificationSuite) testInvalidSQL() {
+// testExistsNonExistent verifies Exists returns false for missing keys
+func (s *KeyValueBasicTestSuite) testExistsNonExistent() {
 	ctx := context.Background()
 
-	params := map[string]interface{}{
-		"sql": "INVALID SQL SYNTAX HERE",
-	}
-	paramsJSON, _ := json.Marshal(params)
-
-	execReq := &proto.ExecuteRequest{
-		Operation: "query",
-		Params:    &proto.ExecuteRequest_RawParams{RawParams: paramsJSON},
+	existsReq := &proto.KeyValueExistsRequest{
+		Namespace: "test",
+		Key:       "non-existent-key",
 	}
 
-	resp, err := s.harness.Plugin.Execute(ctx, execReq)
-
-	// Plugin should return error, not panic
-	if err == nil {
-		assert.False(s.t, resp.Success, "Should fail for invalid SQL")
-		assert.NotEmpty(s.t, resp.Error, "Should provide error message")
-		assert.Contains(s.t, resp.Error, "syntax", "Error should mention SQL syntax")
-	} else {
-		assert.Contains(s.t, err.Error(), "syntax", "Error should describe SQL syntax issue")
-	}
+	existsResp, err := s.harness.Plugin.KeyValueExists(ctx, existsReq)
+	require.NoError(s.t, err, "Exists should not error on non-existent key")
+	assert.False(s.t, existsResp.Exists, "Key should not exist")
 }
 
-func (s *PostgresVerificationSuite) testConstraintViolation() {
+// testOverwriteValue verifies Set overwrites existing values
+func (s *KeyValueBasicTestSuite) testOverwriteValue() {
 	ctx := context.Background()
+	key := "overwrite-key"
 
-	// Insert with duplicate primary key
-	params := map[string]interface{}{
-		"table": "users",
-		"data": map[string]interface{}{
-			"id":    1,
-			"name":  "Duplicate",
-			"email": "dup@example.com",
-		},
+	// Set initial value
+	setReq := &proto.KeyValueSetRequest{
+		Namespace: "test",
+		Key:       key,
+		Value:     []byte("initial-value"),
 	}
-	paramsJSON, _ := json.Marshal(params)
-
-	execReq := &proto.ExecuteRequest{
-		Operation: "insert",
-		Params:    &proto.ExecuteRequest_RawParams{RawParams: paramsJSON},
-	}
-
-	// First insert succeeds
-	resp, err := s.harness.Plugin.Execute(ctx, execReq)
+	_, err := s.harness.Plugin.KeyValueSet(ctx, setReq)
 	require.NoError(s.t, err)
-	require.True(s.t, resp.Success)
 
-	// Second insert should fail with constraint violation
-	resp, err = s.harness.Plugin.Execute(ctx, execReq)
-	if err == nil {
-		assert.False(s.t, resp.Success, "Should fail for duplicate key")
-		assert.Contains(s.t, resp.Error, "duplicate", "Error should mention constraint violation")
-	} else {
-		assert.Contains(s.t, err.Error(), "duplicate", "Error should mention constraint violation")
+	// Overwrite with new value
+	setReq.Value = []byte("new-value")
+	_, err = s.harness.Plugin.KeyValueSet(ctx, setReq)
+	require.NoError(s.t, err)
+
+	// Verify new value
+	getReq := &proto.KeyValueGetRequest{
+		Namespace: "test",
+		Key:       key,
 	}
+	getResp, err := s.harness.Plugin.KeyValueGet(ctx, getReq)
+	require.NoError(s.t, err)
+	assert.Equal(s.t, []byte("new-value"), getResp.Value, "Value should be overwritten")
 }
 
-func (s *PostgresVerificationSuite) TestConcurrency() {
+// testConcurrentSets verifies concurrent Set operations are safe
+func (s *KeyValueBasicTestSuite) testConcurrentSets() {
 	ctx := context.Background()
-
-	// Execute 100 concurrent operations
 	concurrency := 100
 	errChan := make(chan error, concurrency)
 
 	for i := 0; i < concurrency; i++ {
 		go func(idx int) {
-			params := map[string]interface{}{
-				"table": "users",
-				"data": map[string]interface{}{
-					"id":    1000 + idx,
-					"name":  "User" + string(rune(idx)),
-					"email": "user" + string(rune(idx)) + "@example.com",
-				},
-			}
-			paramsJSON, _ := json.Marshal(params)
-
-			execReq := &proto.ExecuteRequest{
-				Operation: "insert",
-				Params:    &proto.ExecuteRequest_RawParams{RawParams: paramsJSON},
+			setReq := &proto.KeyValueSetRequest{
+				Namespace: "test",
+				Key:       fmt.Sprintf("concurrent-key-%d", idx),
+				Value:     []byte(fmt.Sprintf("concurrent-value-%d", idx)),
 			}
 
-			resp, err := s.harness.Plugin.Execute(ctx, execReq)
-			if err != nil {
-				errChan <- err
-				return
-			}
-			if !resp.Success {
-				errChan <- assert.AnError
-				return
-			}
-			errChan <- nil
+			_, err := s.harness.Plugin.KeyValueSet(ctx, setReq)
+			errChan <- err
 		}(i)
 	}
 
 	// Wait for all operations
 	for i := 0; i < concurrency; i++ {
 		err := <-errChan
-		assert.NoError(s.t, err, "Concurrent operations should succeed")
+		assert.NoError(s.t, err, "Concurrent Set operations should succeed")
 	}
-
-	// Verify all rows inserted
-	pgBackend := s.harness.Backend.(*instances.PostgresInstance)
-	row := pgBackend.QueryOne("SELECT COUNT(*) as count FROM users WHERE id >= 1000")
-	assert.Equal(s.t, int64(concurrency), row["count"])
 }
-```text
-
-### Kafka Verification Suite
-
 ```
-// tests/acceptance/verification/kafka/kafka_suite.go
 
-package kafka
+### Example: KeyValue Scan Interface
+
+```go
+// tests/acceptance/interfaces/keyvalue/keyvalue_scan_test.go
+
+package keyvalue
 
 import (
 	"context"
-	"encoding/json"
+	"fmt"
 	"testing"
-	"time"
 
 	"github.com/prism/plugin-core/proto"
 	"github.com/prism/tests/acceptance/harness"
-	"github.com/prism/tests/acceptance/instances"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-// KafkaVerificationSuite tests Kafka-specific features
-type KafkaVerificationSuite struct {
+// KeyValueScanTestSuite verifies keyvalue_scan interface compliance
+type KeyValueScanTestSuite struct {
 	harness *harness.PluginHarness
 	t       *testing.T
 }
 
-func NewKafkaVerificationSuite(t *testing.T, h *harness.PluginHarness) *KafkaVerificationSuite {
-	return &KafkaVerificationSuite{
+func NewKeyValueScanTestSuite(t *testing.T, h *harness.PluginHarness) *KeyValueScanTestSuite {
+	return &KeyValueScanTestSuite{
 		harness: h,
 		t:       t,
 	}
 }
 
-func (s *KafkaVerificationSuite) Run() {
-	s.t.Run("BasicOperations", s.TestBasicOperations)
-	s.t.Run("BackendSpecificFeatures", s.TestBackendSpecificFeatures)
-	s.t.Run("ErrorHandling", s.TestErrorHandling)
-	s.t.Run("Concurrency", s.TestConcurrency)
+func (s *KeyValueScanTestSuite) Run() {
+	s.t.Run("ScanAll", s.testScanAll)
+	s.t.Run("ScanPrefix", s.testScanPrefix)
+	s.t.Run("ScanLimit", s.testScanLimit)
+	s.t.Run("ScanKeys", s.testScanKeys)
+	s.t.Run("Count", s.testCount)
+	s.t.Run("CountWithPrefix", s.testCountWithPrefix)
 }
 
-func (s *KafkaVerificationSuite) TestBasicOperations() {
-	s.t.Run("Produce", s.testProduce)
-	s.t.Run("Consume", s.testConsume)
-	s.t.Run("Subscribe", s.testSubscribe)
-}
-
-func (s *KafkaVerificationSuite) testProduce() {
+func (s *KeyValueScanTestSuite) testScanAll() {
 	ctx := context.Background()
 
-	// Produce message via plugin
-	params := map[string]interface{}{
-		"topic": "test-topic",
-		"key":   "key1",
-		"value": "test message",
-	}
-	paramsJSON, _ := json.Marshal(params)
-
-	execReq := &proto.ExecuteRequest{
-		Operation: "produce",
-		Params:    &proto.ExecuteRequest_RawParams{RawParams: paramsJSON},
-	}
-
-	resp, err := s.harness.Plugin.Execute(ctx, execReq)
-	require.NoError(s.t, err)
-	require.True(s.t, resp.Success, "Produce should succeed")
-
-	// Verify message in actual Kafka cluster
-	kafkaBackend := s.harness.Backend.(*instances.KafkaInstance)
-	messages := kafkaBackend.ConsumeMessages("test-topic", 1, 5*time.Second)
-
-	require.Len(s.t, messages, 1, "Should receive exactly one message")
-	assert.Equal(s.t, []byte("test message"), messages[0].Value)
-	assert.Equal(s.t, []byte("key1"), messages[0].Key)
-}
-
-func (s *KafkaVerificationSuite) testConsume() {
-	ctx := context.Background()
-
-	// Produce message directly to Kafka
-	kafkaBackend := s.harness.Backend.(*instances.KafkaInstance)
-	kafkaBackend.ProduceMessage("test-topic-2", "key2", []byte("direct message"))
-
-	// Consume via plugin
-	params := map[string]interface{}{
-		"topic":          "test-topic-2",
-		"consumer_group": "test-group",
-	}
-	paramsJSON, _ := json.Marshal(params)
-
-	execReq := &proto.ExecuteRequest{
-		Operation: "consume",
-		Params:    &proto.ExecuteRequest_RawParams{RawParams: paramsJSON},
-	}
-
-	resp, err := s.harness.Plugin.Execute(ctx, execReq)
-	require.NoError(s.t, err)
-	require.True(s.t, resp.Success)
-
-	// Parse consumed messages
-	var messages []map[string]interface{}
-	err = json.Unmarshal(resp.GetRawResult(), &messages)
-	require.NoError(s.t, err)
-	require.NotEmpty(s.t, messages, "Should consume at least one message")
-	assert.Equal(s.t, "direct message", messages[0]["value"])
-}
-
-func (s *KafkaVerificationSuite) TestBackendSpecificFeatures() {
-	s.t.Run("Partitioning", s.testPartitioning)
-	s.t.Run("ConsumerGroups", s.testConsumerGroups)
-	s.t.Run("ExactlyOnceSemantics", s.testExactlyOnceSemantics)
-	s.t.Run("Transactions", s.testTransactions)
-}
-
-func (s *KafkaVerificationSuite) testConsumerGroups() {
-	ctx := context.Background()
-
-	topic := "test-consumer-groups"
-	group := "test-group-1"
-
-	// Produce 100 messages
-	for i := 0; i < 100; i++ {
-		params := map[string]interface{}{
-			"topic": topic,
-			"key":   "key" + string(rune(i)),
-			"value": "message " + string(rune(i)),
+	// Seed data
+	for i := 0; i < 10; i++ {
+		setReq := &proto.KeyValueSetRequest{
+			Namespace: "test",
+			Key:       fmt.Sprintf("scan-key-%d", i),
+			Value:     []byte(fmt.Sprintf("scan-value-%d", i)),
 		}
-		paramsJSON, _ := json.Marshal(params)
-
-		execReq := &proto.ExecuteRequest{
-			Operation: "produce",
-			Params:    &proto.ExecuteRequest_RawParams{RawParams: paramsJSON},
-		}
-
-		_, err := s.harness.Plugin.Execute(ctx, execReq)
+		_, err := s.harness.Plugin.KeyValueSet(ctx, setReq)
 		require.NoError(s.t, err)
 	}
 
-	// Create 3 consumers in same group
-	messageCountsPerConsumer := make([]int, 3)
-	for consumerIdx := 0; consumerIdx < 3; consumerIdx++ {
-		params := map[string]interface{}{
-			"topic":          topic,
-			"consumer_group": group,
-			"timeout_ms":     5000,
-		}
-		paramsJSON, _ := json.Marshal(params)
-
-		execReq := &proto.ExecuteRequest{
-			Operation: "consume",
-			Params:    &proto.ExecuteRequest_RawParams{RawParams: paramsJSON},
-		}
-
-		resp, err := s.harness.Plugin.Execute(ctx, execReq)
-		require.NoError(s.t, err)
-		require.True(s.t, resp.Success)
-
-		var messages []map[string]interface{}
-		err = json.Unmarshal(resp.GetRawResult(), &messages)
-		require.NoError(s.t, err)
-
-		messageCountsPerConsumer[consumerIdx] = len(messages)
+	// Scan all keys
+	scanReq := &proto.KeyValueScanRequest{
+		Namespace: "test",
+		Prefix:    "",
+		Limit:     0, // Unlimited
 	}
 
-	// Verify messages distributed across consumers
-	totalMessages := 0
-	for _, count := range messageCountsPerConsumer {
-		totalMessages += count
-		// Each consumer should get roughly 1/3 of messages
-		assert.Greater(s.t, count, 20, "Consumer should receive some messages")
-		assert.Less(s.t, count, 50, "Consumer should not receive all messages")
-	}
-
-	assert.Equal(s.t, 100, totalMessages, "All messages should be consumed exactly once")
-}
-
-func (s *KafkaVerificationSuite) TestErrorHandling() {
-	ctx := context.Background()
-
-	// Test producing to non-existent topic (should auto-create or error)
-	params := map[string]interface{}{
-		"topic": "non-existent-topic-xyz",
-		"key":   "test",
-		"value": "test",
-	}
-	paramsJSON, _ := json.Marshal(params)
-
-	execReq := &proto.ExecuteRequest{
-		Operation: "produce",
-		Params:    &proto.ExecuteRequest_RawParams{RawParams: paramsJSON},
-	}
-
-	resp, err := s.harness.Plugin.Execute(ctx, execReq)
-	// Behavior depends on Kafka config (auto-create topics)
-	// At minimum, should not panic
-	if err != nil {
-		assert.NotNil(s.t, err, "Should handle non-existent topic gracefully")
-	} else {
-		assert.NotNil(s.t, resp, "Should return response")
-	}
-}
-
-func (s *KafkaVerificationSuite) TestConcurrency() {
-	ctx := context.Background()
-
-	topic := "test-concurrency"
-	concurrency := 50
-
-	errChan := make(chan error, concurrency)
-
-	// Produce messages concurrently
-	for i := 0; i < concurrency; i++ {
-		go func(idx int) {
-			params := map[string]interface{}{
-				"topic": topic,
-				"key":   "key" + string(rune(idx)),
-				"value": "concurrent message " + string(rune(idx)),
-			}
-			paramsJSON, _ := json.Marshal(params)
-
-			execReq := &proto.ExecuteRequest{
-				Operation: "produce",
-				Params:    &proto.ExecuteRequest_RawParams{RawParams: paramsJSON},
-			}
-
-			resp, err := s.harness.Plugin.Execute(ctx, execReq)
-			if err != nil {
-				errChan <- err
-				return
-			}
-			if !resp.Success {
-				errChan <- assert.AnError
-				return
-			}
-			errChan <- nil
-		}(i)
-	}
-
-	// Wait for all operations
-	for i := 0; i < concurrency; i++ {
-		err := <-errChan
-		assert.NoError(s.t, err, "Concurrent produce operations should succeed")
-	}
-
-	// Verify all messages produced
-	kafkaBackend := s.harness.Backend.(*instances.KafkaInstance)
-	messages := kafkaBackend.ConsumeMessages(topic, concurrency, 10*time.Second)
-	assert.Len(s.t, messages, concurrency, "All concurrent messages should be produced")
-}
-```text
-
-## Test Backend Instances (testcontainers)
-
-### Backend Interface
-
-```
-// tests/acceptance/instances/backend_interface.go
-
-package instances
-
-import (
-	"google.golang.org/protobuf/types/known/anypb"
-)
-
-// TestBackend provides lifecycle management for test backend instances
-type TestBackend interface {
-	// Lifecycle
-	Start() error
-	Stop() error
-	Reset() error
-
-	// Configuration
-	DefaultConfig() *anypb.Any
-	PooledConfig(poolSize int) *anypb.Any
-
-	// Credentials
-	ValidCredentials() map[string]string
-	InvalidCredentials() map[string]string
-	RotateCredentials() error
-	SupportsCredentialExpiration() bool
-	ExpirableCredentials(duration time.Duration) map[string]string
-
-	// Test operations
-	BasicOperation() string
-	BasicParams() *anypb.Any
-	ParamsForKey(key int) *anypb.Any
-
-	// Backend type
-	Type() string
-}
-```text
-
-### PostgreSQL Test Instance
-
-```
-// tests/acceptance/instances/postgres_instance.go
-
-package instances
-
-import (
-	"context"
-	"database/sql"
-	"fmt"
-	"testing"
-	"time"
-
-	_ "github.com/lib/pq"
-	"github.com/testcontainers/testcontainers-go"
-	"github.com/testcontainers/testcontainers-go/wait"
-	"google.golang.org/protobuf/types/known/anypb"
-)
-
-// PostgresInstance manages a PostgreSQL testcontainer
-type PostgresInstance struct {
-	container testcontainers.Container
-	db        *sql.DB
-	host      string
-	port      int
-	password  string
-	t         *testing.T
-}
-
-// NewPostgresInstance creates a new PostgreSQL test instance
-func NewPostgresInstance(t *testing.T) *PostgresInstance {
-	ctx := context.Background()
-
-	req := testcontainers.ContainerRequest{
-		Image:        "postgres:16-alpine",
-		ExposedPorts: []string{"5432/tcp"},
-		Env: map[string]string{
-			"POSTGRES_PASSWORD": "testpass",
-			"POSTGRES_DB":       "testdb",
-		},
-		WaitingFor: wait.ForLog("database system is ready to accept connections").
-			WithStartupTimeout(60 * time.Second),
-	}
-
-	container, err := testcontainers.GenericContainer(ctx, testcontainers.GenericContainerRequest{
-		ContainerRequest: req,
-		Started:          true,
-	})
-	if err != nil {
-		t.Fatalf("Failed to start PostgreSQL container: %v", err)
-	}
-
-	host, err := container.Host(ctx)
-	if err != nil {
-		t.Fatalf("Failed to get container host: %v", err)
-	}
-
-	mappedPort, err := container.MappedPort(ctx, "5432")
-	if err != nil {
-		t.Fatalf("Failed to get mapped port: %v", err)
-	}
-
-	connStr := fmt.Sprintf("host=%s port=%d user=postgres password=testpass dbname=testdb sslmode=disable",
-		host, mappedPort.Int())
-
-	db, err := sql.Open("postgres", connStr)
-	if err != nil {
-		t.Fatalf("Failed to connect to PostgreSQL: %v", err)
-	}
-
-	// Create test schema
-	_, err = db.Exec(`
-		CREATE TABLE IF NOT EXISTS users (
-			id SERIAL PRIMARY KEY,
-			name TEXT NOT NULL,
-			email TEXT UNIQUE,
-			metadata JSONB
-		)
-	`)
-	if err != nil {
-		t.Fatalf("Failed to create test schema: %v", err)
-	}
-
-	return &PostgresInstance{
-		container: container,
-		db:        db,
-		host:      host,
-		port:      mappedPort.Int(),
-		password:  "testpass",
-		t:         t,
-	}
-}
-
-func (p *PostgresInstance) Start() error {
-	return nil // Already started in NewPostgresInstance
-}
-
-func (p *PostgresInstance) Stop() error {
-	ctx := context.Background()
-	if p.db != nil {
-		p.db.Close()
-	}
-	return p.container.Terminate(ctx)
-}
-
-func (p *PostgresInstance) Reset() error {
-	_, err := p.db.Exec("TRUNCATE TABLE users RESTART IDENTITY CASCADE")
-	return err
-}
-
-func (p *PostgresInstance) DefaultConfig() *anypb.Any {
-	config := map[string]interface{}{
-		"host":     p.host,
-		"port":     p.port,
-		"database": "testdb",
-		"pool_size": 5,
-	}
-	// Marshal to protobuf Any
-	// (Simplified - actual implementation would use proper protobuf serialization)
-	configAny, _ := anypb.New(&anypb.Any{}) // Placeholder
-	return configAny
-}
-
-func (p *PostgresInstance) PooledConfig(poolSize int) *anypb.Any {
-	config := map[string]interface{}{
-		"host":     p.host,
-		"port":     p.port,
-		"database": "testdb",
-		"pool_size": poolSize,
-	}
-	configAny, _ := anypb.New(&anypb.Any{}) // Placeholder
-	return configAny
-}
-
-func (p *PostgresInstance) ValidCredentials() map[string]string {
-	return map[string]string{
-		"username": "postgres",
-		"password": p.password,
-	}
-}
-
-func (p *PostgresInstance) InvalidCredentials() map[string]string {
-	return map[string]string{
-		"username": "invalid_user",
-		"password": "wrong_password",
-	}
-}
-
-func (p *PostgresInstance) RotateCredentials() error {
-	// Change password in PostgreSQL
-	_, err := p.db.Exec("ALTER USER postgres WITH PASSWORD 'newpassword'")
-	if err == nil {
-		p.password = "newpassword"
-	}
-	return err
-}
-
-func (p *PostgresInstance) SupportsCredentialExpiration() bool {
-	return false // PostgreSQL doesn't have built-in credential expiration
-}
-
-func (p *PostgresInstance) ExpirableCredentials(duration time.Duration) map[string]string {
-	return nil // Not supported
-}
-
-func (p *PostgresInstance) BasicOperation() string {
-	return "select"
-}
-
-func (p *PostgresInstance) BasicParams() *anypb.Any {
-	params := map[string]interface{}{
-		"table": "users",
-		"limit": 10,
-	}
-	paramsAny, _ := anypb.New(&anypb.Any{}) // Placeholder
-	return paramsAny
-}
-
-func (p *PostgresInstance) ParamsForKey(key int) *anypb.Any {
-	params := map[string]interface{}{
-		"table": "users",
-		"where": fmt.Sprintf("id = %d", key),
-	}
-	paramsAny, _ := anypb.New(&anypb.Any{}) // Placeholder
-	return paramsAny
-}
-
-func (p *PostgresInstance) Type() string {
-	return "postgres"
-}
-
-// Helper methods for verification tests
-
-func (p *PostgresInstance) QueryOne(query string) map[string]interface{} {
-	row := p.db.QueryRow(query)
-
-	columns, err := row.Columns()
-	if err != nil {
-		return nil
-	}
-
-	values := make([]interface{}, len(columns))
-	valuePtrs := make([]interface{}, len(columns))
-	for i := range values {
-		valuePtrs[i] = &values[i]
-	}
-
-	err = row.Scan(valuePtrs...)
-	if err != nil {
-		return nil
-	}
-
-	result := make(map[string]interface{})
-	for i, col := range columns {
-		result[col] = values[i]
-	}
-
-	return result
-}
-
-func (p *PostgresInstance) Exec(query string) error {
-	_, err := p.db.Exec(query)
-	return err
-}
-```text
-
-### Kafka Test Instance
-
-```
-// tests/acceptance/instances/kafka_instance.go
-
-package instances
-
-import (
-	"context"
-	"fmt"
-	"testing"
-	"time"
-
-	"github.com/segmentio/kafka-go"
-	"github.com/testcontainers/testcontainers-go"
-	"github.com/testcontainers/testcontainers-go/wait"
-	"google.golang.org/protobuf/types/known/anypb"
-)
-
-// KafkaInstance manages a Kafka testcontainer
-type KafkaInstance struct {
-	container testcontainers.Container
-	broker    string
-	writer    *kafka.Writer
-	t         *testing.T
-}
-
-// NewKafkaInstance creates a new Kafka test instance
-func NewKafkaInstance(t *testing.T) *KafkaInstance {
-	ctx := context.Background()
-
-	req := testcontainers.ContainerRequest{
-		Image:        "confluentinc/cp-kafka:7.5.0",
-		ExposedPorts: []string{"9092/tcp", "9093/tcp"},
-		Env: map[string]string{
-			"KAFKA_BROKER_ID":                        "1",
-			"KAFKA_ZOOKEEPER_CONNECT":                "zookeeper:2181",
-			"KAFKA_ADVERTISED_LISTENERS":             "PLAINTEXT://localhost:9092,PLAINTEXT_HOST://localhost:9093",
-			"KAFKA_LISTENER_SECURITY_PROTOCOL_MAP":   "PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT",
-			"KAFKA_INTER_BROKER_LISTENER_NAME":       "PLAINTEXT",
-			"KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR": "1",
-		},
-		WaitingFor: wait.ForLog("started (kafka.server.KafkaServer)").
-			WithStartupTimeout(120 * time.Second),
-	}
-
-	container, err := testcontainers.GenericContainer(ctx, testcontainers.GenericContainerRequest{
-		ContainerRequest: req,
-		Started:          true,
-	})
-	if err != nil {
-		t.Fatalf("Failed to start Kafka container: %v", err)
-	}
-
-	host, err := container.Host(ctx)
-	if err != nil {
-		t.Fatalf("Failed to get container host: %v", err)
-	}
-
-	mappedPort, err := container.MappedPort(ctx, "9092")
-	if err != nil {
-		t.Fatalf("Failed to get mapped port: %v", err)
-	}
-
-	broker := fmt.Sprintf("%s:%d", host, mappedPort.Int())
-
-	return &KafkaInstance{
-		container: container,
-		broker:    broker,
-		t:         t,
-	}
-}
-
-func (k *KafkaInstance) Start() error {
-	return nil // Already started
-}
-
-func (k *KafkaInstance) Stop() error {
-	ctx := context.Background()
-	if k.writer != nil {
-		k.writer.Close()
-	}
-	return k.container.Terminate(ctx)
-}
-
-func (k *KafkaInstance) Reset() error {
-	// Delete all topics (simplified)
-	// In real implementation, would list and delete all topics
-	return nil
-}
-
-func (k *KafkaInstance) DefaultConfig() *anypb.Any {
-	config := map[string]interface{}{
-		"brokers": []string{k.broker},
-	}
-	configAny, _ := anypb.New(&anypb.Any{}) // Placeholder
-	return configAny
-}
-
-func (k *KafkaInstance) PooledConfig(poolSize int) *anypb.Any {
-	return k.DefaultConfig() // Kafka doesn't have traditional connection pooling
-}
-
-func (k *KafkaInstance) ValidCredentials() map[string]string {
-	return map[string]string{} // No auth in test setup
-}
-
-func (k *KafkaInstance) InvalidCredentials() map[string]string {
-	return map[string]string{}
-}
-
-func (k *KafkaInstance) RotateCredentials() error {
-	return nil // No auth in test setup
-}
-
-func (k *KafkaInstance) SupportsCredentialExpiration() bool {
-	return false
-}
-
-func (k *KafkaInstance) ExpirableCredentials(duration time.Duration) map[string]string {
-	return nil
-}
-
-func (k *KafkaInstance) BasicOperation() string {
-	return "produce"
-}
-
-func (k *KafkaInstance) BasicParams() *anypb.Any {
-	params := map[string]interface{}{
-		"topic": "test-topic",
-		"key":   "test-key",
-		"value": "test-value",
-	}
-	paramsAny, _ := anypb.New(&anypb.Any{}) // Placeholder
-	return paramsAny
-}
-
-func (k *KafkaInstance) ParamsForKey(key int) *anypb.Any {
-	params := map[string]interface{}{
-		"topic": "test-topic",
-		"key":   fmt.Sprintf("key-%d", key),
-		"value": fmt.Sprintf("value-%d", key),
-	}
-	paramsAny, _ := anypb.New(&anypb.Any{}) // Placeholder
-	return paramsAny
-}
-
-func (k *KafkaInstance) Type() string {
-	return "kafka"
-}
-
-// Helper methods for verification tests
-
-func (k *KafkaInstance) ProduceMessage(topic, key string, value []byte) error {
-	writer := &kafka.Writer{
-		Addr:     kafka.TCP(k.broker),
-		Topic:    topic,
-		Balancer: &kafka.LeastBytes{},
-	}
-	defer writer.Close()
-
-	return writer.WriteMessages(context.Background(), kafka.Message{
-		Key:   []byte(key),
-		Value: value,
-	})
-}
-
-func (k *KafkaInstance) ConsumeMessages(topic string, count int, timeout time.Duration) []kafka.Message {
-	reader := kafka.NewReader(kafka.ReaderConfig{
-		Brokers:  []string{k.broker},
-		Topic:    topic,
-		GroupID:  "test-consumer",
-		MinBytes: 1,
-		MaxBytes: 10e6,
-	})
-	defer reader.Close()
-
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
-	defer cancel()
-
-	messages := make([]kafka.Message, 0, count)
-	for i := 0; i < count; i++ {
-		msg, err := reader.ReadMessage(ctx)
-		if err != nil {
+	stream, err := s.harness.Plugin.KeyValueScan(ctx, scanReq)
+	require.NoError(s.t, err)
+
+	results := make(map[string][]byte)
+	for {
+		resp, err := stream.Recv()
+		if err == io.EOF {
 			break
 		}
-		messages = append(messages, msg)
+		require.NoError(s.t, err)
+		results[resp.Key] = resp.Value
 	}
 
-	return messages
+	assert.GreaterOrEqual(s.t, len(results), 10, "Should scan at least 10 keys")
 }
-```text
 
-## Plugin Test Harness
+func (s *KeyValueScanTestSuite) testScanPrefix() {
+	ctx := context.Background()
 
+	// Seed data with different prefixes
+	for i := 0; i < 5; i++ {
+		setReq := &proto.KeyValueSetRequest{
+			Namespace: "test",
+			Key:       fmt.Sprintf("user:%d", i),
+			Value:     []byte(fmt.Sprintf("user-data-%d", i)),
+		}
+		_, err := s.harness.Plugin.KeyValueSet(ctx, setReq)
+		require.NoError(s.t, err)
+	}
+
+	for i := 0; i < 5; i++ {
+		setReq := &proto.KeyValueSetRequest{
+			Namespace: "test",
+			Key:       fmt.Sprintf("post:%d", i),
+			Value:     []byte(fmt.Sprintf("post-data-%d", i)),
+		}
+		_, err := s.harness.Plugin.KeyValueSet(ctx, setReq)
+		require.NoError(s.t, err)
+	}
+
+	// Scan only user: prefix
+	scanReq := &proto.KeyValueScanRequest{
+		Namespace: "test",
+		Prefix:    "user:",
+		Limit:     0,
+	}
+
+	stream, err := s.harness.Plugin.KeyValueScan(ctx, scanReq)
+	require.NoError(s.t, err)
+
+	userKeys := 0
+	for {
+		resp, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		require.NoError(s.t, err)
+		assert.Contains(s.t, resp.Key, "user:", "All keys should have user: prefix")
+		userKeys++
+	}
+
+	assert.Equal(s.t, 5, userKeys, "Should scan exactly 5 user keys")
+}
+
+func (s *KeyValueScanTestSuite) testScanLimit() {
+	ctx := context.Background()
+
+	// Seed 20 keys
+	for i := 0; i < 20; i++ {
+		setReq := &proto.KeyValueSetRequest{
+			Namespace: "test",
+			Key:       fmt.Sprintf("limit-key-%d", i),
+			Value:     []byte(fmt.Sprintf("limit-value-%d", i)),
+		}
+		_, err := s.harness.Plugin.KeyValueSet(ctx, setReq)
+		require.NoError(s.t, err)
+	}
+
+	// Scan with limit=10
+	scanReq := &proto.KeyValueScanRequest{
+		Namespace: "test",
+		Prefix:    "limit-key-",
+		Limit:     10,
+	}
+
+	stream, err := s.harness.Plugin.KeyValueScan(ctx, scanReq)
+	require.NoError(s.t, err)
+
+	count := 0
+	for {
+		_, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		require.NoError(s.t, err)
+		count++
+	}
+
+	assert.Equal(s.t, 10, count, "Should scan exactly 10 keys (limit)")
+}
+
+func (s *KeyValueScanTestSuite) testScanKeys() {
+	ctx := context.Background()
+
+	// Seed data
+	for i := 0; i < 5; i++ {
+		setReq := &proto.KeyValueSetRequest{
+			Namespace: "test",
+			Key:       fmt.Sprintf("keys-only-%d", i),
+			Value:     []byte(fmt.Sprintf("large-value-%d", i)), // Values not needed
+		}
+		_, err := s.harness.Plugin.KeyValueSet(ctx, setReq)
+		require.NoError(s.t, err)
+	}
+
+	// Scan keys only (no values)
+	scanKeysReq := &proto.KeyValueScanKeysRequest{
+		Namespace: "test",
+		Prefix:    "keys-only-",
+		Limit:     0,
+	}
+
+	stream, err := s.harness.Plugin.KeyValueScanKeys(ctx, scanKeysReq)
+	require.NoError(s.t, err)
+
+	keys := []string{}
+	for {
+		resp, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		require.NoError(s.t, err)
+		keys = append(keys, resp.Key)
+	}
+
+	assert.Equal(s.t, 5, len(keys), "Should scan 5 keys")
+}
+
+func (s *KeyValueScanTestSuite) testCount() {
+	ctx := context.Background()
+
+	// Seed data
+	for i := 0; i < 15; i++ {
+		setReq := &proto.KeyValueSetRequest{
+			Namespace: "test",
+			Key:       fmt.Sprintf("count-key-%d", i),
+			Value:     []byte(fmt.Sprintf("count-value-%d", i)),
+		}
+		_, err := s.harness.Plugin.KeyValueSet(ctx, setReq)
+		require.NoError(s.t, err)
+	}
+
+	// Count all keys
+	countReq := &proto.KeyValueCountRequest{
+		Namespace: "test",
+		Prefix:    "",
+	}
+
+	countResp, err := s.harness.Plugin.KeyValueCount(ctx, countReq)
+	require.NoError(s.t, err)
+	assert.GreaterOrEqual(s.t, countResp.Count, int64(15), "Should count at least 15 keys")
+}
+
+func (s *KeyValueScanTestSuite) testCountWithPrefix() {
+	ctx := context.Background()
+
+	// Seed data
+	for i := 0; i < 10; i++ {
+		setReq := &proto.KeyValueSetRequest{
+			Namespace: "test",
+			Key:       fmt.Sprintf("prefix-count-key-%d", i),
+			Value:     []byte(fmt.Sprintf("prefix-count-value-%d", i)),
+		}
+		_, err := s.harness.Plugin.KeyValueSet(ctx, setReq)
+		require.NoError(s.t, err)
+	}
+
+	// Count keys with prefix
+	countReq := &proto.KeyValueCountRequest{
+		Namespace: "test",
+		Prefix:    "prefix-count-",
+	}
+
+	countResp, err := s.harness.Plugin.KeyValueCount(ctx, countReq)
+	require.NoError(s.t, err)
+	assert.Equal(s.t, int64(10), countResp.Count, "Should count exactly 10 keys with prefix")
+}
 ```
-// tests/acceptance/harness/plugin_harness.go
+
+## Backend Interface Registry
+
+### Registry Loading
+
+```go
+// tests/acceptance/harness/interface_registry.go
 
 package harness
 
 import (
-	"context"
 	"fmt"
-	"testing"
+	"io/ioutil"
+	"path/filepath"
 
-	"github.com/prism/plugin-core/proto"
-	"github.com/prism/tests/acceptance/instances"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
+	"gopkg.in/yaml.v3"
 )
 
-// PluginHarness manages plugin lifecycle and provides test utilities
-type PluginHarness struct {
-	BackendType string
-	Backend     instances.TestBackend
-	Plugin      proto.BackendPluginClient
-	conn        *grpc.ClientConn
-	t           *testing.T
+// BackendRegistry loads backend interface declarations from registry/backends/*.yaml
+type BackendRegistry struct {
+	Backends map[string]*BackendDeclaration
 }
 
-// NewPluginHarness creates a new plugin test harness
-func NewPluginHarness(t *testing.T, backendType string, backend instances.TestBackend) *PluginHarness {
-	// Start plugin server
-	pluginAddr := startPluginServer(t, backendType)
+// BackendDeclaration represents a backend's declared interfaces
+type BackendDeclaration struct {
+	Backend     string   `yaml:"backend"`
+	Description string   `yaml:"description"`
+	Plugin      string   `yaml:"plugin"`
+	Implements  []string `yaml:"implements"`
+}
 
-	// Connect to plugin
-	conn, err := grpc.Dial(pluginAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+// LoadBackendRegistry loads all backend declarations from registry/backends/
+func LoadBackendRegistry(registryPath string) (*BackendRegistry, error) {
+	registry := &BackendRegistry{
+		Backends: make(map[string]*BackendDeclaration),
+	}
+
+	files, err := filepath.Glob(filepath.Join(registryPath, "backends", "*.yaml"))
 	if err != nil {
-		t.Fatalf("Failed to connect to plugin: %v", err)
+		return nil, fmt.Errorf("failed to list backend files: %w", err)
 	}
 
-	client := proto.NewBackendPluginClient(conn)
+	for _, file := range files {
+		data, err := ioutil.ReadFile(file)
+		if err != nil {
+			return nil, fmt.Errorf("failed to read %s: %w", file, err)
+		}
 
-	return &PluginHarness{
-		BackendType: backendType,
-		Backend:     backend,
-		Plugin:      client,
-		conn:        conn,
-		t:           t,
+		var decl BackendDeclaration
+		if err := yaml.Unmarshal(data, &decl); err != nil {
+			return nil, fmt.Errorf("failed to parse %s: %w", file, err)
+		}
+
+		registry.Backends[decl.Backend] = &decl
+	}
+
+	return registry, nil
+}
+
+// FindBackendsImplementing returns backends that implement the given interface
+func (r *BackendRegistry) FindBackendsImplementing(interfaceName string) []*BackendDeclaration {
+	backends := []*BackendDeclaration{}
+
+	for _, backend := range r.Backends {
+		for _, iface := range backend.Implements {
+			if iface == interfaceName {
+				backends = append(backends, backend)
+				break
+			}
+		}
+	}
+
+	return backends
+}
+
+// VerifyInterfaceImplemented checks if backend declares the interface
+func (r *BackendRegistry) VerifyInterfaceImplemented(backend, interfaceName string) bool {
+	decl, ok := r.Backends[backend]
+	if !ok {
+		return false
+	}
+
+	for _, iface := range decl.Implements {
+		if iface == interfaceName {
+			return true
+		}
+	}
+
+	return false
+}
+```
+
+## Compliance Matrix Test
+
+The compliance matrix runs all interface tests for backends that claim to implement them:
+
+```go
+// tests/acceptance/matrix/compliance_matrix_test.go
+
+package matrix
+
+import (
+	"testing"
+
+	"github.com/prism/tests/acceptance/harness"
+	"github.com/prism/tests/acceptance/instances"
+	"github.com/prism/tests/acceptance/interfaces/keyvalue"
+	"github.com/prism/tests/acceptance/interfaces/pubsub"
+	"github.com/prism/tests/acceptance/interfaces/stream"
+	// ... import other interface test suites
+)
+
+// TestComplianceMatrix runs interface tests for all backends
+func TestComplianceMatrix(t *testing.T) {
+	// Load backend registry
+	registry, err := harness.LoadBackendRegistry("../../registry")
+	if err != nil {
+		t.Fatalf("Failed to load backend registry: %v", err)
+	}
+
+	// Test each backend
+	for backendName, backend := range registry.Backends {
+		t.Run(backendName, func(t *testing.T) {
+			testBackendCompliance(t, backend, registry)
+		})
 	}
 }
 
-// Cleanup shuts down plugin and backend
-func (h *PluginHarness) Cleanup() {
-	ctx := context.Background()
+func testBackendCompliance(t *testing.T, backend *harness.BackendDeclaration, registry *harness.BackendRegistry) {
+	// Start backend testcontainer
+	instance := startBackendInstance(t, backend.Backend)
+	defer instance.Stop()
 
-	// Shutdown plugin
-	h.Plugin.Shutdown(ctx, &proto.ShutdownRequest{})
+	// Create plugin harness
+	h := harness.NewPluginHarness(t, backend.Backend, instance)
+	defer h.Cleanup()
 
-	// Close connection
-	h.conn.Close()
-
-	// Stop backend
-	h.Backend.Stop()
+	// Run interface tests for each declared interface
+	for _, interfaceName := range backend.Implements {
+		t.Run(interfaceName, func(t *testing.T) {
+			testInterface(t, interfaceName, h)
+		})
+	}
 }
 
-// startPluginServer starts a plugin gRPC server for testing
-func startPluginServer(t *testing.T, backendType string) string {
-	// In real implementation, would:
-	// 1. Build plugin binary if needed
-	// 2. Start plugin process with gRPC server
-	// 3. Return address (e.g., "localhost:50100")
+func testInterface(t *testing.T, interfaceName string, h *harness.PluginHarness) {
+	switch interfaceName {
+	// KeyValue interfaces
+	case "keyvalue_basic":
+		suite := keyvalue.NewKeyValueBasicTestSuite(t, h)
+		suite.Run()
 
-	// For this example, return placeholder
-	return fmt.Sprintf("localhost:5010%d", len(backendType))
+	case "keyvalue_scan":
+		suite := keyvalue.NewKeyValueScanTestSuite(t, h)
+		suite.Run()
+
+	case "keyvalue_ttl":
+		suite := keyvalue.NewKeyValueTTLTestSuite(t, h)
+		suite.Run()
+
+	case "keyvalue_transactional":
+		suite := keyvalue.NewKeyValueTransactionalTestSuite(t, h)
+		suite.Run()
+
+	case "keyvalue_batch":
+		suite := keyvalue.NewKeyValueBatchTestSuite(t, h)
+		suite.Run()
+
+	case "keyvalue_cas":
+		suite := keyvalue.NewKeyValueCASTestSuite(t, h)
+		suite.Run()
+
+	// PubSub interfaces
+	case "pubsub_basic":
+		suite := pubsub.NewPubSubBasicTestSuite(t, h)
+		suite.Run()
+
+	case "pubsub_wildcards":
+		suite := pubsub.NewPubSubWildcardsTestSuite(t, h)
+		suite.Run()
+
+	case "pubsub_persistent":
+		suite := pubsub.NewPubSubPersistentTestSuite(t, h)
+		suite.Run()
+
+	// Stream interfaces
+	case "stream_basic":
+		suite := stream.NewStreamBasicTestSuite(t, h)
+		suite.Run()
+
+	case "stream_consumer_groups":
+		suite := stream.NewStreamConsumerGroupsTestSuite(t, h)
+		suite.Run()
+
+	case "stream_replay":
+		suite := stream.NewStreamReplayTestSuite(t, h)
+		suite.Run()
+
+	// ... handle other interfaces
+
+	default:
+		t.Fatalf("Unknown interface: %s", interfaceName)
+	}
 }
-```text
+
+func startBackendInstance(t *testing.T, backendType string) instances.TestBackend {
+	switch backendType {
+	case "redis":
+		return instances.NewRedisInstance(t)
+	case "postgres":
+		return instances.NewPostgresInstance(t)
+	case "kafka":
+		return instances.NewKafkaInstance(t)
+	case "memstore":
+		return instances.NewMemStoreInstance(t)
+	// ... other backends
+	default:
+		t.Fatalf("Unknown backend type: %s", backendType)
+		return nil
+	}
+}
+```
 
 ## CI/CD Integration
 
 ### GitHub Actions Workflow
 
-```
-# .github/workflows/plugin-acceptance.yml
+```yaml
+# .github/workflows/interface-compliance.yml
 
-name: Plugin Acceptance Tests
+name: Interface Compliance Matrix
 
 on:
   push:
@@ -1705,34 +974,113 @@ on:
     branches: [main]
 
 jobs:
-  acceptance:
-    name: ${{ matrix.backend }} v${{ matrix.version }}
+  compliance:
+    name: ${{ matrix.backend }} - ${{ matrix.interface }}
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 10
 
     strategy:
       fail-fast: false
       matrix:
         include:
-          # PostgreSQL versions
-          - backend: postgres
-            version: "14"
-          - backend: postgres
-            version: "15"
-          - backend: postgres
-            version: "16"
-
-          # Redis versions
+          # Redis (16 interfaces)
           - backend: redis
-            version: "7.0"
+            interface: keyvalue_basic
           - backend: redis
-            version: "7.2"
+            interface: keyvalue_scan
+          - backend: redis
+            interface: keyvalue_ttl
+          - backend: redis
+            interface: keyvalue_transactional
+          - backend: redis
+            interface: keyvalue_batch
+          - backend: redis
+            interface: pubsub_basic
+          - backend: redis
+            interface: pubsub_wildcards
+          - backend: redis
+            interface: stream_basic
+          - backend: redis
+            interface: stream_consumer_groups
+          - backend: redis
+            interface: stream_replay
+          - backend: redis
+            interface: stream_retention
+          - backend: redis
+            interface: list_basic
+          - backend: redis
+            interface: list_indexing
+          - backend: redis
+            interface: list_range
+          - backend: redis
+            interface: list_blocking
+          - backend: redis
+            interface: set_basic
+          # ... (all Redis interfaces)
 
-          # Kafka versions
+          # PostgreSQL (16 interfaces)
+          - backend: postgres
+            interface: keyvalue_basic
+          - backend: postgres
+            interface: keyvalue_scan
+          - backend: postgres
+            interface: keyvalue_transactional
+          - backend: postgres
+            interface: keyvalue_batch
+          - backend: postgres
+            interface: queue_basic
+          - backend: postgres
+            interface: queue_visibility
+          - backend: postgres
+            interface: queue_dead_letter
+          - backend: postgres
+            interface: queue_delayed
+          - backend: postgres
+            interface: timeseries_basic
+          - backend: postgres
+            interface: timeseries_aggregation
+          - backend: postgres
+            interface: timeseries_retention
+          - backend: postgres
+            interface: document_basic
+          - backend: postgres
+            interface: document_query
+          - backend: postgres
+            interface: document_indexing
+          - backend: postgres
+            interface: graph_basic
+          - backend: postgres
+            interface: graph_traversal
+
+          # MemStore (6 interfaces - minimal for testing)
+          - backend: memstore
+            interface: keyvalue_basic
+          - backend: memstore
+            interface: keyvalue_ttl
+          - backend: memstore
+            interface: list_basic
+          - backend: memstore
+            interface: list_indexing
+          - backend: memstore
+            interface: list_range
+          - backend: memstore
+            interface: list_blocking
+
+          # Kafka (7 interfaces - streaming focus)
           - backend: kafka
-            version: "3.5"
+            interface: stream_basic
           - backend: kafka
-            version: "3.6"
+            interface: stream_consumer_groups
+          - backend: kafka
+            interface: stream_replay
+          - backend: kafka
+            interface: stream_retention
+          - backend: kafka
+            interface: stream_partitioning
+          - backend: kafka
+            interface: pubsub_basic
+          - backend: kafka
+            interface: pubsub_persistent
 
     steps:
       - name: Checkout code
@@ -1753,45 +1101,43 @@ jobs:
           cd plugins/${{ matrix.backend }}
           go build -o plugin-server ./cmd/server
 
-      - name: Run acceptance tests
+      - name: Run interface test
         env:
           BACKEND_TYPE: ${{ matrix.backend }}
-          BACKEND_VERSION: ${{ matrix.version }}
+          INTERFACE_NAME: ${{ matrix.interface }}
           DOCKER_HOST: unix:///var/run/docker.sock
         run: |
-          go test -v -timeout 10m \
-            ./tests/acceptance/... \
-            -run "Test.*${{ matrix.backend }}"
+          go test -v -timeout 5m \
+            ./tests/acceptance/matrix/... \
+            -run "TestComplianceMatrix/${{ matrix.backend }}/${{ matrix.interface }}"
 
       - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v3
         with:
-          name: test-results-${{ matrix.backend }}-${{ matrix.version }}
-          path: |
-            test-results/
-            coverage.out
+          name: test-results-${{ matrix.backend }}-${{ matrix.interface }}
+          path: test-results/
 
-  acceptance-summary:
-    name: Acceptance Test Summary
+  compliance-summary:
+    name: Compliance Summary
     runs-on: ubuntu-latest
-    needs: acceptance
+    needs: compliance
     if: always()
 
     steps:
       - name: Download all test results
         uses: actions/download-artifact@v3
 
-      - name: Generate summary report
+      - name: Generate compliance matrix
         run: |
-          echo "## Acceptance Test Results" >> $GITHUB_STEP_SUMMARY
+          echo "## Interface Compliance Matrix" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "| Backend | Version | Status |" >> $GITHUB_STEP_SUMMARY
-          echo "|---------|---------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Backend | Interface | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|---------|-----------|--------|" >> $GITHUB_STEP_SUMMARY
 
           for dir in test-results-*/; do
             backend=$(echo $dir | cut -d'-' -f3)
-            version=$(echo $dir | cut -d'-' -f4 | tr -d '/')
+            interface=$(echo $dir | cut -d'-' -f4 | tr -d '/')
 
             if [ -f "$dir/PASS" ]; then
               status="✅ PASS"
@@ -1799,224 +1145,294 @@ jobs:
               status="❌ FAIL"
             fi
 
-            echo "| $backend | $version | $status |" >> $GITHUB_STEP_SUMMARY
+            echo "| $backend | $interface | $status |" >> $GITHUB_STEP_SUMMARY
           done
-```text
-
-### Running Tests Locally
-
 ```
-# Run all acceptance tests
-make test-acceptance
 
-# Run tests for specific backend
-make test-acceptance-postgres
+## Benefits
 
-# Run authentication suite only
-go test ./tests/acceptance/... -run TestAuthSuite
+### 1. Interface Compliance Verification
 
-# Run with specific backend version
-POSTGRES_VERSION=15 go test ./tests/acceptance/postgres_test.go
+**Problem**: Backend claims to implement `keyvalue_scan` but actually doesn't support prefix filtering.
 
-# Run with verbose output
-go test -v ./tests/acceptance/...
+**Solution**: Interface test suite validates all operations defined in `keyvalue_scan.proto`:
+```go
+func (s *KeyValueScanTestSuite) Run() {
+    s.t.Run("ScanAll", s.testScanAll)
+    s.t.Run("ScanPrefix", s.testScanPrefix)  // ← Will fail if not implemented
+    s.t.Run("ScanLimit", s.testScanLimit)
+    s.t.Run("ScanKeys", s.testScanKeys)
+    s.t.Run("Count", s.testCount)
+}
+```
+
+### 2. Cross-Backend Test Reuse
+
+**Before** (backend-type testing):
+- Write PostgreSQL-specific test suite (500 lines)
+- Write Redis-specific test suite (500 lines)
+- Write DynamoDB-specific test suite (500 lines)
+- **Total**: 1500 lines, duplicated logic
+
+**After** (interface-based testing):
+- Write `keyvalue_basic` test suite ONCE (100 lines)
+- Run for PostgreSQL, Redis, DynamoDB, etcd, MemStore
+- **Total**: 100 lines, shared across 5 backends
+
+### 3. Clear Contract Definition
+
+Interface test suites serve as executable specifications:
+```go
+// KeyValueBasicTestSuite defines EXACTLY what keyvalue_basic means:
+// 1. Set(key, value) stores a value
+// 2. Get(key) retrieves the value
+// 3. Delete(key) removes the value
+// 4. Exists(key) checks if key exists
+// 5. Set on existing key overwrites value
+// 6. Get on non-existent key returns NotFound
+// 7. Concurrent operations are safe
+```
+
+Backends implementing `keyvalue_basic` MUST pass all 10 tests.
+
+### 4. Incremental Implementation
+
+Backends can implement subsets of interfaces:
+```yaml
+# registry/backends/memstore.yaml
+implements:
+  - keyvalue_basic  # Minimal KV (Set, Get, Delete, Exists)
+  - keyvalue_ttl    # TTL support
+  - list_basic      # List operations
+
+# NOT implemented (skipped in tests):
+# - keyvalue_scan   # MemStore doesn't support efficient scanning
+# - keyvalue_transactional  # No transactions
+```
+
+Tests run ONLY for declared interfaces - no false failures.
+
+### 5. Registry-Driven Testing
+
+Backend registry (`registry/backends/*.yaml`) is single source of truth:
+```yaml
+# registry/backends/redis.yaml
+backend: redis
+implements:
+  - keyvalue_basic
+  - keyvalue_scan
+  - keyvalue_ttl
+  # ... 13 more interfaces
+```
+
+Test framework:
+1. Loads registry
+2. Finds backends implementing `keyvalue_basic`
+3. Runs `KeyValueBasicTestSuite` for each backend
+4. Reports pass/fail in compliance matrix
+
+## Running Tests Locally
+
+```bash
+# Run full compliance matrix (tests all backends × interfaces)
+make test-compliance
+
+# Run compliance tests for specific backend
+make test-compliance-redis
+
+# Run tests for specific interface (across all backends)
+go test ./tests/acceptance/matrix/... -run "TestComplianceMatrix/.*/keyvalue_basic"
+
+# Run tests for specific backend+interface
+go test ./tests/acceptance/matrix/... -run "TestComplianceMatrix/redis/keyvalue_scan"
+
+# Run tests with verbose output
+go test -v ./tests/acceptance/matrix/...
 
 # Generate coverage report
 go test -coverprofile=coverage.out ./tests/acceptance/...
 go tool cover -html=coverage.out
-```text
+```
 
 ### Makefile Targets
 
-```
+```makefile
 # Makefile
 
-.PHONY: test-acceptance
-test-acceptance: ## Run all acceptance tests
-	@echo "Running acceptance tests..."
-	go test -v -timeout 10m ./tests/acceptance/...
+.PHONY: test-compliance
+test-compliance: ## Run full interface compliance matrix
+	@echo "Running interface compliance tests..."
+	go test -v -timeout 30m ./tests/acceptance/matrix/...
 
-.PHONY: test-acceptance-postgres
-test-acceptance-postgres: ## Run PostgreSQL acceptance tests
-	go test -v -timeout 5m ./tests/acceptance/... -run TestPostgres
+.PHONY: test-compliance-redis
+test-compliance-redis: ## Run Redis compliance tests
+	go test -v -timeout 10m ./tests/acceptance/matrix/... -run TestComplianceMatrix/redis
 
-.PHONY: test-acceptance-kafka
-test-acceptance-kafka: ## Run Kafka acceptance tests
-	go test -v -timeout 5m ./tests/acceptance/... -run TestKafka
+.PHONY: test-compliance-postgres
+test-compliance-postgres: ## Run PostgreSQL compliance tests
+	go test -v -timeout 10m ./tests/acceptance/matrix/... -run TestComplianceMatrix/postgres
 
-.PHONY: test-acceptance-redis
-test-acceptance-redis: ## Run Redis acceptance tests
-	go test -v -timeout 5m ./tests/acceptance/... -run TestRedis
+.PHONY: test-compliance-memstore
+test-compliance-memstore: ## Run MemStore compliance tests
+	go test -v -timeout 5m ./tests/acceptance/matrix/... -run TestComplianceMatrix/memstore
 
-.PHONY: test-auth-suite
-test-auth-suite: ## Run authentication suite across all plugins
-	go test -v ./tests/acceptance/... -run TestAuthSuite
+.PHONY: test-interface
+test-interface: ## Run tests for specific interface (e.g., make test-interface INTERFACE=keyvalue_basic)
+	go test -v ./tests/acceptance/matrix/... -run "TestComplianceMatrix/.*/${INTERFACE}"
 
-.PHONY: test-coverage
-test-coverage: ## Generate test coverage report
-	go test -coverprofile=coverage.out ./tests/acceptance/...
-	go tool cover -html=coverage.out -o coverage.html
-	@echo "Coverage report: coverage.html"
-```text
-
-## Test Execution Example
-
-### Running Complete Test Suite
-
+.PHONY: validate-registry
+validate-registry: ## Validate backend registry files
+	go test -v ./tests/acceptance/matrix/... -run TestRegistryValidator
 ```
-$ make test-acceptance
 
-=== RUN   TestPostgresPlugin
-=== RUN   TestPostgresPlugin/Authentication
-=== RUN   TestPostgresPlugin/Authentication/ValidCredentials
-=== RUN   TestPostgresPlugin/Authentication/InvalidCredentials
-=== RUN   TestPostgresPlugin/Authentication/MissingCredentials
-=== RUN   TestPostgresPlugin/Authentication/CredentialRotation
-=== RUN   TestPostgresPlugin/Authentication/ConnectionPoolAuth
---- PASS: TestPostgresPlugin/Authentication (4.2s)
-    --- PASS: TestPostgresPlugin/Authentication/ValidCredentials (0.5s)
-    --- PASS: TestPostgresPlugin/Authentication/InvalidCredentials (0.3s)
-    --- PASS: TestPostgresPlugin/Authentication/MissingCredentials (0.2s)
-    --- PASS: TestPostgresPlugin/Authentication/CredentialRotation (2.1s)
-    --- PASS: TestPostgresPlugin/Authentication/ConnectionPoolAuth (1.1s)
+## Test Output Example
 
-=== RUN   TestPostgresPlugin/BackendVerification
-=== RUN   TestPostgresPlugin/BackendVerification/BasicOperations
-=== RUN   TestPostgresPlugin/BackendVerification/BasicOperations/Insert
-=== RUN   TestPostgresPlugin/BackendVerification/BasicOperations/Select
-=== RUN   TestPostgresPlugin/BackendVerification/BasicOperations/Update
-=== RUN   TestPostgresPlugin/BackendVerification/BasicOperations/Delete
-=== RUN   TestPostgresPlugin/BackendVerification/BasicOperations/Transaction
---- PASS: TestPostgresPlugin/BackendVerification/BasicOperations (3.8s)
+```bash
+$ make test-compliance
 
-=== RUN   TestPostgresPlugin/BackendVerification/BackendSpecificFeatures
-=== RUN   TestPostgresPlugin/BackendVerification/BackendSpecificFeatures/PreparedStatements
-=== RUN   TestPostgresPlugin/BackendVerification/BackendSpecificFeatures/JSONTypes
-=== RUN   TestPostgresPlugin/BackendVerification/BackendSpecificFeatures/ListenNotify
---- PASS: TestPostgresPlugin/BackendVerification/BackendSpecificFeatures (5.1s)
+=== RUN   TestComplianceMatrix
+=== RUN   TestComplianceMatrix/redis
+=== RUN   TestComplianceMatrix/redis/keyvalue_basic
+=== RUN   TestComplianceMatrix/redis/keyvalue_basic/Set
+=== RUN   TestComplianceMatrix/redis/keyvalue_basic/Get
+=== RUN   TestComplianceMatrix/redis/keyvalue_basic/Delete
+=== RUN   TestComplianceMatrix/redis/keyvalue_basic/Exists
+=== RUN   TestComplianceMatrix/redis/keyvalue_basic/SetGetDelete
+=== RUN   TestComplianceMatrix/redis/keyvalue_basic/GetNonExistent
+=== RUN   TestComplianceMatrix/redis/keyvalue_basic/DeleteNonExistent
+=== RUN   TestComplianceMatrix/redis/keyvalue_basic/ExistsNonExistent
+=== RUN   TestComplianceMatrix/redis/keyvalue_basic/OverwriteValue
+=== RUN   TestComplianceMatrix/redis/keyvalue_basic/ConcurrentSets
+--- PASS: TestComplianceMatrix/redis/keyvalue_basic (2.3s)
 
---- PASS: TestPostgresPlugin (13.1s)
+=== RUN   TestComplianceMatrix/redis/keyvalue_scan
+=== RUN   TestComplianceMatrix/redis/keyvalue_scan/ScanAll
+=== RUN   TestComplianceMatrix/redis/keyvalue_scan/ScanPrefix
+=== RUN   TestComplianceMatrix/redis/keyvalue_scan/ScanLimit
+=== RUN   TestComplianceMatrix/redis/keyvalue_scan/ScanKeys
+=== RUN   TestComplianceMatrix/redis/keyvalue_scan/Count
+=== RUN   TestComplianceMatrix/redis/keyvalue_scan/CountWithPrefix
+--- PASS: TestComplianceMatrix/redis/keyvalue_scan (3.1s)
 
-=== RUN   TestKafkaPlugin
-=== RUN   TestKafkaPlugin/Authentication
---- PASS: TestKafkaPlugin/Authentication (3.5s)
-=== RUN   TestKafkaPlugin/BackendVerification
---- PASS: TestKafkaPlugin/BackendVerification (8.7s)
---- PASS: TestKafkaPlugin (12.2s)
+=== RUN   TestComplianceMatrix/postgres
+=== RUN   TestComplianceMatrix/postgres/keyvalue_basic
+--- PASS: TestComplianceMatrix/postgres/keyvalue_basic (2.8s)
+
+=== RUN   TestComplianceMatrix/postgres/keyvalue_scan
+--- PASS: TestComplianceMatrix/postgres/keyvalue_scan (3.5s)
+
+=== RUN   TestComplianceMatrix/memstore
+=== RUN   TestComplianceMatrix/memstore/keyvalue_basic
+--- PASS: TestComplianceMatrix/memstore/keyvalue_basic (0.1s)
+
+=== RUN   TestComplianceMatrix/memstore/keyvalue_ttl
+--- PASS: TestComplianceMatrix/memstore/keyvalue_ttl (1.2s)
 
 PASS
-ok      github.com/prism/tests/acceptance       25.352s
-```text
-
-### Test Summary Report
-
-Plugin Acceptance Test Results
-===============================
-
-Authentication Suite:
-  ✓ PostgreSQL: 6/6 tests passed (4.2s)
-  ✓ Kafka:      6/6 tests passed (3.5s)
-  ✓ Redis:      6/6 tests passed (2.8s)
-
-Backend Verification:
-  ✓ PostgreSQL: 18/18 tests passed (8.9s)
-  ✓ Kafka:      15/15 tests passed (8.7s)
-  ✓ Redis:      12/12 tests passed (4.1s)
-
-Total: 63/63 tests passed in 25.35s
+ok      github.com/prism/tests/acceptance/matrix        15.234s
 ```
 
-## Benefits and Impact
+### Compliance Matrix Summary
 
-### Cross-Plugin Consistency
+```text
+Interface Compliance Matrix
+===========================
 
-**Before**: Each plugin implemented authentication differently
-- PostgreSQL plugin used one credential format
-- Kafka plugin used another format
-- Redis plugin had different error handling
+Backend: redis (16/16 interfaces PASS)
+  ✓ keyvalue_basic
+  ✓ keyvalue_scan
+  ✓ keyvalue_ttl
+  ✓ keyvalue_transactional
+  ✓ keyvalue_batch
+  ✓ pubsub_basic
+  ✓ pubsub_wildcards
+  ✓ stream_basic
+  ✓ stream_consumer_groups
+  ✓ stream_replay
+  ✓ stream_retention
+  ✓ list_basic
+  ✓ list_indexing
+  ✓ list_range
+  ✓ list_blocking
+  ✓ set_basic
 
-**After**: All plugins handle authentication identically
-- Consistent credential format across all plugins
-- Identical error messages for auth failures
-- Same credential rotation behavior
+Backend: postgres (16/16 interfaces PASS)
+  ✓ keyvalue_basic
+  ✓ keyvalue_scan
+  ✓ keyvalue_transactional
+  ✓ keyvalue_batch
+  ✓ queue_basic
+  ✓ queue_visibility
+  ✓ queue_dead_letter
+  ✓ queue_delayed
+  ✓ timeseries_basic
+  ✓ timeseries_aggregation
+  ✓ timeseries_retention
+  ✓ document_basic
+  ✓ document_query
+  ✓ document_indexing
+  ✓ graph_basic
+  ✓ graph_traversal
 
-### Real Backend Testing
+Backend: memstore (6/6 interfaces PASS)
+  ✓ keyvalue_basic
+  ✓ keyvalue_ttl
+  ✓ list_basic
+  ✓ list_indexing
+  ✓ list_range
+  ✓ list_blocking
 
-**Before**: Plugins tested with mocks
-- Mock behavior didn't match real backends
-- Edge cases missed in testing
-- Production bugs discovered late
+Backend: kafka (7/7 interfaces PASS)
+  ✓ stream_basic
+  ✓ stream_consumer_groups
+  ✓ stream_replay
+  ✓ stream_retention
+  ✓ stream_partitioning
+  ✓ pubsub_basic
+  ✓ pubsub_persistent
 
-**After**: Plugins tested against real instances
-- Protocol implementation verified
-- Backend-specific quirks discovered early
-- High confidence before production deployment
-
-### CI/CD Integration
-
-**Before**: Manual testing required
-- Developer runs tests locally
-- No guarantee tests run before merge
-- Version compatibility issues discovered late
-
-**After**: Automated testing on every commit
-- All plugins tested automatically
-- Multiple backend versions verified
-- Fast feedback loop (&lt;5 minutes)
-
-### Documentation via Tests
-
-**Before**: Plugin development guide separate from code
-- Documentation becomes outdated
-- Examples may not work
-
-**After**: Tests serve as living documentation
-- Always up-to-date examples
-- Shows correct usage patterns
-- New plugin developers can copy test patterns
+Total: 45/45 interfaces PASS across 4 backends
+```
 
 ## Future Enhancements
 
-### Phase 1: Additional Test Suites (Q1 2026)
+### Phase 1: Complete Interface Coverage (Q1 2026)
 
-- **Performance Baseline Suite**: Verify plugin meets latency/throughput SLOs
-- **Memory Leak Detection**: Long-running tests to detect leaks
-- **Connection Exhaustion**: Verify graceful handling of connection limits
+Implement test suites for all 45 interfaces:
+- ✅ KeyValue (6 interfaces) - Completed
+- ⏳ PubSub (5 interfaces) - In progress
+- ⏳ Stream (5 interfaces) - In progress
+- ⏳ Queue (5 interfaces) - Planned
+- ⏳ List (4 interfaces) - Planned
+- ⏳ Set (4 interfaces) - Planned
+- ⏳ SortedSet (5 interfaces) - Planned
+- ⏳ TimeSeries (4 interfaces) - Planned
+- ⏳ Graph (4 interfaces) - Planned
+- ⏳ Document (3 interfaces) - Planned
 
-### Phase 2: Chaos Testing Integration (Q2 2026)
+### Phase 2: Performance Baseline Tests (Q2 2026)
 
-- **Network Partitions**: Test plugin behavior during network failures
-- **Backend Crashes**: Verify recovery after backend restart
-- **Slow Backends**: Test timeout and circuit breaker behavior
+Add performance benchmarks to interface tests:
+```go
+func (s *KeyValueBasicTestSuite) BenchmarkSet() {
+    // Verify latency < P99 SLO (5ms)
+    // Verify throughput > 10k ops/sec
+}
+```
 
-### Phase 3: Multi-Backend Tests (Q3 2026)
+### Phase 3: Chaos Testing (Q3 2026)
 
-- **Cross-Backend Operations**: Test operations spanning multiple backends
-- **Data Consistency**: Verify consistency across backend types
-- **Migration Testing**: Test data migration between backends
+Test interface compliance under failure conditions:
+- Network partitions
+- Backend crashes
+- Slow backends (timeout testing)
 
-## Related RFCs and ADRs
+## Related Documents
 
-- **RFC-008**: Proxy Plugin Architecture (defines plugin interface)
-- **RFC-009**: Distributed Reliability Patterns (circuit breakers, retries)
-- **ADR-047**: OpenTelemetry Tracing Integration (tracing in tests)
-- **ADR-008**: Observability Strategy (metrics collection)
+- [MEMO-006: Backend Interface Decomposition](/memos/memo-006-backend-interface-decomposition-schema-registry) - Interface design principles
+- [RFC-008: Proxy Plugin Architecture](/rfc/rfc-008-proxy-plugin-architecture) - Plugin system overview
+- [MEMO-004: Backend Plugin Implementation Guide](/memos/memo-004-backend-plugin-implementation-guide) - Backend implementability rankings
 
-## References
+## Revision History
 
-- [testcontainers-go](https://github.com/testcontainers/testcontainers-go)
-- [Go Testing Best Practices](https://go.dev/doc/tutorial/add-a-test)
-- [Table-Driven Tests in Go](https://go.dev/wiki/TableDrivenTests)
-- [PostgreSQL Testing with Docker](https://www.postgresql.org/docs/current/regress.html)
-- [Kafka Testing Documentation](https://kafka.apache.org/documentation/#testing)
-
----
-
-**Status**: Draft
-**Next Steps**:
-1. Implement authentication test suite in `tests/acceptance/suites/auth_suite.go`
-2. Create PostgreSQL verification suite as reference implementation
-3. Set up testcontainers infrastructure for all backends
-4. Configure GitHub Actions workflow
-5. Document test writing guide for plugin developers
-6. Create video walkthrough of running tests locally
+- 2025-10-09: Rewritten based on MEMO-006 interface decomposition principles - changed from backend-type testing to interface-based testing

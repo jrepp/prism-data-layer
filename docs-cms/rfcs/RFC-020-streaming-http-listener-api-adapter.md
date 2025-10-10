@@ -1186,10 +1186,10 @@ namespaces:
 
 ## Related Documents
 
-- [RFC-019: Plugin SDK Authorization Layer](/rfc/RFC-019-plugin-sdk-authorization-layer) - Authorization in plugins
-- [MEMO-006: Backend Interface Decomposition](/memos/MEMO-006-backend-interface-decomposition-schema-registry) - Interface decomposition approach
-- [RFC-014: Layered Data Access Patterns](/rfc/RFC-014-layered-data-access-patterns) - Layer 1 primitives
-- [RFC-017: Multicast Registry Pattern](/rfc/RFC-017-multicast-registry-pattern) - Pattern coordinator example
+- [RFC-019: Plugin SDK Authorization Layer](/rfc/rfc-019-plugin-sdk-authorization-layer) - Authorization in plugins
+- [MEMO-006: Backend Interface Decomposition](/memos/memo-006-backend-interface-decomposition-schema-registry) - Interface decomposition approach
+- [RFC-014: Layered Data Access Patterns](/rfc/rfc-014-layered-data-access-patterns) - Layer 1 primitives
+- [RFC-017: Multicast Registry Pattern](/rfc/rfc-017-multicast-registry-pattern) - Pattern coordinator example
 
 ## Revision History
 

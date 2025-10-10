@@ -5,7 +5,7 @@ status: Proposed
 author: Platform Team
 created: 2025-10-09
 updated: 2025-10-09
-tags: [authorization, plugin, sdk, security, tokens, policy, go]
+tags: [authorization, plugin, sdk, security, tokens, policy, go, vault, credentials]
 ---
 
 # RFC-019: Plugin SDK Authorization Layer
@@ -22,6 +22,15 @@ This ensures plugins respect the same authorization policies as the proxy, creat
 
 ## Motivation
 
+### Architectural Decision: Token Validation at Plugin Layer
+
+**CRITICAL**: Token validation and exchange are **intentionally pushed to plugins** (not the proxy) because:
+
+1. **Per-Session Operation**: Token validation and credential exchange happen once per session, not per request
+2. **High-Latency Operation**: Token validation (JWT verification, OIDC discovery) adds latency (~10-50ms)
+3. **Secret Management Integration**: Plugins use validated tokens to fetch backend credentials from Vault
+4. **Defense-in-Depth**: Plugins must validate independently even if proxy validates (zero-trust)
+
 ### Current Gap
 
 Currently, **plugins receive all requests without authorization checks**:
@@ -29,11 +38,11 @@ Currently, **plugins receive all requests without authorization checks**:
 ```text
 ┌─────────────────────┐
 │   Prism Proxy       │
-│   ✅ Validates token │
-│   ✅ Checks authz    │
+│   ❌ No token check  │  ← Proxy passes token through
+│   ➡️  Forwards token  │
 └──────────┬──────────┘
            │
-           │ gRPC (no token validation)
+           │ gRPC (token in metadata)
            ▼
 ┌─────────────────────┐
 │   Plugin (Redis)    │
@@ -51,36 +60,41 @@ Currently, **plugins receive all requests without authorization checks**:
 2. **Plugin-level vulnerabilities**: Compromised plugin can access all data
 3. **Inconsistent enforcement**: Plugins may implement different (or no) authorization
 4. **Audit gaps**: Authorization events not tracked at plugin layer
+5. **No credential isolation**: All plugins share same backend credentials
 
 ### Desired State
 
-**Plugins validate tokens and enforce policies**:
+**Plugins validate tokens, exchange for credentials, and enforce policies**:
 
 ```text
 ┌─────────────────────┐
 │   Prism Proxy       │
-│   ✅ Validates token │
-│   ✅ Checks authz    │
+│   ➡️  Forwards token  │  ← Proxy is stateless, passes token
+│   ❌ No validation   │
 └──────────┬──────────┘
            │
            │ gRPC (token in metadata)
            ▼
-┌─────────────────────┐
-│   Plugin (Redis)    │
-│   ✅ Validates token │  ← NEW
-│   ✅ Checks authz    │  ← NEW
-│   ✅ Audits access   │  ← NEW
-└──────────┬──────────┘
+┌─────────────────────────────────────────────────┐
+│   Plugin (Redis)                                │
+│   ✅ Validates token per session ← NEW          │
+│   ✅ Exchanges token for credentials (Vault) ←  │
+│   ✅ Checks authz via Topaz                     │
+│   ✅ Audits access                              │
+└──────────┬──────────────────────────────────────┘
            │
-           ▼
+           ▼ (per-session credentials from Vault)
       [Redis Backend]
 ```
 
 **Benefits**:
-- ✅ **Defense-in-depth**: Authorization enforced at proxy AND plugin
+- ✅ **Per-session credential isolation**: Each user session gets unique backend credentials from Vault
+- ✅ **High-latency operations amortized**: Token validation once per session, not per request
+- ✅ **Defense-in-depth**: Plugin-side validation even if proxy bypassed
 - ✅ **Consistent policies**: All plugins use same Topaz policies
-- ✅ **Audit completeness**: All data access logged
-- ✅ **Zero-trust architecture**: Never trust downstream components
+- ✅ **Audit completeness**: All data access logged at plugin layer
+- ✅ **Zero-trust architecture**: Never trust upstream components (proxy)
+- ✅ **Secret rotation**: Vault manages credential lifecycle, plugins fetch fresh credentials
 
 ## Design Principles
 
@@ -172,6 +186,312 @@ authz.Audit(ctx, AuditEvent{
     Plugin:     "redis-plugin",
     Backend:    "redis://localhost:6379",
 })
+```
+
+### 5. Token Exchange and Credential Management
+
+**Plugins exchange validated tokens for per-session backend credentials from Vault**:
+
+#### Why Token Exchange?
+
+**Problem**: Shared backend credentials (same Redis password for all users) prevent:
+- Per-user audit trails in backend logs
+- Fine-grained access control at backend level
+- Credential rotation without downtime
+- User-specific rate limiting
+
+**Solution**: After validating the token, plugins use it to fetch **per-session backend credentials** from Vault:
+
+```go
+// After token validation
+claims, err := authz.ValidateToken(ctx, token)
+
+// Exchange token for backend credentials from Vault
+credentials, err := vault.GetCredentials(claims.UserID, "redis", namespace)
+// credentials = { username: "user-alice-session-abc123", password: "..." }
+
+// Use per-session credentials for backend connection
+redisClient := redis.NewClient(&redis.Options{
+    Addr:     "localhost:6379",
+    Username: credentials.Username,  // Per-user username
+    Password: credentials.Password,  // Short-lived password from Vault
+})
+```
+
+#### Vault Integration Architecture
+
+```text
+┌─────────────────────────────────────────────────────────────┐
+│                    Plugin Session Lifecycle                 │
+│                                                             │
+│  1. Validate Token                                          │
+│     ┌──────────────┐                                        │
+│     │ Token        │  Verify JWT signature, expiry,        │
+│     │ Validator    │  claims (sub, exp, aud)               │
+│     └──────────────┘                                        │
+│           │                                                  │
+│           ▼                                                  │
+│  2. Exchange Token for Credentials                          │
+│     ┌──────────────────────────────────────────┐            │
+│     │ Vault Token Exchange                     │            │
+│     │                                          │            │
+│     │ POST /v1/auth/jwt/login                  │            │
+│     │ {                                        │            │
+│     │   "jwt": "<user-token>",                 │            │
+│     │   "role": "prism-redis-plugin"           │            │
+│     │ }                                        │            │
+│     │                                          │            │
+│     │ Response:                                │            │
+│     │ {                                        │            │
+│     │   "auth": {                              │            │
+│     │     "client_token": "<vault-token>",     │            │
+│     │     "lease_duration": 3600               │            │
+│     │   }                                      │            │
+│     │ }                                        │            │
+│     └──────────────────────────────────────────┘            │
+│           │                                                  │
+│           ▼                                                  │
+│  3. Fetch Backend Credentials                               │
+│     ┌──────────────────────────────────────────┐            │
+│     │ GET /v1/database/creds/redis-role        │            │
+│     │ Header: X-Vault-Token: <vault-token>     │            │
+│     │                                          │            │
+│     │ Response:                                │            │
+│     │ {                                        │            │
+│     │   "data": {                              │            │
+│     │     "username": "v-jwt-alice-abc123",    │            │
+│     │     "password": "A1b2C3d4...",           │            │
+│     │   },                                     │            │
+│     │   "lease_duration": 3600,                │            │
+│     │   "renewable": true                      │            │
+│     │ }                                        │            │
+│     └──────────────────────────────────────────┘            │
+│           │                                                  │
+│           ▼                                                  │
+│  4. Connect to Backend with Session Credentials             │
+│     ┌──────────────────────────────────────────┐            │
+│     │ Redis Connection                         │            │
+│     │ AUTH v-jwt-alice-abc123 A1b2C3d4...      │            │
+│     │                                          │            │
+│     │ Redis ACL: User-specific permissions     │            │
+│     │ - READ keys matching "user:alice:*"      │            │
+│     │ - No DELETE permission                   │            │
+│     └──────────────────────────────────────────┘            │
+│                                                             │
+│  5. Credential Renewal (Background)                         │
+│     Every lease_duration/2:                                 │
+│     - Renew Vault token                                     │
+│     - Renew backend credentials                             │
+│     - Update Redis connection pool                          │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+```
+
+#### Per-Session Credential Benefits
+
+1. **Audit Trail**: Backend logs show which user accessed what data
+   ```text
+   Redis log: [AUTH] v-jwt-alice-abc123 authenticated
+   Redis log: [GET] v-jwt-alice-abc123 accessed key "user:alice:profile"
+   ```
+
+2. **Fine-Grained Access Control**: Vault generates credentials with user-specific ACLs
+   ```sql
+   -- Vault generates PostgreSQL user with row-level security
+   CREATE USER "v-jwt-alice-abc123" WITH PASSWORD '...';
+   GRANT SELECT ON orders WHERE user_id = 'alice' TO "v-jwt-alice-abc123";
+   ```
+
+3. **Automatic Credential Rotation**: Vault rotates credentials every session/hour
+   - Plugin fetches new credentials before expiry
+   - No shared long-lived credentials
+   - Breach of one session doesn't compromise others
+
+4. **Rate Limiting**: Backend can rate-limit per user, not per plugin
+   ```text
+   Redis: LIMIT USER v-jwt-alice-abc123 TO 1000 ops/second
+   ```
+
+#### Implementation in Plugin SDK
+
+```go
+// pkg/authz/vault_client.go
+package authz
+
+import (
+    vault "github.com/hashicorp/vault/api"
+)
+
+// VaultClient fetches per-session backend credentials
+type VaultClient struct {
+    client *vault.Client
+    config VaultConfig
+}
+
+type VaultConfig struct {
+    Address    string        // Vault address (https://vault:8200)
+    Namespace  string        // Vault namespace (optional)
+    Role       string        // JWT auth role (prism-redis-plugin)
+    AuthPath   string        // JWT auth mount path (auth/jwt)
+    SecretPath string        // Secret mount path (database/creds/redis-role)
+    RenewInterval time.Duration // Renew credentials every X seconds
+}
+
+// ExchangeTokenForCredentials exchanges user JWT for backend credentials
+func (v *VaultClient) ExchangeTokenForCredentials(ctx context.Context, userToken string) (*BackendCredentials, error) {
+    // Step 1: Authenticate to Vault using user's JWT
+    secret, err := v.client.Logical().Write(v.config.AuthPath+"/login", map[string]interface{}{
+        "jwt":  userToken,
+        "role": v.config.Role,
+    })
+    if err != nil {
+        return nil, fmt.Errorf("vault JWT login failed: %w", err)
+    }
+
+    vaultToken := secret.Auth.ClientToken
+    leaseDuration := time.Duration(secret.Auth.LeaseDuration) * time.Second
+
+    // Step 2: Fetch backend credentials using Vault token
+    v.client.SetToken(vaultToken)
+    secret, err = v.client.Logical().Read(v.config.SecretPath)
+    if err != nil {
+        return nil, fmt.Errorf("failed to fetch backend credentials: %w", err)
+    }
+
+    creds := &BackendCredentials{
+        Username:      secret.Data["username"].(string),
+        Password:      secret.Data["password"].(string),
+        LeaseDuration: time.Duration(secret.LeaseDuration) * time.Second,
+        LeaseID:       secret.LeaseID,
+        VaultToken:    vaultToken,
+    }
+
+    // Step 3: Start background renewal goroutine
+    go v.renewCredentials(ctx, creds)
+
+    return creds, nil
+}
+
+// renewCredentials renews credentials before expiry
+func (v *VaultClient) renewCredentials(ctx context.Context, creds *BackendCredentials) {
+    ticker := time.NewTicker(creds.LeaseDuration / 2)
+    defer ticker.Stop()
+
+    for {
+        select {
+        case <-ctx.Done():
+            return
+        case <-ticker.C:
+            // Renew Vault token
+            _, err := v.client.Auth().Token().RenewSelf(int(creds.LeaseDuration.Seconds()))
+            if err != nil {
+                log.Error("failed to renew vault token", err)
+                return
+            }
+
+            // Renew backend credentials
+            _, err = v.client.Logical().Write("/sys/leases/renew", map[string]interface{}{
+                "lease_id": creds.LeaseID,
+            })
+            if err != nil {
+                log.Error("failed to renew backend credentials", err)
+                return
+            }
+
+            log.Info("renewed backend credentials", "lease_id", creds.LeaseID)
+        }
+    }
+}
+
+type BackendCredentials struct {
+    Username      string
+    Password      string
+    LeaseDuration time.Duration
+    LeaseID       string
+    VaultToken    string
+}
+```
+
+#### Configuration Example
+
+```yaml
+# plugins/redis/config.yaml
+authz:
+  token:
+    enabled: true
+    issuer: "https://auth.prism.io"
+    audience: "prism-plugins"
+
+  vault:
+    enabled: true
+    address: "https://vault:8200"
+    role: "prism-redis-plugin"
+    auth_path: "auth/jwt"
+    secret_path: "database/creds/redis-role"
+    renew_interval: 1800s  # Renew every 30 minutes
+    tls:
+      ca_cert: "/etc/prism/vault-ca.pem"
+
+  topaz:
+    enabled: true
+    endpoint: "localhost:8282"
+```
+
+#### Vault Policy for Plugin
+
+```hcl
+# Vault policy for Redis plugin
+path "database/creds/redis-role" {
+  capabilities = ["read"]
+}
+
+path "auth/token/renew-self" {
+  capabilities = ["update"]
+}
+
+path "sys/leases/renew" {
+  capabilities = ["update"]
+}
+```
+
+#### Credential Lifecycle
+
+```mermaid
+sequenceDiagram
+    participant Client
+    participant Proxy
+    participant Plugin
+    participant Vault
+    participant Redis
+
+    Client->>Proxy: Request (JWT token)
+    Proxy->>Plugin: Forward (JWT in metadata)
+
+    activate Plugin
+    Note over Plugin: Per-Session Setup (once)
+
+    Plugin->>Plugin: Validate JWT token
+    Plugin->>Vault: POST /auth/jwt/login<br/>(user JWT + role)
+    Vault-->>Plugin: Vault token (1h TTL)
+
+    Plugin->>Vault: GET /database/creds/redis-role<br/>(Vault token)
+    Vault-->>Plugin: { username, password } (1h lease)
+
+    Plugin->>Redis: AUTH username password
+    Redis-->>Plugin: OK
+
+    Note over Plugin: Session Active
+
+    loop Every 30 minutes
+        Plugin->>Vault: Renew token
+        Plugin->>Vault: Renew credentials lease
+    end
+
+    Note over Plugin: Session End
+
+    Plugin->>Vault: Revoke lease
+    Vault-->>Redis: DROP USER username
+    deactivate Plugin
 ```
 
 ## Architecture
@@ -1278,11 +1598,12 @@ authz:
 
 ## Related Documents
 
-- [ADR-050: Topaz for Policy Authorization](/adr/ADR-050-topaz-policy-authorization) - Topaz selection and architecture
-- [RFC-010: Admin Protocol with OIDC](/rfc/RFC-010-admin-protocol-oidc) - OIDC authentication
-- [RFC-011: Data Proxy Authentication](/rfc/RFC-011-data-proxy-authentication) - Secrets provider abstraction
-- [RFC-008: Proxy Plugin Architecture](/rfc/RFC-008-proxy-plugin-architecture) - Plugin system
+- [ADR-050: Topaz for Policy Authorization](/adr/adr-050-topaz-policy-authorization) - Topaz selection and architecture
+- [RFC-010: Admin Protocol with OIDC](/rfc/rfc-010-admin-protocol-oidc) - OIDC authentication
+- [RFC-011: Data Proxy Authentication](/rfc/rfc-011-data-proxy-authentication) - Secrets provider abstraction
+- [RFC-008: Proxy Plugin Architecture](/rfc/rfc-008-proxy-plugin-architecture) - Plugin system
 
 ## Revision History
 
+- 2025-10-09: Updated to reflect architectural decision: token validation and exchange pushed to plugins (not proxy) with Vault integration for per-session credentials
 - 2025-10-09: Initial RFC proposing authorization layer in plugin SDK

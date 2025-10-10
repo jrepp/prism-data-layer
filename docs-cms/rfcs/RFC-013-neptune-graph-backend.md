@@ -10,7 +10,7 @@ tags: [backend, graph, neptune, aws, plugin, implementation]
 
 # RFC-013: Neptune Graph Backend Implementation
 
-> **Note**: This RFC provides implementation details for AWS Neptune as the first graph database backend. See [ADR-041: Graph Database Backend Support](/prism-data-layer/adr/ADR-041-graph-database-backend) for the architectural decision and comparison of graph databases.
+> **Note**: This RFC provides implementation details for AWS Neptune as the first graph database backend. See [ADR-041: Graph Database Backend Support](/prism-data-layer/adr/adr-041-graph-database-backend) for the architectural decision and comparison of graph databases.
 
 ## Abstract
 

@@ -43,7 +43,7 @@ Track all significant architectural decisions made in the Prism project. Each AD
 
 **When to read**: Understanding why certain technical choices were made, evaluating alternatives that were considered, onboarding to the project's architectural philosophy.
 
-Browse ADRs in the sidebar or start with [ADR-001: Rust for Proxy](/adr/ADR-001-rust-for-proxy)
+Browse ADRs in the sidebar or start with [ADR-001: Rust for Proxy](/adr/adr-001-rust-for-proxy)
 
 ---
 
@@ -53,7 +53,7 @@ Detailed technical specifications for major features and components. RFCs provid
 
 **When to read**: Understanding complete system designs, implementing new features, reviewing proposed changes before they're built.
 
-Browse RFCs in the sidebar or start with [RFC-001: Prism Architecture](/rfc/RFC-001-prism-architecture)
+Browse RFCs in the sidebar or start with [RFC-001: Prism Architecture](/rfc/rfc-001-prism-architecture)
 
 ---
 
@@ -105,9 +105,9 @@ message UserProfile {
 
 ## Getting Started
 
-1. **Understand the Architecture**: Start with [RFC-001: Prism Architecture](/rfc/RFC-001-prism-architecture)
+1. **Understand the Architecture**: Start with [RFC-001: Prism Architecture](/rfc/rfc-001-prism-architecture)
 2. **Review Key Decisions**: Browse ADRs in the sidebar to understand architectural choices
-3. **Explore Interfaces**: Read [RFC-002: Data Layer Interface](/rfc/RFC-002-data-layer-interface)
+3. **Explore Interfaces**: Read [RFC-002: Data Layer Interface](/rfc/rfc-002-data-layer-interface)
 4. **Set Up Locally**: Follow the development setup in the [repository](https://github.com/jrepp/prism-data-layer)
 
 ## Performance Targets

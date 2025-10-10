@@ -1,18 +1,20 @@
 ---
 id: rfc-022
-title: "RFC-022: Core Plugin SDK Physical Code Layout"
+title: "RFC-022: Core Pattern SDK - Build System and Physical Code Layout"
 status: Proposed
 author: Platform Team
 created: 2025-10-09
 updated: 2025-10-09
-tags: [plugin, sdk, go, library, architecture, code-layout]
+tags: [pattern, sdk, go, library, architecture, code-layout, build-system, tooling]
 ---
 
-# RFC-022: Core Plugin SDK Physical Code Layout
+# RFC-022: Core Pattern SDK - Build System and Physical Code Layout
 
 ## Summary
 
-Define the physical code layout and package structure for the Prism core plugin SDK, making it publishable as a standard Go library (`github.com/prism/plugin-sdk`). This RFC establishes the directory structure, package organization, dependency boundaries, and versioning strategy to enable backend plugin authors to build plugins with a clean, well-organized SDK.
+Define the physical code layout, build system, and tooling infrastructure for the Prism core pattern SDK, making it publishable as a standard Go library (`github.com/prism/pattern-sdk`). This RFC establishes the directory structure, package organization, dependency boundaries, versioning strategy, Makefiles, compile-time validation, linting, and testing infrastructure to enable pattern authors to build sophisticated patterns with a clean, well-organized SDK.
+
+**Note**: This RFC focuses on **build system and tooling**. For pattern architecture and concurrency primitives, see [RFC-025: Pattern SDK Architecture](/rfc/rfc-025).
 
 **Goals**:
 1. **Clean separation**: Authentication, authorization, storage interfaces, utilities in separate packages
@@ -20,45 +22,57 @@ Define the physical code layout and package structure for the Prism core plugin 
 3. **Minimal dependencies**: Only essential external libraries
 4. **Versioning**: Semantic versioning with Go modules
 5. **Discoverability**: Clear package names and godoc-friendly structure
-6. **Extensibility**: Easy to add new interfaces without breaking existing plugins
+6. **Extensibility**: Easy to add new interfaces without breaking existing patterns
+7. **Build automation**: Makefiles, compile-time validation, linting, testing infrastructure
+8. **Developer experience**: Fast builds, instant feedback, clear error messages
 
 ## Motivation
 
 ### Problem
 
-Current plugin implementations have scattered code with unclear boundaries:
-- No standard SDK structure for plugin authors to follow
-- Authorization, token validation, and audit logging are reimplemented per plugin
+Current pattern implementations have scattered code with unclear boundaries:
+- No standard SDK structure for pattern authors to follow
+- Authorization, token validation, and audit logging are reimplemented per pattern
 - gRPC interceptors, connection management, and lifecycle hooks are duplicated
 - No clear versioning strategy for SDK evolution
-- Plugin authors need to figure out dependencies and setup from scratch
+- Pattern authors need to figure out dependencies and setup from scratch
+- **Build system inconsistencies**: No standardized Makefile targets, linting, or testing infrastructure
+- **Manual validation**: No compile-time checks for interface implementation or slot requirements
+- **Slow iteration**: Lack of automated tooling slows development
 
 ### Goals
 
-1. **Reusable SDK**: Backend plugin authors import `github.com/prism/plugin-sdk` and get batteries-included functionality
+1. **Reusable SDK**: Pattern authors import `github.com/prism/pattern-sdk` and get batteries-included functionality
 2. **Defense-in-depth**: Authorization layer built into SDK (RFC-019 implementation)
 3. **Standard interfaces**: Backend interface contracts from protobuf definitions
-4. **Lifecycle management**: Plugin startup, health checks, graceful shutdown
+4. **Lifecycle management**: Pattern startup, health checks, graceful shutdown (RFC-025)
 5. **Observability**: Structured logging, metrics, tracing built-in
-6. **Testing utilities**: Helpers for plugin integration tests
+6. **Testing utilities**: Helpers for pattern integration tests
+7. **Automated builds**: Makefile-based build system with parallel builds and caching
+8. **Compile-time validation**: Interface assertions, type checks, slot validation
+9. **Quality gates**: Linting, test coverage, pre-commit hooks
 
 ## Physical Code Layout
 
 ### Repository Structure
 
 ```text
-plugin-sdk/
-├── go.mod                      # Module: github.com/prism/plugin-sdk
+pattern-sdk/
+├── go.mod                      # Module: github.com/prism/pattern-sdk
 ├── go.sum
-├── README.md                   # SDK overview, quick start, examples
+├── README.md                   # SDK overview, quick start, patterns
 ├── LICENSE                     # Apache 2.0
+├── Makefile                    # Root Makefile (build, test, lint, proto)
+├── .golangci.yml               # Linting configuration
 ├── .github/
 │   └── workflows/
-│       ├── ci.yml              # Build, test, lint
+│       ├── ci.yml              # Build, test, lint, coverage
 │       └── release.yml         # Automated releases with tags
+├── .githooks/                  # Git hooks (pre-commit validation)
+│   └── pre-commit
 ├── doc.go                      # Package documentation root
 │
-├── auth/                       # Package: github.com/prism/plugin-sdk/auth
+├── auth/                       # Package: github.com/prism/pattern-sdk/auth
 │   ├── token.go                # Token validation (JWT/OIDC)
 │   ├── token_test.go
 │   ├── jwks.go                 # JWKS caching
@@ -66,7 +80,7 @@ plugin-sdk/
 │   ├── claims.go               # Token claims extraction
 │   └── doc.go                  # Package documentation
 │
-├── authz/                      # Package: github.com/prism/plugin-sdk/authz
+├── authz/                      # Package: github.com/prism/pattern-sdk/authz
 │   ├── topaz.go                # Topaz client for policy checks
 │   ├── topaz_test.go
 │   ├── cache.go                # Decision caching (5s TTL)
@@ -74,14 +88,14 @@ plugin-sdk/
 │   ├── policy.go               # Policy decision types
 │   └── doc.go                  # Package documentation
 │
-├── audit/                      # Package: github.com/prism/plugin-sdk/audit
+├── audit/                      # Package: github.com/prism/pattern-sdk/audit
 │   ├── logger.go               # Async audit logger
 │   ├── logger_test.go
 │   ├── event.go                # Audit event types
 │   ├── buffer.go               # Buffered event channel
 │   └── doc.go                  # Package documentation
 │
-├── plugin/                     # Package: github.com/prism/plugin-sdk/plugin
+├── plugin/                     # Package: github.com/prism/pattern-sdk/plugin
 │   ├── server.go               # gRPC server setup
 │   ├── server_test.go
 │   ├── lifecycle.go            # Startup, health, shutdown hooks
@@ -92,7 +106,7 @@ plugin-sdk/
 │   ├── interceptor_test.go
 │   └── doc.go                  # Package documentation
 │
-├── interfaces/                 # Package: github.com/prism/plugin-sdk/interfaces
+├── interfaces/                 # Package: github.com/prism/pattern-sdk/interfaces
 │   ├── keyvalue.go             # KeyValue interface contracts
 │   ├── pubsub.go               # PubSub interface contracts
 │   ├── stream.go               # Stream interface contracts
@@ -105,7 +119,7 @@ plugin-sdk/
 │   ├── document.go             # Document interface contracts
 │   └── doc.go                  # Package documentation
 │
-├── storage/                    # Package: github.com/prism/plugin-sdk/storage
+├── storage/                    # Package: github.com/prism/pattern-sdk/storage
 │   ├── connection.go           # Connection pooling helpers
 │   ├── connection_test.go
 │   ├── retry.go                # Retry logic with backoff
@@ -114,7 +128,7 @@ plugin-sdk/
 │   ├── health_test.go
 │   └── doc.go                  # Package documentation
 │
-├── observability/              # Package: github.com/prism/plugin-sdk/observability
+├── observability/              # Package: github.com/prism/pattern-sdk/observability
 │   ├── logging.go              # Structured logging (zap wrapper)
 │   ├── logging_test.go
 │   ├── metrics.go              # Prometheus metrics helpers
@@ -123,7 +137,7 @@ plugin-sdk/
 │   ├── tracing_test.go
 │   └── doc.go                  # Package documentation
 │
-├── testing/                    # Package: github.com/prism/plugin-sdk/testing
+├── testing/                    # Package: github.com/prism/pattern-sdk/testing
 │   ├── mock_auth.go            # Mock token validator
 │   ├── mock_authz.go           # Mock policy checker
 │   ├── mock_audit.go           # Mock audit logger
@@ -131,7 +145,7 @@ plugin-sdk/
 │   ├── fixtures.go             # Test fixtures (tokens, configs)
 │   └── doc.go                  # Package documentation
 │
-├── errors/                     # Package: github.com/prism/plugin-sdk/errors
+├── errors/                     # Package: github.com/prism/pattern-sdk/errors
 │   ├── errors.go               # Standard error types
 │   ├── grpc.go                 # gRPC status code mapping
 │   └── doc.go                  # Package documentation
@@ -147,7 +161,7 @@ plugin-sdk/
 │   ├── queue/                  # Queue interface protos
 │   └── ...                     # Other interfaces
 │
-├── examples/                   # Example plugins (not part of SDK)
+├── patterns/                   # Example plugins (not part of SDK)
 │   ├── memstore/               # MemStore example
 │   │   ├── main.go
 │   │   ├── keyvalue.go
@@ -204,7 +218,7 @@ type TokenValidatorConfig struct {
 
 **Usage Example**:
 ```go
-import "github.com/prism/plugin-sdk/auth"
+import "github.com/prism/pattern-sdk/auth"
 
 validator, err := auth.NewTokenValidator(&auth.TokenValidatorConfig{
     JWKSEndpoint: "https://dex.local/keys",
@@ -251,7 +265,7 @@ type TopazConfig struct {
 
 **Usage Example**:
 ```go
-import "github.com/prism/plugin-sdk/authz"
+import "github.com/prism/pattern-sdk/authz"
 
 checker, err := authz.NewTopazClient(&authz.TopazConfig{
     Endpoint: "localhost:8282",
@@ -303,7 +317,7 @@ type AuditConfig struct {
 
 **Usage Example**:
 ```go
-import "github.com/prism/plugin-sdk/audit"
+import "github.com/prism/pattern-sdk/audit"
 
 logger, err := audit.NewAuditLogger(&audit.AuditConfig{
     Destination: "stdout",
@@ -350,7 +364,7 @@ type ServerConfig struct {
 
 **Usage Example**:
 ```go
-import "github.com/prism/plugin-sdk/plugin"
+import "github.com/prism/pattern-sdk/plugin"
 
 server := plugin.NewServer(&plugin.ServerConfig{
     ListenAddress: ":50051",
@@ -448,7 +462,7 @@ func WithRetry(ctx context.Context, policy *RetryPolicy, fn func() error) error
 
 **Usage Example**:
 ```go
-import "github.com/prism/plugin-sdk/storage"
+import "github.com/prism/pattern-sdk/storage"
 
 policy := &storage.RetryPolicy{
     MaxAttempts:    3,
@@ -488,7 +502,7 @@ type Tracer interface {
 
 **Usage Example**:
 ```go
-import "github.com/prism/plugin-sdk/observability"
+import "github.com/prism/pattern-sdk/observability"
 
 logger := observability.NewLogger(&observability.LogConfig{
     Level: "info",
@@ -529,7 +543,7 @@ func NewTestServer(plugin interface{}) (*TestServer, error)
 
 **Usage Example**:
 ```go
-import "github.com/prism/plugin-sdk/testing"
+import "github.com/prism/pattern-sdk/testing"
 
 // Mock token validator for tests
 mockAuth := &testing.MockTokenValidator{
@@ -567,7 +581,7 @@ func FromGRPCStatus(st *status.Status) error
 
 **Usage Example**:
 ```go
-import "github.com/prism/plugin-sdk/errors"
+import "github.com/prism/pattern-sdk/errors"
 
 if key == "" {
     return nil, errors.ErrInvalidArgument
@@ -584,7 +598,7 @@ if !found {
 
 ```go
 // go.mod
-module github.com/prism/plugin-sdk
+module github.com/prism/pattern-sdk
 
 go 1.21
 
@@ -668,13 +682,13 @@ v2.0.0 - Breaking change (e.g., change interface signature)
 **Go Modules**:
 ```bash
 # Install specific version
-go get github.com/prism/plugin-sdk@v0.1.0
+go get github.com/prism/pattern-sdk@v0.1.0
 
 # Install latest
-go get github.com/prism/plugin-sdk@latest
+go get github.com/prism/pattern-sdk@latest
 
 # Install pre-release
-go get github.com/prism/plugin-sdk@v0.2.0-beta.1
+go get github.com/prism/pattern-sdk@v0.2.0-beta.1
 ```
 
 ### Version Compatibility
@@ -693,7 +707,7 @@ func NewValidator(cfg *Config) (*Validator, error) {
 }
 ```
 
-## Example Plugin Using SDK
+## Example Pattern Using SDK
 
 ### Complete MemStore Plugin
 
@@ -708,9 +722,9 @@ import (
     "os/signal"
     "syscall"
 
-    "github.com/prism/plugin-sdk/plugin"
-    "github.com/prism/plugin-sdk/observability"
-    pb "github.com/prism/plugin-sdk/proto/keyvalue"
+    "github.com/prism/pattern-sdk/plugin"
+    "github.com/prism/pattern-sdk/observability"
+    pb "github.com/prism/pattern-sdk/proto/keyvalue"
 )
 
 func main() {
@@ -761,10 +775,10 @@ import (
     "sync"
     "time"
 
-    "github.com/prism/plugin-sdk/interfaces"
-    "github.com/prism/plugin-sdk/observability"
-    "github.com/prism/plugin-sdk/errors"
-    pb "github.com/prism/plugin-sdk/proto/keyvalue"
+    "github.com/prism/pattern-sdk/interfaces"
+    "github.com/prism/pattern-sdk/observability"
+    "github.com/prism/pattern-sdk/errors"
+    pb "github.com/prism/pattern-sdk/proto/keyvalue"
 )
 
 type MemStorePlugin struct {
@@ -862,13 +876,13 @@ Go SDK for building Prism backend plugins with batteries-included authorization,
 
 ## Installation
 
-    go get github.com/prism/plugin-sdk@latest
+    go get github.com/prism/pattern-sdk@latest
 
 ## Quick Start
 
     import (
-        "github.com/prism/plugin-sdk/plugin"
-        pb "github.com/prism/plugin-sdk/proto/keyvalue"
+        "github.com/prism/pattern-sdk/plugin"
+        pb "github.com/prism/pattern-sdk/proto/keyvalue"
     )
 
     func main() {
@@ -894,13 +908,13 @@ Go SDK for building Prism backend plugins with batteries-included authorization,
 
 ## Documentation
 
-- [API Reference](https://pkg.go.dev/github.com/prism/plugin-sdk)
-- [Examples](./examples/)
-- [RFC-022: SDK Code Layout](https://jrepp.github.io/prism-data-layer/rfc/RFC-022-core-plugin-sdk-code-layout)
+- [API Reference](https://pkg.go.dev/github.com/prism/pattern-sdk)
+- [Examples](./patterns/)
+- [RFC-022: SDK Code Layout](https://jrepp.github.io/prism-data-layer/rfc/rfc-022-core-plugin-sdk-code-layout)
 
 ## Examples
 
-See [examples/](./examples/) directory for:
+See [patterns/](./patterns/) directory for:
 - MemStore plugin (in-memory KeyValue + List)
 - Redis plugin (KeyValue + PubSub + Stream)
 - Postgres plugin (KeyValue + Queue + TimeSeries)
@@ -930,7 +944,7 @@ Apache 2.0 - See [LICENSE](./LICENSE)
 //
 // Import the SDK and create a plugin server:
 //
-//     import "github.com/prism/plugin-sdk/plugin"
+//     import "github.com/prism/pattern-sdk/plugin"
 //
 //     server := plugin.NewServer(&plugin.ServerConfig{
 //         ListenAddress: ":50051",
@@ -957,7 +971,7 @@ Apache 2.0 - See [LICENSE](./LICENSE)
 //
 // Enable defense-in-depth authorization with Topaz policy checks:
 //
-//     import "github.com/prism/plugin-sdk/authz"
+//     import "github.com/prism/pattern-sdk/authz"
 //
 //     checker, err := authz.NewTopazClient(&authz.TopazConfig{
 //         Endpoint: "localhost:8282",
@@ -967,7 +981,7 @@ Apache 2.0 - See [LICENSE](./LICENSE)
 //
 // Structured logging and metrics:
 //
-//     import "github.com/prism/plugin-sdk/observability"
+//     import "github.com/prism/pattern-sdk/observability"
 //
 //     logger := observability.NewLogger(&observability.LogConfig{Level: "info"})
 //     logger.Info("Request received", observability.String("method", "Set"))
@@ -976,7 +990,7 @@ Apache 2.0 - See [LICENSE](./LICENSE)
 //
 // Use mock implementations for unit tests:
 //
-//     import "github.com/prism/plugin-sdk/testing"
+//     import "github.com/prism/pattern-sdk/testing"
 //
 //     mockAuth := &testing.MockTokenValidator{
 //         ValidateFunc: func(ctx, token) (*Claims, error) {
@@ -1099,8 +1113,8 @@ jobs:
 
 ### Phase 1: Extract Core SDK (Week 1)
 
-1. Create `github.com/prism/plugin-sdk` repository
-2. Extract `auth`, `authz`, `audit` packages from RFC-019 examples
+1. Create `github.com/prism/pattern-sdk` repository
+2. Extract `auth`, `authz`, `audit` packages from RFC-019 patterns
 3. Add `plugin` package with server and lifecycle
 4. Add `interfaces` package with Go interface definitions
 5. Add `observability` package with logging/metrics/tracing
@@ -1135,7 +1149,7 @@ jobs:
 2. **Consistent patterns**: All plugins use same auth/authz/audit patterns
 3. **Production-ready**: Observability, health checks, graceful shutdown built-in
 4. **Easy testing**: Mock implementations for unit tests
-5. **Clear documentation**: godoc and examples for all packages
+5. **Clear documentation**: godoc and patterns for all packages
 
 ### For Prism Platform
 
@@ -1151,6 +1165,681 @@ jobs:
 2. **Reliable plugins**: SDK-based plugins follow best practices
 3. **Faster bug fixes**: SDK bugs fixed once, all plugins benefit
 4. **Feature parity**: New SDK features available to all backends
+
+## Build System and Tooling
+
+### Comprehensive Makefile Structure
+
+The pattern SDK uses a hierarchical Makefile system:
+
+```makefile
+# pattern-sdk/Makefile
+.PHONY: all build test test-unit test-integration lint proto clean coverage validate install-tools
+
+# Default target
+all: validate test build
+
+# Install development tools
+install-tools:
+	@echo "Installing development tools..."
+	go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+	go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
+	go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
+
+# Generate protobuf code
+proto:
+	@echo "Generating protobuf code..."
+	./tools/proto-gen.sh
+
+# Build SDK (verify compilation)
+build:
+	@echo "Building SDK..."
+	@CGO_ENABLED=0 go build ./...
+
+# Run all tests
+test: test-unit test-integration
+
+# Unit tests (fast, no external dependencies)
+test-unit:
+	@echo "Running unit tests..."
+	@go test -v -race -short -coverprofile=coverage-unit.out ./...
+
+# Integration tests (requires testcontainers)
+test-integration:
+	@echo "Running integration tests..."
+	@go test -v -race -run Integration -coverprofile=coverage-integration.out ./...
+
+# Lint code
+lint:
+	@echo "Linting..."
+	@golangci-lint run ./...
+
+# Coverage report
+coverage:
+	@echo "Generating coverage report..."
+	@go test -v -race -coverprofile=coverage.out -covermode=atomic ./...
+	@go tool cover -html=coverage.out -o coverage.html
+	@echo "Coverage report: coverage.html"
+
+# Compile-time validation
+validate: validate-interfaces validate-slots
+
+validate-interfaces:
+	@echo "Validating interface implementations..."
+	@./tools/validate-interfaces.sh
+
+validate-slots:
+	@echo "Validating slot configurations..."
+	@go run tools/validate-slots/main.go
+
+# Clean build artifacts
+clean:
+	@echo "Cleaning..."
+	@rm -rf proto/*.pb.go coverage*.out coverage.html
+	@go clean -cache -testcache
+
+# Format code
+fmt:
+	@echo "Formatting code..."
+	@go fmt ./...
+	@goimports -w .
+
+# Release (tag and push)
+release:
+	@echo "Releasing..."
+	@./tools/release.sh
+```
+
+### Pattern-Specific Makefiles
+
+Each pattern has its own Makefile:
+
+```makefile
+# patterns/multicast-registry/Makefile
+PATTERN_NAME := multicast-registry
+BINARY_NAME := $(PATTERN_NAME)
+
+.PHONY: all build test lint run clean
+
+all: test build
+
+# Build pattern binary
+build:
+	@echo "Building $(PATTERN_NAME)..."
+	@CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
+		-ldflags="-s -w" \
+		-o bin/$(BINARY_NAME) \
+		./cmd/$(PATTERN_NAME)
+
+# Build Docker image
+docker:
+	@echo "Building Docker image..."
+	@docker build -t prism/$(PATTERN_NAME):latest .
+
+# Run tests
+test:
+	@echo "Running tests..."
+	@go test -v -race -cover ./...
+
+# Run linter
+lint:
+	@echo "Linting..."
+	@golangci-lint run ./...
+
+# Run pattern locally
+run: build
+	@echo "Running $(PATTERN_NAME)..."
+	@./bin/$(BINARY_NAME) -config config/local.yaml
+
+# Clean build artifacts
+clean:
+	@echo "Cleaning..."
+	@rm -rf bin/
+	@go clean -cache
+```
+
+### Build Targets Reference
+
+| Target | Description | When to Use |
+|--------|-------------|-------------|
+| `make all` | Validate, test, build | Default CI/CD target |
+| `make build` | Compile SDK packages | Verify compilation |
+| `make test` | Run all tests | Before commit |
+| `make test-unit` | Fast unit tests only | During development |
+| `make test-integration` | Slow integration tests | Pre-push, CI/CD |
+| `make lint` | Run linters | Pre-commit hook |
+| `make coverage` | Generate coverage report | Coverage gates |
+| `make validate` | Compile-time checks | Pre-commit, CI/CD |
+| `make proto` | Regenerate protobuf | After .proto changes |
+| `make clean` | Remove artifacts | Clean slate rebuild |
+| `make fmt` | Format code | Auto-fix style |
+
+## Compile-Time Validation
+
+### Interface Implementation Checks
+
+Use Go's compile-time type assertions to verify interface implementation:
+
+```go
+// interfaces/assertions.go
+package interfaces
+
+// Compile-time assertions for KeyValue interfaces
+var (
+    _ KeyValueBasic          = (*assertKeyValueBasic)(nil)
+    _ KeyValueScan           = (*assertKeyValueScan)(nil)
+    _ KeyValueTTL            = (*assertKeyValueTTL)(nil)
+    _ KeyValueTransactional  = (*assertKeyValueTransactional)(nil)
+    _ KeyValueBatch          = (*assertKeyValueBatch)(nil)
+)
+
+// Assertion types (never instantiated)
+type assertKeyValueBasic struct{}
+type assertKeyValueScan struct{}
+type assertKeyValueTTL struct{}
+type assertKeyValueTransactional struct{}
+type assertKeyValueBatch struct{}
+
+// Methods must exist or compilation fails
+func (a *assertKeyValueBasic) Set(ctx context.Context, req *pb.SetRequest) (*pb.SetResponse, error) {
+    panic("assertion type")
+}
+
+func (a *assertKeyValueBasic) Get(ctx context.Context, req *pb.GetRequest) (*pb.GetResponse, error) {
+    panic("assertion type")
+}
+
+// ... other methods
+```
+
+### Pattern Interface Validation
+
+Patterns can validate interface implementation at compile time:
+
+```go
+// patterns/multicast-registry/pattern.go
+package multicast_registry
+
+import (
+    "github.com/prism/pattern-sdk/interfaces"
+    "github.com/prism/pattern-sdk/lifecycle"
+)
+
+// Compile-time assertions
+var (
+    _ lifecycle.Pattern = (*Pattern)(nil)  // Implements Pattern interface
+    _ interfaces.KeyValueScanDriver = (*registryBackend)(nil)  // Registry backend
+    _ interfaces.PubSubDriver = (*messagingBackend)(nil)  // Messaging backend
+)
+
+type Pattern struct {
+    // ... fields
+}
+
+// Pattern interface methods
+func (p *Pattern) Name() string { return "multicast-registry" }
+func (p *Pattern) Initialize(ctx context.Context, config *lifecycle.Config, backends map[string]interface{}) error { /* ... */ }
+func (p *Pattern) Start(ctx context.Context) error { /* ... */ }
+func (p *Pattern) Shutdown(ctx context.Context) error { /* ... */ }
+func (p *Pattern) HealthCheck(ctx context.Context) error { /* ... */ }
+```
+
+### Validation Script
+
+```bash
+#!/usr/bin/env bash
+# tools/validate-interfaces.sh
+# Validates all interface implementations compile successfully
+
+set -euo pipefail
+
+echo "Validating interface implementations..."
+
+# Compile interfaces package
+if ! go build -o /dev/null ./interfaces/...; then
+    echo "❌ Interface validation failed"
+    exit 1
+fi
+
+# Check all patterns compile
+for pattern_dir in patterns/*/; do
+    pattern_name=$(basename "$pattern_dir")
+    echo "  Checking pattern: $pattern_name"
+
+    if ! (cd "$pattern_dir" && go build -o /dev/null ./...); then
+        echo "  ❌ Pattern $pattern_name failed compilation"
+        exit 1
+    fi
+
+    echo "  ✓ Pattern $pattern_name OK"
+done
+
+echo "✅ All interface validations passed"
+```
+
+### Slot Configuration Validation
+
+Validate pattern slot configurations at build time:
+
+```go
+// tools/validate-slots/main.go
+package main
+
+import (
+    "fmt"
+    "os"
+    "path/filepath"
+
+    "gopkg.in/yaml.v3"
+)
+
+type SlotConfig struct {
+    Name               string   `yaml:"name"`
+    RequiredInterfaces []string `yaml:"required_interfaces"`
+    Optional           bool     `yaml:"optional"`
+}
+
+type PatternConfig struct {
+    Name  string       `yaml:"name"`
+    Slots []SlotConfig `yaml:"slots"`
+}
+
+func main() {
+    // Load all pattern configs
+    matches, _ := filepath.Glob("patterns/*/pattern.yaml")
+
+    for _, configPath := range matches {
+        data, _ := os.ReadFile(configPath)
+
+        var config PatternConfig
+        if err := yaml.Unmarshal(data, &config); err != nil {
+            fmt.Printf("❌ Invalid YAML: %s
+", configPath)
+            os.Exit(1)
+        }
+
+        // Validate slots
+        for _, slot := range config.Slots {
+            if len(slot.RequiredInterfaces) == 0 && !slot.Optional {
+                fmt.Printf("❌ Pattern %s: Required slot %s has no interfaces
+",
+                    config.Name, slot.Name)
+                os.Exit(1)
+            }
+        }
+
+        fmt.Printf("✓ Pattern %s validated
+", config.Name)
+    }
+
+    fmt.Println("✅ All slot configurations valid")
+}
+```
+
+## Linting Configuration
+
+### golangci-lint Configuration
+
+```yaml
+# .golangci.yml
+linters-settings:
+  errcheck:
+    check-type-assertions: true
+    check-blank: true
+
+  govet:
+    enable-all: true
+
+  gocyclo:
+    min-complexity: 15
+
+  goconst:
+    min-len: 3
+    min-occurrences: 3
+
+  misspell:
+    locale: US
+
+  lll:
+    line-length: 120
+
+  gofmt:
+    simplify: true
+
+  goimports:
+    local-prefixes: github.com/prism/pattern-sdk
+
+linters:
+  enable:
+    - errcheck      # Unchecked errors
+    - gosimple      # Simplify code
+    - govet         # Vet examines Go source code
+    - ineffassign   # Unused assignments
+    - staticcheck   # Static analysis
+    - typecheck     # Type checker
+    - unused        # Unused constants, variables, functions
+    - gofmt         # Formatting
+    - goimports     # Import organization
+    - misspell      # Spelling
+    - goconst       # Repeated strings
+    - gocyclo       # Cyclomatic complexity
+    - lll           # Line length
+    - dupl          # Duplicate code detection
+    - gosec         # Security issues
+    - revive        # Fast, configurable linter
+
+  disable:
+    - varcheck      # Deprecated
+    - structcheck   # Deprecated
+    - deadcode      # Deprecated
+
+issues:
+  exclude-rules:
+    # Exclude some linters from test files
+    - path: _test\.go
+      linters:
+        - gocyclo
+        - errcheck
+        - dupl
+        - gosec
+
+    # Exclude generated files
+    - path: \.pb\.go$
+      linters:
+        - all
+
+  max-issues-per-linter: 0
+  max-same-issues: 0
+
+run:
+  timeout: 5m
+  tests: true
+  skip-dirs:
+    - proto
+    - vendor
+```
+
+### Pre-Commit Hook
+
+```bash
+#!/usr/bin/env bash
+# .githooks/pre-commit
+# Runs linting and validation before commit
+
+set -e
+
+echo "🔍 Running pre-commit checks..."
+
+# 1. Format check
+echo "  Checking formatting..."
+if ! make fmt > /dev/null 2>&1; then
+    echo "  ❌ Code formatting required"
+    echo "  Run: make fmt"
+    exit 1
+fi
+
+# 2. Lint
+echo "  Running linters..."
+if ! make lint > /dev/null 2>&1; then
+    echo "  ❌ Linting failed"
+    echo "  Run: make lint"
+    exit 1
+fi
+
+# 3. Validation
+echo "  Validating interfaces..."
+if ! make validate > /dev/null 2>&1; then
+    echo "  ❌ Validation failed"
+    echo "  Run: make validate"
+    exit 1
+fi
+
+# 4. Unit tests
+echo "  Running unit tests..."
+if ! make test-unit > /dev/null 2>&1; then
+    echo "  ❌ Tests failed"
+    echo "  Run: make test-unit"
+    exit 1
+fi
+
+echo "✅ Pre-commit checks passed"
+```
+
+### Installing Hooks
+
+```bash
+# Install hooks
+git config core.hooksPath .githooks
+chmod +x .githooks/pre-commit
+
+# Or copy to .git/hooks
+cp .githooks/pre-commit .git/hooks/pre-commit
+chmod +x .git/hooks/pre-commit
+```
+
+## Testing Infrastructure
+
+### Test Organization
+
+```text
+pattern-sdk/
+├── auth/
+│   ├── token.go
+│   ├── token_test.go           # Unit tests
+│   └── token_integration_test.go  # Integration tests (build tag)
+│
+├── patterns/
+│   ├── multicast-registry/
+│   │   ├── pattern.go
+│   │   ├── pattern_test.go     # Unit tests
+│   │   └── integration_test.go # Integration tests
+│   │
+│   └── session-store/
+│       ├── pattern.go
+│       ├── pattern_test.go
+│       └── integration_test.go
+│
+└── testing/
+    ├── fixtures.go              # Test fixtures
+    ├── containers.go            # Testcontainers helpers
+    └── mock_*.go                # Mock implementations
+```
+
+### Test Build Tags
+
+```go
+// +build integration
+
+package multicast_registry_test
+
+import (
+    "context"
+    "testing"
+
+    "github.com/testcontainers/testcontainers-go"
+)
+
+func TestMulticastRegistryIntegration(t *testing.T) {
+    if testing.Short() {
+        t.Skip("Skipping integration test in short mode")
+    }
+
+    // Setup testcontainers...
+}
+```
+
+### Coverage Requirements
+
+```makefile
+# Makefile - Coverage gates
+COVERAGE_THRESHOLD := 80
+
+test-coverage:
+	@echo "Running tests with coverage..."
+	@go test -v -race -coverprofile=coverage.out -covermode=atomic ./...
+	@go tool cover -func=coverage.out -o coverage.txt
+	@COVERAGE=$$(grep total coverage.txt | awk '{print $$3}' | sed 's/%//'); \
+	if [ $$(echo "$$COVERAGE < $(COVERAGE_THRESHOLD)" | bc) -eq 1 ]; then \
+		echo "❌ Coverage $$COVERAGE% is below threshold $(COVERAGE_THRESHOLD)%"; \
+		exit 1; \
+	fi
+	@echo "✅ Coverage: $$(grep total coverage.txt | awk '{print $$3}')"
+```
+
+### Testcontainers Integration
+
+```go
+// testing/containers.go
+package testing
+
+import (
+    "context"
+    "time"
+
+    "github.com/testcontainers/testcontainers-go"
+    "github.com/testcontainers/testcontainers-go/wait"
+)
+
+// RedisContainer starts a Redis testcontainer
+func RedisContainer(ctx context.Context) (testcontainers.Container, string, error) {
+    req := testcontainers.ContainerRequest{
+        Image:        "redis:7-alpine",
+        ExposedPorts: []string{"6379/tcp"},
+        WaitingFor: wait.ForLog("Ready to accept connections").
+            WithStartupTimeout(30 * time.Second),
+    }
+
+    container, err := testcontainers.GenericContainer(ctx, testcontainers.GenericContainerRequest{
+        ContainerRequest: req,
+        Started:          true,
+    })
+    if err != nil {
+        return nil, "", err
+    }
+
+    host, _ := container.Host(ctx)
+    port, _ := container.MappedPort(ctx, "6379")
+    endpoint := host + ":" + port.Port()
+
+    return container, endpoint, nil
+}
+
+// Usage in tests:
+func TestWithRedis(t *testing.T) {
+    ctx := context.Background()
+    container, endpoint, err := testing.RedisContainer(ctx)
+    require.NoError(t, err)
+    defer container.Terminate(ctx)
+
+    // Test using Redis at endpoint...
+}
+```
+
+### Benchmark Tests
+
+```go
+// patterns/multicast-registry/benchmark_test.go
+package multicast_registry_test
+
+import (
+    "context"
+    "testing"
+)
+
+func BenchmarkPublishMulticast_10Subscribers(b *testing.B) {
+    pattern := setupPattern(b, 10)
+    event := createTestEvent()
+
+    b.ResetTimer()
+    for i := 0; i < b.N; i++ {
+        pattern.PublishMulticast(context.Background(), event)
+    }
+}
+
+func BenchmarkPublishMulticast_100Subscribers(b *testing.B) {
+    pattern := setupPattern(b, 100)
+    event := createTestEvent()
+
+    b.ResetTimer()
+    for i := 0; i < b.N; i++ {
+        pattern.PublishMulticast(context.Background(), event)
+    }
+}
+
+// Run benchmarks:
+// go test -bench=. -benchmem ./patterns/multicast-registry/
+```
+
+### CI/CD Integration
+
+```yaml
+# .github/workflows/ci.yml (extended)
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+          cache: true
+
+      - name: Install tools
+        run: make install-tools
+
+      - name: Validate interfaces
+        run: make validate
+
+      - name: Lint
+        run: make lint
+
+      - name: Unit tests
+        run: make test-unit
+
+      - name: Integration tests
+        run: make test-integration
+
+      - name: Coverage gate
+        run: make test-coverage
+
+      - name: Upload coverage
+        uses: codecov/codecov-action@v4
+        with:
+          file: ./coverage.out
+          fail_ci_if_error: true
+
+  build:
+    runs-on: ubuntu-latest
+    needs: test
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+
+      - name: Build SDK
+        run: make build
+
+      - name: Build patterns
+        run: |
+          for pattern in patterns/*/; do
+            echo "Building $(basename $pattern)..."
+            (cd $pattern && make build)
+          done
+```
+
 
 ## Open Questions
 
@@ -1172,10 +1861,10 @@ jobs:
 
 ## Related Documents
 
-- [RFC-019: Plugin SDK Authorization Layer](/rfc/RFC-019-plugin-sdk-authorization-layer) - Authorization implementation
-- [RFC-008: Proxy Plugin Architecture](/rfc/RFC-008-proxy-plugin-architecture) - Plugin system overview
-- [MEMO-006: Backend Interface Decomposition](/memos/MEMO-006-backend-interface-decomposition-schema-registry) - Interface design principles
-- [RFC-021: POC 1 Implementation Plan](/rfc/RFC-021-poc1-keyvalue-memstore-implementation) - MemStore plugin example
+- [RFC-019: Plugin SDK Authorization Layer](/rfc/rfc-019-plugin-sdk-authorization-layer) - Authorization implementation
+- [RFC-008: Proxy Plugin Architecture](/rfc/rfc-008-proxy-plugin-architecture) - Plugin system overview
+- [MEMO-006: Backend Interface Decomposition](/memos/memo-006-backend-interface-decomposition-schema-registry) - Interface design principles
+- [RFC-021: POC 1 Implementation Plan](/rfc/rfc-021-poc1-keyvalue-memstore-implementation) - MemStore plugin example
 
 ## Revision History
 

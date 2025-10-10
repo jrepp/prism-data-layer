@@ -76,7 +76,7 @@ RFCs serve to:
 **Status**: Draft
 **Summary**: Python-based command-line interface for administering Prism, covering namespace management, backend health checks, session inspection, metrics, and shadow traffic management using Typer and Rich for excellent developer experience.
 
-[Read RFC-006 →](./RFC-006-python-admin-cli.md)
+[Read RFC-006 →](/rfc/rfc-006)
 
 ---
 
@@ -85,7 +85,7 @@ RFCs serve to:
 **Status**: Draft
 **Summary**: Standardized cache strategies including look-aside (cache-aside) and write-through patterns for common use cases like table readers and object storage metadata, with configuration-driven behavior and observability.
 
-[Read RFC-007 →](./RFC-007-cache-strategies.md)
+[Read RFC-007 →](/rfc/rfc-007)
 
 ---
 
@@ -94,7 +94,7 @@ RFCs serve to:
 **Status**: Draft
 **Summary**: Architectural separation between minimal proxy core (networking, auth, config) and backend plugins (data-source-specific logic), enabling extensibility through in-process, sidecar, and remote plugin deployment models with secure channels.
 
-[Read RFC-008 →](./RFC-008-proxy-plugin-architecture.md)
+[Read RFC-008 →](/rfc/rfc-008)
 
 ---
 
@@ -103,7 +103,7 @@ RFCs serve to:
 **Status**: Proposed
 **Summary**: High-level distributed reliability patterns that push complexity into the data access layer: Tiered Storage, Write-Ahead Log, Claim Check, Event Sourcing, Change Data Capture, CQRS, and Outbox patterns for building scalable, fault-tolerant systems.
 
-[Read RFC-009 →](./RFC-009-distributed-reliability-patterns.md)
+[Read RFC-009 →](/rfc/rfc-009)
 
 ---
 
