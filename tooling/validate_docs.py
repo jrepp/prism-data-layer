@@ -113,22 +113,82 @@ class PrismDocValidator:
         """Scan all markdown files"""
         self.log("\n📂 Scanning documents...")
 
+        # Filename patterns (TLA-NNN-name-with-dashes.md)
+        adr_pattern = re.compile(r'^ADR-(\d{3})-(.+)\.md$')
+        rfc_pattern = re.compile(r'^RFC-(\d{3})-(.+)\.md$')
+        memo_pattern = re.compile(r'^MEMO-(\d{3})-(.+)\.md$')
+
         # Scan ADRs
         adr_dir = self.repo_root / "docs-cms" / "adr"
         if adr_dir.exists():
             for md_file in sorted(adr_dir.glob("*.md")):
-                # Skip README and template files
-                if md_file.name not in ["README.md", "000-template.md"]:
-                    doc = self._parse_document(md_file, "adr")
-                    if doc:
-                        self.documents.append(doc)
-                        self.file_to_doc[md_file] = doc
+                # Skip README and validate filename format
+                if md_file.name == "README.md":
+                    continue
+
+                match = adr_pattern.match(md_file.name)
+                if not match:
+                    self.errors.append(f"Invalid ADR filename: {md_file.name} (expected: ADR-NNN-name-with-dashes.md)")
+                    self.log(f"   ✗ {md_file.name}: Invalid filename format")
+                    continue
+
+                num, slug = match.groups()
+                # Skip template files (000)
+                if num == "000":
+                    self.log(f"   ⊘ {md_file.name}: Skipping template file")
+                    continue
+
+                doc = self._parse_document(md_file, "adr")
+                if doc:
+                    self.documents.append(doc)
+                    self.file_to_doc[md_file] = doc
 
         # Scan RFCs
         rfc_dir = self.repo_root / "docs-cms" / "rfcs"
         if rfc_dir.exists():
-            for md_file in sorted(rfc_dir.glob("RFC-*.md")):
+            for md_file in sorted(rfc_dir.glob("*.md")):
+                # Skip index files and validate filename format
+                if md_file.name in ["README.md", "index.md"]:
+                    continue
+
+                match = rfc_pattern.match(md_file.name)
+                if not match:
+                    self.errors.append(f"Invalid RFC filename: {md_file.name} (expected: RFC-NNN-name-with-dashes.md)")
+                    self.log(f"   ✗ {md_file.name}: Invalid filename format")
+                    continue
+
+                num, slug = match.groups()
+                # Skip template files (000)
+                if num == "000":
+                    self.log(f"   ⊘ {md_file.name}: Skipping template file")
+                    continue
+
                 doc = self._parse_document(md_file, "rfc")
+                if doc:
+                    self.documents.append(doc)
+                    self.file_to_doc[md_file] = doc
+
+        # Scan MEMOs
+        memo_dir = self.repo_root / "docs-cms" / "memos"
+        if memo_dir.exists():
+            for md_file in sorted(memo_dir.glob("*.md")):
+                # Skip index files and validate filename format
+                if md_file.name in ["README.md", "index.md"]:
+                    continue
+
+                match = memo_pattern.match(md_file.name)
+                if not match:
+                    self.errors.append(f"Invalid MEMO filename: {md_file.name} (expected: MEMO-NNN-name-with-dashes.md)")
+                    self.log(f"   ✗ {md_file.name}: Invalid filename format")
+                    continue
+
+                num, slug = match.groups()
+                # Skip template files (000)
+                if num == "000":
+                    self.log(f"   ⊘ {md_file.name}: Skipping template file")
+                    continue
+
+                doc = self._parse_document(md_file, "memo")
                 if doc:
                     self.documents.append(doc)
                     self.file_to_doc[md_file] = doc
@@ -174,7 +234,7 @@ class PrismDocValidator:
                     schema = ADRFrontmatter(**post.metadata)
                 elif doc_type == "rfc":
                     schema = RFCFrontmatter(**post.metadata)
-                elif "MEMO-" in file_path.name:
+                elif doc_type == "memo":
                     schema = MemoFrontmatter(**post.metadata)
                 else:
                     # Generic validation for other docs
@@ -875,6 +935,7 @@ class PrismDocValidator:
         lines.append(f"\n📄 Documents scanned: {total_docs}")
         lines.append(f"   ADRs: {sum(1 for d in self.documents if d.doc_type == 'adr')}")
         lines.append(f"   RFCs: {sum(1 for d in self.documents if d.doc_type == 'rfc')}")
+        lines.append(f"   MEMOs: {sum(1 for d in self.documents if d.doc_type == 'memo')}")
         lines.append(f"   Docs: {sum(1 for d in self.documents if d.doc_type == 'doc')}")
 
         lines.append(f"\n🔗 Total links: {total_links}")
