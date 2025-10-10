@@ -1,8 +1,9 @@
 ---
 id: memo-002
 title: "MEMO-002: Admin Protocol Security Review and Improvements"
-date: 2025-10-09
-author: System
+author: Platform Team
+created: 2025-10-09
+updated: 2025-10-09
 tags: [security, admin, protocol, grpc, improvements]
 ---
 
