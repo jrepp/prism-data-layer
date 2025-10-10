@@ -107,7 +107,7 @@ ENTRYPOINT ["/prism-proxy"]
 ```
 
 **Size**: ~6MB (single static binary)
-**Startup**: <10ms
+**Startup**: &lt;10ms
 
 ### 2. PostgreSQL Plugin (Go, Scratch)
 
@@ -149,7 +149,7 @@ ENTRYPOINT ["/prism-plugin-postgres"]
 ```
 
 **Size**: ~10MB (includes CA certs)
-**Startup**: <20ms
+**Startup**: &lt;20ms
 
 ### 3. Admin Service (Python, Alpine-Minimal)
 
@@ -346,7 +346,7 @@ echo "=== Reduction: $(echo "scale=1; ($(podman inspect prism-proxy:regular --fo
 ```
 
 **Expected output**:
-```
+```text
 Regular image: 127MB
 Scratch image: 6MB
 Reduction: 95.3%
@@ -510,7 +510,7 @@ ps aux | grep prism-proxy
 
 **Reality**:
 - VM startup: ~5-10 seconds (one-time cost)
-- Container startup: <10ms (once VM is running)
+- Container startup: &lt;10ms (once VM is running)
 - No VM overhead per-container (all share same VM)
 
 **Optimization**:
@@ -583,9 +583,9 @@ kubectl apply -f prism-k8s.yaml
 
 **Advantages**:
 - ✅ **Tiny size**: 6MB vs 127MB (95% reduction)
-- ✅ **Fast startup**: <10ms vs ~150ms
+- ✅ **Fast startup**: &lt;10ms vs ~150ms
 - ✅ **Minimal attack surface**: No OS packages, no vulnerabilities
-- ✅ **Fast pulls**: 6MB downloads in <1 second on fast networks
+- ✅ **Fast pulls**: 6MB downloads in &lt;1 second on fast networks
 - ✅ **Lower costs**: Smaller registry storage, faster CI/CD
 
 **Tradeoffs**:

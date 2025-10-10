@@ -420,7 +420,7 @@ service EventSourcingService { ... }      // Audit-logged mutations
 ### 1. How do we prevent Layer 2 explosion?
 
 **Proposal**: Curated pattern library with strict acceptance criteria:
-- Must solve a common problem (>10% of use cases)
+- Must solve a common problem (&gt;10% of use cases)
 - Must provide semantic guarantees over Layer 1 composition
 - Must have clear ownership and maintenance plan
 
