@@ -117,7 +117,8 @@ class PrismDocValidator:
         adr_dir = self.repo_root / "docs-cms" / "adr"
         if adr_dir.exists():
             for md_file in sorted(adr_dir.glob("*.md")):
-                if md_file.name != "README.md":
+                # Skip README and template files
+                if md_file.name not in ["README.md", "000-template.md"]:
                     doc = self._parse_document(md_file, "adr")
                     if doc:
                         self.documents.append(doc)
