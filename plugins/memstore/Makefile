@@ -1,7 +1,7 @@
 # MemStore Plugin Makefile
 # Thinnest slice implementation for pattern SDK
 
-.PHONY: all build test lint fmt clean help
+.PHONY: all build test lint fmt clean help docker-compare docker-scratch docker-upx docker-distroless
 
 # Binary name
 BINARY := memstore
@@ -26,19 +26,26 @@ help:
 	@echo "============================="
 	@echo ""
 	@echo "Targets:"
-	@echo "  all        - Run fmt, lint, test, and build (default)"
-	@echo "  build      - Build the memstore binary"
-	@echo "  test       - Run all tests"
-	@echo "  test-cover - Run tests with coverage report"
-	@echo "  lint       - Run linters"
-	@echo "  fmt        - Format code"
-	@echo "  clean      - Remove build artifacts"
-	@echo "  run        - Run memstore locally"
+	@echo "  all             - Run fmt, lint, test, and build (default)"
+	@echo "  build           - Build the memstore binary"
+	@echo "  test            - Run all tests"
+	@echo "  test-cover      - Run tests with coverage report"
+	@echo "  lint            - Run linters"
+	@echo "  fmt             - Format code"
+	@echo "  clean           - Remove build artifacts"
+	@echo "  run             - Run memstore locally"
+	@echo ""
+	@echo "Docker targets:"
+	@echo "  docker-compare     - Build and compare all image size variants"
+	@echo "  docker-minimal     - Build minimal variant (~7-8 MB)"
+	@echo "  docker-upx         - Build UPX compressed variant (~3-4 MB)"
+	@echo "  docker-distroless  - Build distroless variant (~9-10 MB)"
 	@echo ""
 	@echo "Examples:"
-	@echo "  make all          # Full build pipeline"
-	@echo "  make test         # Run tests only"
-	@echo "  make test-cover   # Run tests with coverage"
+	@echo "  make all              # Full build pipeline"
+	@echo "  make test             # Run tests only"
+	@echo "  make test-cover       # Run tests with coverage"
+	@echo "  make docker-compare   # Compare Docker image sizes"
 
 # Build binary
 build:
@@ -92,3 +99,29 @@ deps:
 	@go mod download
 	@go mod tidy
 	@echo "✓ Dependencies installed"
+
+# Docker image size comparison
+docker-compare:
+	@echo "Building and comparing Docker image sizes..."
+	@./build-compare.sh
+
+# Build individual Docker variants
+BUILDER ?= docker
+
+docker-minimal:
+	@echo "Building MINIMAL variant (smallest possible)..."
+	@cd .. && $(BUILDER) build --target minimal -t prism/memstore:minimal -f memstore/Dockerfile.optimized .
+	@echo "✓ Image size:"
+	@$(BUILDER) images prism/memstore:minimal --format "{{.Size}}"
+
+docker-upx:
+	@echo "Building UPX variant (compressed)..."
+	@cd .. && $(BUILDER) build --target upx-compressed -t prism/memstore:upx -f memstore/Dockerfile.optimized .
+	@echo "✓ Image size:"
+	@$(BUILDER) images prism/memstore:upx --format "{{.Size}}"
+
+docker-distroless:
+	@echo "Building DISTROLESS variant (current production)..."
+	@cd .. && $(BUILDER) build --target production -t prism/memstore:distroless -f memstore/Dockerfile.optimized .
+	@echo "✓ Image size:"
+	@$(BUILDER) images prism/memstore:distroless --format "{{.Size}}"

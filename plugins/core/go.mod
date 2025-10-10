@@ -3,7 +3,7 @@ module github.com/jrepp/prism-data-layer/plugins/core
 go 1.24.0
 
 require (
-	google.golang.org/grpc v1.76.0
+	google.golang.org/grpc v1.68.1
 	gopkg.in/yaml.v3 v3.0.1
 )
 
