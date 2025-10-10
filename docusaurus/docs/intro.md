@@ -7,77 +7,56 @@ sidebar_position: 1
 
 **Unify your data access. One API, any backend. Blazing fast.**
 
-Welcome to the Prism Data Access Layer documentation. Prism is a high-performance data access gateway that provides a unified, client-configurable interface to heterogeneous data backends.
+Prism is a high-performance data access gateway providing a unified interface to heterogeneous backends (Kafka, Postgres, Redis, NATS). Applications declare requirements; Prism handles provisioning, optimization, and reliability patterns.
 
 ## 🆕 What's New
-
-Stay up to date with the latest changes, new features, and improvements:
 
 **[View Recent Changes →](/docs/changelog)**
 
 Recent highlights:
-- RFC-014: Layered Data Access Patterns
-- Enhanced Admin Protocol with OIDC (RFC-010)
-- Data Proxy Authentication improvements (RFC-011)
-- Distributed Reliability Patterns (RFC-009)
+- **Architecture Guide**: Comprehensive technical overview with system diagrams
+- **Three-Layer Design**: Separates client API, patterns, and backends
+- **Authorization Boundaries**: Policy-driven configuration for team self-service
+- **45 Thin Interfaces**: Type-safe backend composition across 10 data models
 
 ---
 
-## What is Prism?
+## Core Idea
 
-Prism sits between applications and data backends (Kafka, NATS, Postgres, SQLite, Neptune), providing:
+**Three layers separate what, how, and where**:
 
-- **Unified API**: Single gRPC/HTTP interface across all backends
-- **Client-Originated Configuration**: Applications declare requirements; Prism auto-provisions
-- **Rust Performance**: 10-100x faster than JVM alternatives
-- **Local-First Testing**: Real backends locally, no mocks required
-- **Protobuf-Driven**: Single source of truth for all data models
+```
+┌────────────────────────────────────┐
+│   Client API (What)                │  Applications use stable APIs
+│   KeyValue | PubSub | Queue        │
+└────────────────────────────────────┘
+               ↓
+┌────────────────────────────────────┐
+│   Patterns (How)                   │  Prism applies reliability patterns
+│   Outbox | CDC | Claim Check       │
+└────────────────────────────────────┘
+               ↓
+┌────────────────────────────────────┐
+│   Backends (Where)                 │  Data stored in optimal backend
+│   Kafka | Postgres | Redis | NATS  │
+└────────────────────────────────────┘
+```
 
-## Documentation Types
-
-Our documentation is organized into three main types:
-
-### 📋 Architecture Decision Records (ADRs)
-
-Track all significant architectural decisions made in the Prism project. Each ADR captures the context, decision, and consequences of a specific choice.
-
-**When to read**: Understanding why certain technical choices were made, evaluating alternatives that were considered, onboarding to the project's architectural philosophy.
-
-Browse ADRs in the sidebar or start with [ADR-001: Rust for Proxy](/adr/ADR-001-rust-for-proxy)
-
----
-
-### 📐 Request for Comments (RFCs)
-
-Detailed technical specifications for major features and components. RFCs provide comprehensive design documentation before implementation.
-
-**When to read**: Understanding complete system designs, implementing new features, reviewing proposed changes before they're built.
-
-Browse RFCs in the sidebar or start with [RFC-001: Prism Architecture](/rfc/RFC-001-prism-architecture)
+**Benefits**:
+- **Backend Migration**: Swap Redis → DynamoDB without client changes
+- **Pattern Evolution**: Add CDC without API breakage
+- **Configuration-Driven**: Declare needs; Prism selects patterns
+- **Organizational Scale**: Teams self-service with policy guardrails
 
 ---
 
-### 📖 General Documentation
+## Why Prism?
 
-Tutorials, guides, and reference documentation for using and developing Prism.
+### Unified Interface
+Single gRPC/HTTP API across all backends. Write once, run anywhere.
 
-**When to read**: Getting started with Prism, learning how to use specific features, troubleshooting issues.
-
----
-
-## Key Concepts
-
-### Data Abstractions
-
-Prism provides three primary data abstractions:
-
-1. **KeyValue**: HashMap of SortedMaps backed by Postgres, Cassandra, SQLite, or S3
-2. **TimeSeries**: Append-only log with timestamp queries, backed by Kafka, ClickHouse, or NATS
-3. **Graph**: Nodes and edges with traversal, backed by Neptune, Neo4j, or Postgres
-
-### Client-Originated Configuration
-
-Applications declare their data access patterns in protobuf:
+### Self-Service Configuration
+Applications declare requirements in protobuf:
 
 ```protobuf
 message UserEvents {
@@ -85,12 +64,123 @@ message UserEvents {
   option (prism.estimated_write_rps) = "10000";
   option (prism.retention_days) = "90";
 }
-// → Prism selects Kafka, provisions 20 partitions, sets 90-day retention
+// → Prism selects Kafka, provisions 20 partitions
 ```
+
+**Authorization boundaries** prevent misconfigurations:
+- **Guided**: Pre-approved backends for all teams (Postgres, Kafka, Redis)
+- **Advanced**: Backend-specific tuning with approval
+- **Expert**: Platform team unrestricted access
+
+**Result**: Infrastructure team of 10 supports 500+ application teams (50x improvement over manual provisioning).
+
+### Rust Performance
+10-100x faster than JVM alternatives:
+- **P50**: `<1ms` (vs ~5ms JVM)
+- **P99**: `<10ms` (vs ~50ms JVM)
+- **Throughput**: 200k+ RPS (vs ~20k JVM)
+- **Memory**: 20MB idle (vs ~500MB JVM)
+
+### Interface-Based Capabilities
+Backends implement **thin interfaces** (not capability flags):
+
+```
+Redis implements:
+  - keyvalue_basic   (Set, Get, Delete)
+  - keyvalue_scan    (Scan, Count)
+  - keyvalue_ttl     (Expire, GetTTL)
+  - pubsub_basic     (Publish, Subscribe)
+  - stream_basic     (Append, Read)
+  → 16 interfaces total
+```
+
+**Type-safe**: Compiler enforces contracts (no runtime surprises).
+
+---
+
+## Docs
+
+### Decisions
+Architecture Decision Records (ADRs) capture why technical choices were made.
+
+**When to read**: Understanding project philosophy, evaluating alternatives, onboarding.
+
+**Start with**: [Why Rust?](/adr/adr-001-rust-for-proxy) | [Client Configuration](/adr/adr-002)
+
+---
+
+### Designs
+Request for Comments (RFCs) provide detailed specifications before implementation.
+
+**When to read**: Understanding system designs, implementing features, reviewing proposals.
+
+**Start with**: [Architecture](/rfc/rfc-001-prism-architecture) | [Layered Patterns](/rfc/rfc-014-layered-data-access-patterns)
+
+---
+
+### Guides
+Tutorials, references, and troubleshooting for using and developing Prism.
+
+**When to read**: Getting started, learning features, debugging issues.
+
+**Start with**: [Architecture Guide](/docs/architecture)
+
+---
+
+## Core Concepts
+
+### Patterns vs Pattern Providers
+
+- **Pattern**: Abstract concept (KeyValue, Outbox, Multicast Registry)
+- **Pattern Provider**: Runtime process implementing pattern
+- **Backend Driver**: Connection code for specific backends (Kafka, Redis, Postgres)
+
+**Pattern Providers** use **Backend Drivers** configured via **slots**. Backends are configured separately, and slots bind backend interfaces to pattern requirements:
+
+```yaml
+# Backend configuration (connection details)
+backends:
+  redis-cache:
+    type: redis
+    connection: "redis://localhost:6379/0"
+  nats-messaging:
+    type: nats
+    connection: "nats://localhost:4222"
+  postgres-queue:
+    type: postgres
+    connection: "postgresql://localhost:5432/prism"
+
+# Pattern configuration (slot bindings)
+pattern: multicast-registry
+slots:
+  registry:
+    backend: redis-cache      # References backend config
+    interface: keyvalue_basic # Required interface
+  messaging:
+    backend: nats-messaging
+    interface: pubsub_basic
+  durability:
+    backend: postgres-queue
+    interface: queue_basic
+```
+
+Same application code works with different backend combinations (Redis+NATS+Postgres or DynamoDB+SNS+SQS) by changing backend configuration.
+
+### Data Models
+
+Prism provides 10 data models with 45 interfaces:
+
+| Model | Interfaces | Backends |
+|-------|-----------|----------|
+| **KeyValue** | 6 (basic, scan, ttl, transactional, batch, cas) | Redis, Postgres, DynamoDB, MemStore |
+| **PubSub** | 5 (basic, wildcards, persistent, filtering, ordering) | NATS, Redis, Kafka |
+| **Stream** | 5 (basic, consumer_groups, replay, retention, partitioning) | Kafka, Redis, NATS |
+| **Queue** | 5 (basic, visibility, dead_letter, priority, delayed) | Postgres, SQS, RabbitMQ |
+| **TimeSeries** | 4 (basic, aggregation, retention, interpolation) | ClickHouse, TimescaleDB, InfluxDB |
 
 ### PII Handling
 
-Protobuf field annotations drive automatic PII handling:
+Protobuf annotations drive automatic PII handling:
 
 ```protobuf
 message UserProfile {
@@ -100,33 +190,37 @@ message UserProfile {
     (prism.mask_in_logs) = true
   ];
 }
-// → Generates encryption code, masked logging, audit trails
+// → Generates encryption, masked logging, audit trails
 ```
 
-## Getting Started
+---
 
-1. **Understand the Architecture**: Start with [RFC-001: Prism Architecture](/rfc/RFC-001-prism-architecture)
-2. **Review Key Decisions**: Browse ADRs in the sidebar to understand architectural choices
-3. **Explore Interfaces**: Read [RFC-002: Data Layer Interface](/rfc/RFC-002-data-layer-interface)
-4. **Set Up Locally**: Follow the development setup in the [repository](https://github.com/jrepp/prism-data-layer)
+## Start Here
 
-## Performance Targets
+1. **Architecture**: Read [Architecture Guide](/docs/architecture) for system overview
+2. **Decisions**: Browse ADRs to understand technical choices
+3. **Designs**: Review key RFCs ([Architecture](/rfc/rfc-001-prism-architecture), [Layered Patterns](/rfc/rfc-014-layered-data-access-patterns))
+4. **Setup**: Follow [repository instructions](https://github.com/jrepp/prism-data-layer)
+
+---
+
+## Performance
 
 - **P50 Latency**: `<1ms`
 - **P99 Latency**: `<10ms`
 - **Throughput**: 10k+ RPS per connection
 - **Memory**: `<500MB` per proxy instance
 
-## Project Philosophy
+---
 
-Prism is built on these principles:
+## Philosophy
 
-1. **Performance First**: Rust-based proxy for maximum throughput and minimal latency
-2. **Client-Originated Configuration**: Applications know their needs best
-3. **Local-First Testing**: Real backends over mocks for realistic testing
-4. **Pluggable Backends**: Clean abstraction layer allows adding backends without changing application code
-5. **DRY via Code Generation**: Protobuf definitions with custom tags drive code generation across components
+1. **Performance First**: Rust proxy for maximum throughput, minimal latency
+2. **Client Configuration**: Applications know their needs best
+3. **Local Testing**: Real backends over mocks for realistic testing
+4. **Pluggable Backends**: Clean abstraction allows adding backends without client changes
+5. **Code Generation**: Protobuf definitions drive all code generation
 
 ---
 
-For more details on the project philosophy and development practices, see [CLAUDE.md](https://github.com/jrepp/prism-data-layer/blob/main/CLAUDE.md) in the repository.
+For development practices and project guidance, see [CLAUDE.md](https://github.com/jrepp/prism-data-layer/blob/main/CLAUDE.md).

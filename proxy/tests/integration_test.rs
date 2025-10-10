@@ -207,3 +207,84 @@ async fn test_server_startup_and_shutdown() {
     server.shutdown().await.expect("Failed to shutdown server");
     println!("✓ Server shut down cleanly");
 }
+
+#[tokio::test]
+#[ignore] // Run with `cargo test -- --ignored` to include integration tests
+async fn test_proxy_with_nats_pattern() {
+    // Initialize tracing for debugging
+    let _ = tracing_subscriber::fmt()
+        .with_env_filter("prism_proxy=debug")
+        .try_init();
+
+    // Path to NATS binary
+    let nats_path = PathBuf::from("../patterns/nats/nats");
+
+    // Skip test if binary doesn't exist
+    if !nats_path.exists() {
+        eprintln!("Skipping test: NATS binary not found at {:?}", nats_path);
+        eprintln!("Build it with: cd patterns/nats && go build -o nats cmd/nats/main.go");
+        return;
+    }
+
+    // Create pattern manager
+    let pattern_manager = Arc::new(PatternManager::new());
+
+    // Register NATS pattern
+    pattern_manager
+        .register_pattern("nats".to_string(), nats_path)
+        .await
+        .expect("Failed to register NATS pattern");
+
+    // Create router and server
+    let router = Arc::new(Router::new(pattern_manager.clone()));
+    let mut server = ProxyServer::new(router, "127.0.0.1:18983".to_string());
+
+    // Start the proxy server
+    server
+        .start()
+        .await
+        .expect("Failed to start proxy server");
+
+    println!("✓ Proxy server started on 127.0.0.1:18983");
+
+    // Start NATS pattern
+    println!("Starting NATS pattern...");
+    let start_result = pattern_manager.start_pattern("nats").await;
+
+    match start_result {
+        Ok(_) => {
+            println!("✓ NATS pattern started successfully");
+
+            // Wait for pattern to fully initialize
+            sleep(Duration::from_millis(1500)).await;
+
+            // Health check the pattern
+            let health = pattern_manager.health_check("nats").await;
+            println!("Health check result: {:?}", health);
+
+            assert!(health.is_ok(), "Health check should succeed");
+
+            // TODO: Send actual Publish/Subscribe requests via gRPC client
+            // This would require a PubSub gRPC client implementation
+            println!("✓ Pattern is healthy and running");
+
+            // Stop the pattern
+            println!("Stopping NATS pattern...");
+            pattern_manager
+                .stop_pattern("nats")
+                .await
+                .expect("Failed to stop NATS");
+            println!("✓ NATS pattern stopped");
+        }
+        Err(e) => {
+            eprintln!("Failed to start NATS: {}", e);
+            panic!("NATS pattern should start successfully");
+        }
+    }
+
+    // Shutdown server
+    server.shutdown().await.expect("Failed to shutdown server");
+    println!("✓ Proxy server shut down");
+
+    println!("\n🎉 NATS integration test completed!");
+}

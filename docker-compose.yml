@@ -25,12 +25,30 @@ services:
     profiles:
       - tools
 
+  # NATS for POC 3: PubSub backend
+  nats:
+    image: nats:2.10-alpine
+    container_name: prism-nats
+    ports:
+      - "4222:4222"   # Client connections
+      - "8222:8222"   # HTTP monitoring
+      - "6222:6222"   # Cluster connections
+    command:
+      - "--name=prism-nats"
+      - "--http_port=8222"
+      - "--js"  # Enable JetStream (optional, disabled in pattern by default)
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "--quiet", "http://localhost:8222/healthz"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+
   # Placeholder for future services
-  # signoz: (POC 3+)
+  # signoz: (POC 4+)
   # dex: (POC 5)
   # postgres: (future)
   # kafka: (future)
-  # nats: (POC 3)
 
 volumes:
   redis_data:

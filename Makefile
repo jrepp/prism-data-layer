@@ -41,7 +41,13 @@ build-proxy: ## Build Rust proxy
 	@cd proxy && cargo build --release
 	$(call print_green,Proxy built)
 
-build-patterns: build-memstore build-redis ## Build all Go patterns
+build-patterns: build-memstore build-redis build-nats ## Build all Go patterns
+
+# Pattern: To add a new pattern, add three targets:
+#   build-<pattern>: Build the pattern binary
+#   test-<pattern>: Run pattern unit tests
+#   coverage-<pattern>: Generate coverage report
+# Then add to: build-patterns, test-patterns, coverage-patterns, clean-patterns, fmt-go, lint-go
 
 build-memstore: ## Build MemStore pattern
 	$(call print_blue,Building MemStore pattern...)
@@ -53,11 +59,17 @@ build-redis: ## Build Redis pattern
 	@cd patterns/redis && go build -o redis cmd/redis/main.go
 	$(call print_green,Redis built)
 
+build-nats: ## Build NATS pattern
+	$(call print_blue,Building NATS pattern...)
+	@cd patterns/nats && go build -o nats cmd/nats/main.go
+	$(call print_green,NATS built)
+
 build-dev: ## Build all components in debug mode (faster)
 	$(call print_blue,Building in debug mode...)
 	@cd proxy && cargo build
 	@cd patterns/memstore && go build -o memstore cmd/memstore/main.go
 	@cd patterns/redis && go build -o redis cmd/redis/main.go
+	@cd patterns/nats && go build -o nats cmd/nats/main.go
 	$(call print_green,Debug builds complete)
 
 ##@ Testing
@@ -70,7 +82,7 @@ test-proxy: ## Run Rust proxy unit tests
 	@cd proxy && cargo test --lib
 	$(call print_green,Proxy unit tests passed)
 
-test-patterns: test-memstore test-redis test-core ## Run all Go pattern tests
+test-patterns: test-memstore test-redis test-nats test-core ## Run all Go pattern tests
 
 test-memstore: ## Run MemStore tests
 	$(call print_blue,Running MemStore tests...)
@@ -81,6 +93,11 @@ test-redis: ## Run Redis tests
 	$(call print_blue,Running Redis tests...)
 	@cd patterns/redis && go test -v -cover ./...
 	$(call print_green,Redis tests passed)
+
+test-nats: ## Run NATS tests
+	$(call print_blue,Running NATS tests...)
+	@cd patterns/nats && go test -v -cover ./...
+	$(call print_green,NATS tests passed)
 
 test-core: ## Run Core SDK tests
 	$(call print_blue,Running Core SDK tests...)
@@ -95,6 +112,24 @@ test-integration: build-memstore ## Run integration tests (requires built MemSto
 test-all: test test-integration ## Run all tests including integration tests
 	$(call print_green,All tests (unit + integration) passed)
 
+test-acceptance: test-acceptance-redis test-acceptance-nats ## Run all acceptance tests with testcontainers
+	$(call print_green,All acceptance tests passed)
+
+test-acceptance-redis: ## Run Redis acceptance tests with testcontainers
+	$(call print_blue,Running Redis acceptance tests...)
+	@cd tests/acceptance/redis && go test -v -timeout 10m ./...
+	$(call print_green,Redis acceptance tests passed)
+
+test-acceptance-nats: ## Run NATS acceptance tests with testcontainers
+	$(call print_blue,Running NATS acceptance tests...)
+	@cd tests/acceptance/nats && go test -v -timeout 10m ./...
+	$(call print_green,NATS acceptance tests passed)
+
+test-acceptance-quiet: ## Run all acceptance tests in quiet mode (suppress container logs)
+	$(call print_blue,Running acceptance tests in quiet mode...)
+	@PRISM_TEST_QUIET=1 $(MAKE) test-acceptance
+	$(call print_green,All acceptance tests passed (quiet mode))
+
 ##@ Code Coverage
 
 coverage: coverage-proxy coverage-patterns ## Generate coverage reports for all components
@@ -104,7 +139,7 @@ coverage-proxy: ## Generate Rust proxy coverage report
 	@cd proxy && cargo test --lib -- --test-threads=1
 	$(call print_green,Proxy coverage report generated)
 
-coverage-patterns: coverage-memstore coverage-redis coverage-core ## Generate coverage for all patterns
+coverage-patterns: coverage-memstore coverage-redis coverage-nats coverage-core ## Generate coverage for all patterns
 
 coverage-memstore: ## Generate MemStore coverage report
 	$(call print_blue,Generating MemStore coverage...)
@@ -120,12 +155,35 @@ coverage-redis: ## Generate Redis coverage report
 	@cd patterns/redis && go tool cover -html=coverage.out -o coverage.html
 	$(call print_green,Redis coverage: patterns/redis/coverage.html)
 
+coverage-nats: ## Generate NATS coverage report
+	$(call print_blue,Generating NATS coverage...)
+	@cd patterns/nats && go test -coverprofile=coverage.out ./...
+	@cd patterns/nats && go tool cover -func=coverage.out | grep total
+	@cd patterns/nats && go tool cover -html=coverage.out -o coverage.html
+	$(call print_green,NATS coverage: patterns/nats/coverage.html)
+
 coverage-core: ## Generate Core SDK coverage report
 	$(call print_blue,Generating Core SDK coverage...)
 	@cd patterns/core && go test -coverprofile=coverage.out ./...
 	@cd patterns/core && go tool cover -func=coverage.out | grep total
 	@cd patterns/core && go tool cover -html=coverage.out -o coverage.html
 	$(call print_green,Core SDK coverage: patterns/core/coverage.html)
+
+coverage-acceptance: coverage-acceptance-redis coverage-acceptance-nats ## Generate coverage for acceptance tests
+
+coverage-acceptance-redis: ## Generate Redis acceptance test coverage
+	$(call print_blue,Generating Redis acceptance test coverage...)
+	@cd tests/acceptance/redis && go test -coverprofile=coverage.out -timeout 10m ./...
+	@cd tests/acceptance/redis && go tool cover -func=coverage.out | grep total
+	@cd tests/acceptance/redis && go tool cover -html=coverage.out -o coverage.html
+	$(call print_green,Redis acceptance coverage: tests/acceptance/redis/coverage.html)
+
+coverage-acceptance-nats: ## Generate NATS acceptance test coverage
+	$(call print_blue,Generating NATS acceptance test coverage...)
+	@cd tests/acceptance/nats && go test -coverprofile=coverage.out -timeout 10m ./...
+	@cd tests/acceptance/nats && go tool cover -func=coverage.out | grep total
+	@cd tests/acceptance/nats && go tool cover -html=coverage.out -o coverage.html
+	$(call print_green,NATS acceptance coverage: tests/acceptance/nats/coverage.html)
 
 ##@ Protobuf
 
@@ -163,6 +221,8 @@ clean-patterns: ## Clean pattern binaries
 	@rm -f patterns/memstore/coverage.out patterns/memstore/coverage.html
 	@rm -f patterns/redis/redis
 	@rm -f patterns/redis/coverage.out patterns/redis/coverage.html
+	@rm -f patterns/nats/nats
+	@rm -f patterns/nats/coverage.out patterns/nats/coverage.html
 	@rm -f patterns/core/coverage.out patterns/core/coverage.html
 	$(call print_green,Patterns cleaned)
 
@@ -190,6 +250,7 @@ fmt-go: ## Format Go code
 	$(call print_blue,Formatting Go code...)
 	@cd patterns/memstore && go fmt ./...
 	@cd patterns/redis && go fmt ./...
+	@cd patterns/nats && go fmt ./...
 	@cd patterns/core && go fmt ./...
 	$(call print_green,Go code formatted)
 
@@ -204,15 +265,16 @@ lint-go: ## Lint Go code
 	$(call print_blue,Linting Go code...)
 	@cd patterns/memstore && go vet ./...
 	@cd patterns/redis && go vet ./...
+	@cd patterns/nats && go vet ./...
 	@cd patterns/core && go vet ./...
 	$(call print_green,Go code linted)
 
 ##@ Docker
 
-docker-up: ## Start local development services (Redis)
+docker-up: ## Start local development services (Redis, NATS)
 	$(call print_blue,Starting local development services...)
 	@docker-compose up -d
-	$(call print_green,Services started - Redis available at localhost:6379)
+	$(call print_green,Services started - Redis: localhost:6379, NATS: localhost:4222)
 
 docker-down: ## Stop local development services
 	$(call print_blue,Stopping local development services...)
@@ -260,7 +322,7 @@ install-tools: ## Install development tools
 
 ##@ CI/CD
 
-ci: lint test-all docs-validate ## Run full CI pipeline (lint, test, validate docs)
+ci: lint test-all test-acceptance docs-validate ## Run full CI pipeline (lint, test, acceptance, validate docs)
 	$(call print_green,CI pipeline passed)
 
 pre-commit: fmt lint test ## Run pre-commit checks (format, lint, test)

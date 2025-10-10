@@ -60,6 +60,14 @@ func (r *RedisPattern) Initialize(ctx context.Context, config *core.Config) erro
 	if backendConfig.Address == "" {
 		backendConfig.Address = "localhost:6379"
 	}
+
+	// Strip redis:// or rediss:// scheme prefix if present (for testcontainers compatibility)
+	if len(backendConfig.Address) > 8 && backendConfig.Address[:8] == "redis://" {
+		backendConfig.Address = backendConfig.Address[8:]
+	} else if len(backendConfig.Address) > 9 && backendConfig.Address[:9] == "rediss://" {
+		backendConfig.Address = backendConfig.Address[9:]
+	}
+
 	if backendConfig.MaxRetries == 0 {
 		backendConfig.MaxRetries = 3
 	}
@@ -104,8 +112,7 @@ func (r *RedisPattern) Initialize(ctx context.Context, config *core.Config) erro
 
 // Start begins serving requests
 func (r *RedisPattern) Start(ctx context.Context) error {
-	// Redis client is ready, just wait for context cancellation
-	<-ctx.Done()
+	// Redis client is ready from Initialize, nothing to start
 	return nil
 }
 

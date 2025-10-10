@@ -131,8 +131,8 @@ class PrismDocValidator:
         adr_dir = self.repo_root / "docs-cms" / "adr"
         if adr_dir.exists():
             for md_file in sorted(adr_dir.glob("*.md")):
-                # Skip README and validate filename format
-                if md_file.name == "README.md":
+                # Skip README and index files (landing pages)
+                if md_file.name in ["README.md", "index.md"]:
                     continue
 
                 match = adr_pattern.match(md_file.name)

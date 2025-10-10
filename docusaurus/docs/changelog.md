@@ -1,7 +1,7 @@
 ---
 title: "Documentation Change Log"
 description: "Recent changes to Prism documentation with quick links"
-sidebar_position: 1
+sidebar_position: 3
 ---
 
 # Documentation Change Log
@@ -9,6 +9,59 @@ sidebar_position: 1
 Quick access to recently updated documentation. Changes listed in reverse chronological order (newest first).
 
 ## Recent Changes
+
+### 2025-10-10
+
+#### Technical Architecture Guide - Terminology Consolidation (UPDATED)
+**Link**: [Architecture Guide](/docs/architecture)
+
+**Summary**: Consolidated terminology throughout architecture guide for consistency:
+- **Pattern** = abstract concept (KeyValue, PubSub, Outbox, Claim Check, etc.)
+- **Pattern Provider** = runtime component implementing patterns (Kafka provider, PostgreSQL provider, etc.)
+- Updated all diagrams and references from "plugin" → "pattern provider"
+- Clarified organizational scalability benefits of client-originated configuration
+- Added authorization boundaries section explaining expressibility vs security/reliability tension
+
+**Impact**: Consistent terminology makes architecture clearer. "Pattern" emphasizes conceptual abstraction; "Pattern Provider" emphasizes runtime implementation.
+
+---
+
+#### ADR-002: Client-Originated Configuration - Authorization Boundaries (EXPANDED)
+**Link**: [ADR-002](/adr/adr-002)
+
+**Summary**: Major expansion adding organizational scalability and configuration authorization section:
+- Organizational scalability challenge: Infrastructure team size stays constant (10 people supports 500+ teams)
+- Authorization boundaries: Three permission levels (Guided, Advanced, Expert)
+- Policy enforcement mechanism with Rust validation code examples
+- Permission escalation workflow with audit trail
+- Common configuration mistakes prevented (excessive retention, wrong backend for pattern, over-provisioning)
+- Organizational benefits: 50x improvement (platform team of 10 supports 500+ teams vs 1 DBA per 10 teams)
+- Future enhancements: Automated permission elevation, cost budgeting integration
+
+**Key Innovation**: Client configurability essential for organizational scalability, but requires policy-driven authorization boundaries. Three-tier permission model balances expressibility (teams move fast) with security/reliability (prevent misconfigurations).
+
+**Impact**: Documents critical tension between self-service empowerment and platform stability. Provides concrete policy enforcement mechanism for production deployments.
+
+---
+
+#### Technical Architecture Guide (NEW)
+**Link**: [Architecture Guide](/docs/architecture)
+
+**Summary**: Comprehensive technical architecture overview document with system diagrams and backend interface mapping:
+- High-level architecture overview with three-layer design philosophy (Client API → Pattern Composition → Backend Execution)
+- Complete system architecture diagram showing data flow from clients → proxy → patterns → plugins → backends
+- Proxy and plugin architecture diagram with responsibility separation
+- Backend interface decomposition catalog (45 thin interfaces across 10 data models)
+- Backend implementation matrix showing which backends implement which interfaces
+- Pattern composition and slot-based configuration examples
+- Design rationale covering key architectural decisions
+- Quick reference guides for backend and pattern selection
+
+**Key Innovation**: Single comprehensive guide orienting technical users to Prism's architecture, component responsibilities, and backend interface mapping strategy. Combines high-level system design with detailed interface catalogs and practical quick reference guides.
+
+**Impact**: Provides authoritative technical reference for platform engineers, backend developers, and architects evaluating or working with Prism. Complements existing RFCs and ADRs with cohesive architectural overview.
+
+---
 
 ### 2025-10-09
 

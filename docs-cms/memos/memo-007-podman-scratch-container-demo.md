@@ -3,8 +3,8 @@ id: memo-007
 title: "MEMO-007: Podman Demo for Scratch-Based Containers with Native Runtime"
 author: Platform Team
 created: 2025-10-09
-updated: 2025-10-09
-tags: [containers, podman, scratch, demo, runtime, optimization]
+updated: 2025-10-10
+tags: [containers, podman, scratch, demo, runtime, optimization, patterns]
 ---
 
 # MEMO-007: Podman Demo for Scratch-Based Containers with Native Runtime
@@ -68,7 +68,7 @@ graph TB
 
 **Three Demo Images**:
 1. **prism-proxy**: Rust proxy (~6MB)
-2. **prism-plugin-postgres**: Go plugin (~10MB)
+2. **prism-redis**: Go KeyValue implementation connecting to Redis backend (~10MB)
 3. **prism-admin**: Python admin service (~45MB, Alpine-based)
 
 ## Implementation: Scratch-Based Containerfiles
@@ -109,9 +109,9 @@ ENTRYPOINT ["/prism-proxy"]
 **Size**: ~6MB (single static binary)
 **Startup**: &lt;10ms
 
-### 2. PostgreSQL Plugin (Go, Scratch)
+### 2. Redis KeyValue Implementation (Go, Scratch)
 
-Location: `plugins/postgres/Containerfile`
+Location: `patterns/redis/Containerfile`
 
 ```dockerfile
 # Build stage
@@ -129,8 +129,8 @@ COPY . .
 # Build static binary with CGO disabled
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
     -ldflags="-w -s" \
-    -o /prism-plugin-postgres \
-    ./cmd/server
+    -o /prism-redis \
+    ./cmd/redis
 
 # Runtime stage (scratch)
 FROM scratch
@@ -139,13 +139,13 @@ FROM scratch
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 
 # Copy static binary
-COPY --from=builder /prism-plugin-postgres /prism-plugin-postgres
+COPY --from=builder /prism-redis /prism-redis
 
 # Expose gRPC port
-EXPOSE 50100
+EXPOSE 9535
 
 # Run binary
-ENTRYPOINT ["/prism-plugin-postgres"]
+ENTRYPOINT ["/prism-redis"]
 ```
 
 **Size**: ~10MB (includes CA certs)
@@ -228,8 +228,8 @@ choco install podman
 # Build proxy (scratch-based, 6MB)
 podman build -t prism-proxy:scratch -f proxy/Containerfile .
 
-# Build plugin (scratch-based, 10MB)
-podman build -t prism-plugin-postgres:scratch -f plugins/postgres/Containerfile plugins/postgres
+# Build KeyValue implementation (scratch-based, 10MB)
+podman build -t prism-redis:scratch -f patterns/redis/Containerfile patterns/redis
 
 # Build admin (Alpine-minimal, 45MB)
 podman build -t prism-admin:minimal -f admin/Containerfile admin
@@ -238,7 +238,7 @@ podman build -t prism-admin:minimal -f admin/Containerfile admin
 podman images | grep prism
 # OUTPUT:
 # prism-proxy              scratch   <image-id>   6.2MB
-# prism-plugin-postgres    scratch   <image-id>   10.1MB
+# prism-redis              scratch   <image-id>   10.1MB
 # prism-admin              minimal   <image-id>   45MB
 ```
 
@@ -254,12 +254,12 @@ podman run -d \
   -p 8981:8981 \
   prism-proxy:scratch
 
-# Run plugin
+# Run KeyValue implementation (connects to Redis backend)
 podman run -d \
-  --name prism-plugin-postgres \
-  -p 50100:50100 \
-  -e POSTGRES_URL="postgres://localhost:5432/prism" \
-  prism-plugin-postgres:scratch
+  --name prism-redis \
+  -p 9535:9535 \
+  -e REDIS_URL="redis://localhost:6379/0" \
+  prism-redis:scratch
 
 # Run admin
 podman run -d \
@@ -287,13 +287,13 @@ spec:
     - containerPort: 8980
     - containerPort: 8981
 
-  - name: plugin-postgres
-    image: localhost/prism-plugin-postgres:scratch
+  - name: keyvalue-redis
+    image: localhost/prism-redis:scratch
     ports:
-    - containerPort: 50100
+    - containerPort: 9535
     env:
-    - name: POSTGRES_URL
-      value: "postgres://postgres:5432/prism"
+    - name: REDIS_URL
+      value: "redis://redis:6379/0"
 
   - name: admin
     image: localhost/prism-admin:minimal
@@ -311,7 +311,7 @@ podman pod ps
 
 # Check container logs
 podman logs prism-stack-proxy
-podman logs prism-stack-plugin-postgres
+podman logs prism-stack-keyvalue-redis
 podman logs prism-stack-admin
 
 # Stop and remove pod
@@ -379,15 +379,13 @@ echo "=== Startup Time Comparison ==="
 #!/bin/bash
 # demo-3-full-stack.sh
 
-# Start PostgreSQL (using existing image)
+# Start Redis (using existing image)
 podman run -d \
-  --name postgres \
-  -e POSTGRES_PASSWORD=prism \
-  -e POSTGRES_DB=prism \
-  -p 5432:5432 \
-  docker.io/library/postgres:16-alpine
+  --name redis \
+  -p 6379:6379 \
+  docker.io/library/redis:7-alpine
 
-# Wait for PostgreSQL
+# Wait for Redis
 sleep 3
 
 # Create and start Prism pod
@@ -408,8 +406,8 @@ podman logs prism-stack-proxy --tail 10
 # Cleanup
 podman pod stop prism-stack
 podman pod rm prism-stack
-podman stop postgres
-podman rm postgres
+podman stop redis
+podman rm redis
 ```
 
 ## Build-Test Cycle Optimization
@@ -444,7 +442,7 @@ podman build --squash -t prism-proxy:dev -f proxy/Containerfile . \
    ```bash
    # Build multiple images concurrently
    podman build -t prism-proxy:scratch -f proxy/Containerfile . &
-   podman build -t prism-plugin:scratch -f plugins/postgres/Containerfile plugins/postgres &
+   podman build -t prism-redis:scratch -f patterns/redis/Containerfile patterns/redis &
    wait
    ```
 
@@ -622,9 +620,11 @@ RUN apk add --no-cache curl busybox
 
 - [ADR-049: Podman Container Optimization](/adr/adr-049-podman-container-optimization) - Decision to use Podman
 - [ADR-026: Distroless Container Images](/adr/adr-026-distroless-container-images) - Alternative to scratch
-- [MEMO-004: Backend Plugin Implementation Guide](/memos/memo-004-backend-plugin-implementation-guide) - Plugin containers
+- [MEMO-004: Backend Plugin Implementation Guide](/memos/memo-004-backend-plugin-implementation-guide) - Backend implementation guide
+- [MEMO-006: Backend Interface Decomposition and Schema Registry](/memos/memo-006-backend-interface-decomposition-schema-registry) - Pattern vs backend distinction (patterns like multicast-registry coordinate multiple backends)
 
 ## Revision History
 
+- 2025-10-10: Updated terminology - Redis is a backend, not a pattern. Changed example from Postgres to Redis KeyValue implementation. Clarified that patterns (like multicast-registry) coordinate multiple backends to provide higher-level solutions.
 - 2025-10-09: Initial draft covering Podman + scratch containers with native runtime demo
 
