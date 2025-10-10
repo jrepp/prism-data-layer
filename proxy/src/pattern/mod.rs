@@ -130,45 +130,82 @@ impl Pattern {
             "pattern process spawned successfully"
         );
 
-        // Wait for process to start and gRPC server to be ready
-        // TODO: Replace with proper health check polling
+        // Wait for process to start
         tracing::info!(
             pattern = %self.name,
-            "waiting for pattern to initialize gRPC server"
+            "waiting for pattern process to initialize"
         );
-        sleep(Duration::from_millis(1500)).await;
+        sleep(Duration::from_millis(500)).await;
 
         Ok(())
     }
 
-    /// Connect gRPC client to pattern
+    /// Connect gRPC client to pattern with retry and exponential backoff
     async fn connect_client(&mut self) -> crate::Result<()> {
         if let Some(ref endpoint) = self.grpc_endpoint {
             tracing::info!(
                 pattern = %self.name,
                 endpoint = %endpoint,
-                "connecting gRPC client to pattern"
+                "connecting gRPC client to pattern with retry"
             );
 
-            let client = PatternClient::connect(endpoint.clone()).await.map_err(|e| {
-                tracing::error!(
+            // Retry configuration: 5 attempts with exponential backoff
+            let max_attempts = 5;
+            let initial_delay = Duration::from_millis(100);
+            let max_delay = Duration::from_secs(2);
+
+            let mut attempt = 1;
+            let mut delay = initial_delay;
+
+            loop {
+                tracing::debug!(
                     pattern = %self.name,
-                    endpoint = %endpoint,
-                    error = %e,
-                    "failed to connect gRPC client"
+                    attempt = attempt,
+                    max_attempts = max_attempts,
+                    "attempting gRPC connection"
                 );
-                e
-            })?;
 
-            self.client = Some(client);
+                match PatternClient::connect(endpoint.clone()).await {
+                    Ok(client) => {
+                        self.client = Some(client);
 
-            tracing::info!(
-                pattern = %self.name,
-                endpoint = %endpoint,
-                "gRPC client connected successfully"
-            );
+                        tracing::info!(
+                            pattern = %self.name,
+                            endpoint = %endpoint,
+                            attempts = attempt,
+                            "gRPC client connected successfully"
+                        );
 
-            Ok(())
+                        return Ok(());
+                    }
+                    Err(e) => {
+                        if attempt >= max_attempts {
+                            tracing::error!(
+                                pattern = %self.name,
+                                endpoint = %endpoint,
+                                attempts = attempt,
+                                error = %e,
+                                "failed to connect gRPC client after max retries"
+                            );
+                            return Err(e.into());
+                        }
+
+                        tracing::warn!(
+                            pattern = %self.name,
+                            attempt = attempt,
+                            next_delay_ms = delay.as_millis(),
+                            error = %e,
+                            "gRPC connection attempt failed, retrying"
+                        );
+
+                        sleep(delay).await;
+
+                        // Exponential backoff: double the delay, cap at max_delay
+                        delay = (delay * 2).min(max_delay);
+                        attempt += 1;
+                    }
+                }
+            }
         } else {
             tracing::error!(
                 pattern = %self.name,
