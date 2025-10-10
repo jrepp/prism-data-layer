@@ -189,7 +189,7 @@ Proxy with 20 use-case services: ~40k LOC, 150MB binary
 ### Layer 1: Primitives (Generic, Always Available)
 
 **Six core primitives** (RFC-014):
-```protobuf
+```
 service KeyValueService { ... }
 service PubSubService { ... }
 service QueueService { ... }
@@ -212,7 +212,7 @@ service TransactionalService { ... }
 ### Layer 2: Patterns (Use-Case-Specific, Opt-In)
 
 **Purpose-built patterns** (RFC-017, plus more):
-```protobuf
+```
 service MulticastRegistryService { ... }  // IoT, presence, service discovery
 service SagaService { ... }               // Distributed transactions
 service EventSourcingService { ... }      // Audit trails, event log
@@ -444,7 +444,7 @@ MulticastRegistryService (Layer 2)
 
 **Proposal**: Pattern coordinators are plugins with semantic versioning:
 
-```yaml
+```
 coordinator_plugin: prism-multicast-registry:v1.2.0
 ```text
 
@@ -492,3 +492,5 @@ coordinator_plugin: prism-multicast-registry:v1.2.0
 
 - 2025-10-09: Initial draft proposing layered API architecture (primitives + patterns)
 
+
+```

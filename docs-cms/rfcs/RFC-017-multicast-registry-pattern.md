@@ -427,7 +427,7 @@ The Multicast Registry pattern **composes** three data access primitives:
 
 The pattern defines **three backend slots** that can be filled independently:
 
-```yaml
+```
 pattern: multicast-registry
 
 backend_slots:

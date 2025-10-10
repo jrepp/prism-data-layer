@@ -122,7 +122,7 @@ CREATE TABLE namespace_features (
 
 ### Admin API Integration
 
-```rust
+```
 use rusqlite::{Connection, params};
 
 pub struct ConfigStore {
@@ -314,7 +314,7 @@ impl ConfigStore {
 
 ### Initialization on Startup
 
-```rust
+```
 pub async fn initialize_config_store() -> Result<ConfigStore> {
     let db_path = Path::new("/var/lib/prism/config.db");
 
@@ -337,7 +337,7 @@ pub async fn initialize_config_store() -> Result<ConfigStore> {
 
 ### Backup Strategy
 
-```bash
+```
 # Daily backup via cron
 #!/bin/bash
 # /etc/cron.daily/prism-config-backup
@@ -357,7 +357,7 @@ find $BACKUP_DIR -name "config-*.db" -mtime +30 -delete
 
 ### Read-Heavy Optimization
 
-```rust
+```
 // Use connection pool for concurrent reads
 use r2d2_sqlite::SqliteConnectionManager;
 use r2d2::Pool;
@@ -405,3 +405,5 @@ See ADR-037 for full multi-instance strategy.
 ## Revision History
 
 - 2025-10-08: Initial draft proposing SQLite for local config storage
+
+```

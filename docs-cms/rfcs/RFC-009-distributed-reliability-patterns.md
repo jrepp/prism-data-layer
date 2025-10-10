@@ -72,7 +72,7 @@ Patterns are ordered by complexity and value. Prism will implement in this order
 
 #### Prism Configuration
 
-```yaml
+```
 # .config.yaml
 namespaces:
   - name: user-activity-logs
@@ -114,7 +114,7 @@ namespaces:
 
 #### Client Code
 
-```rust
+```
 // Application sees unified interface
 let log = client.get("user-activity-logs", "user:12345:2025-01-15").await?;
 
@@ -289,7 +289,7 @@ let order = client.get("order-writes", "order:789").await?;
 
 #### Prism Configuration
 
-```yaml
+```
 namespaces:
   - name: video-processing-events
     pattern: claim-check
@@ -318,7 +318,7 @@ namespaces:
 
 #### Client Code
 
-```rust
+```
 // Producer: Prism handles claim check automatically
 let event = VideoProcessingEvent {
     video_id: "vid123",
@@ -588,7 +588,7 @@ graph TD
 
 #### Prism Configuration
 
-```yaml
+```
 namespaces:
   - name: user-cdc
     pattern: change-data-capture
@@ -635,7 +635,7 @@ namespaces:
 
 #### CDC Event Format
 
-```json
+```
 {
   "op": "u",  // c=create, u=update, d=delete
   "source": {
@@ -660,7 +660,7 @@ namespaces:
 
 #### Client Code
 
-```python
+```
 # Application does normal database operations
 db.execute("UPDATE users SET email = 'new@example.com' WHERE id = 42")
 
@@ -853,7 +853,7 @@ let listings = client.query("product-listings", filters).await?;
 
 #### Prism Configuration
 
-```yaml
+```
 namespaces:
   - name: order-service
     pattern: outbox
@@ -890,7 +890,7 @@ namespaces:
 
 #### Client Code
 
-```rust
+```
 // Application: Single transaction
 let tx = db.begin().await?;
 
@@ -958,7 +958,7 @@ tx.commit().await?;
 
 **Use Case**: Video processing pipeline where videos are too large for Kafka, but you want pub/sub semantics.
 
-```yaml
+```
 namespaces:
   - name: video-processing
     patterns:
@@ -993,7 +993,7 @@ namespaces:
 
 **Use Case**: Transactionally publish large payloads (e.g., ML model weights after training).
 
-```yaml
+```
 namespaces:
   - name: ml-model-releases
     patterns:
@@ -1031,7 +1031,7 @@ namespaces:
 
 **Use Case**: High-throughput writes with automatic hot/warm/cold tiering.
 
-```yaml
+```
 namespaces:
   - name: user-activity
     patterns:
@@ -1071,7 +1071,7 @@ namespaces:
 
 **Use Case**: Keep read models in sync with write model using change data capture.
 
-```yaml
+```
 namespaces:
   - name: product-catalog
     patterns:
@@ -1139,7 +1139,7 @@ namespaces:
 
 Each pattern is a first-class `pattern` type in namespace config:
 
-```yaml
+```
 namespaces:
   - name: my-data
     pattern: tiered-storage  # or event-sourcing, cqrs, etc.

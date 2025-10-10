@@ -72,7 +72,7 @@ Organizations deploying Prism at scale face several challenges:
 
 ### Components
 
-```mermaid
+```
 graph TB
     subgraph "prism-netgw Control Plane"
         API[Control Plane API<br/>:9980]
@@ -226,7 +226,7 @@ Global Health (prism-netgw)
 └── Control Plane Health (netgw nodes)
 ```text
 
-```protobuf
+```
 message ReportHealthRequest {
   string cluster_id = 1;
   google.protobuf.Timestamp timestamp = 2;
@@ -259,7 +259,7 @@ message BackendHealth {
 
 **Goal**: Clients discover nearest healthy Prism gateway.
 
-```protobuf
+```
 message DiscoverGatewaysRequest {
   string namespace = 1;        // Filter by namespace support
   string client_location = 2;   // "us-east-1", "eu-west-1", etc.
@@ -282,7 +282,7 @@ message Gateway {
 ```text
 
 **DNS-based discovery** (alternative):
-```bash
+```
 # Round-robin DNS for Prism gateways
 dig prism.example.com
 # → 10.0.1.10 (us-east-1)
@@ -304,7 +304,7 @@ dig prism.example.com
 2. **Gateway-to-Gateway Forwarding**: Local gateway proxies to remote gateway (transparent)
 3. **Data Replication**: Namespace replicated across regions (lowest latency, eventual consistency)
 
-```protobuf
+```
 message RouteRequest {
   string namespace = 1;
   string client_region = 2;
@@ -330,27 +330,27 @@ message RouteResponse {
 **Strategies**:
 
 1. **Async Configuration Push**: Don't block on config sync
-   ```text
+   ```
    prism-netgw: Config updated (version 123)
    → Async push to all clusters (fire-and-forget)
    → Eventually consistent (all clusters converge to version 123)
    ```text
 
 2. **Heartbeat with Jitter**: Randomize heartbeat intervals to avoid thundering herd
-   ```rust
+   ```
    let heartbeat_interval = Duration::from_secs(30);
    let jitter = Duration::from_secs(rand::thread_rng().gen_range(0..10));
    sleep(heartbeat_interval + jitter).await;
    ```text
 
 3. **Batch Updates**: Accumulate config changes and push in batches
-   ```text
+   ```
    Instead of: 10 individual namespace updates (10 round trips)
    Do: 1 batch with 10 namespace updates (1 round trip)
    ```text
 
 4. **Caching**: Prism clusters cache config locally (survive netgw downtime)
-   ```text
+   ```
    prism-agent:
      - Fetches config from netgw periodically
      - Caches config on disk
@@ -402,7 +402,7 @@ Result: Only Group A can make config changes (split-brain prevented)
 
 ### gRPC Service Definition
 
-```protobuf
+```
 syntax = "proto3";
 
 package prism.netgw.v1;
@@ -441,7 +441,7 @@ service ControlPlaneService {
 
 ### Kubernetes Deployment (Multi-Region)
 
-```yaml
+```
 # Deploy netgw control plane in multiple regions
 apiVersion: apps/v1
 kind: StatefulSet
@@ -482,7 +482,7 @@ spec:
 
 ### Agent Deployment (Per Cluster)
 
-```yaml
+```
 # Deploy prism-agent on each Prism gateway cluster
 apiVersion: apps/v1
 kind: DaemonSet
@@ -518,7 +518,7 @@ spec:
 
 All communication between netgw and agents uses mTLS:
 
-```yaml
+```
 tls:
   server_cert: /etc/netgw/tls/server.crt
   server_key: /etc/netgw/tls/server.key

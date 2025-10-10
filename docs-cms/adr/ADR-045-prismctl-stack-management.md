@@ -98,7 +98,7 @@ prismctl
 
 Stack management shares configuration with other prismctl commands:
 
-```yaml
+```
 # ~/.prism/config.yaml
 admin:
   endpoint: localhost:8981
@@ -134,7 +134,7 @@ The `stack` subcommand supports multiple infrastructure providers:
 
 Uses Consul, Vault, and Nomad for service discovery, secrets, and orchestration:
 
-```bash
+```
 # Use Hashicorp stack (default)
 prismctl stack init --provider hashicorp
 
@@ -147,7 +147,7 @@ prismctl stack init --provider hashicorp
 ```text
 
 **Configuration** (`~/.prism/stacks/hashicorp.yaml`):
-```yaml
+```
 provider: hashicorp
 
 services:
@@ -180,7 +180,7 @@ services:
 ```text
 
 **Stack operations**:
-```go
+```
 type HashicorpStack struct {
     config *HashicorpConfig
 }
@@ -209,7 +209,7 @@ func (s *HashicorpStack) Start(ctx context.Context) error {
 
 Simple Docker-based local development:
 
-```bash
+```
 # Use Docker Compose stack
 prismctl stack init --provider docker-compose
 
@@ -218,7 +218,7 @@ prismctl stack start
 ```text
 
 **Configuration** (`~/.prism/stacks/docker-compose.yaml`):
-```yaml
+```
 provider: docker-compose
 
 compose_file: ~/.prism/docker-compose.yml
@@ -231,7 +231,7 @@ services:
 ```text
 
 **Stack operations**:
-```go
+```
 type DockerComposeStack struct {
     composeFile string
 }
@@ -249,7 +249,7 @@ func (s *DockerComposeStack) Start(ctx context.Context) error {
 
 Cloud-native using AWS services:
 
-```bash
+```
 # Use AWS stack
 prismctl stack init --provider aws
 
@@ -261,7 +261,7 @@ prismctl stack init --provider aws
 ```text
 
 **Configuration** (`~/.prism/stacks/aws.yaml`):
-```yaml
+```
 provider: aws
 
 region: us-west-2
@@ -288,7 +288,7 @@ services:
 
 Deploy to Kubernetes cluster:
 
-```bash
+```
 # Use Kubernetes stack
 prismctl stack init --provider kubernetes
 
@@ -300,7 +300,7 @@ prismctl stack start
 
 All providers implement a common interface:
 
-```go
+```
 type StackProvider interface {
     // Initialize creates configuration files
     Init(ctx context.Context, opts *InitOptions) error
@@ -341,7 +341,7 @@ type Endpoints struct {
 ### Implementation Example
 
 **Stack initialization**:
-```go
+```
 // cmd/prismctl/stack.go
 var stackInitCmd = &cobra.Command{
     Use:   "init",
@@ -381,7 +381,7 @@ func createStackProvider(name string) (StackProvider, error) {
 ```text
 
 **Stack start**:
-```go
+```
 var stackStartCmd = &cobra.Command{
     Use:   "start",
     Short: "Start infrastructure stack",
@@ -421,7 +421,7 @@ func runStackStart(cmd *cobra.Command, args []string) error {
 
 ### Installation and Setup
 
-```bash
+```
 # 1. Install prismctl
 go install github.com/jrepp/prism-data-layer/tools/cmd/prismctl@latest
 
@@ -460,7 +460,7 @@ prismctl namespace create my-app
 
 Combine init + start:
 
-```bash
+```
 # Bootstrap everything in one command
 prismctl stack bootstrap
 

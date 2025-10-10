@@ -102,7 +102,7 @@ Build **Admin UI with FastAPI + gRPC-Web**:
 - **Cons**: Larger CSS file (but can be minified)
 
 **Generated gRPC-Web client:**
-```bash
+```
 # Generate JavaScript client from proto
 protoc --js_out=import_style=commonjs,binary:./admin-ui/static/js \
        --grpc-web_out=import_style=commonjs,mode=grpcwebtext:./admin-ui/static/js \
@@ -111,7 +111,7 @@ protoc --js_out=import_style=commonjs,binary:./admin-ui/static/js \
 
 ### FastAPI Implementation
 
-```python
+```
 # admin-ui/main.py
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles

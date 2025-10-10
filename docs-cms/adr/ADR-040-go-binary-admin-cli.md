@@ -233,14 +233,14 @@ tools/
 ```text
 
 **Build**:
-```bash
+```
 cd tools
 go build -o prismctl ./cmd/prismctl
 ./prismctl --help
 ```text
 
 **Release build** (optimized):
-```bash
+```
 go build -ldflags="-s -w" -o prismctl ./cmd/prismctl
 upx prismctl  # Optional: compress binary (10MB → 3MB)
 ```text
@@ -248,7 +248,7 @@ upx prismctl  # Optional: compress binary (10MB → 3MB)
 ### Configuration
 
 **Default config** (`~/.prism/config.yaml`):
-```yaml
+```
 admin:
   endpoint: localhost:8981
 
@@ -277,7 +277,7 @@ logging:
 
 **Superseded by ADR-045**: Bootstrap is now handled by `prismctl stack init`.
 
-```bash
+```
 # Install prismctl (includes bootstrap functionality)
 go install github.com/jrepp/prism-data-layer/tools/cmd/prismctl@latest
 
@@ -303,7 +303,7 @@ Rationale:
 
 **Plugin manifests** in `~/.prism/plugins/`:
 
-```yaml
+```
 # ~/.prism/plugins/postgres.yaml
 name: postgres
 image: prism/postgres-plugin:latest
@@ -315,7 +315,7 @@ capabilities:
 ```text
 
 **CLI integration**:
-```bash
+```
 # List available plugins
 prismctl plugin list
 
@@ -330,7 +330,7 @@ prismctl plugin health postgres
 ```text
 
 **Go implementation**:
-```go
+```
 func runPluginStart(cmd *cobra.Command, args []string) error {
     pluginName := args[0]
 
@@ -428,3 +428,5 @@ func loadPluginManifest(name string) (*PluginManifest, error) {
 
 - 2025-10-09: Initial acceptance with Go binary approach
 - 2025-10-09: Updated to reference ADR-045 for stack management (bootstrap now via prismctl)
+
+```

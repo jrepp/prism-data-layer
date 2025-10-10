@@ -56,7 +56,7 @@ Write Path:
 
 ### Cache Configuration
 
-```yaml
+```
 namespace: user-profiles
 
 cache:
@@ -76,7 +76,7 @@ cache:
 
 ### Implementation
 
-```rust
+```
 #[async_trait]
 pub trait CacheBackend: Send + Sync {
     async fn get(&self, key: &str) -> Result<Option<Vec<u8>>>;
@@ -112,7 +112,7 @@ impl CacheBackend for RedisCache {
 
 ### Cache-Aware Backend Wrapper
 
-```rust
+```
 pub struct CachedBackend<B: KeyValueBackend> {
     backend: B,
     cache: Option<Arc<dyn CacheBackend>>,

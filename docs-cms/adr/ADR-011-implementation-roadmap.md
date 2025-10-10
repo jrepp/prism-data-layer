@@ -46,7 +46,7 @@ proto/
    - Service/RPC-level: `require_auth`, `timeout_ms`, `idempotent`
 
 3. **Set up code generation**:
-```bash
+```
 # Install buf
 brew install bufbuild/buf/buf
 
@@ -58,7 +58,7 @@ buf generate --template buf.gen.python.yaml
 ```text
 
 4. **Create `tooling/codegen`** module:
-```python
+```
 python -m tooling.codegen generate
 # → Generates Rust, Python, TypeScript from proto
 ```text
@@ -85,13 +85,13 @@ Create minimal gRPC server in Rust that can accept requests and return dummy res
 ### Deliverables
 
 1. **Initialize Rust workspace**:
-```bash
+```
 cargo new --lib proxy
 cd proxy
 ```text
 
 2. **Add dependencies** (`Cargo.toml`):
-```toml
+```
 [dependencies]
 tokio = { version = "1.35", features = ["full"] }
 tonic = "0.10"
@@ -102,7 +102,7 @@ tracing-subscriber = "0.3"
 ```text
 
 3. **Implement health check service**:
-```rust
+```
 // proxy/src/health.rs
 pub struct HealthService;
 
@@ -115,7 +115,7 @@ impl HealthCheck for HealthService {
 ```text
 
 4. **Create main server**:
-```rust
+```
 // proxy/src/main.rs
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -132,7 +132,7 @@ async fn main() -> Result<()> {
 ```text
 
 5. **Add basic logging**:
-```rust
+```
 tracing_subscriber::fmt()
     .with_target(false)
     .compact()
@@ -160,7 +160,7 @@ Define complete KeyValue protobuf API and generate server stubs.
 ### Deliverables
 
 1. **Create KeyValue proto**:
-```protobuf
+```
 // proto/prism/keyvalue/v1/keyvalue.proto
 service KeyValueService {
   rpc Put(PutRequest) returns (PutResponse);
@@ -171,7 +171,7 @@ service KeyValueService {
 ```text
 
 2. **Create KeyValue types**:
-```protobuf
+```
 // proto/prism/keyvalue/v1/types.proto
 message Item {
   bytes key = 1;
@@ -188,12 +188,12 @@ message PutRequest {
 ```text
 
 3. **Regenerate Rust code**:
-```bash
+```
 buf generate
 ```text
 
 4. **Implement stub service** (returns errors):
-```rust
+```
 // proxy/src/keyvalue/service.rs
 pub struct KeyValueService;
 
@@ -207,7 +207,7 @@ impl KeyValue for KeyValueService {
 ```text
 
 5. **Wire into server**:
-```rust
+```
 Server::builder()
     .add_service(HealthServer::new(health_svc))
     .add_service(KeyValueServer::new(kv_svc))  // ← New!
@@ -237,7 +237,7 @@ Implement working KeyValue backend using SQLite for local testing.
 ### Deliverables
 
 1. **Define backend trait**:
-```rust
+```
 // proxy/src/backend/mod.rs
 #[async_trait]
 pub trait KeyValueBackend: Send + Sync {
@@ -249,7 +249,7 @@ pub trait KeyValueBackend: Send + Sync {
 ```text
 
 2. **Implement SQLite backend**:
-```rust
+```
 // proxy/src/backend/sqlite.rs
 pub struct SqliteBackend {
     pool: SqlitePool,
@@ -280,7 +280,7 @@ impl KeyValueBackend for SqliteBackend {
 ```text
 
 3. **Create schema migration**:
-```sql
+```
 -- proxy/migrations/001_create_kv_table.sql
 CREATE TABLE IF NOT EXISTS kv (
     namespace TEXT NOT NULL,
@@ -296,7 +296,7 @@ CREATE INDEX idx_kv_namespace ON kv(namespace);
 ```text
 
 4. **Wire backend into service**:
-```rust
+```
 // proxy/src/keyvalue/service.rs
 pub struct KeyValueService {
     backend: Arc<dyn KeyValueBackend>,
@@ -314,7 +314,7 @@ impl KeyValue for KeyValueService {
 ```text
 
 5. **Add configuration**:
-```yaml
+```
 # proxy/config.yaml
 database:
   type: sqlite
@@ -348,7 +348,7 @@ Validate end-to-end functionality with automated tests using real local backends
 ### Deliverables
 
 1. **Create integration test**:
-```rust
+```
 // proxy/tests/integration_test.rs
 #[tokio::test]
 async fn test_put_get_roundtrip() {
@@ -384,7 +384,7 @@ async fn test_put_get_roundtrip() {
 ```text
 
 2. **Enhance `docker-compose.test.yml`**:
-```yaml
+```
 services:
   prism-proxy:
     build: ./proxy
@@ -400,7 +400,7 @@ services:
 ```text
 
 3. **Create test helper**:
-```rust
+```
 // proxy/tests/common/mod.rs
 pub struct TestFixture {
     pub client: KeyValueClient<Channel>,
@@ -421,7 +421,7 @@ impl TestFixture {
 ```text
 
 4. **Add CI workflow**:
-```yaml
+```
 # .github/workflows/test.yml
 name: Tests
 
@@ -465,7 +465,7 @@ Production-ready Postgres backend with complete documentation.
 ### Deliverables
 
 1. **Implement Postgres backend**:
-```rust
+```
 // proxy/src/backend/postgres.rs
 pub struct PostgresBackend {
     pool: PgPool,
@@ -499,7 +499,7 @@ impl KeyValueBackend for PostgresBackend {
 ```text
 
 2. **Add connection pooling**:
-```rust
+```
 let pool = PgPoolOptions::new()
     .max_connections(20)
     .connect(&database_url)
@@ -507,7 +507,7 @@ let pool = PgPoolOptions::new()
 ```text
 
 3. **Create Postgres migrations**:
-```sql
+```
 -- proxy/migrations/postgres/001_create_kv_table.sql
 CREATE TABLE IF NOT EXISTS kv (
     namespace VARCHAR(255) NOT NULL,
@@ -524,7 +524,7 @@ CREATE INDEX idx_kv_id ON kv(namespace, id);
 ```text
 
 4. **Add integration tests for Postgres**:
-```rust
+```
 #[tokio::test]
 async fn test_postgres_backend() {
     let pool = PgPool::connect("postgres://prism:prism_test_password@localhost/prism_test")
@@ -624,3 +624,5 @@ Once the foundation is solid, subsequent phases:
 ## Revision History
 
 - 2025-10-05: Initial roadmap and acceptance
+
+```

@@ -174,7 +174,7 @@ tools/
 
 ### Example Implementation
 
-```go
+```
 // cmd/prism-cli/root.go
 package main
 
@@ -263,3 +263,5 @@ func main() {
 ## Revision History
 
 - 2025-10-07: Initial draft and acceptance (adapted from org-stream-producer)
+
+```

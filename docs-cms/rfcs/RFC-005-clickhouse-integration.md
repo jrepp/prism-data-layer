@@ -490,7 +490,7 @@ retention_storage = compressed_size × retention_days × (1 + replica_count)
 
 ### 7.2 Monitoring
 
-```yaml
+```
 metrics:
   ingestion:
     - insert_rate_events_per_sec
@@ -518,7 +518,7 @@ metrics:
 
 ### 7.3 Data Lifecycle
 
-```mermaid
+```
 graph LR
     Hot[Hot Storage<br/>SSD<br/>Last 7 days] -->|TTL| Warm[Warm Storage<br/>HDD<br/>8-30 days]
     Warm -->|TTL| Cold[Cold Storage<br/>S3<br/>31-90 days]
@@ -530,7 +530,7 @@ graph LR
     style Delete fill:#dfe6e9
 ```text
 
-```sql
+```
 -- Tiered storage with TTL
 ALTER TABLE events MODIFY TTL
     timestamp + INTERVAL 7 DAY TO VOLUME 'hot',
@@ -606,3 +606,5 @@ ALTER TABLE events MODIFY TTL
 ## 11. Revision History
 
 - 2025-10-08: Initial draft
+
+```

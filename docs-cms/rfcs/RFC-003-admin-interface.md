@@ -94,7 +94,7 @@ Prism requires administrative capabilities beyond the data plane APIs. Operators
 
 **API Surface:**
 
-```protobuf
+```
 service AdminService {
   // Configuration Management
   rpc ListConfigs(ListConfigsRequest) returns (ListConfigsResponse);
@@ -132,7 +132,7 @@ service AdminService {
 
 Run on separate port (8981) alongside data plane (8980):
 
-```rust
+```
 // proxy/src/main.rs
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -159,7 +159,7 @@ async fn main() -> Result<()> {
 
 Admin API requires separate credentials:
 
-```yaml
+```
 # Metadata in all admin requests
 metadata:
   x-admin-token: "admin-abc123"
@@ -244,7 +244,7 @@ admin-ui/static/
 
 **JavaScript Client:**
 
-```javascript
+```
 // admin-ui/static/js/config.js
 import {AdminServiceClient} from './admin_grpc_web_pb.js';
 
@@ -287,7 +287,7 @@ async function loadConfigs() {
 
 **Implementation:**
 
-```rust
+```
 impl AdminService {
     async fn create_config(&self, req: CreateConfigRequest) -> Result<CreateConfigResponse> {
         let actor = self.get_admin_user_from_metadata()?;
@@ -314,7 +314,7 @@ impl AdminService {
 
 **Storage:**
 
-```sql
+```
 CREATE TABLE audit_log (
     id UUID PRIMARY KEY,
     timestamp TIMESTAMPTZ NOT NULL,
@@ -347,7 +347,7 @@ CREATE TABLE audit_log (
 
 **Docker Compose:**
 
-```yaml
+```
 services:
   prism-proxy:
     image: prism/proxy:latest
@@ -371,7 +371,7 @@ services:
 
 **Network Policy:**
 
-```yaml
+```
 # Kubernetes NetworkPolicy example
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
@@ -405,7 +405,7 @@ spec:
 - Scoped to specific operations (RBAC)
 - Stored in secret management system
 
-```rust
+```
 #[derive(Debug)]
 pub struct AdminApiKey {
     pub key_id: String,
@@ -434,7 +434,7 @@ pub enum Permission {
 
 **Role-Based Access Control (RBAC):**
 
-```yaml
+```
 roles:
   admin:
     - config:*
@@ -461,7 +461,7 @@ roles:
 - Admin UI behind VPN or internal load balancer
 - mTLS for admin API connections
 
-```yaml
+```
 # Example firewall rules
 - port: 8980
   protocol: TCP
@@ -478,7 +478,7 @@ roles:
 
 Admin UI caches configuration list:
 
-```javascript
+```
 // Cache configs for 30 seconds
 const configCache = new Map();
 const CACHE_TTL = 30000;
@@ -501,7 +501,7 @@ async function getConfigs() {
 
 All list operations support pagination:
 
-```protobuf
+```
 message ListSessionsRequest {
   int32 page_size = 1;
   optional string page_token = 2;
@@ -518,7 +518,7 @@ message ListSessionsResponse {
 
 Long-running operations return operation handle:
 
-```protobuf
+```
 message DrainConnectionsRequest {
   optional string namespace = 1;
   optional google.protobuf.Duration timeout = 2;
@@ -575,7 +575,7 @@ message GetOperationResponse {
 ## Testing Strategy
 
 ### Unit Tests
-```rust
+```
 #[cfg(test)]
 mod tests {
     #[tokio::test]
@@ -597,7 +597,7 @@ mod tests {
 ```text
 
 ### Integration Tests
-```bash
+```
 # Test admin API
 grpcurl -H "x-admin-token: test-token" \
   localhost:8981 \
@@ -611,7 +611,7 @@ curl http://localhost:8000
 ```text
 
 ### E2E Tests
-```python
+```
 # tests/e2e/test_admin_workflow.py
 def test_full_admin_workflow():
     # Create config via UI
@@ -630,7 +630,7 @@ def test_full_admin_workflow():
 
 ### Metrics
 
-```rust
+```
 // Prometheus metrics for admin API
 lazy_static! {
     static ref ADMIN_REQUESTS: IntCounterVec = register_int_counter_vec!(
@@ -649,7 +649,7 @@ lazy_static! {
 
 ### Alerts
 
-```yaml
+```
 # Prometheus alerting rules
 groups:
 - name: prism_admin
@@ -688,3 +688,5 @@ groups:
 ## Revision History
 
 - 2025-10-08: Initial draft
+
+```

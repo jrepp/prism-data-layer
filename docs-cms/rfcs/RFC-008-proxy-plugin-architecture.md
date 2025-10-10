@@ -1345,7 +1345,7 @@ test result: ok. 45 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out
 
 **GitHub Actions workflow**:
 
-```yaml
+```
 # .github/workflows/plugin-acceptance.yml
 name: Plugin Acceptance Tests
 
@@ -1448,7 +1448,7 @@ jobs:
 
 ### Plugin Verification
 
-```rust
+```
 // Verify plugin before loading
 pub fn verify_plugin(plugin_path: &Path) -> Result<()> {
     // 1. Check file permissions (must be owned by prism user)
@@ -1563,7 +1563,7 @@ Making plugins easy to create is critical for Prism's success. We prioritize:
 
 **Quick Start** - Create a new plugin in 30 seconds:
 
-```bash
+```
 # Create new plugin from template
 prism-plugin-init --name mongodb --language rust
 
@@ -1599,7 +1599,7 @@ mongodb-plugin/
 
 Rust SDK provides helpers for common patterns:
 
-```rust
+```
 use prism_plugin_sdk::prelude::*;
 
 #[plugin]
@@ -1643,7 +1643,7 @@ impl BackendPlugin for MongoDbPlugin {
 
 **Local Testing Without Prism**:
 
-```bash
+```
 # 1. Start plugin in standalone mode
 cargo run --bin mongodb-plugin-server
 
@@ -1658,7 +1658,7 @@ grpcurl -plaintext -d '{"operation": "get", "params": {"key": "foo"}}' \
 
 **Integration Testing**:
 
-```rust
+```
 #[tokio::test]
 async fn test_get_operation() {
     // SDK provides test harness
@@ -1676,7 +1676,7 @@ async fn test_get_operation() {
 
 **Hot-Reload During Development**:
 
-```bash
+```
 # Watch for changes and reload plugin
 cargo watch -x 'build --release' -s 'prism plugin reload mongodb'
 ```text
@@ -1697,7 +1697,7 @@ cargo watch -x 'build --release' -s 'prism plugin reload mongodb'
 - **Best for**: Prototyping, ML backends, custom integrations
 
 **Template Availability**:
-```bash
+```
 prism-plugin-init --name mybackend --language [rust|go|python]
 ```text
 
@@ -1723,7 +1723,7 @@ Each template includes:
 
 **Performance Isolation** (Prevents noisy neighbor):
 
-```yaml
+```
 # Kubernetes resource limits per plugin
 apiVersion: v1
 kind: Pod
@@ -1744,7 +1744,7 @@ spec:
 
 **Network Isolation** (Prevents cross-plugin communication):
 
-```yaml
+```
 # NetworkPolicy: Plugin can only talk to proxy and backend
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
@@ -1775,7 +1775,7 @@ Plugin management commands are provided via the Prism Admin CLI. See [RFC-006 Pl
 
 **Quick examples**:
 
-```bash
+```
 # List installed plugins
 prism plugin list
 
@@ -1804,7 +1804,7 @@ For detailed plugin admin commands, see [RFC-006 Section: Plugin Management](./R
 
 1. **Implement BackendPlugin Trait**:
 
-```rust
+```
 use prism_plugin::{BackendPlugin, InitializeRequest, ExecuteRequest};
 
 pub struct MyBackendPlugin {
@@ -1839,7 +1839,7 @@ impl BackendPlugin for MyBackendPlugin {
 
 2. **Build as Shared Library**:
 
-```toml
+```
 [lib]
 crate-type = ["cdylib"]  # Dynamic library
 
@@ -1849,7 +1849,7 @@ prism-plugin-sdk = "0.1"
 
 3. **Register Plugin**:
 
-```yaml
+```
 # Add to proxy configuration
 plugins:
   - name: my-backend
@@ -1866,3 +1866,5 @@ plugins:
 3. Convert PostgreSQL backend to plugin architecture
 4. Document plugin development process
 5. Implement sidecar plugin support with Unix sockets
+
+```

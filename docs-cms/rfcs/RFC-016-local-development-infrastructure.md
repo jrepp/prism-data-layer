@@ -148,7 +148,7 @@ local-dev/
 
 ### Quick Start
 
-```bash
+```
 # Start Signoz
 cd local-dev/signoz
 docker-compose -f docker-compose.signoz.yml up -d
@@ -163,7 +163,7 @@ export OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4317
 ### Integration Points
 
 **Prism Proxy:**
-```rust
+```
 // Automatically uses OTEL_EXPORTER_OTLP_ENDPOINT if set
 // proxy/src/main.rs
 fn main() {
@@ -173,7 +173,7 @@ fn main() {
 ```text
 
 **Backend Plugins:**
-```go
+```
 // plugins/<backend>/main.go
 func main() {
     observability.InitTracer("prism-plugin-postgres")
@@ -194,7 +194,7 @@ func main() {
 
 ### Architecture
 
-```mermaid
+```
 sequenceDiagram
     participant Dev as Developer
     participant CLI as prismctl
@@ -225,7 +225,7 @@ sequenceDiagram
 
 Location: `local-dev/dex/dex-config.yaml`
 
-```yaml
+```
 issuer: http://localhost:5556/dex
 
 storage:
@@ -283,7 +283,7 @@ enablePasswordDB: true
 
 Location: `local-dev/dex/static-users.yaml`
 
-```yaml
+```
 # Pre-provisioned developer user
 # Password is bcrypt hash of "devpass"
 staticPasswords:
@@ -313,7 +313,7 @@ staticPasswords:
 
 Location: `local-dev/dex/docker-compose.dex.yml`
 
-```yaml
+```
 version: '3.8'
 
 services:
@@ -359,7 +359,7 @@ networks:
 
 #### Implementation: Auto-Login Flow
 
-```rust
+```
 // cli/src/auth/auto_login.rs
 
 pub struct AutoLoginConfig {
@@ -423,7 +423,7 @@ fn is_local_dev() -> bool {
 
 #### CLI Integration
 
-```rust
+```
 // cli/src/commands/namespace.rs
 
 async fn list_namespaces(ctx: &Context) -> Result<()> {
@@ -463,7 +463,7 @@ async fn list_namespaces(ctx: &Context) -> Result<()> {
 
 #### Environment Variable Toggle
 
-```bash
+```
 # Enable auto-login (default for local dev)
 export PRISM_LOCAL_DEV=true
 
@@ -507,7 +507,7 @@ prism namespace list
 
 ### Update Process
 
-```bash
+```
 # Update Signoz
 cd local-dev/signoz
 docker-compose -f docker-compose.signoz.yml pull
@@ -527,7 +527,7 @@ make update-support-services
 
 Location: `local-dev/versions.yaml`
 
-```yaml
+```
 # Prism Local Development Support Services
 # Last updated: 2025-10-09
 
@@ -568,7 +568,7 @@ backend_testing:
 
 ### Health Checks
 
-```bash
+```
 # Check all support services
 cd local-dev
 ./scripts/health-check.sh
@@ -584,7 +584,7 @@ cd local-dev
 
 ### Pattern 1: Start Everything
 
-```bash
+```
 # Start all support services
 cd local-dev
 make dev-up
@@ -596,7 +596,7 @@ make dev-up
 
 ### Pattern 2: Start Only Signoz
 
-```bash
+```
 # Just observability, no auth
 cd local-dev/signoz
 docker-compose -f docker-compose.signoz.yml up -d
@@ -608,7 +608,7 @@ cargo run --release
 
 ### Pattern 3: Start Only Dex
 
-```bash
+```
 # Just auth, no observability
 cd local-dev/dex
 docker-compose -f docker-compose.dex.yml up -d
@@ -620,7 +620,7 @@ prism auth login
 
 ### Pattern 4: Full Stack with Backends
 
-```bash
+```
 # Start support services
 make dev-up
 
@@ -641,7 +641,7 @@ cargo run --release
 Support services expose configuration via standard environment variables:
 
 **Signoz (OpenTelemetry):**
-```bash
+```
 # OTLP endpoint for Prism components
 export OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4317
 
@@ -655,7 +655,7 @@ export OTEL_RESOURCE_ATTRIBUTES="deployment.environment=local"
 ```text
 
 **Dex (OIDC):**
-```bash
+```
 # Issuer URL
 export PRISM_OIDC_ISSUER=http://localhost:5556/dex
 
@@ -669,7 +669,7 @@ export PRISM_LOCAL_DEV=true
 ### Configuration Files
 
 **Prism Proxy Config:**
-```yaml
+```
 # proxy/config.yaml
 observability:
   tracing:
@@ -687,7 +687,7 @@ authentication:
 ```text
 
 **CLI Config:**
-```yaml
+```
 # ~/.prism/config.yaml
 admin:
   endpoint: http://localhost:8090
@@ -703,7 +703,7 @@ auth:
 
 ### Workflow 1: First-Time Setup
 
-```bash
+```
 # Clone repository
 git clone https://github.com/org/prism.git
 cd prism
@@ -729,7 +729,7 @@ make bootstrap
 
 ### Workflow 2: Daily Development
 
-```bash
+```
 # Start support services (if not running)
 make dev-up
 
@@ -749,7 +749,7 @@ prism health
 
 ### Workflow 3: Testing OIDC Integration
 
-```bash
+```
 # Start Dex
 cd local-dev/dex
 docker-compose -f docker-compose.dex.yml up -d
@@ -776,7 +776,7 @@ cat ~/.prism/token
 
 ### Workflow 4: Debugging with Traces
 
-```bash
+```
 # Ensure Signoz is running
 make dev-signoz-up
 
@@ -850,3 +850,5 @@ For production:
 ## Revision History
 
 - 2025-10-09: Initial draft covering Signoz, Dex, developer identity auto-provisioning, and lifecycle management
+
+```

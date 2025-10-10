@@ -511,7 +511,7 @@ implementation:
 
 **Example Configuration** (using the pattern):
 
-```yaml
+```
 namespaces:
   - name: iot-devices
     pattern: multicast-registry
@@ -633,7 +633,7 @@ proto/
 
 ### 1. **Explicit Capability Mapping**
 
-```yaml
+```
 # Before (ambiguous)
 backend: redis
 
@@ -678,7 +678,7 @@ config = generate_namespace_config(
 
 ### 3. **Backend Substitutability**
 
-```yaml
+```
 # Development (fast local testing)
 slots:
   registry:
@@ -744,7 +744,7 @@ slots: {registry: dynamodb, messaging: sns}
 
 ## Example: Full Configuration Generation Flow
 
-```bash
+```
 # 1. List available patterns
 $ prismctl registry patterns list
 multicast-registry    v1    Register identities and multicast to subsets
@@ -849,3 +849,5 @@ Slot: messaging
 ## Revision History
 
 - 2025-10-09: Initial draft defining three-layer schema architecture (interfaces, backends, patterns)
+
+```

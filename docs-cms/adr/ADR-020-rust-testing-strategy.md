@@ -361,7 +361,7 @@ proxy/
 
 ### Running Tests
 
-```bash
+```
 # Unit tests only (fast)
 cargo test --lib
 
@@ -386,7 +386,7 @@ PROPTEST_CASES=10000 cargo test
 
 ### CI Configuration
 
-```yaml
+```
 # .github/workflows/rust-test.yml
 jobs:
   test:
@@ -415,7 +415,7 @@ jobs:
 
 ### Dependencies
 
-```toml
+```
 [dev-dependencies]
 tokio-test = "0.4"
 proptest = "1.4"
@@ -436,3 +436,5 @@ testcontainers = "0.15"
 ## Revision History
 
 - 2025-10-07: Initial draft and acceptance
+
+```

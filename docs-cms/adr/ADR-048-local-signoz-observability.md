@@ -113,7 +113,7 @@ Signoz Components:
 
 Location: `local-dev/signoz/docker-compose.signoz.yml`
 
-```yaml
+```
 version: '3.8'
 
 services:
@@ -218,7 +218,7 @@ networks:
 
 Location: `local-dev/signoz/otel-collector-config.yaml`
 
-```yaml
+```
 receivers:
   otlp:
     protocols:
@@ -285,7 +285,7 @@ service:
 
 The proxy automatically detects and uses Signoz when available:
 
-```rust
+```
 // proxy/src/observability/tracer.rs
 
 pub fn init_tracer(config: &ObservabilityConfig) -> Result<Tracer> {
@@ -318,7 +318,7 @@ pub fn init_tracer(config: &ObservabilityConfig) -> Result<Tracer> {
 
 Plugins receive OTLP configuration via environment variables:
 
-```go
+```
 // plugins/core/observability/tracer.go
 
 func InitTracer(serviceName string) error {
@@ -350,7 +350,7 @@ func InitTracer(serviceName string) error {
 
 ### Starting Signoz
 
-```bash
+```
 # Start Signoz stack
 cd local-dev/signoz
 docker-compose -f docker-compose.signoz.yml up -d
@@ -364,7 +364,7 @@ open http://localhost:3301
 
 ### Starting Prism with Signoz
 
-```bash
+```
 # Set OTLP endpoint environment variable
 export OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4317
 
@@ -387,7 +387,7 @@ OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4317 \
 
 ### Resetting Data
 
-```bash
+```
 # Stop and remove volumes
 docker-compose -f docker-compose.signoz.yml down -v
 
@@ -469,3 +469,5 @@ docker-compose -f docker-compose.signoz.yml up -d
 ## Revision History
 
 - 2025-10-09: Initial decision for local Signoz instance
+
+```

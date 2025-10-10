@@ -65,7 +65,7 @@ System-Wide Default TTL (30 days)
 
 ### Implementation in Protobuf
 
-```protobuf
+```
 // Client-specified TTL in requests
 message SetRequest {
   string namespace = 1;
@@ -99,7 +99,7 @@ message NamespaceConfig {
 
 ### Configuration YAML Example
 
-```yaml
+```
 namespaces:
   - name: user-sessions
     backend: redis
@@ -123,7 +123,7 @@ namespaces:
 
 ### Redis (Cache, Session, Vector)
 
-```rust
+```
 // Rust implementation in Prism proxy
 async fn set_with_ttl(
     &self,
@@ -144,7 +144,7 @@ async fn set_with_ttl(
 
 ### PostgreSQL (KeyValue)
 
-```sql
+```
 -- Table schema with TTL support
 CREATE TABLE keyvalue (
     namespace VARCHAR(255) NOT NULL,
@@ -167,7 +167,7 @@ AND expires_at IS NOT NULL;
 
 ### ClickHouse (TimeSeries)
 
-```sql
+```
 -- ClickHouse table with TTL
 CREATE TABLE events (
     timestamp DateTime64(9),
@@ -183,7 +183,7 @@ TTL timestamp + INTERVAL 90 DAY; -- Default 90 days
 
 ### MinIO (Object Storage)
 
-```python
+```
 # MinIO lifecycle policy
 lifecycle_config = {
     "Rules": [
@@ -206,7 +206,7 @@ minio_client.set_bucket_lifecycle("prism-objects", lifecycle_config)
 
 ### Metrics
 
-```protobuf
+```
 message TTLMetrics {
   string namespace = 1;
 
@@ -228,7 +228,7 @@ message TTLMetrics {
 
 ### Alerting Rules
 
-```yaml
+```
 # Prometheus alert rules
 groups:
   - name: ttl_alerts
@@ -251,7 +251,7 @@ groups:
 
 ### Admin CLI Commands
 
-```bash
+```
 # Show TTL distribution for namespace
 prism namespace describe my-app --show-ttl-stats
 
@@ -269,7 +269,7 @@ prism data set-ttl my-app key456 --infinite
 
 ### Python SDK
 
-```python
+```
 from prism_sdk import PrismClient
 
 client = PrismClient(namespace="user-sessions")
@@ -286,7 +286,7 @@ client.set("permanent:record", data, no_expiration=True)
 
 ### Go SDK
 
-```go
+```
 client := prism.NewClient("user-sessions")
 
 // Explicit TTL
@@ -425,3 +425,5 @@ client.Set(ctx, "permanent:record", data,
 2. Implement TTL defaults in proxy for each backend
 3. Add TTL metrics to monitoring dashboards
 4. Document TTL best practices in client SDK guides
+
+```

@@ -157,7 +157,7 @@ const config: Config = {
     ],
   ],
 
-  // Enable Mermaid
+  // Enable Mermaid and configure markdown
   markdown: {
     mermaid: true,
   },

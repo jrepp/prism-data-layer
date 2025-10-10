@@ -719,6 +719,117 @@ class PrismDocValidator:
         finally:
             os.chdir(original_dir)
 
+    def check_code_blocks(self):
+        """Check code block formatting - balanced and properly labeled
+
+        Rules (per CommonMark/MDX spec):
+        - Opening fence: ``` followed by optional language (e.g., ```python, ```text)
+        - Closing fence: ``` with NO language or other text
+        - Content: Everything between opening and closing is treated as content
+        """
+        self.log("\n📝 Checking code blocks...")
+
+        total_valid = 0
+        total_invalid = 0
+
+        for doc in self.documents:
+            try:
+                content = doc.file_path.read_text(encoding='utf-8')
+                lines = content.split('\n')
+
+                in_code_block = False
+                in_frontmatter = False
+                frontmatter_count = 0
+                opening_line = None
+                opening_language = None
+                doc_valid_blocks = 0
+                doc_invalid_blocks = 0
+
+                for line_num, line in enumerate(lines, start=1):
+                    stripped = line.strip()
+
+                    # Track frontmatter (first --- to second ---)
+                    if stripped == '---':
+                        frontmatter_count += 1
+                        if frontmatter_count == 1:
+                            in_frontmatter = True
+                        elif frontmatter_count == 2:
+                            in_frontmatter = False
+                        continue
+
+                    # Skip frontmatter content
+                    if in_frontmatter:
+                        continue
+
+                    # Check if this line is a code fence (must start with exactly ``` or more backticks)
+                    # Per CommonMark: fence must be at least 3 backticks
+                    fence_match = re.match(r'^(`{3,})', stripped)
+                    if not fence_match:
+                        continue
+
+                    # This is a fence line
+                    fence_backticks = fence_match.group(1)
+                    remainder = stripped[len(fence_backticks):].strip()
+
+                    if not in_code_block:
+                        # Opening fence
+                        if not remainder:
+                            # Bare opening fence - INVALID (must have language)
+                            error = f"Line {line_num}: Opening code fence missing language (use ```text for plain text)"
+                            doc.errors.append(error)
+                            self.log(f"   ✗ {doc.file_path.name}:{line_num} - Opening fence without language")
+                            doc_invalid_blocks += 1
+                            total_invalid += 1
+                            # Still track as opening to detect closing
+                            in_code_block = True
+                            opening_line = line_num
+                            opening_language = '<none>'
+                        else:
+                            # Valid opening with language
+                            in_code_block = True
+                            opening_line = line_num
+                            opening_language = remainder.split()[0] if remainder else '<none>'
+                    else:
+                        # Closing fence
+                        if remainder:
+                            # Closing fence has extra text - INVALID
+                            # Per CommonMark: closing fence should have no info string
+                            error = f"Line {line_num}: Closing code fence has extra text (```{remainder}), should be just ```"
+                            doc.errors.append(error)
+                            self.log(f"   ✗ {doc.file_path.name}:{line_num} - Closing fence with text '```{remainder}'")
+                            doc_invalid_blocks += 1
+                            total_invalid += 1
+                        else:
+                            # Valid closing fence
+                            doc_valid_blocks += 1
+                            total_valid += 1
+
+                        # Mark block as closed regardless
+                        in_code_block = False
+                        opening_line = None
+                        opening_language = None
+
+                # Check for unclosed code block
+                if in_code_block:
+                    error = f"Unclosed code block starting at line {opening_line} (```{opening_language})"
+                    doc.errors.append(error)
+                    self.log(f"   ✗ {doc.file_path.name} - Unclosed block at line {opening_line}")
+                    doc_invalid_blocks += 1
+                    total_invalid += 1
+
+                # Report per-document summary
+                if doc_valid_blocks > 0 or doc_invalid_blocks > 0:
+                    if doc_invalid_blocks == 0:
+                        self.log(f"   ✓ {doc.file_path.name}: {doc_valid_blocks} valid code blocks")
+                    else:
+                        self.log(f"   ✗ {doc.file_path.name}: {doc_valid_blocks} valid, {doc_invalid_blocks} invalid")
+
+            except Exception as e:
+                doc.errors.append(f"Error checking code blocks: {e}")
+                self.log(f"   ✗ {doc.file_path.name}: Exception - {e}")
+
+        self.log(f"\n   Total: {total_valid} valid code blocks, {total_invalid} invalid code blocks across {len(self.documents)} documents")
+
     def check_formatting(self):
         """Check markdown formatting issues"""
         self.log("\n📝 Checking formatting...")
@@ -847,6 +958,7 @@ class PrismDocValidator:
         self.scan_documents()
         self.extract_links()
         self.validate_links()
+        self.check_code_blocks()  # NEW: Check code block balance and labeling
         self.check_mdx_compilation()  # NEW: Check MDX compilation with @mdx-js/mdx
         self.check_mdx_compatibility()
         self.check_cross_plugin_links()

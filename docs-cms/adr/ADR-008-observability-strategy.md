@@ -51,7 +51,7 @@ Adopt **OpenTelemetry** from day one for metrics, logs, and traces. Use **Promet
 
 **Key Metrics** (Prometheus format):
 
-```rust
+```
 use prometheus::{
     register_histogram_vec, register_counter_vec,
     HistogramVec, CounterVec,
@@ -104,7 +104,7 @@ REQUEST_COUNT
 
 **Format**: JSON for machine parsing
 
-```rust
+```
 use tracing::{info, error, instrument};
 use tracing_subscriber::fmt::format::json;
 
@@ -141,7 +141,7 @@ async fn handle_request(request: Request) -> Result<Response> {
 ```text
 
 **Log Output**:
-```json
+```
 {
   "timestamp": "2025-10-05T12:34:56.789Z",
   "level": "INFO",

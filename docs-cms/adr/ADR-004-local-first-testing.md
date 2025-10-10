@@ -59,7 +59,7 @@ Developer Laptop
 
 ### Local Stack Configuration
 
-```yaml
+```
 # docker-compose.test.yml
 version: '3.9'
 
@@ -134,7 +134,7 @@ services:
 
 ### Python Tooling
 
-```python
+```
 # tooling/test/local_stack.py
 
 import subprocess
@@ -209,7 +209,7 @@ if __name__ == "__main__":
 
 ### Test Structure
 
-```rust
+```
 // proxy/tests/integration/keyvalue_test.rs
 
 use prism_proxy::*;
@@ -360,7 +360,7 @@ async fn load_test_keyvalue_writes() {
 
 ### CI Configuration
 
-```yaml
+```
 # .github/workflows/test.yml
 name: Tests
 
@@ -389,7 +389,7 @@ jobs:
 
 ### Developer Workflow
 
-```bash
+```
 # One-time setup
 curl -LsSf https://astral.sh/uv/install.sh | sh
 uv sync
@@ -415,3 +415,5 @@ python -m tooling.test.local-stack down
 ## Revision History
 
 - 2025-10-05: Initial draft and acceptance
+
+```

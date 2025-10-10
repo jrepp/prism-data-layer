@@ -481,7 +481,7 @@ Standard gRPC status codes:
 
 ### Roles
 
-```yaml
+```
 roles:
   admin:
     description: Full administrative access
@@ -520,7 +520,7 @@ roles:
 
 ### Authorization Middleware
 
-```rust
+```
 use tonic::{Request, Status};
 use tonic::metadata::MetadataMap;
 
@@ -576,7 +576,7 @@ impl AuthInterceptor {
 
 ### Audit Entry Structure
 
-```rust
+```
 #[derive(Debug, Serialize)]
 pub struct AuditLogEntry {
     pub id: Uuid,
@@ -596,7 +596,7 @@ pub struct AuditLogEntry {
 
 ### Storage
 
-```sql
+```
 CREATE TABLE admin_audit_log (
     id UUID PRIMARY KEY,
     timestamp TIMESTAMPTZ NOT NULL,
@@ -622,7 +622,7 @@ CREATE TABLE admin_audit_log (
 
 ### Network Isolation
 
-```yaml
+```
 # Kubernetes NetworkPolicy
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
@@ -644,7 +644,7 @@ spec:
 
 ### Rate Limiting
 
-```rust
+```
 use governor::{Quota, RateLimiter};
 
 pub struct RateLimitInterceptor {
@@ -674,7 +674,7 @@ impl RateLimitInterceptor {
 
 ### TLS Configuration
 
-```rust
+```
 use tonic::transport::{Server, ServerTlsConfig};
 
 let tls_config = ServerTlsConfig::new()
@@ -692,7 +692,7 @@ Server::builder()
 
 ### Docker Compose
 
-```yaml
+```
 services:
   prism-proxy:
     image: prism/proxy:latest
@@ -714,7 +714,7 @@ networks:
 
 ### Kubernetes
 
-```yaml
+```
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -760,7 +760,7 @@ spec:
 
 ### Integration Tests
 
-```go
+```
 func TestAdminProtocol(t *testing.T) {
     // Start mock OIDC server
     oidcServer := mockoidc.NewServer(t)
@@ -829,7 +829,7 @@ func TestAdminProtocol(t *testing.T) {
      - Flow: When access_token expires, use refresh_token to get new access_token
      - Refresh tokens stored securely in `~/.prism/token` (mode 0600)
      - Configuration:
-       ```yaml
+       ```
        token_cache:
          jwt_validation_ttl: 24h  # How long to cache validated JWTs
          jwks_cache_ttl: 24h      # How long to cache public keys
@@ -852,7 +852,7 @@ func TestAdminProtocol(t *testing.T) {
      - Check standard claims (iss, aud, exp, nbf) locally
      - **No online validation** = Can't check real-time revocation
    - **Technology Stack**:
-     ```rust
+     ```
      use jsonwebtoken::{decode, DecodingKey, Validation, Algorithm};
      use reqwest::Client;
 
@@ -914,7 +914,7 @@ func TestAdminProtocol(t *testing.T) {
      - Example: Group `platform-team` → Can access all namespaces
      - Example: Group `team-analytics` → Can access `analytics` namespace
      - Configuration:
-       ```yaml
+       ```
        namespace_access:
          analytics:
            groups: ["team-analytics", "platform-team"]
@@ -928,7 +928,7 @@ func TestAdminProtocol(t *testing.T) {
      - Example: `"namespaces": ["analytics", "user-profiles"]`
      - IdP adds custom claims during token issuance
      - Configuration:
-       ```rust
+       ```
        let authorized_namespaces = claims.custom
            .get("namespaces")
            .and_then(|v| v.as_array())
@@ -941,7 +941,7 @@ func TestAdminProtocol(t *testing.T) {
      - JWT provides identity, external policy engine (OPA/Cedar) decides access
      - Policy checks: `allow if user.email in namespace.allowed_users`
      - Configuration:
-       ```rego
+       ```
        # OPA policy
        allow {
            input.user.email == "alice@company.com"
@@ -959,7 +959,7 @@ func TestAdminProtocol(t *testing.T) {
      - Token issuer determines namespace access
      - Example: `iss: https://tenant-analytics.idp.com` → `analytics` namespace
      - Configuration:
-       ```yaml
+       ```
        namespaces:
          analytics:
            oidc_issuer: https://tenant-analytics.idp.com
@@ -983,7 +983,7 @@ func TestAdminProtocol(t *testing.T) {
      - Service accounts use client_id/client_secret to obtain tokens
      - No user interaction required (headless authentication)
      - Flow:
-       ```bash
+       ```
        curl -X POST https://idp.example.com/oauth/token \
          -H "Content-Type: application/x-www-form-urlencoded" \
          -d "grant_type=client_credentials" \
@@ -992,7 +992,7 @@ func TestAdminProtocol(t *testing.T) {
          -d "scope=admin:read admin:write"
        ```text
      - Configuration:
-       ```yaml
+       ```
        # CI/CD environment
        PRISM_CLIENT_ID=prism-ci-service
        PRISM_CLIENT_SECRET=<secret>
@@ -1006,7 +1006,7 @@ func TestAdminProtocol(t *testing.T) {
      - Prism issues API keys directly (bypass OIDC for service accounts)
      - Keys stored in database, validated by Prism (not IdP)
      - Flow:
-       ```bash
+       ```
        # Generate key (admin operation)
        prismctl serviceaccount create ci-deploy --scopes admin:write
        # Returns: prism_key_abc123...
@@ -1016,7 +1016,7 @@ func TestAdminProtocol(t *testing.T) {
        prismctl namespace create prod-analytics
        ```text
      - Configuration:
-       ```sql
+       ```
        CREATE TABLE service_accounts (
            id UUID PRIMARY KEY,
            name VARCHAR(255) NOT NULL,
@@ -1033,7 +1033,7 @@ func TestAdminProtocol(t *testing.T) {
      - For K8s deployments, use projected service account tokens
      - Tokens automatically rotated by Kubernetes
      - Flow:
-       ```yaml
+       ```
        # Pod spec
        volumes:
        - name: prism-token
@@ -1053,7 +1053,7 @@ func TestAdminProtocol(t *testing.T) {
      - Store client credentials in secret manager (Vault/AWS Secrets Manager)
      - Fetch credentials at runtime, obtain token, use, discard
      - Configuration:
-       ```bash
+       ```
        # Fetch from Vault
        export PRISM_CLIENT_SECRET=$(vault kv get -field=secret prism/ci-service)
 
@@ -1092,3 +1092,5 @@ func TestAdminProtocol(t *testing.T) {
 
 - 2025-10-09: Initial draft with OIDC flows and sequence diagrams
 - 2025-10-09: Expanded open questions with feedback on multi-provider support (AWS/Azure/Google/Okta/Auth0/Dex), token caching (24h default with refresh token support), offline validation with JWKS caching, multi-tenancy mapping options (group/claim/OPA/tenant-scoped), and service account best practices (client credentials/API keys/K8s tokens/secret manager)
+
+```

@@ -115,7 +115,7 @@ prism/
 
 ### Key Libraries
 
-```go
+```
 // Protobuf
 import "google.golang.org/protobuf/proto"
 
@@ -136,13 +136,13 @@ import "golang.org/x/sync/errgroup"
 
 Generate Go code from the same proto definitions:
 
-```bash
+```
 # Generate Go protobuf code
 buf generate --template tools/buf.gen.go.yaml
 ```text
 
 `tools/buf.gen.go.yaml`:
-```yaml
+```
 version: v1
 plugins:
   - plugin: go
@@ -157,7 +157,7 @@ plugins:
 
 ### Example Tool: prism-cli
 
-```go
+```
 package main
 
 import (
@@ -204,3 +204,5 @@ func main() {
 ## Revision History
 
 - 2025-10-07: Initial draft and acceptance
+
+```

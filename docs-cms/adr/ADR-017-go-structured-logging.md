@@ -116,7 +116,7 @@ tools/internal/
 
 ### Core API
 
-```go
+```
 package log
 
 import (
@@ -179,7 +179,7 @@ type loggerKey struct{}
 
 ### Usage Examples
 
-```go
+```
 // Initialize at startup
 if err := log.Init(slog.LevelInfo, "json"); err != nil {
     panic(err)
@@ -217,7 +217,7 @@ logger.Debug("worker started",
 
 For hot paths, use conditional logging:
 
-```go
+```
 if logger.Enabled(ctx, slog.LevelDebug) {
     logger.DebugContext(ctx, "processing item",
         "item_id", id,
@@ -228,7 +228,7 @@ if logger.Enabled(ctx, slog.LevelDebug) {
 
 ### Testing Pattern
 
-```go
+```
 // Custom handler for testing
 type TestHandler struct {
     logs []slog.Record
@@ -331,3 +331,5 @@ func TestMigrate_Logging(t *testing.T) {
 ## Revision History
 
 - 2025-10-07: Initial draft and acceptance (adapted from org-stream-producer)
+
+```

@@ -72,7 +72,7 @@ From the reference materials (PDFs and videos), Netflix's Data Gateway provides:
 
 We've created a shallow monorepo structure:
 
-```
+```text
 prism/
 ├── CLAUDE.md                    # Project philosophy and guidance
 ├── README.md                    # Quick start and overview

@@ -174,7 +174,7 @@ tools/
 
 ### Test Runner
 
-```go
+```
 // tools/acceptance_test.go
 package tools_test
 
@@ -215,7 +215,7 @@ func mainCLI() int {
 
 ### Example Test Script
 
-```txtar
+```
 # testdata/script/namespace_create.txtar
 
 # Test: Create a namespace with explicit configuration
@@ -249,7 +249,7 @@ prismctl namespace list
 
 ### Advanced Test: Configuration File Discovery
 
-```txtar
+```
 # testdata/script/config_discovery.txtar
 
 # Create project config file
@@ -274,7 +274,7 @@ stdout 'backend:.*postgres'
 
 ### Multi-Step Workflow Test
 
-```txtar
+```
 # testdata/script/shadow_traffic.txtar
 
 # Setup: Create source namespace
@@ -308,7 +308,7 @@ prismctl namespace delete prod-app-new --force
 
 ### Error Handling Test
 
-```txtar
+```
 # testdata/script/namespace_errors.txtar
 
 # Test: Create namespace with invalid backend
@@ -333,7 +333,7 @@ prismctl namespace delete duplicate --force
 
 ### JSON Output Test
 
-```txtar
+```
 # testdata/script/json_output.txtar
 
 # Create test namespace

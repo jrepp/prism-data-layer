@@ -454,7 +454,7 @@ prism
 
 #### Create Namespace
 
-```bash
+```
 # Preferred: Declarative mode from config file
 prismctl namespace create --config namespace.yaml
 
@@ -510,7 +510,7 @@ prismctl namespace list --include-inactive
 
 #### Describe Namespace
 
-```bash
+```
 prismctl namespace describe my-app
 
 # Include recent errors
@@ -594,7 +594,7 @@ Backend Health Status
 
 #### Backend Statistics
 
-```bash
+```
 # Show stats for all backends
 prismctl backend stats
 
@@ -609,7 +609,7 @@ prismctl backend stats --output json
 
 #### List Sessions
 
-```bash
+```
 # List all active sessions across all namespaces
 prismctl session list
 
@@ -666,7 +666,7 @@ Statistics:
 
 #### Show Configuration
 
-```bash
+```
 # Show proxy-wide configuration
 prismctl config show
 
@@ -682,7 +682,7 @@ prismctl config show --output yaml > prism-config.yaml
 
 #### Validate Configuration
 
-```bash
+```
 # Validate config file before applying
 prismctl config validate prism-config.yaml
 
@@ -751,7 +751,7 @@ Backend Health:
 
 #### Export Metrics
 
-```bash
+```
 # Prometheus format
 prismctl metrics export --format prometheus > metrics.prom
 
@@ -763,7 +763,7 @@ prismctl metrics export --format json --include-metadata > metrics.json
 
 #### Enable Shadow Traffic
 
-```bash
+```
 # Enable shadow traffic for Postgres version upgrade (14 → 16)
 prismctl shadow enable user-profiles \
   --source postgres-14-primary \
@@ -851,7 +851,7 @@ For complete plugin development guide, see [RFC-008: Plugin Development Experien
 
 #### List Plugins
 
-```bash
+```
 # List all installed plugins
 prismctl plugin list
 
@@ -908,7 +908,7 @@ Ready to create namespaces with backend: mongodb
 
 #### Update Plugin
 
-```bash
+```
 # Update to latest version
 prismctl plugin update mongodb
 
@@ -971,7 +971,7 @@ Plugin 'kafka' disabled successfully
 
 #### Plugin Status
 
-```bash
+```
 # View plugin health and detailed metrics
 prismctl plugin status mongodb
 
@@ -1045,7 +1045,7 @@ Reload time: 2.3s (zero downtime)
 
 #### View Plugin Logs
 
-```bash
+```
 # View recent logs
 prismctl plugin logs mongodb
 
@@ -1182,7 +1182,7 @@ tools/
 
 ### Example Implementation (Namespace Commands)
 
-```python
+```
 # src/prism_cli/commands/namespace.py
 import typer
 from rich.console import Console
@@ -1330,7 +1330,7 @@ def describe(
 
 ### Admin gRPC Client Wrapper
 
-```python
+```
 # src/prism_cli/client/admin.py
 import grpc
 from typing import List, Optional
@@ -1463,7 +1463,7 @@ The CLI follows a hierarchical configuration search strategy:
 5. **Command-line arguments**: Override any config file settings
 
 **Example `.config.yaml` (project-level)**:
-```yaml
+```
 # .config.yaml - Project configuration for my-app namespace
 namespace: my-app  # Default namespace for scoped commands
 endpoint: localhost:50052
@@ -1478,7 +1478,7 @@ backend:
 ```text
 
 **Example `~/.prism/config.yaml` (user-level)**:
-```yaml
+```
 # ~/.prism/config.yaml - Global CLI configuration
 default_endpoint: localhost:50052
 auth:
@@ -1501,7 +1501,7 @@ logging:
 ```text
 
 **Usage pattern**:
-```bash
+```
 # In project directory with .config.yaml (namespace: my-app):
 cd ~/projects/my-app
 prismctl session list          # Auto-scopes to my-app namespace
@@ -1518,7 +1518,7 @@ prismctl session list          # Finds .config.yaml in ~/projects/my-app/
 
 ### Environment Variables
 
-```bash
+```
 # Override config file settings
 export PRISM_ENDPOINT="prism.example.com:50052"
 export PRISM_AUTH_METHOD="oauth2"
@@ -1547,7 +1547,7 @@ export PRISM_OUTPUT_FORMAT="json"
 
 ### Unit Tests
 
-```python
+```
 # tests/test_namespace.py
 from typer.testing import CliRunner
 from prism_cli.main import app
@@ -1591,7 +1591,7 @@ def test_namespace_list_json():
 
 ### Integration Tests
 
-```python
+```
 # tests/integration/test_admin_client.py
 import pytest
 from prism_cli.client.admin import AdminClient
@@ -1623,7 +1623,7 @@ def test_create_and_list_namespace(admin_client):
 
 ### Installation
 
-```bash
+```
 # Install via uv (development)
 cd prism-cli
 uv pip install -e .
@@ -1638,7 +1638,7 @@ prismctl --help
 
 ### Shell Completion
 
-```bash
+```
 # Bash
 prismctl --install-completion bash
 
@@ -1699,7 +1699,7 @@ Track CLI adoption and usage patterns:
 
 CLI logs structured events:
 
-```json
+```
 {
   "timestamp": "2025-10-08T09:15:23.456Z",
   "level": "info",
@@ -1736,7 +1736,7 @@ CLI logs structured events:
 
 ### All Commands
 
-```bash
+```
 prismctl namespace create <name> [options]
 prismctl namespace list [options]
 prismctl namespace describe <name> [options]
@@ -1771,7 +1771,7 @@ prismctl help [command]
 
 ### Global Options
 
-```bash
+```
 --endpoint <url>        # Proxy endpoint (default: localhost:50052)
 --output <format>       # Output format: table, json, yaml
 --no-color              # Disable colored output
@@ -1789,3 +1789,5 @@ prismctl help [command]
 2. Add namespace commands as proof-of-concept
 3. Test against local Prism proxy
 4. Iterate based on user feedback
+
+```

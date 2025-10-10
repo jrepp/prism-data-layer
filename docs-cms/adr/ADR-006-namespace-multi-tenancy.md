@@ -48,7 +48,7 @@ Examples:
 
 ### Namespace Configuration
 
-```yaml
+```
 namespace: user-profiles
 
 # What abstraction?
@@ -189,7 +189,7 @@ Physical: social-graph-prod instance
 ### Namespace Lifecycle
 
 1. **Creation**:
-   ```bash
+   ```
    # Via protobuf definition
    message UserProfile {
      option (prism.namespace) = "user-profiles";
@@ -212,7 +212,7 @@ Physical: social-graph-prod instance
    - Monitoring and alerts configured
 
 3. **Access Control**:
-   ```rust
+   ```
    // Check if service can access namespace
    if !authz.can_access(service_id, namespace, AccessLevel::ReadWrite) {
        return Err(Error::Forbidden);
@@ -228,7 +228,7 @@ Physical: social-graph-prod instance
 
 ### Namespace Metadata Store
 
-```rust
+```
 pub struct NamespaceMetadata {
     pub name: String,
     pub abstraction: AbstractionType,
@@ -258,7 +258,7 @@ Stored in:
 
 ### Namespace Discovery
 
-```rust
+```
 // Client discovers which shard serves a namespace
 pub struct DiscoveryClient {
     control_plane_url: String,
@@ -284,7 +284,7 @@ impl DiscoveryClient {
 
 Small namespaces can share a shard:
 
-```yaml
+```
 shard: prod-shard-1
 namespaces:
   - user-profiles       (5000 RPS)
@@ -294,7 +294,7 @@ namespaces:
 
 Large namespaces get dedicated shards:
 
-```yaml
+```
 shard: prod-shard-video-events
 namespaces:
   - video-events        (200,000 RPS)  # Dedicated shard
@@ -311,3 +311,5 @@ namespaces:
 ## Revision History
 
 - 2025-10-05: Initial draft and acceptance
+
+```

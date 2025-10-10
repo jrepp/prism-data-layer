@@ -93,7 +93,7 @@ Use **gRPC as the primary interface** for Prism data access layer:
 
 Each access pattern gets its own service:
 
-```protobuf
+```
 // proto/prism/session/v1/session_service.proto
 service SessionService {
   rpc CreateSession(CreateSessionRequest) returns (CreateSessionResponse);
@@ -132,7 +132,7 @@ service TransactService {
 ### Streaming Patterns
 
 **Server streaming** (pagination, pub/sub):
-```protobuf
+```
 service ReaderService {
   // Server streams pages to client
   rpc Read(ReadRequest) returns (stream Page) {
@@ -144,7 +144,7 @@ service ReaderService {
 }
 ```text
 
-```rust
+```
 // Server implementation
 async fn read(&self, req: Request<ReadRequest>) -> Result<Response<Self::ReadStream>, Status> {
     let (tx, rx) = mpsc::channel(100);
@@ -166,7 +166,7 @@ async fn read(&self, req: Request<ReadRequest>) -> Result<Response<Self::ReadStr
 ```text
 
 **Client streaming** (batch writes):
-```protobuf
+```
 service TransactService {
   // Client streams write batches
   rpc BatchWrite(stream WriteRequest) returns (WriteResponse);
@@ -174,7 +174,7 @@ service TransactService {
 ```text
 
 **Bidirectional streaming** (pub/sub with acks):
-```protobuf
+```
 service PubSubService {
   // Client subscribes, server streams events, client sends acks
   rpc Stream(stream ClientMessage) returns (stream ServerMessage);
@@ -185,7 +185,7 @@ service PubSubService {
 
 Use gRPC status codes:
 
-```rust
+```
 use tonic::{Code, Status};
 
 // Not found
@@ -206,7 +206,7 @@ return Err(Status::permission_denied("insufficient permissions"));
 
 Structured error details:
 
-```protobuf
+```
 import "google/rpc/error_details.proto";
 
 message ErrorInfo {
@@ -220,7 +220,7 @@ message ErrorInfo {
 
 Use gRPC metadata for cross-cutting concerns:
 
-```rust
+```
 // Server: extract session token from metadata
 let session_token = req.metadata()
     .get("x-session-token")
@@ -244,7 +244,7 @@ Common metadata:
 ### Performance Optimizations
 
 **Connection pooling:**
-```rust
+```
 // Reuse connections
 let channel = Channel::from_static("http://localhost:8980")
     .connect_lazy();
@@ -253,7 +253,7 @@ let client = QueueServiceClient::new(channel.clone());
 ```text
 
 **Compression:**
-```rust
+```
 // Enable gzip compression
 let channel = Channel::from_static("http://localhost:8980")
     .http2_keep_alive_interval(Duration::from_secs(30))
@@ -262,7 +262,7 @@ let channel = Channel::from_static("http://localhost:8980")
 ```text
 
 **Timeouts:**
-```protobuf
+```
 service QueueService {
   rpc Publish(PublishRequest) returns (PublishResponse) {
     option (google.api.method_signature) = "timeout=5s";
@@ -320,7 +320,7 @@ service QueueService {
 
 ### Server Implementation (Rust)
 
-```rust
+```
 // proxy/src/main.rs
 use tonic::transport::Server;
 
@@ -345,7 +345,7 @@ async fn main() -> Result<()> {
 
 ### Client Implementation (Go)
 
-```go
+```
 // Client connection
 conn, err := grpc.Dial(
     "localhost:8980",
@@ -369,7 +369,7 @@ resp, err := client.Publish(ctx, &queue.PublishRequest{
 
 ### Testing with grpcurl
 
-```bash
+```
 # List services
 grpcurl -plaintext localhost:8980 list
 
@@ -383,7 +383,7 @@ grpcurl -plaintext -d '{"topic":"events","payload":"dGVzdA=="}' \
 
 ### Code Generation
 
-```bash
+```
 # Generate Rust code
 buf generate --template proxy/buf.gen.rust.yaml
 
@@ -405,3 +405,5 @@ buf generate --template clients/python/buf.gen.python.yaml
 ## Revision History
 
 - 2025-10-07: Initial draft and acceptance
+
+```

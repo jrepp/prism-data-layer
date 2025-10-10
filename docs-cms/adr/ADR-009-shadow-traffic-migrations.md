@@ -54,7 +54,7 @@ Client Request
 
 **Phase 1: Setup Shadow (Week 1)**
 
-```yaml
+```
 namespace: user-profiles
 
 backends:
@@ -69,7 +69,7 @@ backends:
 ```text
 
 All writes go to both:
-```rust
+```
 async fn put(&self, request: PutRequest) -> Result<PutResponse> {
     // Write to primary (blocking)
     let primary_result = self.primary_backend.put(&request).await?;
@@ -95,7 +95,7 @@ async fn put(&self, request: PutRequest) -> Result<PutResponse> {
 **Phase 2: Backfill (Week 2-3)**
 
 Copy existing data:
-```bash
+```
 # Scan all data from primary
 prism-cli backfill \
   --namespace user-profiles \
@@ -105,7 +105,7 @@ prism-cli backfill \
   --throttle-rps 1000
 ```text
 
-```rust
+```
 async fn backfill(
     from: &dyn Backend,
     to: &dyn Backend,
@@ -137,7 +137,7 @@ async fn backfill(
 **Phase 3: Shadow Read (Week 4)**
 
 Read from both, compare:
-```yaml
+```
 namespace: user-profiles
 
 backends:
@@ -149,7 +149,7 @@ backends:
     mode: shadow_read  # Read and compare
 ```text
 
-```rust
+```
 async fn get(&self, request: GetRequest) -> Result<GetResponse> {
     // Read from primary (blocking)
     let primary_response = self.primary_backend.get(&request).await?;

@@ -75,7 +75,7 @@ You need **guaranteed durability** for operations - write operations must be per
 
 **Why WAL is Critical for Reliability:**
 
-```mermaid
+```
 sequenceDiagram
     participant App as Application
     participant Proxy as Prism Proxy
@@ -105,7 +105,7 @@ sequenceDiagram
 ```text
 
 **Client Configuration:**
-```yaml
+```
 # Declare what you need - Prism handles the rest
 namespaces:
   - name: order-processing
@@ -120,7 +120,7 @@ namespaces:
 ```text
 
 **Client Code (Producer):**
-```python
+```
 # Application publishes operation - Prism ensures durability
 order = {"order_id": 12345, "amount": 99.99, "status": "pending"}
 
@@ -135,7 +135,7 @@ print("Order persisted:", response.offset)
 ```text
 
 **Client Code (Consumer):**
-```python
+```
 # Consumer must explicitly acknowledge each operation
 for operation in client.consume("orders"):
     try:
@@ -259,7 +259,7 @@ You need guaranteed message delivery when updating database - no lost messages, 
 - No dual-write problems
 
 **Client Configuration:**
-```yaml
+```
 namespaces:
   - name: order-processing
     pattern: queue
@@ -270,7 +270,7 @@ namespaces:
 ```text
 
 **Client Code:**
-```python
+```
 # Application code: Atomically update DB and publish event
 with client.transaction() as tx:
     # 1. Update database
@@ -373,7 +373,7 @@ You need BOTH transactional guarantees (outbox) AND large payload support (claim
 - Exactly-once delivery
 
 **Client Configuration:**
-```yaml
+```
 namespaces:
   - name: ml-model-releases
     pattern: pubsub
@@ -385,7 +385,7 @@ namespaces:
 ```text
 
 **Client Code:**
-```python
+```
 # Application: Publish large model with transactional guarantee
 model_weights = load_model("model-v2.weights")  # 2GB
 
@@ -492,7 +492,7 @@ With Prism: Declare cache + CDC, Prism handles everything
 
 Application owners declare **requirements**, Prism selects **patterns**:
 
-```yaml
+```
 # Application declares "what" they need
 namespaces:
   - name: video-uploads
@@ -516,7 +516,7 @@ Application owners **never write pattern composition logic** - they declare need
 
 The Prism proxy is structured to cleanly separate concerns across layers:
 
-```mermaid
+```
 graph TB
     subgraph "External"
         Client[Client Application]
@@ -616,7 +616,7 @@ graph TB
 
 ### Authentication and Authorization Flow
 
-```mermaid
+```
 sequenceDiagram
     participant Client
     participant gRPC as gRPC Server
@@ -656,7 +656,7 @@ sequenceDiagram
 
 ### Pattern Layer Execution Flow
 
-```mermaid
+```
 sequenceDiagram
     participant API as API Layer (Layer 3)
     participant Chain as Pattern Chain
@@ -706,7 +706,7 @@ sequenceDiagram
 
 ### Pattern Routing and Backend Execution
 
-```mermaid
+```
 graph LR
     subgraph "Pattern Layer"
         Input[Pattern Input<br/>Context]
@@ -772,7 +772,7 @@ graph LR
 
 The **What** layer - defines the interface applications use:
 
-```protobuf
+```
 // Example: PubSub Service
 service PubSubService {
   rpc Publish(PublishRequest) returns (PublishResponse);
@@ -796,7 +796,7 @@ message PublishRequest {
 
 The **How** layer - implements reliability patterns transparently:
 
-```yaml
+```
 # Namespace configuration
 namespaces:
   - name: video-processing
@@ -822,7 +822,7 @@ namespaces:
 
 **Pattern Execution Order:**
 
-```mermaid
+```
 sequenceDiagram
     participant App as Application
     participant API as Layer 3: PubSub API
@@ -849,7 +849,7 @@ sequenceDiagram
 
 The **Where** layer - connects to and executes on specific backends:
 
-```rust
+```
 // Backend-specific implementation
 impl KafkaBackend {
     async fn publish(&self, topic: &str, payload: &[u8]) -> Result<Offset> {
@@ -895,7 +895,7 @@ Not all patterns can be layered together. Compatibility depends on:
 
 #### Without Layering (Application Code)
 
-```python
+```
 # Application must implement Claim Check manually
 def publish_video(video_id, video_bytes):
     if len(video_bytes) > 1_000_000:  # > 1MB
@@ -940,7 +940,7 @@ def consume_video():
 #### With Prism Layering (Zero Application Code)
 
 **Configuration**:
-```yaml
+```
 namespaces:
   - name: video-processing
     client_api: pubsub
@@ -963,7 +963,7 @@ namespaces:
 ```text
 
 **Application Code**:
-```python
+```
 # Producer: Prism handles Claim Check automatically
 client.publish("videos", video_bytes)
 # Prism:
@@ -990,7 +990,7 @@ process_video(video_bytes)
 
 #### Pattern Layering
 
-```mermaid
+```
 sequenceDiagram
     participant App as Application
     participant Prism as Prism Proxy
@@ -1026,7 +1026,7 @@ sequenceDiagram
 ```text
 
 **Configuration**:
-```yaml
+```
 namespaces:
   - name: ml-model-releases
     client_api: pubsub
@@ -1066,7 +1066,7 @@ namespaces:
 
 #### Pattern Composition
 
-```yaml
+```
 namespaces:
   - name: user-profiles
     client_api: reader
@@ -1104,7 +1104,7 @@ namespaces:
 
 **Data Flow**:
 
-```mermaid
+```
 graph LR
     App[Application]
     Prism[Prism Proxy]
@@ -1143,7 +1143,7 @@ graph LR
 #### Example: Queue Service
 
 **Client API (Layer 3)** - Stable interface:
-```protobuf
+```
 service QueueService {
   rpc Publish(PublishRequest) returns (PublishResponse);
   rpc Subscribe(SubscribeRequest) returns (stream Message);
@@ -1161,7 +1161,7 @@ service QueueService {
 | Tiered Queue | Redis (hot) → Postgres (warm) → S3 (cold) | Multi-tier retention |
 
 **Application doesn't know which strategy** - same API for all:
-```python
+```
 # Works with ANY backend strategy
 client.publish("events", payload)
 messages = client.subscribe("events")
@@ -1171,7 +1171,7 @@ messages = client.subscribe("events")
 
 Applications declare requirements; Prism selects patterns:
 
-```yaml
+```
 # Application-facing configuration
 namespaces:
   - name: video-processing
@@ -1200,7 +1200,7 @@ namespaces:
 
 Each pattern implements standard interfaces for composability:
 
-```rust
+```
 /// Pattern trait for composing reliability patterns
 #[async_trait]
 pub trait Pattern: Send + Sync {
@@ -1236,7 +1236,7 @@ pub struct ConsumeContext {
 
 ### Example: Claim Check Pattern Implementation
 
-```rust
+```
 pub struct ClaimCheckPattern {
     threshold: usize,
     storage: Arc<dyn ObjectStorage>,
@@ -1291,7 +1291,7 @@ impl Pattern for ClaimCheckPattern {
 
 Prism executes patterns in order:
 
-```rust
+```
 pub struct PatternChain {
     patterns: Vec<Box<dyn Pattern>>,
 }

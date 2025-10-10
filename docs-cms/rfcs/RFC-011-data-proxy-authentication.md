@@ -299,7 +299,7 @@ S3           | IAM Role          | Access Keys    | Instance Profile
 
 ### Postgres Authentication
 
-```mermaid
+```
 sequenceDiagram
     participant Proxy as Prism Proxy
     participant Vault as HashiCorp Vault
@@ -342,7 +342,7 @@ sequenceDiagram
 
 ### Kafka Authentication (SASL/SCRAM)
 
-```mermaid
+```
 sequenceDiagram
     participant Proxy as Prism Proxy
     participant Vault as HashiCorp Vault
@@ -371,7 +371,7 @@ sequenceDiagram
 
 ### NATS Authentication (JWT)
 
-```mermaid
+```
 sequenceDiagram
     participant Proxy as Prism Proxy
     participant Vault as HashiCorp Vault
@@ -392,7 +392,7 @@ sequenceDiagram
 
 ### Redis Authentication (ACL)
 
-```mermaid
+```
 sequenceDiagram
     participant Proxy as Prism Proxy
     participant Vault as HashiCorp Vault
@@ -417,7 +417,7 @@ sequenceDiagram
 
 ### Credential Management
 
-```rust
+```
 use vaultrs::client::VaultClient;
 use vaultrs::kv2;
 
@@ -505,7 +505,7 @@ impl CredentialManager {
 
 ## End-to-End Authentication Flow
 
-```mermaid
+```
 sequenceDiagram
     participant App as Application
     participant Proxy as Prism Proxy
@@ -556,7 +556,7 @@ To support multiple secret management services (Vault, AWS Secrets Manager, Goog
 
 ### Secrets Provider Interface
 
-```rust
+```
 #[async_trait]
 pub trait SecretsProvider: Send + Sync {
     /// Fetch credentials for a backend
@@ -589,7 +589,7 @@ pub struct Credentials {
 
 #### HashiCorp Vault Provider
 
-```rust
+```
 use vaultrs::client::VaultClient;
 
 pub struct VaultProvider {
@@ -631,7 +631,7 @@ impl SecretsProvider for VaultProvider {
 
 #### AWS Secrets Manager Provider
 
-```rust
+```
 use aws_sdk_secretsmanager::Client as SecretsManagerClient;
 use aws_sdk_secretsmanager::types::SecretString;
 
@@ -692,7 +692,7 @@ struct SecretData {
 
 #### Google Secret Manager Provider
 
-```rust
+```
 use google_secretmanager::v1::SecretManagerServiceClient;
 
 pub struct GcpSecretsProvider {
@@ -749,7 +749,7 @@ impl SecretsProvider for GcpSecretsProvider {
 
 #### Azure Key Vault Provider
 
-```rust
+```
 use azure_security_keyvault::KeyvaultClient;
 use azure_identity::DefaultAzureCredential;
 
@@ -811,7 +811,7 @@ impl SecretsProvider for AzureKeyVaultProvider {
 
 ### Provider Selection Strategy
 
-```rust
+```
 pub enum ProviderConfig {
     Vault {
         address: String,
@@ -863,7 +863,7 @@ pub fn create_provider(config: &ProviderConfig) -> Result<Arc<dyn SecretsProvide
 
 ### Credential Manager with Multiple Providers
 
-```rust
+```
 pub struct CredentialManager {
     provider: Arc<dyn SecretsProvider>,
     credentials: Arc<RwLock<HashMap<String, BackendCredentials>>>,
@@ -970,7 +970,7 @@ impl CredentialManager {
 
 #### Option 1: HashiCorp Vault (Recommended for Dynamic Credentials)
 
-```yaml
+```
 # prism-proxy.yaml
 data_port: 8980
 admin_port: 8981
@@ -1026,7 +1026,7 @@ backends:
 
 #### Option 2: AWS Secrets Manager (AWS Native)
 
-```yaml
+```
 # prism-proxy.yaml
 data_port: 8980
 admin_port: 8981
@@ -1072,7 +1072,7 @@ backends:
 ```text
 
 **AWS Secrets Manager Secret Format** (JSON):
-```json
+```
 {
   "username": "prism-postgres-user",
   "password": "securepassword123",
@@ -1085,7 +1085,7 @@ backends:
 
 #### Option 3: Google Secret Manager (GCP Native)
 
-```yaml
+```
 # prism-proxy.yaml
 data_port: 8980
 admin_port: 8981
@@ -1132,7 +1132,7 @@ backends:
 
 #### Option 4: Azure Key Vault (Azure Native)
 
-```yaml
+```
 # prism-proxy.yaml
 data_port: 8980
 admin_port: 8981
@@ -1180,7 +1180,7 @@ backends:
 
 For hybrid cloud deployments, you can configure different providers per backend:
 
-```yaml
+```
 # prism-proxy.yaml
 data_port: 8980
 admin_port: 8981
@@ -1294,7 +1294,7 @@ Every data access must log:
 
 ### Integration Tests
 
-```rust
+```
 #[tokio::test]
 async fn test_mtls_authentication() {
     let ca = generate_test_ca();
@@ -1391,3 +1391,5 @@ async fn test_mtls_authentication() {
 - 2025-10-09: Initial draft with mTLS and backend authentication flows
 - 2025-10-09: Expanded open questions with feedback on Vault CA, credential caching (24hr default), per-credential connection pooling, fallback auth strategies, and observability metrics
 - 2025-10-09: Added secrets provider abstraction supporting HashiCorp Vault, AWS Secrets Manager, Google Secret Manager, and Azure Key Vault with pluggable architecture, provider comparison matrix, and multi-provider hybrid cloud deployment patterns
+
+```

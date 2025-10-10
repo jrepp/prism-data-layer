@@ -9,7 +9,7 @@ This document contains sequence and architecture diagrams for Prism's key workfl
 
 ### Sequence: Client Connection with Named Configuration
 
-```
+```text
 ┌──────┐                  ┌──────────┐                  ┌──────────┐
 │Client│                  │  Prism   │                  │ Backend  │
 │      │                  │  Proxy   │                  │ (Postgres│
@@ -79,7 +79,7 @@ This document contains sequence and architecture diagrams for Prism's key workfl
 
 ### Sequence: Client with Inline Configuration
 
-```
+```text
 ┌──────┐                  ┌──────────┐                  ┌──────────┐
 │Client│                  │  Prism   │                  │ Backend  │
 │      │                  │  Proxy   │                  │ (Kafka)  │
@@ -125,7 +125,7 @@ This document contains sequence and architecture diagrams for Prism's key workfl
 
 ### Kafka Publisher Flow
 
-```
+```text
 ┌───────────┐         ┌──────────┐         ┌────────────┐         ┌────────┐
 │  Client   │         │  Prism   │         │   Kafka    │         │ Kafka  │
 │Application│         │  Proxy   │         │ Publisher  │         │Cluster │
@@ -151,7 +151,7 @@ This document contains sequence and architecture diagrams for Prism's key workfl
 
 ### Kafka Consumer Flow
 
-```
+```text
 ┌────────┐         ┌────────────┐         ┌──────────┐         ┌───────────┐
 │ Kafka  │         │   Kafka    │         │  Prism   │         │  Client   │
 │Cluster │         │ Consumer   │         │  Proxy   │         │Application│
@@ -188,7 +188,7 @@ This document contains sequence and architecture diagrams for Prism's key workfl
 
 ### Two-Table Transaction (Inbox/Outbox Pattern)
 
-```
+```text
 ┌──────┐         ┌──────────┐         ┌────────────┐         ┌──────────┐
 │Client│         │  Prism   │         │Transaction │         │ Postgres │
 │      │         │  Proxy   │         │ Processor  │         │ Database │
@@ -257,7 +257,7 @@ This document contains sequence and architecture diagrams for Prism's key workfl
 
 ### Streaming Pagination
 
-```
+```text
 ┌──────┐         ┌──────────┐         ┌────────────┐         ┌──────────┐
 │Client│         │  Prism   │         │  Indexed   │         │ Database │
 │      │         │  Proxy   │         │  Reader    │         │          │
@@ -308,7 +308,7 @@ This document contains sequence and architecture diagrams for Prism's key workfl
 
 ## Complete System Architecture
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────────────┐
 │                         Client Applications                         │
 │                                                                       │

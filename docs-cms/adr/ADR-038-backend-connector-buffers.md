@@ -97,7 +97,7 @@ From Netflix metrics:
 ### Plugin Simplification
 
 **Before** (plugin does everything):
-```rust
+```
 impl PostgresPlugin {
     async fn execute(&self, req: ExecuteRequest) -> Result<ExecuteResponse> {
         // Plugin manages:
@@ -114,7 +114,7 @@ impl PostgresPlugin {
 ```text
 
 **After** (plugin delegates to connector):
-```rust
+```
 impl PostgresPlugin {
     async fn execute(&self, req: ExecuteRequest) -> Result<ExecuteResponse> {
         // Plugin just translates request → connector format
@@ -136,7 +136,7 @@ impl PostgresPlugin {
 
 Compute-heavy backends (ClickHouse aggregations, graph queries) need more CPU than connection management:
 
-```yaml
+```
 # Scale plugin for compute (Rust)
 apiVersion: v1
 kind: Deployment
@@ -183,7 +183,7 @@ Plugin crashes → All connections lost → Reconnect storm to database
 
 **4. Global Resource Management**
 
-```go
+```
 // Connector enforces global limits across all plugin instances
 type PostgresConnector struct {
     globalPool *pgxpool.Pool  // Max 500 connections globally
@@ -251,7 +251,7 @@ type PostgresConnector struct {
 
 ### Connector gRPC API
 
-```protobuf
+```
 syntax = "proto3";
 
 package prism.connector;
@@ -294,7 +294,7 @@ message ConnectorStats {
 
 ### PostgreSQL Connector Example (Go)
 
-```go
+```
 package main
 
 import (
@@ -342,7 +342,7 @@ func (c *PostgresConnector) Execute(ctx context.Context, req *pb.ExecuteRequest)
 ### Deployment Topology
 
 **Option 1: Sidecar Pattern** (Recommended for Kubernetes):
-```yaml
+```
 apiVersion: v1
 kind: Pod
 metadata:

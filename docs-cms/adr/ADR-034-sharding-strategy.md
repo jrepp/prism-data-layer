@@ -158,7 +158,7 @@ Dedicated backend clusters per shard:
 ### Deployment Topology
 
 **Shared Namespace Proxy (Small Scale)**:
-```yaml
+```
 # Single Prism instance, multiple namespaces
 services:
   prism-shared:
@@ -171,7 +171,7 @@ services:
 ```text
 
 **Product-Sharded Deployment (Medium Scale)**:
-```yaml
+```
 # Separate Prism instances per product
 services:
   prism-playback:
@@ -190,7 +190,7 @@ services:
 ```text
 
 **Feature + SLA Sharded (Large Scale)**:
-```yaml
+```
 # Sharded by product, feature, and SLA tier
 services:
   prism-playback-live:  # Low latency tier
@@ -211,7 +211,7 @@ services:
 ### Routing to Shards
 
 **Service Mesh Approach** (Recommended):
-```yaml
+```
 # Istio VirtualService routes clients to correct shard
 apiVersion: networking.istio.io/v1beta1
 kind: VirtualService
@@ -238,7 +238,7 @@ spec:
 ```text
 
 **Client-Side Routing**:
-```rust
+```
 // Client selects shard based on product
 let prism_endpoint = match product {
     Product::Playback => "prism-playback.example.com:50051",
@@ -253,7 +253,7 @@ let client = PrismClient::connect(prism_endpoint).await?;
 
 Use Kubernetes ConfigMaps or CRDs to define shards:
 
-```yaml
+```
 apiVersion: prism.io/v1alpha1
 kind: PrismShard
 metadata:
@@ -296,3 +296,5 @@ spec:
 ## Revision History
 
 - 2025-10-08: Initial draft based on Netflix's sharding experience
+
+```

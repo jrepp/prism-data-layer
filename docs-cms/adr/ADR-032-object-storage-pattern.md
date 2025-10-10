@@ -754,3 +754,5 @@ What's the lifecycle?
 3. Generate ObjectStoreService gRPC stubs
 4. Write integration tests with ephemeral MinIO
 5. Document object storage pattern in client SDK guides
+
+```

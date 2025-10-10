@@ -124,7 +124,7 @@ proto/*.proto
 
 ### Example: Complete Data Model
 
-```protobuf
+```
 // user_profile.proto
 syntax = "proto3";
 
@@ -181,7 +181,7 @@ message ProfileSettings {
 This **single file** generates:
 
 1. **Rust structs** with validation:
-```rust
+```
 #[derive(Clone, PartialEq, Message)]
 pub struct UserProfile {
     #[prost(string, tag = "1")]
@@ -201,7 +201,7 @@ impl UserProfile {
 ```text
 
 2. **Postgres schema**:
-```sql
+```
 CREATE TABLE user_profile (
     user_id UUID PRIMARY KEY,
     email VARCHAR(255) NOT NULL,
@@ -216,7 +216,7 @@ CREATE INDEX idx_user_profile_email ON user_profile(email);
 ```text
 
 3. **TypeScript types** for admin UI:
-```typescript
+```
 export interface UserProfile {
   userId: string;
   email: string;
@@ -229,7 +229,7 @@ export interface UserProfile {
 ```text
 
 4. **Deployment config** (auto-generated):
-```yaml
+```
 name: user-profile
 backend: postgres
 capacity:

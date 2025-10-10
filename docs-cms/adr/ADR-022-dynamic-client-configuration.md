@@ -65,7 +65,7 @@ Implement **Dynamic Client Configuration** with protobuf descriptors:
 
 ### Client Configuration Descriptor (Protobuf)
 
-```protobuf
+```
 // proto/prism/config/v1/client_config.proto
 syntax = "proto3";
 
@@ -207,7 +207,7 @@ message RateLimitConfig {
 
 ### Configuration Service (gRPC)
 
-```protobuf
+```
 // proto/prism/config/v1/config_service.proto
 syntax = "proto3";
 
@@ -521,7 +521,7 @@ config/
 
 Server validates all configurations:
 
-```rust
+```
 impl ConfigValidator {
     fn validate(&self, config: &ClientConfig) -> Result<(), Vec<ValidationError>> {
         let mut errors = Vec::new();
@@ -551,7 +551,7 @@ impl ConfigValidator {
 
 Client caches configurations locally:
 
-```go
+```
 type ConfigCache struct {
     cache map[string]*ClientConfig
     ttl   time.Duration
@@ -586,3 +586,5 @@ func (c *ConfigCache) Get(name string) (*ClientConfig, error) {
 
 - 2025-10-08: Added protobuf tagging section with schema and protocol recording examples
 - 2025-10-07: Initial draft and acceptance
+
+```

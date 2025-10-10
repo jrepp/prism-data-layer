@@ -335,7 +335,7 @@ All abstractions support:
 
 ### Protobuf Organization
 
-```
+```text
 proto/
 ├── prism/
 │   ├── keyvalue/

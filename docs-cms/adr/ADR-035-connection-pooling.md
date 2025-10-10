@@ -313,3 +313,5 @@ pool_size = max(min_size, expected_p99_rps * p99_query_latency_seconds)
 ## Revision History
 
 - 2025-10-08: Initial draft with backend-specific pooling strategies
+
+```

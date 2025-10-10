@@ -113,7 +113,7 @@ Prism separates **server configuration** (infrastructure) from **client configur
 
 Clients provide configuration as protobuf messages:
 
-```protobuf
+```
 message ClientConfig {
   string name = 1;                  // Named config or custom
   string version = 2;               // For evolution
@@ -129,14 +129,14 @@ message ClientConfig {
 ### 3.3 Configuration Sources
 
 **Named Configurations** (server-provided templates):
-```bash
+```
 # Client requests pre-configured pattern
 config, err := client.GetConfig("user-profiles")
 session, err := client.StartSession(config)
 ```text
 
 **Inline Configurations** (client-provided):
-```go
+```
 config := &ClientConfig{
     Pattern: ACCESS_PATTERN_QUEUE,
     Backend: &BackendConfig{Type: BACKEND_TYPE_KAFKA},
@@ -164,7 +164,7 @@ Server validates all configurations:
 
 ### 4.2 Session Service API
 
-```protobuf
+```
 service SessionService {
   rpc CreateSession(CreateSessionRequest) returns (CreateSessionResponse);
   rpc CloseSession(CloseSessionRequest) returns (CloseSessionResponse);

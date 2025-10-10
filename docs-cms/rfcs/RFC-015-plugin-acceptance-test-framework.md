@@ -95,7 +95,7 @@ Plugin Acceptance Test Framework
 
 ### Test Execution Flow
 
-```mermaid
+```
 sequenceDiagram
     participant TestRunner
     participant PluginHarness
@@ -146,7 +146,7 @@ The **Authentication Test Suite** verifies that all plugins handle credential pa
 
 ### Implementation
 
-```go
+```
 // tests/acceptance/suites/auth_suite.go
 
 package suites
@@ -445,7 +445,7 @@ func (s *AuthTestSuite) TestExpiredCredentials() {
 
 The authentication suite runs automatically for every plugin:
 
-```go
+```
 // tests/acceptance/postgres_test.go
 
 func TestPostgresPlugin_Authentication(t *testing.T) {
@@ -469,7 +469,7 @@ func TestPostgresPlugin_Authentication(t *testing.T) {
 
 Each backend implements a verification suite that tests protocol-specific features:
 
-```go
+```
 // tests/acceptance/verification/backend_suite.go
 
 package verification
@@ -499,7 +499,7 @@ type BackendVerificationSuite interface {
 
 ### PostgreSQL Verification Suite
 
-```go
+```
 // tests/acceptance/verification/postgres/postgres_suite.go
 
 package postgres
@@ -904,7 +904,7 @@ func (s *PostgresVerificationSuite) TestConcurrency() {
 
 ### Kafka Verification Suite
 
-```go
+```
 // tests/acceptance/verification/kafka/kafka_suite.go
 
 package kafka
@@ -1156,7 +1156,7 @@ func (s *KafkaVerificationSuite) TestConcurrency() {
 
 ### Backend Interface
 
-```go
+```
 // tests/acceptance/instances/backend_interface.go
 
 package instances
@@ -1195,7 +1195,7 @@ type TestBackend interface {
 
 ### PostgreSQL Test Instance
 
-```go
+```
 // tests/acceptance/instances/postgres_instance.go
 
 package instances
@@ -1422,7 +1422,7 @@ func (p *PostgresInstance) Exec(query string) error {
 
 ### Kafka Test Instance
 
-```go
+```
 // tests/acceptance/instances/kafka_instance.go
 
 package instances
@@ -1615,7 +1615,7 @@ func (k *KafkaInstance) ConsumeMessages(topic string, count int, timeout time.Du
 
 ## Plugin Test Harness
 
-```go
+```
 // tests/acceptance/harness/plugin_harness.go
 
 package harness
@@ -1692,7 +1692,7 @@ func startPluginServer(t *testing.T, backendType string) string {
 
 ### GitHub Actions Workflow
 
-```yaml
+```
 # .github/workflows/plugin-acceptance.yml
 
 name: Plugin Acceptance Tests
@@ -1804,7 +1804,7 @@ jobs:
 
 ### Running Tests Locally
 
-```bash
+```
 # Run all acceptance tests
 make test-acceptance
 
@@ -1827,7 +1827,7 @@ go tool cover -html=coverage.out
 
 ### Makefile Targets
 
-```makefile
+```
 # Makefile
 
 .PHONY: test-acceptance
@@ -1862,7 +1862,7 @@ test-coverage: ## Generate test coverage report
 
 ### Running Complete Test Suite
 
-```bash
+```
 $ make test-acceptance
 
 === RUN   TestPostgresPlugin

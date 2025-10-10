@@ -162,7 +162,7 @@ proxy/src/
 
 ### Top-Level Error Types
 
-```rust
+```
 // proxy/src/error.rs
 use thiserror::Error;
 
@@ -198,7 +198,7 @@ impl From<ProxyError> for tonic::Status {
 
 ### Handler Pattern
 
-```rust
+```
 use anyhow::{Context, Result};
 use tonic::{Request, Response, Status};
 
@@ -240,7 +240,7 @@ impl KeyValueService for KeyValueHandler {
 
 ### Backend Error Definition
 
-```rust
+```
 // proxy/src/backend/error.rs
 use thiserror::Error;
 
@@ -265,7 +265,7 @@ pub enum BackendError {
 
 ### Testing Error Conditions
 
-```rust
+```
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -301,7 +301,7 @@ mod tests {
 
 Integrate with structured logging:
 
-```rust
+```
 use tracing::error;
 
 match do_operation().await {
@@ -329,3 +329,5 @@ match do_operation().await {
 ## Revision History
 
 - 2025-10-07: Initial draft and acceptance
+
+```

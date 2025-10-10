@@ -215,7 +215,7 @@ status:
 ### Why Custom Operator vs Raw Kubernetes?
 
 **Without Operator** (raw Kubernetes manifests):
-```yaml
+```
 # Must manually define:
 - Deployment for each shard
 - StatefulSet for SQLite persistence
@@ -225,7 +225,7 @@ status:
 ```text
 
 **With Operator**:
-```yaml
+```
 # Just define:
 apiVersion: prism.io/v1alpha1
 kind: PrismNamespace

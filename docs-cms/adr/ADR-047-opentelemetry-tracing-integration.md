@@ -51,7 +51,7 @@ prism.handle_request           [150ms total]
 
 ### Architecture
 
-```mermaid
+```
 sequenceDiagram
     participant Client
     participant Proxy as Rust Proxy
@@ -780,3 +780,5 @@ prism-proxy: handle_data_request [142ms]
 ## Revision History
 
 - 2025-10-09: Initial draft and acceptance
+
+```

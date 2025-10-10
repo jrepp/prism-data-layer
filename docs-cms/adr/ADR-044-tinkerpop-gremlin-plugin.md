@@ -53,7 +53,7 @@ prism-graph-plugin (generic)
 
 ### Configuration
 
-```yaml
+```
 # Generic Gremlin Server connection
 graph_backend:
   type: gremlin
@@ -74,7 +74,7 @@ graph_backend:
 
 ### Neptune-Specific Configuration
 
-```yaml
+```
 # Neptune (inherits from gremlin, adds AWS-specific)
 graph_backend:
   type: neptune
@@ -97,7 +97,7 @@ graph_backend:
 
 Generic plugin **auto-detects** backend capabilities:
 
-```go
+```
 // gremlin-core/capabilities.go
 func (c *GremlinClient) DetectCapabilities() (*PluginCapabilities, error) {
     caps := &PluginCapabilities{
@@ -166,7 +166,7 @@ func (c *GremlinClient) queryServerFeatures() (*ServerFeatures, error) {
 
 Neptune plugin **extends** generic plugin with AWS features:
 
-```go
+```
 // plugins/neptune/plugin.go
 type NeptunePlugin struct {
     *gremlin.GenericGremlinPlugin  // Embed generic plugin
@@ -215,7 +215,7 @@ Application uses **same Gremlin API** across different backends:
 
 ### Development: TinkerGraph (in-memory)
 
-```yaml
+```
 namespace: user-graph-dev
 backend:
   type: tinkergraph
@@ -232,7 +232,7 @@ backend:
 
 ### Staging: JanusGraph (self-hosted)
 
-```yaml
+```
 namespace: user-graph-staging
 backend:
   type: janusgraph
@@ -254,7 +254,7 @@ backend:
 
 ### Production: Neptune (AWS)
 
-```yaml
+```
 namespace: user-graph-prod
 backend:
   type: neptune
@@ -277,7 +277,7 @@ backend:
 
 Application code is **identical** across all backends:
 
-```go
+```
 // Same code works with TinkerGraph, JanusGraph, Neptune
 client := prism.NewGraphClient(namespace)
 
@@ -309,7 +309,7 @@ result, err := client.Gremlin(
 
 Prism **validates queries** against backend capabilities:
 
-```go
+```
 func (p *Proxy) ExecuteGremlinQuery(
     namespace string,
     query string,
@@ -372,7 +372,7 @@ func validateQueryFeatures(query string, caps *PluginCapabilities) error {
 
 Start with in-memory TinkerGraph, move to production Neptune:
 
-```bash
+```
 # Development (local)
 prismctl namespace create user-graph-dev --backend tinkergraph
 
@@ -387,7 +387,7 @@ prismctl namespace create user-graph-prod --backend neptune
 
 Use cheaper backends for non-critical workloads:
 
-```yaml
+```
 # Expensive: Neptune (ACID, replicas, managed)
 production_graph:
   backend: neptune
@@ -417,7 +417,7 @@ Not locked into AWS:
 
 Integration tests use TinkerGraph (no external dependencies):
 
-```go
+```
 func TestGraphTraversal(t *testing.T) {
     // Fast, deterministic, no setup required
     plugin := NewTinkerGraphPlugin()

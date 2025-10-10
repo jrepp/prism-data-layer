@@ -60,7 +60,7 @@ Foundation service for authentication, authorization, and connection management.
 
 ### 2.2 Service Definition
 
-```protobuf
+```
 syntax = "proto3";
 
 package prism.session.v1;
@@ -89,7 +89,7 @@ service SessionService {
 
 ### 2.3 Messages
 
-```protobuf
+```
 message CreateSessionRequest {
   // Authentication credentials
   oneof auth {
@@ -193,7 +193,7 @@ message RefreshSessionResponse {
 ### 2.4 Usage Examples
 
 **Create Session (Named Config):**
-```go
+```
 client := session.NewSessionServiceClient(conn)
 
 resp, err := client.CreateSession(ctx, &session.CreateSessionRequest{
@@ -211,7 +211,7 @@ sessionToken := resp.SessionToken
 ```text
 
 **Heartbeat Loop:**
-```go
+```
 ticker := time.NewTicker(30 * time.Second)
 defer ticker.Stop()
 
@@ -240,7 +240,7 @@ Kafka-style message queue operations with topics, partitions, and offsets.
 
 ### 3.2 Service Definition
 
-```protobuf
+```
 syntax = "proto3";
 
 package prism.queue.v1;
@@ -274,7 +274,7 @@ service QueueService {
 
 ### 3.3 Messages
 
-```protobuf
+```
 message PublishRequest {
   string session_token = 1;
   string topic = 2;
@@ -408,7 +408,7 @@ message PartitionInfo {
 ### 3.4 Usage Examples
 
 **Publish:**
-```rust
+```
 let response = client.publish(PublishRequest {
     session_token: token.clone(),
     topic: "events".to_string(),
@@ -423,7 +423,7 @@ println!("Published to partition {} offset {}",
 ```text
 
 **Subscribe (Streaming):**
-```rust
+```
 let mut stream = client.subscribe(SubscribeRequest {
     session_token: token.clone(),
     topic: "events".to_string(),
@@ -452,7 +452,7 @@ NATS-style publish-subscribe with topic patterns and wildcards.
 
 ### 4.2 Service Definition
 
-```protobuf
+```
 syntax = "proto3";
 
 package prism.pubsub.v1;
@@ -476,7 +476,7 @@ service PubSubService {
 
 ### 4.3 Messages
 
-```protobuf
+```
 message PublishRequest {
   string session_token = 1;
   string topic = 2;  // e.g., "events.user.created"
@@ -550,7 +550,7 @@ message Subscription {
 ### 4.4 Usage Examples
 
 **Subscribe with Wildcard:**
-```go
+```
 stream, err := client.Subscribe(ctx, &pubsub.SubscribeRequest{
     SessionToken: token,
     TopicPattern: "events.user.*",  // Match all user events
@@ -583,7 +583,7 @@ Database-style paged reading with queries and filters.
 
 ### 5.2 Service Definition
 
-```protobuf
+```
 syntax = "proto3";
 
 package prism.reader.v1;
@@ -608,7 +608,7 @@ service ReaderService {
 
 ### 5.3 Messages
 
-```protobuf
+```
 message ReadRequest {
   string session_token = 1;
   string collection = 2;
@@ -730,7 +730,7 @@ message GetResponse {
 ### 5.4 Usage Examples
 
 **Paged Reading:**
-```python
+```
 stream = client.Read(reader_pb2.ReadRequest(
     session_token=token,
     collection="users",
@@ -752,7 +752,7 @@ for page in stream:
 ```text
 
 **Query with Filter:**
-```python
+```
 # Complex filter: active users created in last 30 days
 filter = reader_pb2.Filter(
     composite=reader_pb2.CompositeFilter(
@@ -795,7 +795,7 @@ Transactional writes across two tables (inbox/outbox pattern).
 
 ### 6.2 Service Definition
 
-```protobuf
+```
 syntax = "proto3";
 
 package prism.transact.v1;
@@ -820,7 +820,7 @@ service TransactService {
 
 ### 6.3 Messages
 
-```protobuf
+```
 message WriteRequest {
   string session_token = 1;
 
@@ -975,7 +975,7 @@ message ProcessMailboxResponse {
 ### 6.4 Usage Examples
 
 **Single Transaction:**
-```rust
+```
 let response = client.write(WriteRequest {
     session_token: token.clone(),
     data: Some(DataWrite {
@@ -1003,7 +1003,7 @@ println!("Transaction {} committed", response.transaction_id);
 ```text
 
 **Streaming Transaction:**
-```rust
+```
 let (mut tx, mut rx) = client.transaction().await?.into_inner().split();
 
 // Begin
@@ -1061,7 +1061,7 @@ All services use standard gRPC status codes:
 
 Use `google.rpc.ErrorInfo` for structured errors:
 
-```protobuf
+```
 import "google/rpc/error_details.proto";
 
 // In error response metadata
@@ -1077,7 +1077,7 @@ google.rpc.ErrorInfo {
 
 ### 7.3 Client Error Handling
 
-```go
+```
 resp, err := client.Publish(ctx, req)
 if err != nil {
     st, ok := status.FromError(err)
@@ -1129,7 +1129,7 @@ if err != nil {
 
 ### 8.3 Deprecation Process
 
-```protobuf
+```
 message OldRequest {
   string field1 = 1;
   string field2 = 2 [deprecated = true];  // Mark deprecated
@@ -1150,7 +1150,7 @@ service MyService {
 
 All languages get generated clients:
 
-```bash
+```
 # Rust
 buf generate --template buf.gen.rust.yaml
 
@@ -1164,7 +1164,7 @@ buf generate --template buf.gen.python.yaml
 ### 9.2 Client Patterns
 
 **Connection Management:**
-```go
+```
 // Create connection with keepalive
 conn, err := grpc.Dial(
     "prism.example.com:8980",
@@ -1182,7 +1182,7 @@ queueClient := queue.NewQueueServiceClient(conn)
 ```text
 
 **Metadata Propagation:**
-```go
+```
 // Add session token to metadata
 md := metadata.Pairs("x-session-token", sessionToken)
 ctx := metadata.NewOutgoingContext(ctx, md)
@@ -1222,7 +1222,7 @@ func sessionTokenInterceptor(token string) grpc.UnaryClientInterceptor {
 
 Set appropriate timeouts:
 
-```go
+```
 ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 defer cancel()
 

@@ -79,7 +79,7 @@ Implement **container plugin model** with standardized contracts:
 
 All container plugins implement standard interface:
 
-```protobuf
+```
 // proto/prism/plugin/v1/plugin.proto
 syntax = "proto3";
 
@@ -144,7 +144,7 @@ message InfoResponse {
 
 All plugins configured via environment variables:
 
-```bash
+```
 # Common to all plugins
 PRISM_PROXY_ENDPOINT=localhost:8980
 PRISM_PLUGIN_ROLE=publisher
@@ -182,7 +182,7 @@ MAILBOX_BATCH_SIZE=100
 
 #### Kafka Publisher
 
-```rust
+```
 // containers/kafka-publisher/src/main.rs
 
 use rdkafka::producer::{FutureProducer, FutureRecord};
@@ -231,7 +231,7 @@ async fn main() -> Result<()> {
 
 #### Kafka Consumer
 
-```rust
+```
 // containers/kafka-consumer/src/main.rs
 
 use rdkafka::consumer::{Consumer, StreamConsumer};
@@ -274,7 +274,7 @@ impl KafkaConsumer {
 
 #### NATS Publisher
 
-```rust
+```
 // containers/nats-publisher/src/main.rs
 
 use async_nats::Client;
@@ -304,7 +304,7 @@ impl NatsPublisher {
 
 #### NATS Consumer
 
-```rust
+```
 // containers/nats-consumer/src/main.rs
 
 use async_nats::{Client, jetstream};
@@ -351,7 +351,7 @@ impl NatsConsumer {
 
 ### Paged Reader Plugin
 
-```rust
+```
 // containers/indexed-reader/src/main.rs
 
 use sqlx::PgPool;
@@ -395,7 +395,7 @@ impl IndexedReader {
 
 #### Transaction Processor
 
-```rust
+```
 // containers/transact-processor/src/main.rs
 
 use sqlx::{PgPool, Transaction};
@@ -456,7 +456,7 @@ impl TransactProcessor {
 
 #### Mailbox Listener
 
-```rust
+```
 // containers/mailbox-listener/src/main.rs
 
 use sqlx::PgPool;
@@ -512,7 +512,7 @@ impl MailboxListener {
 
 Each plugin is a separate Docker image:
 
-```dockerfile
+```
 # Dockerfile.kafka-publisher
 FROM rust:1.75 as builder
 WORKDIR /app
@@ -527,7 +527,7 @@ ENTRYPOINT ["kafka-publisher"]
 
 ### Docker Compose Example
 
-```yaml
+```
 # docker-compose.plugins.yml
 version: '3.8'
 
@@ -591,7 +591,7 @@ services:
 
 ### Kubernetes Deployment
 
-```yaml
+```
 # k8s/kafka-consumer-deployment.yaml
 apiVersion: apps/v1
 kind: Deployment
@@ -690,3 +690,5 @@ spec:
 ## Revision History
 
 - 2025-10-07: Initial draft and acceptance
+
+```

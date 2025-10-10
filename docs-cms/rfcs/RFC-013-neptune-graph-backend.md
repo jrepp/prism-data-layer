@@ -511,7 +511,7 @@ NeptuneGraphStep(vertex,[email.eq(alice)])  1      1           2.345
 
 ### Unit Tests
 
-```go
+```
 func TestCreateVertex(t *testing.T) {
     plugin := setupNeptunePlugin(t)
 
@@ -531,7 +531,7 @@ func TestCreateVertex(t *testing.T) {
 
 ### Integration Tests
 
-```go
+```
 func TestGraphTraversal(t *testing.T) {
     plugin := setupRealNeptune(t)  // Connect to test Neptune cluster
 
@@ -629,3 +629,5 @@ func TestGraphTraversal(t *testing.T) {
 ## Revision History
 
 - 2025-10-09: Initial proposal for Neptune graph backend plugin
+
+```

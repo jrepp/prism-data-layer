@@ -336,7 +336,7 @@ tags: [architecture, backend]
 
 ## ADR Lifecycle
 
-```
+```text
 Proposed → Reviewed → Accepted → Implemented
                 ↓
             Deprecated / Superseded

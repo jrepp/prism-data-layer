@@ -10,7 +10,7 @@ This document outlines the complete protobuf structure for Prism, organized by m
 
 ## Directory Structure
 
-```
+```text
 proto/
 ├── prism/
 │   ├── options.proto              # Custom Prism options (tags)

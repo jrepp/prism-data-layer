@@ -77,7 +77,7 @@ Application Code
 
 ### Subscriber Configuration
 
-```rust
+```
 use tracing_subscriber::{fmt, EnvFilter, layer::SubscriberExt, util::SubscriberInitExt};
 
 fn init_tracing() -> Result<()> {
@@ -102,7 +102,7 @@ fn init_tracing() -> Result<()> {
 
 ### Structured Events
 
-```rust
+```
 use tracing::{info, warn, error, debug};
 
 // Structured fields
@@ -131,7 +131,7 @@ debug!(
 
 ### Span Instrumentation
 
-```rust
+```
 use tracing::{info_span, instrument, Instrument};
 
 // Automatic instrumentation with #[instrument]
@@ -164,7 +164,7 @@ span.record("user_id", &user_id);
 
 ### OpenTelemetry Integration
 
-```rust
+```
 use opentelemetry::global;
 use tracing_opentelemetry::OpenTelemetryLayer;
 use opentelemetry_jaeger::JaegerPipeline;
@@ -193,7 +193,7 @@ async fn init_tracing_with_otel() -> Result<()> {
 
 ### Log Levels and Filtering
 
-```rust
+```
 // Set via environment variable
 // RUST_LOG=prism_proxy=debug,sqlx=warn
 
@@ -205,7 +205,7 @@ let filter = EnvFilter::new("prism_proxy=debug")
 
 ### Performance: Conditional Logging
 
-```rust
+```
 use tracing::Level;
 
 // Only evaluate expensive computation if debug enabled
@@ -261,7 +261,7 @@ let _span = info_span!("hot_path").entered();
 
 ### Dependencies
 
-```toml
+```
 [dependencies]
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["json", "env-filter"] }
@@ -277,7 +277,7 @@ Always include:
 - `service.version`: from Cargo.toml
 - `environment`: "production", "staging", "development"
 
-```rust
+```
 fn init_tracing() -> Result<()> {
     tracing_subscriber::registry()
         .with(EnvFilter::from_default_env())
@@ -310,7 +310,7 @@ fn init_tracing() -> Result<()> {
 
 ### Testing with Tracing
 
-```rust
+```
 #[cfg(test)]
 mod tests {
     use tracing_subscriber::layer::SubscriberExt;
@@ -342,3 +342,5 @@ mod tests {
 ## Revision History
 
 - 2025-10-07: Initial draft and acceptance
+
+```

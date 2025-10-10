@@ -248,7 +248,7 @@ tools/
 
 ### Running Tests
 
-```bash
+```
 # Unit tests only (fast)
 go test ./... -short
 
@@ -268,7 +268,7 @@ go test ./internal/migrate -v
 
 ### CI Configuration
 
-```yaml
+```
 # .github/workflows/go-test.yml
 jobs:
   test:
@@ -305,3 +305,5 @@ jobs:
 ## Revision History
 
 - 2025-10-07: Initial draft and acceptance (adapted from org-stream-producer)
+
+```
