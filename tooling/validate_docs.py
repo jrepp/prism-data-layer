@@ -121,10 +121,11 @@ class PrismDocValidator:
         """Scan all markdown files"""
         self.log("\n📂 Scanning documents...")
 
-        # Filename patterns (TLA-NNN-name-with-dashes.md)
-        adr_pattern = re.compile(r'^ADR-(\d{3})-(.+)\.md$')
-        rfc_pattern = re.compile(r'^RFC-(\d{3})-(.+)\.md$')
-        memo_pattern = re.compile(r'^MEMO-(\d{3})-(.+)\.md$')
+        # Filename patterns (adr-NNN-name-with-dashes.md or ADR-NNN-name-with-dashes.md)
+        # Accept both lowercase (new standard) and uppercase (legacy) formats
+        adr_pattern = re.compile(r'^(adr|ADR)-(\d{3})-(.+)\.md$', re.IGNORECASE)
+        rfc_pattern = re.compile(r'^(rfc|RFC)-(\d{3})-(.+)\.md$', re.IGNORECASE)
+        memo_pattern = re.compile(r'^(memo|MEMO)-(\d{3})-(.+)\.md$', re.IGNORECASE)
 
         # Scan ADRs
         adr_dir = self.repo_root / "docs-cms" / "adr"
@@ -136,11 +137,11 @@ class PrismDocValidator:
 
                 match = adr_pattern.match(md_file.name)
                 if not match:
-                    self.errors.append(f"Invalid ADR filename: {md_file.name} (expected: ADR-NNN-name-with-dashes.md)")
+                    self.errors.append(f"Invalid ADR filename: {md_file.name} (expected: adr-NNN-name-with-dashes.md or ADR-NNN-name-with-dashes.md)")
                     self.log(f"   ✗ {md_file.name}: Invalid filename format")
                     continue
 
-                num, slug = match.groups()
+                prefix, num, slug = match.groups()
                 # Skip template files (000)
                 if num == "000":
                     self.log(f"   ⊘ {md_file.name}: Skipping template file")
@@ -161,11 +162,11 @@ class PrismDocValidator:
 
                 match = rfc_pattern.match(md_file.name)
                 if not match:
-                    self.errors.append(f"Invalid RFC filename: {md_file.name} (expected: RFC-NNN-name-with-dashes.md)")
+                    self.errors.append(f"Invalid RFC filename: {md_file.name} (expected: rfc-NNN-name-with-dashes.md or RFC-NNN-name-with-dashes.md)")
                     self.log(f"   ✗ {md_file.name}: Invalid filename format")
                     continue
 
-                num, slug = match.groups()
+                prefix, num, slug = match.groups()
                 # Skip template files (000)
                 if num == "000":
                     self.log(f"   ⊘ {md_file.name}: Skipping template file")
@@ -186,11 +187,11 @@ class PrismDocValidator:
 
                 match = memo_pattern.match(md_file.name)
                 if not match:
-                    self.errors.append(f"Invalid MEMO filename: {md_file.name} (expected: MEMO-NNN-name-with-dashes.md)")
+                    self.errors.append(f"Invalid MEMO filename: {md_file.name} (expected: memo-NNN-name-with-dashes.md or MEMO-NNN-name-with-dashes.md)")
                     self.log(f"   ✗ {md_file.name}: Invalid filename format")
                     continue
 
-                num, slug = match.groups()
+                prefix, num, slug = match.groups()
                 # Skip template files (000)
                 if num == "000":
                     self.log(f"   ⊘ {md_file.name}: Skipping template file")
