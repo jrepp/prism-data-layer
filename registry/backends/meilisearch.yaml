@@ -1,0 +1,183 @@
+backend: meilisearch
+description: "Fast, typo-tolerant search engine with instant search-as-you-type"
+plugin: prism-meilisearch:v1.0.0
+connection_string_format: "meilisearch://host:port?api_key=..."
+
+# Meilisearch implements 8 interfaces across 3 data models
+implements:
+  # Document (3 of 3) - Primary strength: JSON document storage with full-text search
+  - document_basic          # Add/update/delete/get documents
+  - document_query          # Search with filters, facets, sorting
+  - document_indexing       # Create/manage indexes with ranking rules
+
+  # KeyValue (2 of 6) - Documents can be accessed by primary key
+  - keyvalue_basic          # Get document by ID, set/update document
+  - keyvalue_scan           # List all documents with pagination
+
+  # Set (3 of 4) - Faceted search returns unique values (like set operations)
+  - set_basic               # Facet values as set members
+  - set_operations          # Faceted search with AND/OR filters
+  - set_cardinality         # Count unique facet values
+
+# Notable capabilities
+capabilities:
+  # Search features
+  full_text_search: true
+  typo_tolerance: true           # Handles misspellings automatically
+  faceted_search: true           # Filter by categorical attributes
+  filtering: true                # WHERE-like queries on attributes
+  sorting: true                  # Multi-field sorting
+  highlighting: true             # Search term highlighting in results
+  synonyms: true                 # Configure synonym groups
+  stop_words: true               # Language-specific stop words
+
+  # Ranking and relevance
+  custom_ranking: true           # Define ranking rules per index
+  geo_search: true               # Radius and bounding box geo queries
+  prefix_search: true            # Search-as-you-type with prefix matching
+
+  # Performance
+  instant_search: true           # Sub-50ms search responses
+  incremental_indexing: true     # Update documents without full reindex
+  async_operations: true         # Background indexing tasks
+
+  # Multi-tenancy
+  tenant_tokens: true            # JWT-based document filtering per tenant
+  api_keys: true                 # Multiple API keys with permissions
+
+  # Data model
+  schemaless: true               # No schema required (JSON documents)
+  primary_key: true              # Configurable primary key field
+  nested_fields: true            # Index nested JSON objects
+  arrays: true                   # Index array fields
+
+  # What Meilisearch does NOT support
+  transactions: false            # No ACID transactions
+  joins: false                   # No cross-index queries
+  aggregations: false            # Limited aggregation (only facet counts)
+  graph_queries: false           # No relationship traversal
+  time_series: false             # No time-series optimizations
+  ttl: false                     # No automatic expiration
+
+# Typical use cases
+use_cases:
+  - Full-text search for e-commerce product catalogs
+  - Documentation search with typo tolerance
+  - Autocomplete and search-as-you-type
+  - Faceted navigation (filter by category, price, brand, etc.)
+  - Geo-spatial search (find nearby locations)
+  - Multi-tenant search with document-level filtering
+
+# Performance characteristics
+performance:
+  search_latency_p50: "10ms"
+  search_latency_p99: "50ms"
+  indexing_throughput: "10,000 docs/sec"
+  max_index_size: "100M documents per index"
+  max_document_size: "10MB per document"
+  concurrent_searches: "1,000+ queries/sec"
+
+# Integration notes
+integration:
+  primary_language: rust
+  client_libraries:
+    - go
+    - python
+    - javascript
+    - rust
+    - ruby
+    - php
+    - java
+  rest_api: true
+  grpc_api: false  # REST/HTTP only
+
+# Configuration example
+example_config:
+  connection: "meilisearch://localhost:7700?api_key=masterKey"
+  index: "products"
+  searchable_attributes:
+    - name
+    - description
+    - category
+  filterable_attributes:
+    - price
+    - brand
+    - category
+    - in_stock
+  sortable_attributes:
+    - price
+    - created_at
+    - rating
+  ranking_rules:
+    - words         # Typo tolerance
+    - typo          # Number of typos
+    - proximity     # Word proximity
+    - attribute     # Attribute ranking order
+    - sort          # User-defined sort
+    - exactness     # Exact matches first
+  typo_tolerance:
+    enabled: true
+    min_word_size_for_typos:
+      one_typo: 5
+      two_typos: 9
+  pagination:
+    max_total_hits: 1000
+
+# Comparison to alternatives
+comparison:
+  vs_elasticsearch:
+    pros:
+      - "10x faster indexing"
+      - "Much simpler configuration (no mapping definitions)"
+      - "Better out-of-the-box relevance"
+      - "Lower resource usage (20MB baseline vs 1GB)"
+    cons:
+      - "No advanced aggregations"
+      - "No graph queries"
+      - "Smaller ecosystem"
+
+  vs_typesense:
+    pros:
+      - "Better typo tolerance"
+      - "More mature (launched 2018 vs 2019)"
+      - "Larger community"
+    cons:
+      - "Similar feature set"
+      - "Both Rust-based, similar performance"
+
+  vs_algolia:
+    pros:
+      - "Open source (Apache 2.0)"
+      - "Self-hosted (no vendor lock-in)"
+      - "No per-search pricing"
+    cons:
+      - "Algolia has more features (AB testing, analytics)"
+      - "Algolia has managed infrastructure"
+
+# Meilisearch-specific limitations
+limitations:
+  - No joins across indexes (denormalize data instead)
+  - Limited aggregations (only count distinct facet values)
+  - No full ACID transactions (use for read-heavy workloads)
+  - Documents limited to 10MB each
+  - Maximum 200 indexes per instance (recommend one index per tenant)
+  - Sorting limited to 20 attributes per index
+
+# Backend implementation notes
+implementation_notes:
+  - Use Meilisearch REST API (no native gRPC)
+  - Map document operations to Meilisearch document API
+  - Map search queries to Meilisearch search endpoint
+  - Use tenant tokens for multi-tenant document filtering
+  - Leverage async task API for bulk indexing
+  - Monitor task queue for indexing backlog
+
+# Related interfaces
+related_interfaces:
+  - document_basic: Primary interface for adding/updating/deleting documents
+  - document_query: Search interface with filters and facets
+  - document_indexing: Index management and ranking configuration
+  - keyvalue_basic: Get document by ID (primary key lookup)
+  - keyvalue_scan: Enumerate all documents with pagination
+
+# 8 interfaces total

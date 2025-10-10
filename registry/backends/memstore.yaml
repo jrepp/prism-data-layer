@@ -1,0 +1,163 @@
+backend: memstore
+description: "In-memory Go map and list structures for local testing"
+plugin: built-in
+connection_string_format: "mem://local"
+
+# MemStore implements 6 interfaces across 2 data models - minimal but complete for testing
+implements:
+  # KeyValue (2 of 6) - Minimal key-value storage using sync.Map
+  - keyvalue_basic          # sync.Map: Store, Load, Delete, LoadOrStore
+  - keyvalue_ttl            # TTL with time.AfterFunc cleanup goroutines
+
+  # List (4 of 4) - Complete in-memory list support using Go slices
+  - list_basic              # Slice operations: append to head/tail, pop from head/tail
+  - list_indexing           # Direct slice indexing: get/set by index
+  - list_range              # Slice range operations: subslice, trim
+  - list_blocking           # Blocking pops using channels
+
+# Notable capabilities
+capabilities:
+  # Performance
+  in_memory: true               # All data in RAM (no disk)
+  zero_latency: true            # Nanosecond-level operations
+  concurrent_safe: true         # sync.Map and mutex-protected slices
+
+  # Data model
+  schemaless: true              # Any Go value can be stored
+  ttl_support: true             # Automatic expiration with cleanup
+  blocking_operations: true     # Blocking list pops with Go channels
+
+  # What MemStore does NOT support
+  persistence: false            # Data lost on restart
+  distributed: false            # Single process only
+  transactions: false           # No ACID transactions
+  replication: false            # No HA or replication
+  size_limits: true             # Limited by available RAM
+
+# Typical use cases
+use_cases:
+  - Local development without external dependencies
+  - Fast integration tests (no Docker required)
+  - Proof-of-concept demonstrations
+  - Embedded applications with small datasets
+  - Caching layer in single-process applications
+
+# Performance characteristics
+performance:
+  read_latency_p50: "100ns"     # Nanoseconds - sync.Map.Load
+  write_latency_p50: "200ns"    # Nanoseconds - sync.Map.Store
+  list_push_p50: "50ns"         # Nanoseconds - slice append
+  list_pop_p50: "50ns"          # Nanoseconds - slice reslice
+  throughput: "10M ops/sec"     # Single goroutine
+  concurrent_throughput: "50M ops/sec"  # With parallel goroutines
+  max_keys: "10M+"              # Limited by RAM (assume 100 bytes/key = 1GB)
+  max_list_size: "10M+ items"   # Limited by RAM
+
+# Implementation details
+implementation:
+  keyvalue_storage:
+    type: sync.Map              # Concurrent map
+    key_type: string            # Keys are strings
+    value_type: interface{}     # Values are any Go type
+    ttl_mechanism: time.AfterFunc  # Per-key timers
+
+  list_storage:
+    type: "[]interface{}"       # Go slice
+    synchronization: sync.RWMutex  # Reader-writer lock
+    blocking_mechanism: chan struct{}  # Channels for blocking pops
+    max_capacity: "unlimited"   # Grows dynamically
+
+# Configuration example
+example_config:
+  connection: "mem://local"
+  keyvalue:
+    max_ttl: 3600               # Maximum TTL in seconds (1 hour)
+    cleanup_interval: 60        # TTL cleanup check interval (seconds)
+  list:
+    default_capacity: 1000      # Initial slice capacity
+    max_block_timeout: 30       # Maximum blocking pop timeout (seconds)
+
+# Integration notes
+integration:
+  primary_language: go
+  no_external_dependencies: true
+  no_network_io: true
+  startup_time: "<1ms"
+  shutdown_time: "<1ms"
+
+# Comparison to alternatives
+comparison:
+  vs_redis:
+    pros:
+      - "1000x faster (no network, no serialization)"
+      - "Zero dependencies (no Docker, no installation)"
+      - "Instant startup (<1ms vs ~100ms)"
+    cons:
+      - "No persistence"
+      - "No distribution"
+      - "Single process only"
+
+  vs_sqlite:
+    pros:
+      - "100x faster (no disk I/O)"
+      - "No serialization overhead"
+      - "Concurrent-safe with sync.Map"
+    cons:
+      - "No SQL queries"
+      - "No persistence"
+      - "Limited to simple data structures"
+
+# MemStore-specific limitations
+limitations:
+  - All data lost on process restart (no persistence)
+  - Single process only (no distributed mode)
+  - No transactions across multiple operations
+  - TTL cleanup requires active timers (memory overhead for many keys with TTL)
+  - Lists are mutex-locked (blocking operations block entire list)
+  - No size limits enforced (can OOM if dataset exceeds RAM)
+
+# Backend implementation notes
+implementation_notes:
+  keyvalue:
+    - Use sync.Map for concurrent key-value access
+    - Store TTL timers in separate map[string]*time.Timer
+    - On Get with expired key, return NotFound and clean up
+    - Background goroutine cleans up expired keys periodically
+
+  list:
+    - Each list is a Go slice protected by sync.RWMutex
+    - PushLeft prepends (costly - requires slice copy)
+    - PushRight appends (efficient - amortized O(1))
+    - PopLeft removes from head (efficient - just reslice)
+    - PopRight removes from tail (efficient - just reslice)
+    - Blocking pops use channels: block until item available or timeout
+    - Index operations are direct slice access (O(1))
+    - Range operations use slice subslicing (O(1) to get, O(n) to copy)
+
+# Related interfaces
+related_interfaces:
+  - keyvalue_basic: Core KV operations (Set, Get, Delete, Exists)
+  - keyvalue_ttl: TTL management (Expire, GetTTL, Persist)
+  - list_basic: FIFO/LIFO operations (PushLeft, PushRight, PopLeft, PopRight)
+  - list_indexing: Index-based access (Get, Set, Insert, Remove)
+  - list_range: Range operations (GetRange, Trim)
+  - list_blocking: Blocking pops (BlockingPopLeft, BlockingPopRight)
+
+# Testing recommendations
+testing:
+  unit_tests:
+    - Test TTL expiration with short timeouts (1s)
+    - Test concurrent access with multiple goroutines
+    - Test list blocking with timeouts
+    - Test list growth with large datasets
+
+  integration_tests:
+    - Use MemStore for fast test iterations (no Docker)
+    - Validate behavior matches Redis/Postgres semantics
+    - Use for testing pattern coordinators locally
+
+  load_tests:
+    - MemStore suitable for load tests up to 1M keys
+    - Beyond 1M keys, switch to Redis for realistic memory usage
+
+# 6 interfaces total across 2 data models

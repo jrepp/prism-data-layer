@@ -374,16 +374,23 @@ implements:
 
 ```yaml
 backend: memstore
-description: "In-memory Go map for local testing"
+description: "In-memory Go map and list for local testing"
 plugin: built-in
 connection_string_format: "mem://local"
 
-# MemStore implements 2 interfaces - minimal viable keyvalue
+# MemStore implements 6 interfaces across 2 data models
 implements:
+  # KeyValue (2 of 6) - Minimal key-value storage
   - keyvalue_basic  # sync.Map operations
   - keyvalue_ttl    # TTL with time.AfterFunc cleanup
 
-# 2 interfaces total - intentionally minimal for fast local testing
+  # List (4 of 4) - Complete in-memory list support
+  - list_basic      # Slice-based FIFO/LIFO operations
+  - list_indexing   # Direct slice indexing
+  - list_range      # Slice range operations
+  - list_blocking   # Blocking pops with channels
+
+# 6 interfaces total - intentionally minimal for fast local testing
 ```
 
 **Kafka Backend** (stored as `registry/backends/kafka.yaml`):
@@ -417,16 +424,17 @@ implements:
 | Redis | 16 | KeyValue, PubSub, Stream, List, Set, SortedSet | Most versatile general-purpose backend |
 | Postgres | 16 | KeyValue, Queue, TimeSeries, Document, Graph | Different mix, strong consistency |
 | Kafka | 7 | Stream, PubSub | Specialized for event streaming |
+| Meilisearch | 8 | Document, KeyValue, Set | Specialized for full-text search |
 | NATS | 8 | PubSub, Stream, Queue | Lightweight messaging |
 | DynamoDB | 9 | KeyValue, Document, Set | AWS managed NoSQL |
+| MemStore | 6 | KeyValue, List | Minimal for local testing |
 | ClickHouse | 3 | TimeSeries, Stream | Specialized for analytics |
 | Neptune | 4 | Graph | Specialized for graph queries |
-| MemStore | 2 | KeyValue | Minimal for local testing |
 
 **Key Insights**:
 1. **Redis & Postgres are workhorses**: Both implement 16 interfaces but different mixes
-2. **Specialized backends focus**: Kafka (streaming), Neptune (graph), ClickHouse (analytics)
-3. **Test backends minimal**: MemStore implements just enough for local development
+2. **Specialized backends focus**: Kafka (streaming), Neptune (graph), ClickHouse (analytics), Meilisearch (search)
+3. **Test backends minimal**: MemStore implements just enough for local development (KeyValue + List)
 4. **No backend implements all 45 interfaces**: Backends specialize in what they're good at
 
 ### Layer 3: Pattern Schemas with Slots
