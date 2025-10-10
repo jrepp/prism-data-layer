@@ -41,17 +41,23 @@ build-proxy: ## Build Rust proxy
 	@cd proxy && cargo build --release
 	$(call print_green,Proxy built)
 
-build-patterns: build-memstore ## Build all Go patterns
+build-patterns: build-memstore build-redis ## Build all Go patterns
 
 build-memstore: ## Build MemStore pattern
 	$(call print_blue,Building MemStore pattern...)
 	@cd patterns/memstore && go build -o memstore cmd/memstore/main.go
 	$(call print_green,MemStore built)
 
+build-redis: ## Build Redis pattern
+	$(call print_blue,Building Redis pattern...)
+	@cd patterns/redis && go build -o redis cmd/redis/main.go
+	$(call print_green,Redis built)
+
 build-dev: ## Build all components in debug mode (faster)
 	$(call print_blue,Building in debug mode...)
 	@cd proxy && cargo build
 	@cd patterns/memstore && go build -o memstore cmd/memstore/main.go
+	@cd patterns/redis && go build -o redis cmd/redis/main.go
 	$(call print_green,Debug builds complete)
 
 ##@ Testing
@@ -64,12 +70,17 @@ test-proxy: ## Run Rust proxy unit tests
 	@cd proxy && cargo test --lib
 	$(call print_green,Proxy unit tests passed)
 
-test-patterns: test-memstore test-core ## Run all Go pattern tests
+test-patterns: test-memstore test-redis test-core ## Run all Go pattern tests
 
 test-memstore: ## Run MemStore tests
 	$(call print_blue,Running MemStore tests...)
 	@cd patterns/memstore && go test -v -cover ./...
 	$(call print_green,MemStore tests passed)
+
+test-redis: ## Run Redis tests
+	$(call print_blue,Running Redis tests...)
+	@cd patterns/redis && go test -v -cover ./...
+	$(call print_green,Redis tests passed)
 
 test-core: ## Run Core SDK tests
 	$(call print_blue,Running Core SDK tests...)
@@ -93,7 +104,7 @@ coverage-proxy: ## Generate Rust proxy coverage report
 	@cd proxy && cargo test --lib -- --test-threads=1
 	$(call print_green,Proxy coverage report generated)
 
-coverage-patterns: coverage-memstore coverage-core ## Generate coverage for all patterns
+coverage-patterns: coverage-memstore coverage-redis coverage-core ## Generate coverage for all patterns
 
 coverage-memstore: ## Generate MemStore coverage report
 	$(call print_blue,Generating MemStore coverage...)
@@ -101,6 +112,13 @@ coverage-memstore: ## Generate MemStore coverage report
 	@cd patterns/memstore && go tool cover -func=coverage.out | grep total
 	@cd patterns/memstore && go tool cover -html=coverage.out -o coverage.html
 	$(call print_green,MemStore coverage: patterns/memstore/coverage.html)
+
+coverage-redis: ## Generate Redis coverage report
+	$(call print_blue,Generating Redis coverage...)
+	@cd patterns/redis && go test -coverprofile=coverage.out ./...
+	@cd patterns/redis && go tool cover -func=coverage.out | grep total
+	@cd patterns/redis && go tool cover -html=coverage.out -o coverage.html
+	$(call print_green,Redis coverage: patterns/redis/coverage.html)
 
 coverage-core: ## Generate Core SDK coverage report
 	$(call print_blue,Generating Core SDK coverage...)
@@ -143,6 +161,8 @@ clean-patterns: ## Clean pattern binaries
 	$(call print_blue,Cleaning patterns...)
 	@rm -f patterns/memstore/memstore
 	@rm -f patterns/memstore/coverage.out patterns/memstore/coverage.html
+	@rm -f patterns/redis/redis
+	@rm -f patterns/redis/coverage.out patterns/redis/coverage.html
 	@rm -f patterns/core/coverage.out patterns/core/coverage.html
 	$(call print_green,Patterns cleaned)
 
@@ -169,6 +189,7 @@ fmt-rust: ## Format Rust code
 fmt-go: ## Format Go code
 	$(call print_blue,Formatting Go code...)
 	@cd patterns/memstore && go fmt ./...
+	@cd patterns/redis && go fmt ./...
 	@cd patterns/core && go fmt ./...
 	$(call print_green,Go code formatted)
 
@@ -182,8 +203,27 @@ lint-rust: ## Lint Rust code with clippy
 lint-go: ## Lint Go code
 	$(call print_blue,Linting Go code...)
 	@cd patterns/memstore && go vet ./...
+	@cd patterns/redis && go vet ./...
 	@cd patterns/core && go vet ./...
 	$(call print_green,Go code linted)
+
+##@ Docker
+
+docker-up: ## Start local development services (Redis)
+	$(call print_blue,Starting local development services...)
+	@docker-compose up -d
+	$(call print_green,Services started - Redis available at localhost:6379)
+
+docker-down: ## Stop local development services
+	$(call print_blue,Stopping local development services...)
+	@docker-compose down
+	$(call print_green,Services stopped)
+
+docker-logs: ## Show logs from local services
+	@docker-compose logs -f
+
+docker-redis-cli: ## Open Redis CLI (requires docker-up)
+	@docker-compose run --rm redis-cli
 
 ##@ Documentation
 

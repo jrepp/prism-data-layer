@@ -1,0 +1,41 @@
+services:
+  # Redis for POC 2: KeyValue backend
+  redis:
+    image: redis:7-alpine
+    container_name: prism-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+
+  # Redis CLI (optional, for debugging)
+  redis-cli:
+    image: redis:7-alpine
+    container_name: prism-redis-cli
+    command: redis-cli -h redis
+    depends_on:
+      - redis
+    profiles:
+      - tools
+
+  # Placeholder for future services
+  # signoz: (POC 3+)
+  # dex: (POC 5)
+  # postgres: (future)
+  # kafka: (future)
+  # nats: (POC 3)
+
+volumes:
+  redis_data:
+    driver: local
+
+networks:
+  default:
+    name: prism-network
