@@ -73,7 +73,7 @@ Application Code
       ├─ Layer: fmt (console)  ─┘
       ├─ Layer: json (file)
       └─ Layer: opentelemetry (Jaeger/Tempo)
-```
+```text
 
 ### Subscriber Configuration
 
@@ -98,7 +98,7 @@ fn init_tracing() -> Result<()> {
 
     Ok(())
 }
-```
+```text
 
 ### Structured Events
 
@@ -127,7 +127,7 @@ debug!(
     items = ?items,  // Debug representation
     "processing items"
 );
-```
+```text
 
 ### Span Instrumentation
 
@@ -160,7 +160,7 @@ async fn manual_span_example() {
 // Span fields can be set dynamically
 let span = info_span!("request", user_id = tracing::field::Empty);
 span.record("user_id", &user_id);
-```
+```text
 
 ### OpenTelemetry Integration
 
@@ -189,7 +189,7 @@ async fn init_tracing_with_otel() -> Result<()> {
 
     Ok(())
 }
-```
+```text
 
 ### Log Levels and Filtering
 
@@ -201,7 +201,7 @@ async fn init_tracing_with_otel() -> Result<()> {
 let filter = EnvFilter::new("prism_proxy=debug")
     .add_directive("sqlx=warn".parse()?)
     .add_directive("tonic=info".parse()?);
-```
+```text
 
 ### Performance: Conditional Logging
 
@@ -216,7 +216,7 @@ if tracing::level_enabled!(Level::DEBUG) {
 // Or use span guards for hot paths
 let _span = info_span!("hot_path").entered();
 // Span only recorded if info level enabled
-```
+```text
 
 ### Alternatives Considered
 
@@ -268,7 +268,7 @@ tracing-subscriber = { version = "0.3", features = ["json", "env-filter"] }
 tracing-opentelemetry = "0.22"
 opentelemetry = { version = "0.21", features = ["trace"] }
 opentelemetry-jaeger = { version = "0.20", features = ["rt-tokio"] }
-```
+```text
 
 ### Standard Fields
 
@@ -291,7 +291,7 @@ fn init_tracing() -> Result<()> {
 
     Ok(())
 }
-```
+```text
 
 ### Logging Guidelines
 
@@ -327,7 +327,7 @@ mod tests {
         });
     }
 }
-```
+```text
 
 ## References
 

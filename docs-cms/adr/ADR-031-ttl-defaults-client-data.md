@@ -61,7 +61,7 @@ Namespace-Level Default TTL
 Pattern-Specific Default TTL
     ↓ (fallback)
 System-Wide Default TTL (30 days)
-```
+```text
 
 ### Implementation in Protobuf
 
@@ -95,7 +95,7 @@ message NamespaceConfig {
   // Warn when data approaches expiration
   bool enable_ttl_warnings = 6 [default = true];
 }
-```
+```text
 
 ### Configuration YAML Example
 
@@ -117,7 +117,7 @@ namespaces:
     backend: postgres
     pattern: keyvalue
     allow_infinite_ttl: true  # Explicit opt-in for infinite TTL
-```
+```text
 
 ## Backend-Specific Implementation
 
@@ -140,7 +140,7 @@ async fn set_with_ttl(
         .set_ex(key, value, effective_ttl.as_secs() as usize)
         .await
 }
-```
+```text
 
 ### PostgreSQL (KeyValue)
 
@@ -163,7 +163,7 @@ WHERE expires_at IS NOT NULL;
 DELETE FROM keyvalue
 WHERE expires_at < NOW()
 AND expires_at IS NOT NULL;
-```
+```text
 
 ### ClickHouse (TimeSeries)
 
@@ -179,7 +179,7 @@ ENGINE = MergeTree()
 PARTITION BY toYYYYMMDD(timestamp)
 ORDER BY (namespace, event_type, timestamp)
 TTL timestamp + INTERVAL 90 DAY; -- Default 90 days
-```
+```text
 
 ### MinIO (Object Storage)
 
@@ -200,7 +200,7 @@ lifecycle_config = {
     ]
 }
 minio_client.set_bucket_lifecycle("prism-objects", lifecycle_config)
-```
+```text
 
 ## Monitoring and Observability
 
@@ -224,7 +224,7 @@ message TTLMetrics {
   int64 total_bytes = 8;
   int64 bytes_to_expire_soon = 9;
 }
-```
+```text
 
 ### Alerting Rules
 
@@ -247,7 +247,7 @@ groups:
         for: 6h
         annotations:
           summary: "Storage growing without expiration"
-```
+```text
 
 ### Admin CLI Commands
 
@@ -263,7 +263,7 @@ prism data set-ttl my-app key123 --ttl 1h
 
 # Disable expiration for specific item (requires permission)
 prism data set-ttl my-app key456 --infinite
-```
+```text
 
 ## Client SDK Examples
 
@@ -282,7 +282,7 @@ client.set("session:def456", session_data)
 
 # Infinite TTL (requires namespace config: allow_infinite_ttl=true)
 client.set("permanent:record", data, no_expiration=True)
-```
+```text
 
 ### Go SDK
 
@@ -299,7 +299,7 @@ client.Set(ctx, "session:def456", sessionData)
 // Infinite TTL (opt-in required)
 client.Set(ctx, "permanent:record", data,
     prism.WithNoExpiration())
-```
+```text
 
 ## Migration Path
 

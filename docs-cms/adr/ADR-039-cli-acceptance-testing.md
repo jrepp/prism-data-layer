@@ -170,7 +170,7 @@ tools/
 │       └── ...
 ├── acceptance_test.go         # testscript runner
 └── go.mod
-```
+```text
 
 ### Test Runner
 
@@ -211,7 +211,7 @@ func mainCLI() int {
     }
     return 0
 }
-```
+```text
 
 ### Example Test Script
 
@@ -245,7 +245,7 @@ stdout 'Deleted namespace "my-app"'
 # Verify deletion
 prismctl namespace list
 ! stdout 'my-app'
-```
+```text
 
 ### Advanced Test: Configuration File Discovery
 
@@ -270,7 +270,7 @@ stdout 'Backend: postgres'
 prismctl config show
 stdout 'namespace: my-project'
 stdout 'backend:.*postgres'
-```
+```text
 
 ### Multi-Step Workflow Test
 
@@ -304,7 +304,7 @@ stdout 'Shadow traffic disabled'
 # Cleanup
 prismctl namespace delete prod-app --force
 prismctl namespace delete prod-app-new --force
-```
+```text
 
 ### Error Handling Test
 
@@ -329,7 +329,7 @@ stderr 'error: namespace "duplicate" already exists'
 
 # Cleanup
 prismctl namespace delete duplicate --force
-```
+```text
 
 ### JSON Output Test
 
@@ -351,7 +351,7 @@ stdout '"name":.*"json-test"'
 
 # Cleanup
 prismctl namespace delete json-test --force
-```
+```text
 
 ## Testing Strategy
 

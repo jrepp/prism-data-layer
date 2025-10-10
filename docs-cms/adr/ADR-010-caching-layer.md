@@ -52,7 +52,7 @@ Write Path:
                 │            │
                 │    Invalidate
                 └───────────▶│
-```
+```text
 
 ### Cache Configuration
 
@@ -72,7 +72,7 @@ cache:
   connection:
     endpoints: [redis://cache-cluster-1:6379]
     pool_size: 50
-```
+```text
 
 ### Implementation
 
@@ -108,7 +108,7 @@ impl CacheBackend for RedisCache {
         Ok(())
     }
 }
-```
+```text
 
 ### Cache-Aware Backend Wrapper
 
@@ -191,7 +191,7 @@ impl<B: KeyValueBackend> KeyValueBackend for CachedBackend<B> {
         Ok(())
     }
 }
-```
+```text
 
 ### Cache Key Design
 

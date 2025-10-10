@@ -67,7 +67,7 @@ Build **Admin UI with FastAPI + gRPC-Web**:
 │  Prism Admin API (:8981)                    │
 │  - prism.admin.v1.AdminService              │
 └─────────────────────────────────────────────┘
-```
+```text
 
 ### Why FastAPI
 
@@ -107,7 +107,7 @@ Build **Admin UI with FastAPI + gRPC-Web**:
 protoc --js_out=import_style=commonjs,binary:./admin-ui/static/js \
        --grpc-web_out=import_style=commonjs,mode=grpcwebtext:./admin-ui/static/js \
        proto/prism/admin/v1/admin.proto
-```
+```text
 
 ### FastAPI Implementation
 
@@ -142,7 +142,7 @@ async def grpc_proxy(method: str, request: bytes):
 @app.get("/health")
 async def health():
     return {"status": "healthy"}
-```
+```text
 
 ### Frontend Structure
 

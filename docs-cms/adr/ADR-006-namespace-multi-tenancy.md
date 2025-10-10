@@ -38,7 +38,7 @@ Examples:
 - video-view-events     (TimeSeries, analytics)
 - social-graph          (Graph, relationships)
 - payment-transactions  (KeyValue, financial data)
-```
+```text
 
 **Properties**:
 - Globally unique within Prism
@@ -84,7 +84,7 @@ backend_config:
     connection_string: postgres://prod-postgres-1/prism
     pool_size: 20
     table_name: user_profiles
-```
+```text
 
 ### Multi-Tenancy Strategies
 
@@ -124,7 +124,7 @@ Namespace: user-profiles
 Backend: postgres
     ↓
 Physical: prism_db.user_profiles table
-```
+```text
 
 Namespace: video-events
     ↓
@@ -138,7 +138,7 @@ Namespace: social-graph
 Backend: neptune
     ↓
 Physical: social-graph-prod instance
-```
+```text
 
 ### Alternatives Considered
 
@@ -203,7 +203,7 @@ Physical: social-graph-prod instance
      --abstraction keyvalue \
      --backend postgres \
      --capacity-estimate-rps 5000
-   ```
+   ```text
 
 2. **Provisioning**:
    - Capacity planner calculates requirements
@@ -217,7 +217,7 @@ Physical: social-graph-prod instance
    if !authz.can_access(service_id, namespace, AccessLevel::ReadWrite) {
        return Err(Error::Forbidden);
    }
-   ```
+   ```text
 
 4. **Deletion**:
    - Mark namespace as deleted
@@ -249,7 +249,7 @@ pub enum NamespaceStatus {
     Deleting,
     Deleted,
 }
-```
+```text
 
 Stored in:
 - **Control plane database** (Postgres)
@@ -278,7 +278,7 @@ impl DiscoveryClient {
         })
     }
 }
-```
+```text
 
 ### Co-Location Strategy
 
@@ -290,7 +290,7 @@ namespaces:
   - user-profiles       (5000 RPS)
   - user-preferences    (500 RPS)   # Co-located
   - user-settings       (200 RPS)   # Co-located
-```
+```text
 
 Large namespaces get dedicated shards:
 
@@ -298,7 +298,7 @@ Large namespaces get dedicated shards:
 shard: prod-shard-video-events
 namespaces:
   - video-events        (200,000 RPS)  # Dedicated shard
-```
+```text
 
 ## References
 

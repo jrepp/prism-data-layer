@@ -47,7 +47,7 @@ prism-graph-plugin (generic)
 │   └── tinkergraph/       # In-memory (for testing)
 └── proto/
     └── graph.proto        # Unified graph API
-```
+```text
 
 ## Generic Gremlin Plugin Architecture
 
@@ -70,7 +70,7 @@ graph_backend:
       max_connections: 20
     capabilities:
       auto_detect: true  # Query server for capabilities
-```
+```text
 
 ### Neptune-Specific Configuration
 
@@ -91,7 +91,7 @@ graph_backend:
     cloudwatch:
       metrics_enabled: true
       log_group: /aws/neptune/my-cluster
-```
+```text
 
 ## Capability Detection
 
@@ -160,7 +160,7 @@ func (c *GremlinClient) queryServerFeatures() (*ServerFeatures, error) {
 
     return features, nil
 }
-```
+```text
 
 ### Backend-Specific Specialization
 
@@ -207,7 +207,7 @@ func (p *NeptunePlugin) GetCapabilities() (*PluginCapabilities, error) {
 
     return caps, nil
 }
-```
+```text
 
 ## Example: Multi-Backend Support
 
@@ -221,7 +221,7 @@ backend:
   type: tinkergraph
   config:
     auto_detect: true
-```
+```text
 
 **Detected Capabilities**:
 - Gremlin: ✅
@@ -243,7 +243,7 @@ backend:
       method: basic
       username: prism
       password: ${JANUS_PASSWORD}
-```
+```text
 
 **Detected Capabilities**:
 - Gremlin: ✅
@@ -263,7 +263,7 @@ backend:
     region: us-east-1
     auth:
       method: iam
-```
+```text
 
 **Detected Capabilities**:
 - Gremlin: ✅
@@ -301,7 +301,7 @@ client.AddEdge("FOLLOWS", alice.ID, bob.ID, map[string]interface{}{
 result, err := client.Gremlin(
     "g.V('user:alice').out('FOLLOWS').out('FOLLOWS').dedup().limit(10)",
 )
-```
+```text
 
 **Backend selection** is configuration-driven, not code-driven.
 
@@ -364,7 +364,7 @@ func validateQueryFeatures(query string, caps *PluginCapabilities) error {
 
     return nil
 }
-```
+```text
 
 ## Benefits of Generic Plugin
 
@@ -381,7 +381,7 @@ prismctl namespace create user-graph-staging --backend janusgraph
 
 # Production (AWS)
 prismctl namespace create user-graph-prod --backend neptune
-```
+```text
 
 ### 2. **Cost Optimization**
 
@@ -402,7 +402,7 @@ staging_graph:
 dev_graph:
   backend: tinkergraph
   cost: $0 (local)
-```
+```text
 
 ### 3. **Vendor Independence**
 
@@ -433,7 +433,7 @@ func TestGraphTraversal(t *testing.T) {
     assert.Len(t, result.Vertices, 1)
     assert.Equal(t, "B", result.Vertices[0].Id)
 }
-```
+```text
 
 ## Community Ecosystem
 

@@ -69,7 +69,7 @@ Dedicated backend clusters per shard:
 │  │  └────────────────┘  │  │  └─────────────────────┘  │   │
 │  └──────────────────────┘  └───────────────────────────┘   │
 └─────────────────────────────────────────────────────────────┘
-```
+```text
 
 ## Rationale
 
@@ -168,7 +168,7 @@ services:
       - user-profiles
       - session-cache
       - recommendations
-```
+```text
 
 **Product-Sharded Deployment (Medium Scale)**:
 ```yaml
@@ -187,7 +187,7 @@ services:
     namespaces:
       - search-index
       - search-cache
-```
+```text
 
 **Feature + SLA Sharded (Large Scale)**:
 ```yaml
@@ -206,7 +206,7 @@ services:
     sla: p99_50ms
     backends:
       - redis-vod-cluster
-```
+```text
 
 ### Routing to Shards
 
@@ -235,7 +235,7 @@ spec:
       route:
         - destination:
             host: prism-search
-```
+```text
 
 **Client-Side Routing**:
 ```rust
@@ -247,7 +247,7 @@ let prism_endpoint = match product {
 };
 
 let client = PrismClient::connect(prism_endpoint).await?;
-```
+```text
 
 ### Configuration Management
 
@@ -274,7 +274,7 @@ spec:
     requests:
       cpu: "4"
       memory: "8Gi"
-```
+```text
 
 (See ADR-037 for Kubernetes Operator details)
 

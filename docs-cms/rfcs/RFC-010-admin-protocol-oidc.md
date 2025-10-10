@@ -47,7 +47,7 @@ Administrator → OIDC Provider → Admin CLI/UI → Prism Admin API → Backend
 2. Receive JWT with claims
 3. Present JWT in gRPC metadata
 4. Authorized operations
-```
+```text
 
 ### Ports and Endpoints
 
@@ -463,7 +463,7 @@ All requests must include:
 
 authorization: Bearer <jwt_token>
 request-id: <uuid>  // Optional but recommended
-```
+```text
 
 ### Error Codes
 
@@ -501,7 +501,7 @@ roles:
     description: Read-only access
     permissions:
       - admin:read
-```
+```text
 
 ### Permission Mapping
 
@@ -570,7 +570,7 @@ impl AuthInterceptor {
         }.to_string()
     }
 }
-```
+```text
 
 ## Audit Logging
 
@@ -592,7 +592,7 @@ pub struct AuditLogEntry {
     pub error: Option<String>,
     pub metadata: serde_json::Value,
 }
-```
+```text
 
 ### Storage
 
@@ -616,7 +616,7 @@ CREATE TABLE admin_audit_log (
     INDEX idx_audit_operation ON admin_audit_log(operation),
     INDEX idx_audit_namespace ON admin_audit_log(namespace)
 );
-```
+```text
 
 ## Security Considerations
 
@@ -640,7 +640,7 @@ spec:
     ports:
     - protocol: TCP
       port: 8981
-```
+```text
 
 ### Rate Limiting
 
@@ -670,7 +670,7 @@ impl RateLimitInterceptor {
         Ok(())
     }
 }
-```
+```text
 
 ### TLS Configuration
 
@@ -686,7 +686,7 @@ Server::builder()
     .add_service(AdminServiceServer::new(admin_service))
     .serve("[::]:8981".parse()?)
     .await?;
-```
+```text
 
 ## Deployment
 
@@ -710,7 +710,7 @@ services:
 networks:
   internal:
     internal: true
-```
+```text
 
 ### Kubernetes
 
@@ -754,7 +754,7 @@ spec:
   - port: 8981
     targetPort: 8981
     name: admin
-```
+```text
 
 ## Testing
 
@@ -793,7 +793,7 @@ func TestAdminProtocol(t *testing.T) {
     require.NoError(t, err)
     assert.Equal(t, "test-namespace", resp.Namespace.Name)
 }
-```
+```text
 
 ## Open Questions
 
@@ -834,7 +834,7 @@ func TestAdminProtocol(t *testing.T) {
          jwt_validation_ttl: 24h  # How long to cache validated JWTs
          jwks_cache_ttl: 24h      # How long to cache public keys
          auto_refresh: true       # Automatically refresh expired tokens
-       ```
+       ```text
    - **Security Trade-offs**:
      - Longer caching = better performance, but delayed revocation
      - Shorter caching = more validation overhead, but faster revocation response
@@ -895,7 +895,7 @@ func TestAdminProtocol(t *testing.T) {
              Ok(())
          }
      }
-     ```
+     ```text
    - **Trade-offs**:
      - ✅ **Pros**: Lower latency, no OIDC dependency per-request, better availability
      - ❌ **Cons**: Can't detect real-time revocation, stale keys if JWKS refresh fails
@@ -920,7 +920,7 @@ func TestAdminProtocol(t *testing.T) {
            groups: ["team-analytics", "platform-team"]
          user-profiles:
            groups: ["team-users", "platform-team"]
-       ```
+       ```text
      - **Pros**: Simple, leverages existing IdP groups, easy to understand
      - **Cons**: Tight coupling to IdP group structure, requires group sync
    - **Option 2: Claim-Based Mapping**
@@ -934,7 +934,7 @@ func TestAdminProtocol(t *testing.T) {
            .and_then(|v| v.as_array())
            .map(|arr| arr.iter().filter_map(|v| v.as_str()).collect())
            .unwrap_or_default();
-       ```
+       ```text
      - **Pros**: Explicit, no group interpretation needed, flexible
      - **Cons**: Requires custom IdP configuration, claim size limits
    - **Option 3: Dynamic RBAC with External Policy**
@@ -951,7 +951,7 @@ func TestAdminProtocol(t *testing.T) {
        allow {
            "platform-team" in input.user.groups
        }
-       ```
+       ```text
      - **Pros**: Most flexible, centralized policy management, audit trail
      - **Cons**: Additional dependency (OPA), higher latency, more complex
    - **Option 4: Tenant-Scoped OIDC Providers**
@@ -965,7 +965,7 @@ func TestAdminProtocol(t *testing.T) {
            oidc_issuer: https://tenant-analytics.idp.com
          user-profiles:
            oidc_issuer: https://tenant-users.idp.com
-       ```
+       ```text
      - **Pros**: Strong isolation, tenant-specific policies, clear boundaries
      - **Cons**: Complex setup, multiple IdP integrations, higher overhead
    - **Comparison Table**:
@@ -990,7 +990,7 @@ func TestAdminProtocol(t *testing.T) {
          -d "client_id=prism-ci-service" \
          -d "client_secret=<secret>" \
          -d "scope=admin:read admin:write"
-       ```
+       ```text
      - Configuration:
        ```yaml
        # CI/CD environment
@@ -999,7 +999,7 @@ func TestAdminProtocol(t *testing.T) {
 
        # CLI auto-detects and uses client credentials
        prismctl --auth=client-credentials namespace list
-       ```
+       ```text
      - **Pros**: Standard OAuth2 flow, widely supported, short-lived tokens
      - **Cons**: Secret management required, no refresh tokens (must re-authenticate)
    - **Recommendation 2: Long-Lived API Keys**
@@ -1014,7 +1014,7 @@ func TestAdminProtocol(t *testing.T) {
        # Use key
        export PRISM_API_KEY=prism_key_abc123...
        prismctl namespace create prod-analytics
-       ```
+       ```text
      - Configuration:
        ```sql
        CREATE TABLE service_accounts (
@@ -1026,7 +1026,7 @@ func TestAdminProtocol(t *testing.T) {
            expires_at TIMESTAMPTZ,
            last_used_at TIMESTAMPTZ
        );
-       ```
+       ```text
      - **Pros**: Simple, no IdP dependency, fine-grained scopes
      - **Cons**: Not standard OAuth2, custom implementation, key rotation complexity
    - **Recommendation 3: Kubernetes Service Account Tokens**
@@ -1046,7 +1046,7 @@ func TestAdminProtocol(t *testing.T) {
 
        # Mount at /var/run/secrets/prism/token
        # CLI auto-detects and uses
-       ```
+       ```text
      - **Pros**: Automatic rotation, no secret management, K8s-native
      - **Cons**: K8s-only, requires TokenRequest API, audience configuration
    - **Recommendation 4: Short-Lived Tokens with Secure Storage**
@@ -1059,7 +1059,7 @@ func TestAdminProtocol(t *testing.T) {
 
        # Obtain token (automatically by CLI)
        prismctl namespace list
-       ```
+       ```text
      - **Pros**: Secrets never stored on disk, audit trail in secret manager
      - **Cons**: Dependency on secret manager, additional latency
    - **Comparison Table**:

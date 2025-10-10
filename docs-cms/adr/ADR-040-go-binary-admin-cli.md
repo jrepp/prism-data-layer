@@ -230,20 +230,20 @@ tools/
         ├── health.go         # Health commands
         ├── session.go        # Session commands
         └── config.go         # Config management
-```
+```text
 
 **Build**:
 ```bash
 cd tools
 go build -o prismctl ./cmd/prismctl
 ./prismctl --help
-```
+```text
 
 **Release build** (optimized):
 ```bash
 go build -ldflags="-s -w" -o prismctl ./cmd/prismctl
 upx prismctl  # Optional: compress binary (10MB → 3MB)
-```
+```text
 
 ### Configuration
 
@@ -265,7 +265,7 @@ plugins:
 
 logging:
   level: info
-```
+```text
 
 **Precedence** (Viper):
 1. Command-line flags
@@ -291,7 +291,7 @@ prismctl stack start
 # Use prismctl for admin operations
 prismctl namespace list
 prismctl health
-```
+```text
 
 Rationale:
 - Single binary handles both bootstrap and runtime operations
@@ -312,7 +312,7 @@ backends: [postgres]
 capabilities:
   - keyvalue
   - transactions
-```
+```text
 
 **CLI integration**:
 ```bash
@@ -327,7 +327,7 @@ prismctl plugin stop postgres
 
 # Plugin health
 prismctl plugin health postgres
-```
+```text
 
 **Go implementation**:
 ```go
@@ -358,7 +358,7 @@ func loadPluginManifest(name string) (*PluginManifest, error) {
 
     return &manifest, nil
 }
-```
+```text
 
 ## Consequences
 

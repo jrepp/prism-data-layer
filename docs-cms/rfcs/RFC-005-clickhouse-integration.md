@@ -476,7 +476,7 @@ clickhouse:
 daily_volume = events_per_day × avg_event_size_bytes
 compressed_size = daily_volume / compression_ratio
 retention_storage = compressed_size × retention_days × (1 + replica_count)
-```
+```text
 
 **Example**:
 - 1B events/day × 200 bytes = 200GB/day uncompressed
@@ -514,7 +514,7 @@ metrics:
   replication:
     - replication_lag_seconds
     - replica_queue_size
-```
+```text
 
 ### 7.3 Data Lifecycle
 
@@ -528,7 +528,7 @@ graph LR
     style Warm fill:#feca57
     style Cold fill:#48dbfb
     style Delete fill:#dfe6e9
-```
+```text
 
 ```sql
 -- Tiered storage with TTL
@@ -537,7 +537,7 @@ ALTER TABLE events MODIFY TTL
     timestamp + INTERVAL 30 DAY TO VOLUME 'warm',
     timestamp + INTERVAL 90 DAY TO VOLUME 'cold',
     timestamp + INTERVAL 90 DAY DELETE;
-```
+```text
 
 ## 8. Migration Path
 

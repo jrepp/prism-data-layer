@@ -47,7 +47,7 @@ prism.handle_request           [150ms total]
 │  └─ postgres.query            [137ms]
 │     └─ SQL: SELECT * FROM... [135ms]
 └─ prism.response.serialize     [3ms]
-```
+```text
 
 ### Architecture
 
@@ -74,7 +74,7 @@ sequenceDiagram
     Proxy-->>Client: gRPC Response
 
     Note over Client,Backend: All spans linked by<br/>trace_id: abc123
-```
+```text
 
 ### Trace Context Propagation
 
@@ -765,7 +765,7 @@ prism-proxy: handle_data_request [142ms]
 │     ├─ prism-plugin-postgres: pool.acquire [2ms]
 │     └─ prism-plugin-postgres: postgres.query [134ms]
 │        └─ postgresql: SELECT * FROM users WHERE id = $1 [132ms]
-```
+```text
 
 ## References
 

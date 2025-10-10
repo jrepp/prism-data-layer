@@ -75,7 +75,7 @@ Prism requires administrative capabilities beyond the data plane APIs. Operators
 │  │ Postgres │  │ Kafka    │  │ NATS     │                  │
 │  └──────────┘  └──────────┘  └──────────┘                  │
 └─────────────────────────────────────────────────────────────┘
-```
+```text
 
 ### Component 1: Admin API (gRPC)
 
@@ -126,7 +126,7 @@ service AdminService {
   // Audit
   rpc GetAuditLog(GetAuditLogRequest) returns (stream AuditLogEntry);
 }
-```
+```text
 
 **Implementation:**
 
@@ -153,7 +153,7 @@ async fn main() -> Result<()> {
     tokio::try_join!(data_server, admin_server)?;
     Ok(())
 }
-```
+```text
 
 **Authentication:**
 
@@ -164,7 +164,7 @@ Admin API requires separate credentials:
 metadata:
   x-admin-token: "admin-abc123"
   x-admin-user: "alice@example.com"
-```
+```text
 
 **Pros:**
 - Strong security boundary
@@ -240,7 +240,7 @@ admin-ui/static/
 │   └── health.js       # Health dashboard
 └── lib/
     └── grpc-web.js     # gRPC-Web runtime
-```
+```text
 
 **JavaScript Client:**
 
@@ -261,7 +261,7 @@ async function loadConfigs() {
         renderConfigs(response.getConfigsList());
     });
 }
-```
+```text
 
 **Pros:**
 - No build step required
@@ -310,7 +310,7 @@ impl AdminService {
         result
     }
 }
-```
+```text
 
 **Storage:**
 
@@ -330,7 +330,7 @@ CREATE TABLE audit_log (
     INDEX idx_audit_actor ON audit_log(actor),
     INDEX idx_audit_operation ON audit_log(operation)
 );
-```
+```text
 
 **Pros:**
 - Comprehensive audit trail
@@ -367,7 +367,7 @@ services:
       ADMIN_TOKEN_SECRET: ${ADMIN_TOKEN_SECRET}
     depends_on:
       - prism-proxy
-```
+```text
 
 **Network Policy:**
 
@@ -394,7 +394,7 @@ spec:
     ports:
     - protocol: TCP
       port: 8980  # Data plane - all pods
-```
+```text
 
 ## Security Considerations
 
@@ -423,7 +423,7 @@ pub enum Permission {
     NamespaceAdmin,
     OperationalAdmin,
 }
-```
+```text
 
 **Alternative: OAuth2**
 - *Pros*: Standard protocol, integrates with IdP
@@ -452,7 +452,7 @@ roles:
     - config:read
     - session:read
     - backend:read
-```
+```text
 
 ### Network Isolation
 
@@ -470,7 +470,7 @@ roles:
 - port: 8981
   protocol: TCP
   allow: [internal, 10.0.0.0/8]
-```
+```text
 
 ## Performance Considerations
 
@@ -495,7 +495,7 @@ async function getConfigs() {
     configCache.set('list', { data: configs, timestamp: now });
     return configs;
 }
-```
+```text
 
 ### Pagination
 
@@ -512,7 +512,7 @@ message ListSessionsResponse {
   optional string next_page_token = 2;
   int32 total_count = 3;
 }
-```
+```text
 
 ### Async Operations
 
@@ -539,7 +539,7 @@ message GetOperationResponse {
   int32 progress_percent = 2;
   optional string error = 3;
 }
-```
+```text
 
 ## Migration and Rollout
 
@@ -594,7 +594,7 @@ mod tests {
         assert_eq!(err.code(), Code::Unauthenticated);
     }
 }
-```
+```text
 
 ### Integration Tests
 ```bash
@@ -608,7 +608,7 @@ psql -c "SELECT * FROM audit_log WHERE operation = 'CreateConfig'"
 
 # Test UI
 curl http://localhost:8000
-```
+```text
 
 ### E2E Tests
 ```python
@@ -624,7 +624,7 @@ def test_full_admin_workflow():
     # Verify audit log
     audit = api_client.get_audit_log(operation="CreateConfig")
     assert len(audit) == 1
-```
+```text
 
 ## Monitoring and Observability
 
@@ -645,7 +645,7 @@ lazy_static! {
         &["operation"]
     ).unwrap();
 }
-```
+```text
 
 ### Alerts
 
@@ -665,7 +665,7 @@ groups:
       rate(prism_admin_requests_total{status="unauthenticated"}[5m]) > 0
     annotations:
       summary: "Unauthorized access attempts detected"
-```
+```text
 
 ## Open Questions
 

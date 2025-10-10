@@ -43,7 +43,7 @@ Modern distributed applications require complex reliability patterns, but implem
 │  Kafka | NATS | Postgres | Redis | S3 | ClickHouse      │
 │  "Connect to and execute operations on backend"          │
 └──────────────────────────────────────────────────────────┘
-```
+```text
 
 **Goals:**
 - Define clear separation between client API and backend strategies
@@ -102,7 +102,7 @@ sequenceDiagram
     Note over App,Backend: Crash Recovery
     Proxy->>WAL: On restart: Read uncommitted WAL entries
     Proxy->>Backend: Replay to backend
-```
+```text
 
 **Client Configuration:**
 ```yaml
@@ -117,7 +117,7 @@ namespaces:
       replay: enabled           # → Prism keeps committed log for replay
       retention: 30days         # → Prism retains WAL for 30 days
       ordered: true             # → Prism guarantees order
-```
+```text
 
 **Client Code (Producer):**
 ```python
@@ -132,7 +132,7 @@ response = client.publish("orders", order)
 #   ✓ Can be replayed if needed
 
 print("Order persisted:", response.offset)
-```
+```text
 
 **Client Code (Consumer):**
 ```python
@@ -149,7 +149,7 @@ for operation in client.consume("orders"):
         # On failure: don't ack, operation will be retried
         logging.error(f"Failed to process order: {e}")
         operation.nack()  # Explicit negative ack (immediate retry)
-```
+```text
 
 **What Happens Internally:**
 
@@ -245,7 +245,7 @@ process_video(video_bytes)
 Problem: ML team publishes 50GB model weights per training run
 Before Prism: Manual S3 upload + manual message with S3 key
 With Prism: Standard publish() API, Prism handles everything
-```
+```text
 
 ### Pattern 3: Transactional Messaging (Outbox)
 
@@ -267,7 +267,7 @@ namespaces:
     needs:
       consistency: strong          # → Prism adds Outbox pattern
       delivery_guarantee: exactly_once
-```
+```text
 
 **Client Code:**
 ```python
@@ -284,7 +284,7 @@ with client.transaction() as tx:
     tx.commit()
 
 # Prism handles background publishing from outbox table
-```
+```text
 
 **What Happens Internally:**
 1. **Layer 3**: Client calls `tx.publish()`
@@ -359,7 +359,7 @@ def cache_invalidator():
 Problem: Keep Elasticsearch search index synced with PostgreSQL
 Before Prism: Dual write (update DB, update ES) - race conditions
 With Prism: CDC automatically streams changes, ES consumes
-```
+```text
 
 ### Pattern 5: Transactional Large Payloads (Outbox + Claim Check)
 
@@ -382,7 +382,7 @@ namespaces:
       consistency: strong           # → Prism adds Outbox
       max_message_size: 5GB        # → Prism adds Claim Check
       delivery_guarantee: exactly_once
-```
+```text
 
 **Client Code:**
 ```python
@@ -406,7 +406,7 @@ with client.transaction() as tx:
     tx.commit()
 # If commit succeeds: model will be published
 # If commit fails: S3 object is cleaned up, no message sent
-```
+```text
 
 **What Happens Internally:**
 1. **Layer 3**: Client calls `tx.publish(2GB)`
@@ -474,7 +474,7 @@ product = client.get("products", product_id)  # Gets updated price
 Problem: Product catalog with millions of reads/sec, frequent price updates
 Before Prism: Manual cache + manual invalidation, stale data bugs
 With Prism: Declare cache + CDC, Prism handles everything
-```
+```text
 
 ### Pattern Selection Guide
 
@@ -506,7 +506,7 @@ namespaces:
 # Internally translates to:
 #   patterns: [WAL, Outbox, Claim Check, Tiered Storage]
 #   backend: [Kafka, S3, Postgres]
-```
+```text
 
 Application owners **never write pattern composition logic** - they declare needs, Prism handles the rest.
 
@@ -612,7 +612,7 @@ graph TB
     PatternChain -.->|Emit| Metrics
     PatternChain -.->|Emit| Traces
     PatternChain -.->|Emit| Logs
-```
+```text
 
 ### Authentication and Authorization Flow
 
@@ -652,7 +652,7 @@ sequenceDiagram
         JWT-->>Auth: Error
         Auth-->>Client: Unauthenticated (16)
     end
-```
+```text
 
 ### Pattern Layer Execution Flow
 
@@ -702,7 +702,7 @@ sequenceDiagram
         P1->>Backend: UPDATE outbox published_at
         P1->>Obs: Metric: outbox_published++
     end
-```
+```text
 
 ### Pattern Routing and Backend Execution
 
@@ -764,7 +764,7 @@ graph LR
     Transact --> PGOps
     Stream --> PGOps
     Batch --> RedisOps
-```
+```text
 
 ### Three-Layer Model
 
@@ -784,7 +784,7 @@ message PublishRequest {
   bytes payload = 2;  // Application doesn't know about Claim Check
   map<string, string> metadata = 3;
 }
-```
+```text
 
 **Key Characteristics:**
 - Backend-agnostic (no Kafka/NATS specific details)
@@ -818,7 +818,7 @@ namespaces:
     backend:
       queue: kafka
       topic_prefix: video
-```
+```text
 
 **Pattern Execution Order:**
 
@@ -843,7 +843,7 @@ sequenceDiagram
     Backend-->>Pat2: Acknowledged
     Pat2-->>API: Success
     API-->>App: PublishResponse
-```
+```text
 
 #### Layer 1: Backend Execution (Implementation)
 
@@ -859,7 +859,7 @@ impl KafkaBackend {
             .map_err(|e| Error::Backend(e))
     }
 }
-```
+```text
 
 **Key Characteristics:**
 - Backend-specific logic encapsulated
@@ -929,7 +929,7 @@ def consume_video():
         video_bytes = msg["payload"]
 
     process_video(video_bytes)
-```
+```text
 
 **Problems**:
 - 20+ lines of boilerplate per producer/consumer
@@ -960,7 +960,7 @@ namespaces:
       type: kafka
       brokers: [kafka-1:9092, kafka-2:9092]
       topic: videos
-```
+```text
 
 **Application Code**:
 ```python
@@ -975,7 +975,7 @@ client.publish("videos", video_bytes)
 event = client.subscribe("videos")
 video_bytes = event.payload  # Prism fetched from S3 automatically
 process_video(video_bytes)
-```
+```text
 
 **Benefits**:
 - 2 lines of application code (vs 20+)
@@ -1023,7 +1023,7 @@ sequenceDiagram
 
         Prism->>DB: UPDATE outbox<br/>SET published_at = NOW()
     end
-```
+```text
 
 **Configuration**:
 ```yaml
@@ -1052,7 +1052,7 @@ namespaces:
     backend:
       type: kafka
       topic: model-releases
-```
+```text
 
 **Guarantees**:
 - ✅ If transaction commits, event WILL be published (outbox)
@@ -1100,7 +1100,7 @@ namespaces:
     backend:
       type: postgres
       database: users_db
-```
+```text
 
 **Data Flow**:
 
@@ -1128,7 +1128,7 @@ graph LR
     CDC -->|Parse changes| Kafka
     Kafka -->|Subscribe| Invalidator
     Invalidator -->|DEL user:123:profile| Cache
-```
+```text
 
 **Benefits**:
 - Applications always read from cache (fast)
@@ -1148,7 +1148,7 @@ service QueueService {
   rpc Publish(PublishRequest) returns (PublishResponse);
   rpc Subscribe(SubscribeRequest) returns (stream Message);
 }
-```
+```text
 
 **Backend Strategy (Layer 2 + 1)** - Implementation details:
 
@@ -1165,7 +1165,7 @@ service QueueService {
 # Works with ANY backend strategy
 client.publish("events", payload)
 messages = client.subscribe("events")
-```
+```text
 
 ### Pattern Configuration Encapsulation
 
@@ -1192,7 +1192,7 @@ namespaces:
     backend:
       type: kafka
       partitions: 20              # For throughput
-```
+```text
 
 ## Stitching Patterns Together
 
@@ -1232,7 +1232,7 @@ pub struct ConsumeContext {
     pub payload: Vec<u8>,
     pub metadata: HashMap<String, String>,
 }
-```
+```text
 
 ### Example: Claim Check Pattern Implementation
 
@@ -1285,7 +1285,7 @@ impl Pattern for ClaimCheckPattern {
         }
     }
 }
-```
+```text
 
 ### Pattern Chain Execution
 
@@ -1313,7 +1313,7 @@ impl PatternChain {
         Ok(ctx)
     }
 }
-```
+```text
 
 **Example execution with Outbox + Claim Check**:
 
@@ -1647,7 +1647,7 @@ prism_pattern_outbox_pending_count{namespace="videos"} 5
 # Pattern Chain
 prism_pattern_chain_duration_seconds{namespace="videos", pattern="claim-check"} 0.042
 prism_pattern_chain_duration_seconds{namespace="videos", pattern="outbox"} 0.008
-```
+```text
 
 ### Distributed Tracing
 

@@ -80,7 +80,7 @@ Prism addresses the complexity of managing multiple data backends in modern appl
 │ • SQLite         │           │ • NATS           │
 │ • Neptune        │           │ • Redis          │
 └──────────────────┘           └───────────────────┘
-```
+```text
 
 ### 2.2 Key Design Principles
 
@@ -124,7 +124,7 @@ message ClientConfig {
   RateLimitConfig rate_limit = 7;   // RPS, burst
   string namespace = 8;             // Multi-tenancy isolation
 }
-```
+```text
 
 ### 3.3 Configuration Sources
 
@@ -133,7 +133,7 @@ message ClientConfig {
 # Client requests pre-configured pattern
 config, err := client.GetConfig("user-profiles")
 session, err := client.StartSession(config)
-```
+```text
 
 **Inline Configurations** (client-provided):
 ```go
@@ -143,7 +143,7 @@ config := &ClientConfig{
     Consistency: &ConsistencyConfig{Level: CONSISTENCY_LEVEL_EVENTUAL},
 }
 session, err := client.StartSession(config)
-```
+```text
 
 ### 3.4 Configuration Validation
 
@@ -171,7 +171,7 @@ service SessionService {
   rpc Heartbeat(HeartbeatRequest) returns (HeartbeatResponse);
   rpc GetSession(GetSessionRequest) returns (GetSessionResponse);
 }
-```
+```text
 
 ### 4.3 Session State
 

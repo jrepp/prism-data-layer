@@ -61,7 +61,7 @@ Implement **Dynamic Client Configuration** with protobuf descriptors:
     │ Uses named config │     │ Provides custom   │
     │ "user-profiles"   │     │ inline config     │
     └───────────────────┘     └───────────────────┘
-```
+```text
 
 ### Client Configuration Descriptor (Protobuf)
 
@@ -203,7 +203,7 @@ message RateLimitConfig {
   int32 requests_per_second = 1;
   int32 burst = 2;
 }
-```
+```text
 
 ### Configuration Service (gRPC)
 
@@ -270,7 +270,7 @@ message ValidateConfigResponse {
   repeated string errors = 2;
   repeated string warnings = 3;
 }
-```
+```text
 
 ### Client Connection Flow
 
@@ -515,7 +515,7 @@ config/
     ├── key-value.yaml
     ├── queue.yaml
     └── pubsub.yaml
-```
+```text
 
 ### Configuration Validation
 
@@ -545,7 +545,7 @@ impl ConfigValidator {
         if errors.is_empty() { Ok(()) } else { Err(errors) }
     }
 }
-```
+```text
 
 ### Configuration Caching
 
@@ -571,7 +571,7 @@ func (c *ConfigCache) Get(name string) (*ClientConfig, error) {
     c.cache[name] = config
     return config, nil
 }
-```
+```text
 
 ## References
 

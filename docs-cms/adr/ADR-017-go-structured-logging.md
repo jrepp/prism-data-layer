@@ -112,7 +112,7 @@ tools/internal/
     log.go           # slog wrapper with context helpers
     context.go       # Context management
     log_test.go      # Tests
-```
+```text
 
 ### Core API
 
@@ -175,7 +175,7 @@ func With(ctx context.Context, args ...any) context.Context {
 }
 
 type loggerKey struct{}
-```
+```text
 
 ### Usage Examples
 
@@ -211,7 +211,7 @@ logger.Debug("worker started",
     "worker_id", workerID,
     "queue_size", queueSize,
 )
-```
+```text
 
 ### Performance-Critical Paths
 
@@ -224,7 +224,7 @@ if logger.Enabled(ctx, slog.LevelDebug) {
         "batch", batchNum,
     )
 }
-```
+```text
 
 ### Testing Pattern
 
@@ -256,7 +256,7 @@ func TestMigrate_Logging(t *testing.T) {
         t.Error("expected at least 1 log entry")
     }
 }
-```
+```text
 
 ## Logging Guidelines
 

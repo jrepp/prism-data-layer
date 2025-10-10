@@ -68,7 +68,7 @@ Patterns are ordered by complexity and value. Prism will implement in this order
    │ Redis  │       │ Postgres │     │   S3     │
    │ (ms)   │       │ (10ms)   │     │ (100ms)  │
    └────────┘       └──────────┘     └──────────┘
-```
+```text
 
 #### Prism Configuration
 
@@ -110,7 +110,7 @@ namespaces:
 
       - condition: age > 30_days AND tier == warm
         action: demote_to_cold
-```
+```text
 
 #### Client Code
 
@@ -123,7 +123,7 @@ let log = client.get("user-activity-logs", "user:12345:2025-01-15").await?;
 // 2. Checks warm tier (Postgres) - HIT
 // 3. Returns result
 // 4. Optionally promotes to hot tier (if access_count > 10)
-```
+```text
 
 #### Key Characteristics
 
@@ -285,7 +285,7 @@ let order = client.get("order-writes", "order:789").await?;
 │  3. Process full payload                               │
 │                                                         │
 └─────────────────────────────────────────────────────────┘
-```
+```text
 
 #### Prism Configuration
 
@@ -314,7 +314,7 @@ namespaces:
       # OR retain for replay
       on_consume: false
       retention: 604800  # 7 days
-```
+```text
 
 #### Client Code
 
@@ -340,7 +340,7 @@ let event: VideoProcessingEvent = client.consume("video-processing-events").awai
 // 4. Returns to consumer
 
 assert_eq!(event.raw_video.len(), 50_000_000);
-```
+```text
 
 #### Key Characteristics
 
@@ -584,7 +584,7 @@ graph TD
    │  Redis  │    │ Elastic │    │ ClickHouse  │
    │ (Cache) │    │ (Search)│    │ (Analytics) │
    └─────────┘    └─────────┘    └─────────────┘
-```
+```text
 
 #### Prism Configuration
 
@@ -631,7 +631,7 @@ namespaces:
         backend: clickhouse
         operations: [INSERT, UPDATE]
         table: user_events
-```
+```text
 
 #### CDC Event Format
 
@@ -656,7 +656,7 @@ namespaces:
   },
   "ts_ms": 1704931200000
 }
-```
+```text
 
 #### Client Code
 
@@ -672,7 +672,7 @@ db.execute("UPDATE users SET email = 'new@example.com' WHERE id = 42")
 # 5. Inserts into ClickHouse: user_events table
 
 # No dual writes needed!
-```
+```text
 
 #### Key Characteristics
 
@@ -849,7 +849,7 @@ let listings = client.query("product-listings", filters).await?;
 ┌─────────────────────────────────────────────────────────┐
 │                 Kafka (Events)                          │
 └─────────────────────────────────────────────────────────┘
-```
+```text
 
 #### Prism Configuration
 
@@ -886,7 +886,7 @@ namespaces:
         cleanup:
           strategy: delete  # or mark_published
           retention: 86400  # Keep published events for 1 day
-```
+```text
 
 #### Client Code
 
@@ -916,7 +916,7 @@ tx.commit().await?;
 // - Deletes from outbox (or marks published_at)
 
 // Guaranteed: If order exists in database, event will be published.
-```
+```text
 
 #### Key Characteristics
 
@@ -980,7 +980,7 @@ namespaces:
         - name: thumbnail-generator
         - name: transcoder
         - name: metadata-extractor
-```
+```text
 
 **How it works**:
 1. Producer publishes large video (50MB)
@@ -1017,7 +1017,7 @@ namespaces:
       destination:
         backend: kafka
         topic: model-releases
-```
+```text
 
 **How it works**:
 1. Application saves model metadata + model weights to outbox table (single transaction)
@@ -1058,7 +1058,7 @@ namespaces:
         ttl: 2592000
       cold:
         backend: s3
-```
+```text
 
 **How it works**:
 1. Application writes activity log (fast Kafka append)
@@ -1098,7 +1098,7 @@ namespaces:
       - name: product-cache
         backend: redis
         sync_from: product-cdc.products
-```
+```text
 
 **How it works**:
 1. Application writes to Postgres (write model)
@@ -1145,7 +1145,7 @@ namespaces:
     pattern: tiered-storage  # or event-sourcing, cqrs, etc.
     backend: multi  # Indicates multiple backends
     # Pattern-specific config follows
-```
+```text
 
 ### 2. Code Generation from Patterns
 

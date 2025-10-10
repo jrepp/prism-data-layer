@@ -1339,7 +1339,7 @@ Backend-Specific Results:
   ClickHouse: ✓ 10/10 tests passed
 
 test result: ok. 45 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out
-```
+```text
 
 ### CI/CD Integration
 
@@ -1386,7 +1386,7 @@ jobs:
         with:
           name: acceptance-test-results-${{ matrix.backend }}
           path: target/test-results/
-```
+```text
 
 ### Benefits of Acceptance Test Framework
 
@@ -1470,7 +1470,7 @@ pub fn verify_plugin(plugin_path: &Path) -> Result<()> {
 
     Ok(())
 }
-```
+```text
 
 ## Netflix Architecture Comparison
 
@@ -1584,7 +1584,7 @@ mongodb-plugin/
 │   ├── integration_test.rs
 │   └── fixtures/
 └── README.md
-```
+```text
 
 **Template provides**:
 - gRPC service implementation skeleton
@@ -1630,7 +1630,7 @@ impl BackendPlugin for MongoDbPlugin {
         Ok(GetResponse { value: doc })
     }
 }
-```
+```text
 
 **SDK Features**:
 - **Macros**: `#[plugin]`, `#[operation]` reduce boilerplate
@@ -1654,7 +1654,7 @@ grpcurl -plaintext -d '{"namespace": "test", "config": {...}}' \
 # 3. Send operations
 grpcurl -plaintext -d '{"operation": "get", "params": {"key": "foo"}}' \
   localhost:50100 prism.plugin.BackendPlugin/Execute
-```
+```text
 
 **Integration Testing**:
 
@@ -1672,14 +1672,14 @@ async fn test_get_operation() {
 
     assert_eq!(response.value, expected_value);
 }
-```
+```text
 
 **Hot-Reload During Development**:
 
 ```bash
 # Watch for changes and reload plugin
 cargo watch -x 'build --release' -s 'prism plugin reload mongodb'
-```
+```text
 
 ### Language Support Strategy
 
@@ -1699,7 +1699,7 @@ cargo watch -x 'build --release' -s 'prism plugin reload mongodb'
 **Template Availability**:
 ```bash
 prism-plugin-init --name mybackend --language [rust|go|python]
-```
+```text
 
 Each template includes:
 - gRPC service implementation
@@ -1740,7 +1740,7 @@ spec:
       limits:
         cpu: "4"        # Prevent CPU starvation of other plugins
         memory: "8Gi"   # Prevent OOM affecting proxy
-```
+```text
 
 **Network Isolation** (Prevents cross-plugin communication):
 
@@ -1767,7 +1767,7 @@ spec:
     - podSelector:
         matchLabels:
           app: clickhouse  # Plugin can only call ClickHouse
-```
+```text
 
 ### Plugin Administration
 
@@ -1794,7 +1794,7 @@ prism plugin status mongodb
 
 # Hot-reload plugin code
 prism plugin reload mongodb
-```
+```text
 
 For detailed plugin admin commands, see [RFC-006 Section: Plugin Management](./RFC-006-python-admin-cli.md#plugin-management).
 
@@ -1835,7 +1835,7 @@ impl BackendPlugin for MyBackendPlugin {
         }
     }
 }
-```
+```text
 
 2. **Build as Shared Library**:
 
@@ -1845,7 +1845,7 @@ crate-type = ["cdylib"]  # Dynamic library
 
 [dependencies]
 prism-plugin-sdk = "0.1"
-```
+```text
 
 3. **Register Plugin**:
 
@@ -1855,7 +1855,7 @@ plugins:
   - name: my-backend
     library: /path/to/libmy_backend_plugin.so
     type: in_process
-```
+```text
 
 ---
 

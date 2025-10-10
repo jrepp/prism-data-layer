@@ -743,7 +743,7 @@ What's the lifecycle?
 ├─ Temporary (< 7 days) → Object Storage with short TTL
 ├─ Medium-term (7-90 days) → Object Storage with default TTL
 └─ Permanent → Object Storage with infinite TTL (explicit opt-in)
-```
+```text
 
 ---
 

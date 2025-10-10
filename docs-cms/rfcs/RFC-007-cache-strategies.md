@@ -762,7 +762,7 @@ What's your data update frequency?
 ├─ Rarely (hourly+) → Look-Aside + long TTL + warmup
 ├─ Occasionally (minutes) → Look-Aside + short TTL
 └─ Frequently (seconds) → Write-Through
-```
+```text
 
 ---
 

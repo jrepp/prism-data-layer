@@ -37,23 +37,23 @@ Prism sits between applications and data backends (Kafka, NATS, Postgres, SQLite
 
 Our documentation is organized into three main types:
 
-### 📋 [Architecture Decision Records (ADRs)](/adr)
+### 📋 Architecture Decision Records (ADRs)
 
 Track all significant architectural decisions made in the Prism project. Each ADR captures the context, decision, and consequences of a specific choice.
 
 **When to read**: Understanding why certain technical choices were made, evaluating alternatives that were considered, onboarding to the project's architectural philosophy.
 
-[Browse ADRs →](/adr)
+Browse ADRs in the sidebar or start with [ADR-001: Rust for Proxy](/adr/ADR-001-rust-for-proxy)
 
 ---
 
-### 📐 [Request for Comments (RFCs)](/rfc)
+### 📐 Request for Comments (RFCs)
 
 Detailed technical specifications for major features and components. RFCs provide comprehensive design documentation before implementation.
 
 **When to read**: Understanding complete system designs, implementing new features, reviewing proposed changes before they're built.
 
-[Browse RFCs →](/rfc)
+Browse RFCs in the sidebar or start with [RFC-001: Prism Architecture](/rfc/RFC-001-prism-architecture)
 
 ---
 
@@ -106,7 +106,7 @@ message UserProfile {
 ## Getting Started
 
 1. **Understand the Architecture**: Start with [RFC-001: Prism Architecture](/rfc/RFC-001-prism-architecture)
-2. **Review Key Decisions**: Browse [ADRs](/adr) to understand architectural choices
+2. **Review Key Decisions**: Browse ADRs in the sidebar to understand architectural choices
 3. **Explore Interfaces**: Read [RFC-002: Data Layer Interface](/rfc/RFC-002-data-layer-interface)
 4. **Set Up Locally**: Follow the development setup in the [repository](https://github.com/jrepp/prism-data-layer)
 

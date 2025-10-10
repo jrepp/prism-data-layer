@@ -45,7 +45,7 @@ Adopt **OpenTelemetry** from day one for metrics, logs, and traces. Use **Promet
 │   ├─ Logs ────────► Loki
 │   └─ Traces ──────► Jaeger/Tempo
 └─────────────┘
-```
+```text
 
 ### Metrics
 
@@ -93,7 +93,7 @@ timer.observe_duration();
 REQUEST_COUNT
     .with_label_values(&[namespace, "get", "success"])
     .inc();
-```
+```text
 
 **Dashboards**:
 - **Golden Signals**: Latency, Traffic, Errors, Saturation
@@ -138,7 +138,7 @@ async fn handle_request(request: Request) -> Result<Response> {
         }
     }
 }
-```
+```text
 
 **Log Output**:
 ```json
@@ -156,7 +156,7 @@ async fn handle_request(request: Request) -> Result<Response> {
     "trace_id": "0af7651916cd43dd8448eb211c80319c"
   }
 }
-```
+```text
 
 **Log Levels**:
 - `ERROR`: Something failed, needs immediate attention

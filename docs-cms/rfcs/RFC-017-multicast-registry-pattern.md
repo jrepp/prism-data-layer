@@ -411,7 +411,7 @@ The Multicast Registry pattern **composes** three data access primitives:
 │        └──────────────────┴──────────────────┘         │
 │                     Coordinated by Proxy               │
 └─────────────────────────────────────────────────────────┘
-```
+```text
 
 ### Primitive Mapping
 
@@ -445,7 +445,7 @@ backend_slots:
     purpose: Persist undelivered messages (optional)
     operations: [enqueue, dequeue, ack]
     candidates: [kafka, postgres, sqs, redis-stream]
-```
+```text
 
 **Key Design Principle**: The same client API works with different backend combinations, allowing trade-offs between consistency, durability, and performance.
 

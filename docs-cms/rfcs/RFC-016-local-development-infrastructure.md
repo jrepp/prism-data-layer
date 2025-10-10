@@ -134,7 +134,7 @@ local-dev/
 └── all/
     ├── docker-compose.all.yml  # Start everything
     └── Makefile
-```
+```text
 
 **Benefits:**
 - Start/stop services independently
@@ -158,7 +158,7 @@ open http://localhost:3301
 
 # Configure Prism to send telemetry
 export OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4317
-```
+```text
 
 ### Integration Points
 
@@ -170,7 +170,7 @@ fn main() {
     init_observability()?; // Sets up OpenTelemetry
     // ...
 }
-```
+```text
 
 **Backend Plugins:**
 ```go
@@ -179,7 +179,7 @@ func main() {
     observability.InitTracer("prism-plugin-postgres")
     // Reads OTEL_EXPORTER_OTLP_ENDPOINT from environment
 }
-```
+```text
 
 ### Resource Usage
 
@@ -219,7 +219,7 @@ sequenceDiagram
     Dex-->>Admin: Valid
     Admin-->>CLI: Response
     CLI-->>Dev: Result
-```
+```text
 
 ### Dex Configuration
 
@@ -277,7 +277,7 @@ connectors:
 
 # Enable password grant (for automated testing)
 enablePasswordDB: true
-```
+```text
 
 ### Static Developer User
 
@@ -302,7 +302,7 @@ staticPasswords:
     userID: "a0b1c2d3-e4f5-6789-0123-456789abcdef"
     groups:
       - "prism:viewer"
-```
+```text
 
 **Default Credentials:**
 - **Email**: `dev@local.prism`
@@ -349,7 +349,7 @@ networks:
   prism:
     driver: bridge
     external: false
-```
+```text
 
 ### Developer Identity Auto-Provisioning
 
@@ -419,7 +419,7 @@ fn is_local_dev() -> bool {
         .map(|v| v == "true")
         .unwrap_or(false)
 }
-```
+```text
 
 #### CLI Integration
 
@@ -459,7 +459,7 @@ async fn list_namespaces(ctx: &Context) -> Result<()> {
     println!("{}", format_namespaces(&namespaces));
     Ok(())
 }
-```
+```text
 
 #### Environment Variable Toggle
 
@@ -477,7 +477,7 @@ prism namespace list
 # NAME              STATUS    BACKEND
 # analytics         active    postgres
 # events            active    kafka
-```
+```text
 
 ### Resource Usage
 
@@ -521,7 +521,7 @@ docker-compose -f docker-compose.dex.yml up -d
 # Update all
 cd local-dev
 make update-support-services
-```
+```text
 
 ### Version Tracking
 
@@ -564,7 +564,7 @@ backend_testing:
   kafka:
     version: "7.5.0"
   # See MEMO-004 for complete backend versions
-```
+```text
 
 ### Health Checks
 
@@ -578,7 +578,7 @@ cd local-dev
 # ✅ Signoz OTLP (grpc://localhost:4317): healthy
 # ✅ Dex OIDC (http://localhost:5556): healthy
 # ✅ Dex well-known config: valid
-```
+```text
 
 ## Usage Patterns
 
@@ -592,7 +592,7 @@ make dev-up
 # Equivalent to:
 # docker-compose -f signoz/docker-compose.signoz.yml up -d
 # docker-compose -f dex/docker-compose.dex.yml up -d
-```
+```text
 
 ### Pattern 2: Start Only Signoz
 
@@ -604,7 +604,7 @@ docker-compose -f docker-compose.signoz.yml up -d
 # Start Prism without Dex (local mode, no auth)
 export PRISM_AUTH_DISABLED=true
 cargo run --release
-```
+```text
 
 ### Pattern 3: Start Only Dex
 
@@ -616,7 +616,7 @@ docker-compose -f docker-compose.dex.yml up -d
 # Test OIDC flow
 prism auth login
 # Opens browser to http://localhost:5556/dex/auth
-```
+```text
 
 ### Pattern 4: Full Stack with Backends
 
@@ -632,7 +632,7 @@ docker-compose -f docker-compose.backends.yml up redis -d
 export OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4317
 export PRISM_LOCAL_DEV=true
 cargo run --release
-```
+```text
 
 ## Configuration Injection
 
@@ -652,7 +652,7 @@ export OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4317
 
 # Environment label
 export OTEL_RESOURCE_ATTRIBUTES="deployment.environment=local"
-```
+```text
 
 **Dex (OIDC):**
 ```bash
@@ -664,7 +664,7 @@ export PRISM_OIDC_CLIENT_ID=prismctl
 
 # Auto-login (local dev only)
 export PRISM_LOCAL_DEV=true
-```
+```text
 
 ### Configuration Files
 
@@ -684,7 +684,7 @@ authentication:
     issuer: ${PRISM_OIDC_ISSUER:-http://localhost:5556/dex}
     client_id: prism-proxy
     # Auto-discover JWKS from .well-known/openid-configuration
-```
+```text
 
 **CLI Config:**
 ```yaml
@@ -697,7 +697,7 @@ auth:
     issuer: http://localhost:5556/dex
     client_id: prismctl
     auto_login: true  # Local dev only
-```
+```text
 
 ## Developer Workflows
 
@@ -725,7 +725,7 @@ make bootstrap
 # 🔭 Signoz UI: http://localhost:3301
 # 🔐 Dex OIDC: http://localhost:5556/dex
 # 👤 Auto-authenticated as: dev@local.prism
-```
+```text
 
 ### Workflow 2: Daily Development
 
@@ -745,7 +745,7 @@ go run ./cmd/server
 prism namespace list  # Auto-authenticates
 prism session list
 prism health
-```
+```text
 
 ### Workflow 3: Testing OIDC Integration
 
@@ -772,7 +772,7 @@ cat ~/.prism/token
 #   "refresh_token": "Cgk...",
 #   "expires_at": "2025-10-09T11:00:00Z"
 # }
-```
+```text
 
 ### Workflow 4: Debugging with Traces
 
@@ -797,7 +797,7 @@ open http://localhost:3301
 # Filter by service: prism-proxy
 # Click trace to see full waterfall showing:
 #   prism-proxy → admin-service → postgres
-```
+```text
 
 ## Production Considerations
 

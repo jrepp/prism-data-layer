@@ -582,7 +582,7 @@ namespaces:
 
 ## Schema Registry Filesystem Layout
 
-```
+```text
 registry/
 ├── interfaces/              # Layer 1: Backend interface schemas
 │   ├── keyvalue.yaml       # Interface definition + capabilities

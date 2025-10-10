@@ -91,7 +91,7 @@ Plugin Acceptance Test Framework
     ├── kafka_instance.go         # Kafka testcontainer
     ├── redis_instance.go         # Redis testcontainer
     └── backend_interface.go      # Common interface
-```
+```text
 
 ### Test Execution Flow
 
@@ -136,7 +136,7 @@ sequenceDiagram
     TestRunner->>BackendInstance: Stop()
     BackendInstance->>Backend: docker stop
     deactivate BackendInstance
-```
+```text
 
 ## Reusable Authentication Test Suite
 
@@ -439,7 +439,7 @@ func (s *AuthTestSuite) TestExpiredCredentials() {
 		assert.Contains(s.t, err.Error(), "auth", "Error should indicate authentication problem")
 	}
 }
-```
+```text
 
 ### Authentication Suite Usage
 
@@ -461,7 +461,7 @@ func TestPostgresPlugin_Authentication(t *testing.T) {
 	authSuite := suites.NewAuthTestSuite(t, harness)
 	authSuite.Run()
 }
-```
+```text
 
 ## Per-Backend Verification Tests
 
@@ -495,7 +495,7 @@ type BackendVerificationSuite interface {
 	// Backend-specific features
 	TestBackendSpecificFeatures(t *testing.T)
 }
-```
+```text
 
 ### PostgreSQL Verification Suite
 
@@ -900,7 +900,7 @@ func (s *PostgresVerificationSuite) TestConcurrency() {
 	row := pgBackend.QueryOne("SELECT COUNT(*) as count FROM users WHERE id >= 1000")
 	assert.Equal(s.t, int64(concurrency), row["count"])
 }
-```
+```text
 
 ### Kafka Verification Suite
 
@@ -1150,7 +1150,7 @@ func (s *KafkaVerificationSuite) TestConcurrency() {
 	messages := kafkaBackend.ConsumeMessages(topic, concurrency, 10*time.Second)
 	assert.Len(s.t, messages, concurrency, "All concurrent messages should be produced")
 }
-```
+```text
 
 ## Test Backend Instances (testcontainers)
 
@@ -1191,7 +1191,7 @@ type TestBackend interface {
 	// Backend type
 	Type() string
 }
-```
+```text
 
 ### PostgreSQL Test Instance
 
@@ -1418,7 +1418,7 @@ func (p *PostgresInstance) Exec(query string) error {
 	_, err := p.db.Exec(query)
 	return err
 }
-```
+```text
 
 ### Kafka Test Instance
 
@@ -1611,7 +1611,7 @@ func (k *KafkaInstance) ConsumeMessages(topic string, count int, timeout time.Du
 
 	return messages
 }
-```
+```text
 
 ## Plugin Test Harness
 
@@ -1686,7 +1686,7 @@ func startPluginServer(t *testing.T, backendType string) string {
 	// For this example, return placeholder
 	return fmt.Sprintf("localhost:5010%d", len(backendType))
 }
-```
+```text
 
 ## CI/CD Integration
 
@@ -1800,7 +1800,7 @@ jobs:
 
             echo "| $backend | $version | $status |" >> $GITHUB_STEP_SUMMARY
           done
-```
+```text
 
 ### Running Tests Locally
 
@@ -1823,7 +1823,7 @@ go test -v ./tests/acceptance/...
 # Generate coverage report
 go test -coverprofile=coverage.out ./tests/acceptance/...
 go tool cover -html=coverage.out
-```
+```text
 
 ### Makefile Targets
 
@@ -1856,7 +1856,7 @@ test-coverage: ## Generate test coverage report
 	go test -coverprofile=coverage.out ./tests/acceptance/...
 	go tool cover -html=coverage.out -o coverage.html
 	@echo "Coverage report: coverage.html"
-```
+```text
 
 ## Test Execution Example
 
@@ -1905,7 +1905,7 @@ $ make test-acceptance
 
 PASS
 ok      github.com/prism/tests/acceptance       25.352s
-```
+```text
 
 ### Test Summary Report
 

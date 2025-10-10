@@ -38,7 +38,7 @@ docs/
 ├── README.md        # Wall of text
 ├── ARCHITECTURE.md  # ASCII diagrams
 └── API.md           # Code comments extracted
-```
+```text
 
 **After** (micro-CMS with Docusaurus + GitHub Pages):
 https://your-team.github.io/prism/
@@ -139,7 +139,7 @@ async fn main() -> Result<()> {
 use prism_admin_client::AdminClient;  // No syntax highlighting
                                        // No copy button
                                        // Hard to read
-```
+```text
 
 vs
 
@@ -161,7 +161,7 @@ Search returns:
   3. ADR-012: Object Storage Integration
 
 Time to answer: 5 seconds (vs 5 minutes grepping)
-```
+```text
 
 **Real Example**: When reviewing RFC-015 (Plugin Acceptance Tests), search for "authentication" immediately shows:
 - RFC-008: Plugin authentication requirements
@@ -251,7 +251,7 @@ User sees:
 - No mermaid rendering (just code blocks)
 - Hard to navigate (no sidebar)
 - Ugly monospace font
-```
+```text
 
 **After** (GitHub Pages):
 "Check out the RFC at: https://team.github.io/prism/rfc/RFC-014"
@@ -418,7 +418,7 @@ tags: [category1, category2]
 ### Traditional Code-First Workflow (Previous Approach)
 
 Problem → Prototype Code → Review Code → Fix Issues → Document (Maybe)
-```
+```text
 
 **Problems**:
 - ❌ Architectural decisions buried in code, hard to find rationale

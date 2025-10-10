@@ -49,7 +49,7 @@ Client Service → [mTLS] → Prism Proxy → [Backend Auth] → Backends
 
 Input:  mTLS certificates validate client identity
 Output: Backend-specific credentials (mTLS, passwords, API keys)
-```
+```text
 
 ### Ports and Security Zones
 
@@ -295,7 +295,7 @@ NATS         | JWT               | NKey           | Vault/K8s Secret
 Redis        | ACL + Password    | None           | Vault/K8s Secret
 SQLite       | File permissions  | None           | N/A (local)
 S3           | IAM Role          | Access Keys    | Instance Profile
-```
+```text
 
 ### Postgres Authentication
 
@@ -338,7 +338,7 @@ sequenceDiagram
         Vault-->>Proxy: New {username, password}
         Proxy->>Proxy: Update connection pool
     end
-```
+```text
 
 ### Kafka Authentication (SASL/SCRAM)
 
@@ -367,7 +367,7 @@ sequenceDiagram
     Proxy->>Kafka: ProduceRequest<br/>Topic: user-events
     Kafka->>Kafka: Check ACLs:<br/>Can prism-kafka-xyz789 write to topic?
     Kafka-->>Proxy: ProduceResponse
-```
+```text
 
 ### NATS Authentication (JWT)
 
@@ -388,7 +388,7 @@ sequenceDiagram
     Proxy->>NATS: PUB events.user.login 42<br/>{user_id: "123", timestamp: ...}
     NATS->>NATS: Check permissions:<br/>Can JWT publish to events.user.login?
     NATS-->>Proxy: +OK
-```
+```text
 
 ### Redis Authentication (ACL)
 
@@ -413,7 +413,7 @@ sequenceDiagram
 
     Proxy->>Redis: SET cache:user:123:session <data>
     Redis-->>Proxy: OK
-```
+```text
 
 ### Credential Management
 
@@ -501,7 +501,7 @@ impl CredentialManager {
         });
     }
 }
-```
+```text
 
 ## End-to-End Authentication Flow
 
@@ -548,7 +548,7 @@ sequenceDiagram
 
         Proxy-->>App: PermissionDenied (7)
     end
-```
+```text
 
 ## Secrets Provider Abstraction
 
@@ -583,7 +583,7 @@ pub struct Credentials {
     pub lease_id: Option<String>,
     pub expires_at: Option<DateTime<Utc>>,
 }
-```
+```text
 
 ### Provider Implementations
 
@@ -627,7 +627,7 @@ impl SecretsProvider for VaultProvider {
         "vault"
     }
 }
-```
+```text
 
 #### AWS Secrets Manager Provider
 
@@ -688,7 +688,7 @@ struct SecretData {
     api_key: Option<String>,
     metadata: Option<HashMap<String, String>>,
 }
-```
+```text
 
 #### Google Secret Manager Provider
 
@@ -745,7 +745,7 @@ impl SecretsProvider for GcpSecretsProvider {
         "gcp-secret-manager"
     }
 }
-```
+```text
 
 #### Azure Key Vault Provider
 
@@ -794,7 +794,7 @@ impl SecretsProvider for AzureKeyVaultProvider {
         "azure-keyvault"
     }
 }
-```
+```text
 
 ### Provider Comparison
 
@@ -859,7 +859,7 @@ pub fn create_provider(config: &ProviderConfig) -> Result<Arc<dyn SecretsProvide
         }
     }
 }
-```
+```text
 
 ### Credential Manager with Multiple Providers
 
@@ -962,7 +962,7 @@ impl CredentialManager {
         });
     }
 }
-```
+```text
 
 ## Configuration
 
@@ -1022,7 +1022,7 @@ backends:
     connection:
       servers: [nats://nats-1:4222, nats://nats-2:4222]
       tls_required: true
-```
+```text
 
 #### Option 2: AWS Secrets Manager (AWS Native)
 
@@ -1069,7 +1069,7 @@ backends:
       brokers: [kafka-1:9092, kafka-2:9092, kafka-3:9092]
       security_protocol: SASL_SSL
       sasl_mechanism: SCRAM-SHA-512
-```
+```text
 
 **AWS Secrets Manager Secret Format** (JSON):
 ```json
@@ -1081,7 +1081,7 @@ backends:
     "environment": "production"
   }
 }
-```
+```text
 
 #### Option 3: Google Secret Manager (GCP Native)
 
@@ -1128,7 +1128,7 @@ backends:
       brokers: [kafka-1:9092, kafka-2:9092, kafka-3:9092]
       security_protocol: SASL_SSL
       sasl_mechanism: SCRAM-SHA-512
-```
+```text
 
 #### Option 4: Azure Key Vault (Azure Native)
 
@@ -1174,7 +1174,7 @@ backends:
       brokers: [kafka-1:9092, kafka-2:9092, kafka-3:9092]
       security_protocol: SASL_SSL
       sasl_mechanism: SCRAM-SHA-512
-```
+```text
 
 ### Multi-Provider Deployment (Hybrid Cloud)
 
@@ -1255,7 +1255,7 @@ backends:
       port: 5432
       database: reports
       ssl_mode: require
-```
+```text
 
 ## Security Considerations
 
@@ -1278,7 +1278,7 @@ Automatic rotation schedule:
 3. On renewal failure, fetch new credentials
 4. Gracefully drain old connections
 5. Old credentials revoked by Vault after TTL
-```
+```text
 
 ### Audit Requirements
 
@@ -1324,7 +1324,7 @@ async fn test_mtls_authentication() {
 
     assert!(bad_client.is_err());
 }
-```
+```text
 
 ## Open Questions
 

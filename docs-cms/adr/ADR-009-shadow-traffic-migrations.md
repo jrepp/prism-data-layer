@@ -40,7 +40,7 @@ Client Request
       ├──► Primary Backend (old) ──► Response to client
       │
       └──► Shadow Backend (new)  ──► Log comparison
-```
+```text
 
 **Phases**:
 
@@ -66,7 +66,7 @@ backends:
     type: postgres-new
     connection: postgres://new-cluster/prism
     mode: shadow_write  # Write only, don't read
-```
+```text
 
 All writes go to both:
 ```rust
@@ -90,7 +90,7 @@ async fn put(&self, request: PutRequest) -> Result<PutResponse> {
 
     Ok(primary_result)
 }
-```
+```text
 
 **Phase 2: Backfill (Week 2-3)**
 
@@ -103,7 +103,7 @@ prism-cli backfill \
   --to postgres-new \
   --parallelism 10 \
   --throttle-rps 1000
-```
+```text
 
 ```rust
 async fn backfill(
@@ -132,7 +132,7 @@ async fn backfill(
 
     Ok(BackfillStats { items_copied: total_copied })
 }
-```
+```text
 
 **Phase 3: Shadow Read (Week 4)**
 
@@ -147,7 +147,7 @@ backends:
   shadow:
     type: postgres-new
     mode: shadow_read  # Read and compare
-```
+```text
 
 ```rust
 async fn get(&self, request: GetRequest) -> Result<GetResponse> {
@@ -181,7 +181,7 @@ async fn get(&self, request: GetRequest) -> Result<GetResponse> {
 
     Ok(primary_response)
 }
-```
+```text
 
 **Monitor mismatch rate**:
 shadow_reads_mismatch_rate =

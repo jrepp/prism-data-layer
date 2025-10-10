@@ -347,7 +347,7 @@ prism/proxy:latest              # Production
 prism/proxy:v1.2.3              # Specific version (production)
 prism/proxy:debug               # Debug variant (latest)
 prism/proxy:v1.2.3-debug        # Debug variant (specific version)
-```
+```text
 
 ### File Structure
 

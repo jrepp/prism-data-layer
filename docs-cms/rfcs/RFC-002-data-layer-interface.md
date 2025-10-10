@@ -50,7 +50,7 @@ The Prism data layer interface provides:
 │Reader       │      │Transact Service│
 │Service (v1) │      │     (v1)       │
 └─────────────┘      └────────────────┘
-```
+```text
 
 ## 2. Session Service
 
@@ -85,7 +85,7 @@ service SessionService {
   // Refresh session (extend expiration)
   rpc RefreshSession(RefreshSessionRequest) returns (RefreshSessionResponse);
 }
-```
+```text
 
 ### 2.3 Messages
 
@@ -188,7 +188,7 @@ message RefreshSessionRequest {
 message RefreshSessionResponse {
   google.protobuf.Timestamp new_expires_at = 1;
 }
-```
+```text
 
 ### 2.4 Usage Examples
 
@@ -208,7 +208,7 @@ resp, err := client.CreateSession(ctx, &session.CreateSessionRequest{
 })
 
 sessionToken := resp.SessionToken
-```
+```text
 
 **Heartbeat Loop:**
 ```go
@@ -230,7 +230,7 @@ for {
         return
     }
 }
-```
+```text
 
 ## 3. Queue Service
 
@@ -270,7 +270,7 @@ service QueueService {
   // Get topic metadata
   rpc GetTopicInfo(GetTopicInfoRequest) returns (GetTopicInfoResponse);
 }
-```
+```text
 
 ### 3.3 Messages
 
@@ -403,7 +403,7 @@ message PartitionInfo {
   int64 latest_offset = 3;
   int64 message_count = 4;
 }
-```
+```text
 
 ### 3.4 Usage Examples
 
@@ -420,7 +420,7 @@ let response = client.publish(PublishRequest {
 
 println!("Published to partition {} offset {}",
     response.partition, response.offset);
-```
+```text
 
 **Subscribe (Streaming):**
 ```rust
@@ -442,7 +442,7 @@ while let Some(message) = stream.message().await? {
         message_ids: vec![message.message_id],
     }).await?;
 }
-```
+```text
 
 ## 4. PubSub Service
 
@@ -472,7 +472,7 @@ service PubSubService {
   // List active subscriptions
   rpc ListSubscriptions(ListSubscriptionsRequest) returns (ListSubscriptionsResponse);
 }
-```
+```text
 
 ### 4.3 Messages
 
@@ -545,7 +545,7 @@ message Subscription {
   int64 messages_received = 5;
   bool active = 6;
 }
-```
+```text
 
 ### 4.4 Usage Examples
 
@@ -573,7 +573,7 @@ for {
     log.Info("received event", "topic", event.Topic, "id", event.EventId)
     processEvent(event)
 }
-```
+```text
 
 ## 5. Reader Service
 
@@ -604,7 +604,7 @@ service ReaderService {
   // Get single record by ID
   rpc Get(GetRequest) returns (GetResponse);
 }
-```
+```text
 
 ### 5.3 Messages
 
@@ -725,7 +725,7 @@ message GetResponse {
   optional Row row = 1;
   bool found = 2;
 }
-```
+```text
 
 ### 5.4 Usage Examples
 
@@ -749,7 +749,7 @@ for page in stream:
 
     if not page.has_more:
         break
-```
+```text
 
 **Query with Filter:**
 ```python
@@ -785,7 +785,7 @@ stream = client.Query(reader_pb2.QueryRequest(
 
 for row in stream:
     process_user(row)
-```
+```text
 
 ## 6. Transact Service
 
@@ -816,7 +816,7 @@ service TransactService {
   // Mark mailbox messages as processed
   rpc ProcessMailbox(ProcessMailboxRequest) returns (ProcessMailboxResponse);
 }
-```
+```text
 
 ### 6.3 Messages
 
@@ -970,7 +970,7 @@ message ProcessMailboxResponse {
   int32 processed_count = 1;
   repeated string failed_ids = 2;
 }
-```
+```text
 
 ### 6.4 Usage Examples
 
@@ -1000,7 +1000,7 @@ let response = client.write(WriteRequest {
 }).await?;
 
 println!("Transaction {} committed", response.transaction_id);
-```
+```text
 
 **Streaming Transaction:**
 ```rust
@@ -1031,7 +1031,7 @@ tx.send(TransactRequest {
 }).await?;
 
 let committed = rx.message().await?.unwrap();
-```
+```text
 
 ## 7. Error Handling
 
@@ -1073,7 +1073,7 @@ google.rpc.ErrorInfo {
     "expired_at": "2025-10-07T12:00:00Z"
   }
 }
-```
+```text
 
 ### 7.3 Client Error Handling
 
@@ -1101,7 +1101,7 @@ if err != nil {
         return err
     }
 }
-```
+```text
 
 ## 8. Backward Compatibility
 
@@ -1142,7 +1142,7 @@ service MyService {
   }
   rpc NewMethod(NewRequest) returns (NewResponse);
 }
-```
+```text
 
 ## 9. Client Libraries
 
@@ -1159,7 +1159,7 @@ buf generate --template buf.gen.go.yaml
 
 # Python
 buf generate --template buf.gen.python.yaml
-```
+```text
 
 ### 9.2 Client Patterns
 
@@ -1179,7 +1179,7 @@ defer conn.Close()
 // Create clients
 sessionClient := session.NewSessionServiceClient(conn)
 queueClient := queue.NewQueueServiceClient(conn)
-```
+```text
 
 **Metadata Propagation:**
 ```go
@@ -1197,7 +1197,7 @@ func sessionTokenInterceptor(token string) grpc.UnaryClientInterceptor {
         return invoker(ctx, method, req, reply, cc, opts...)
     }
 }
-```
+```text
 
 ## 10. Performance Considerations
 
@@ -1227,7 +1227,7 @@ ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 defer cancel()
 
 resp, err := client.Publish(ctx, req)
-```
+```text
 
 ## 11. Security
 

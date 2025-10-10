@@ -180,7 +180,7 @@ message SetRequest {
 **Example**:
 Proxy with 6 generic services: ~10k LOC, 50MB binary
 Proxy with 20 use-case services: ~40k LOC, 150MB binary
-```
+```text
 
 ## Proposed Solution: Layered API Architecture
 
@@ -196,7 +196,7 @@ service QueueService { ... }
 service TimeSeriesService { ... }
 service GraphService { ... }
 service TransactionalService { ... }
-```
+```text
 
 **Characteristics**:
 - ✅ Always available (core proxy functionality)
@@ -218,7 +218,7 @@ service SagaService { ... }               // Distributed transactions
 service EventSourcingService { ... }      // Audit trails, event log
 service WorkQueueService { ... }          // Background jobs
 service CacheAsideService { ... }         // Read-through cache
-```
+```text
 
 **Characteristics**:
 - ✅ Self-documenting (clear purpose)
@@ -436,7 +436,7 @@ SagaService (Layer 2)
 KeyValueService (Layer 1)
   ↑ used by
 MulticastRegistryService (Layer 2)
-```
+```text
 
 **Rationale**: Keeps patterns loosely coupled, evolution independent.
 
@@ -446,7 +446,7 @@ MulticastRegistryService (Layer 2)
 
 ```yaml
 coordinator_plugin: prism-multicast-registry:v1.2.0
-```
+```text
 
 **Migration path**:
 - v1.x: Breaking changes → new major version

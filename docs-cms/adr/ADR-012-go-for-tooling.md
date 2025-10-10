@@ -111,7 +111,7 @@ prism/
 │   │   └── util/
 │   ├── go.mod
 │   └── go.sum
-```
+```text
 
 ### Key Libraries
 
@@ -130,7 +130,7 @@ import "log/slog"
 
 // Concurrency patterns
 import "golang.org/x/sync/errgroup"
-```
+```text
 
 ### Protobuf Sharing
 
@@ -139,7 +139,7 @@ Generate Go code from the same proto definitions:
 ```bash
 # Generate Go protobuf code
 buf generate --template tools/buf.gen.go.yaml
-```
+```text
 
 `tools/buf.gen.go.yaml`:
 ```yaml
@@ -153,7 +153,7 @@ plugins:
     out: internal/proto
     opt:
       - paths=source_relative
-```
+```text
 
 ### Example Tool: prism-cli
 
@@ -192,7 +192,7 @@ func main() {
         os.Exit(1)
     }
 }
-```
+```text
 
 ## References
 

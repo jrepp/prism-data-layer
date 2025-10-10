@@ -158,7 +158,7 @@ proxy/src/
 │   ├── mod.rs
 │   └── error.rs      # KeyValue-specific errors
 └── main.rs
-```
+```text
 
 ### Top-Level Error Types
 
@@ -194,7 +194,7 @@ impl From<ProxyError> for tonic::Status {
         }
     }
 }
-```
+```text
 
 ### Handler Pattern
 
@@ -236,7 +236,7 @@ impl KeyValueService for KeyValueHandler {
         }
     }
 }
-```
+```text
 
 ### Backend Error Definition
 
@@ -261,7 +261,7 @@ pub enum BackendError {
     #[error("io error: {0}")]
     Io(#[from] std::io::Error),
 }
-```
+```text
 
 ### Testing Error Conditions
 
@@ -295,7 +295,7 @@ mod tests {
         assert_eq!(status.code(), tonic::Code::NotFound);
     }
 }
-```
+```text
 
 ### Error Logging
 
@@ -316,7 +316,7 @@ match do_operation().await {
         return Err(e);
     }
 }
-```
+```text
 
 ## References
 

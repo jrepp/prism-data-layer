@@ -87,7 +87,7 @@ Use **gRPC as the primary interface** for Prism data access layer:
     │   Go Client       │     │   Rust Client     │
     │ (generated code)  │     │ (generated code)  │
     └───────────────────┘     └───────────────────┘
-```
+```text
 
 ### Service Organization
 
@@ -127,7 +127,7 @@ service TransactService {
   rpc Write(WriteRequest) returns (WriteResponse);
   rpc Transaction(stream TransactRequest) returns (stream TransactResponse);
 }
-```
+```text
 
 ### Streaming Patterns
 
@@ -142,7 +142,7 @@ service ReaderService {
     };
   }
 }
-```
+```text
 
 ```rust
 // Server implementation
@@ -163,7 +163,7 @@ async fn read(&self, req: Request<ReadRequest>) -> Result<Response<Self::ReadStr
 
     Ok(Response::new(ReceiverStream::new(rx)))
 }
-```
+```text
 
 **Client streaming** (batch writes):
 ```protobuf
@@ -171,7 +171,7 @@ service TransactService {
   // Client streams write batches
   rpc BatchWrite(stream WriteRequest) returns (WriteResponse);
 }
-```
+```text
 
 **Bidirectional streaming** (pub/sub with acks):
 ```protobuf
@@ -179,7 +179,7 @@ service PubSubService {
   // Client subscribes, server streams events, client sends acks
   rpc Stream(stream ClientMessage) returns (stream ServerMessage);
 }
-```
+```text
 
 ### Error Handling
 
@@ -202,7 +202,7 @@ return Err(Status::deadline_exceeded("operation timed out"));
 
 // Permission denied
 return Err(Status::permission_denied("insufficient permissions"));
-```
+```text
 
 Structured error details:
 
@@ -214,7 +214,7 @@ message ErrorInfo {
   string domain = 2;
   map<string, string> metadata = 3;
 }
-```
+```text
 
 ### Metadata and Context
 
@@ -233,7 +233,7 @@ request.metadata_mut().insert(
     "x-session-token",
     session_token.parse().unwrap(),
 );
-```
+```text
 
 Common metadata:
 - `x-session-token`: Session identifier
@@ -250,7 +250,7 @@ let channel = Channel::from_static("http://localhost:8980")
     .connect_lazy();
 
 let client = QueueServiceClient::new(channel.clone());
-```
+```text
 
 **Compression:**
 ```rust
@@ -259,7 +259,7 @@ let channel = Channel::from_static("http://localhost:8980")
     .http2_keep_alive_interval(Duration::from_secs(30))
     .http2_adaptive_window(true)
     .connect_lazy();
-```
+```text
 
 **Timeouts:**
 ```protobuf
@@ -268,7 +268,7 @@ service QueueService {
     option (google.api.method_signature) = "timeout=5s";
   }
 }
-```
+```text
 
 ### Alternatives Considered
 
@@ -341,7 +341,7 @@ async fn main() -> Result<()> {
 
     Ok(())
 }
-```
+```text
 
 ### Client Implementation (Go)
 
@@ -365,7 +365,7 @@ resp, err := client.Publish(ctx, &queue.PublishRequest{
     Topic:   "events",
     Payload: data,
 })
-```
+```text
 
 ### Testing with grpcurl
 
@@ -379,7 +379,7 @@ grpcurl -plaintext localhost:8980 describe prism.queue.v1.QueueService
 # Make request
 grpcurl -plaintext -d '{"topic":"events","payload":"dGVzdA=="}' \
   localhost:8980 prism.queue.v1.QueueService/Publish
-```
+```text
 
 ### Code Generation
 
@@ -392,7 +392,7 @@ buf generate --template tools/buf.gen.go.yaml
 
 # Generate Python code
 buf generate --template clients/python/buf.gen.python.yaml
-```
+```text
 
 ## References
 

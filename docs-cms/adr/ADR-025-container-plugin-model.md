@@ -73,7 +73,7 @@ Implement **container plugin model** with standardized contracts:
 │                   │        │ │   Listener   │ │
 │                   │        │ └──────────────┘ │
 └───────────────────┘        └──────────────────┘
-```
+```text
 
 ### Plugin Contract
 
@@ -138,7 +138,7 @@ message InfoResponse {
   string backend = 4;  // "kafka", "nats", "postgres", etc.
   map<string, string> capabilities = 5;
 }
-```
+```text
 
 ### Environment Configuration
 
@@ -176,7 +176,7 @@ DATABASE_TABLE=events
 MAILBOX_TABLE=mailbox
 MAILBOX_POLL_INTERVAL=1s
 MAILBOX_BATCH_SIZE=100
-```
+```text
 
 ### Kafka Plugin Containers
 
@@ -227,7 +227,7 @@ async fn main() -> Result<()> {
     let publisher = KafkaPublisher::new()?;
     publisher.run().await
 }
-```
+```text
 
 #### Kafka Consumer
 
@@ -268,7 +268,7 @@ impl KafkaConsumer {
         }
     }
 }
-```
+```text
 
 ### NATS Plugin Containers
 
@@ -300,7 +300,7 @@ impl NatsPublisher {
         Ok(())
     }
 }
-```
+```text
 
 #### NATS Consumer
 
@@ -347,7 +347,7 @@ impl NatsConsumer {
         Ok(())
     }
 }
-```
+```text
 
 ### Paged Reader Plugin
 
@@ -389,7 +389,7 @@ impl IndexedReader {
         }
     }
 }
-```
+```text
 
 ### Transact Writer Plugins
 
@@ -452,7 +452,7 @@ impl TransactProcessor {
         })
     }
 }
-```
+```text
 
 #### Mailbox Listener
 
@@ -506,7 +506,7 @@ impl MailboxListener {
         Ok(())
     }
 }
-```
+```text
 
 ### Docker Deployment
 
@@ -523,7 +523,7 @@ FROM debian:bookworm-slim
 RUN apt-get update && apt-get install -y ca-certificates && rm -rf /var/lib/apt/lists/*
 COPY --from=builder /app/target/release/kafka-publisher /usr/local/bin/
 ENTRYPOINT ["kafka-publisher"]
-```
+```text
 
 ### Docker Compose Example
 
@@ -587,7 +587,7 @@ services:
       - DATABASE_URL=postgres://prism:password@postgres/prism
       - MAILBOX_ID=system
       - MAILBOX_POLL_INTERVAL=1s
-```
+```text
 
 ### Kubernetes Deployment
 
@@ -639,7 +639,7 @@ spec:
           limits:
             memory: "512Mi"
             cpu: "500m"
-```
+```text
 
 ### Alternatives Considered
 

@@ -357,7 +357,7 @@ proxy/
 │       └── keyvalue_test.rs
 └── benches/
     └── keyvalue_bench.rs
-```
+```text
 
 ### Running Tests
 
@@ -382,7 +382,7 @@ cargo bench
 
 # Property tests (more iterations)
 PROPTEST_CASES=10000 cargo test
-```
+```text
 
 ### CI Configuration
 
@@ -411,7 +411,7 @@ jobs:
 
       - name: Benchmarks (ensure no regression)
         run: cargo bench --no-fail-fast
-```
+```text
 
 ### Dependencies
 
@@ -421,7 +421,7 @@ tokio-test = "0.4"
 proptest = "1.4"
 criterion = { version = "0.5", features = ["async_tokio"] }
 testcontainers = "0.15"
-```
+```text
 
 ## References
 

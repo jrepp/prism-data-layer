@@ -185,7 +185,7 @@ status:
 │  │  └────────────┘  │        │  └────────────┘  │       │
 │  └──────────────────┘        └──────────────────┘       │
 └──────────────────────────────────────────────────────────┘
-```
+```text
 
 ### Reconciliation Logic
 
@@ -222,7 +222,7 @@ status:
 - Services for each shard
 - ConfigMaps for namespace configs (must sync manually!)
 - Plugin sidecar injection (manual, error-prone)
-```
+```text
 
 **With Operator**:
 ```yaml
@@ -235,7 +235,7 @@ spec:
   backend: postgres
   pattern: keyvalue
 # Operator handles the rest!
-```
+```text
 
 ### Compared to Alternatives
 

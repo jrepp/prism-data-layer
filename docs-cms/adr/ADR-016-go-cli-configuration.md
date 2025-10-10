@@ -170,7 +170,7 @@ tools/
 │   └── config/
 │       ├── config.go      # Config types
 │       └── loader.go      # Viper integration
-```
+```text
 
 ### Example Implementation
 
@@ -231,7 +231,7 @@ func main() {
         os.Exit(1)
     }
 }
-```
+```text
 
 ## Consequences
 

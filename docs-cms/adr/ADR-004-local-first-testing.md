@@ -55,7 +55,7 @@ Developer Laptop
 │  │  • Neptune (localstack)          │  │
 │  └──────────────────────────────────┘  │
 └────────────────────────────────────────┘
-```
+```text
 
 ### Local Stack Configuration
 
@@ -130,7 +130,7 @@ services:
       - "8182:8182"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-```
+```text
 
 ### Python Tooling
 
@@ -205,7 +205,7 @@ if __name__ == "__main__":
         stack.down()
     elif args.command == "reset":
         stack.reset()
-```
+```text
 
 ### Test Structure
 
@@ -276,7 +276,7 @@ async fn load_test_keyvalue_writes() {
 
     assert!(throughput > 500.0, "Throughput too low: {}", throughput);
 }
-```
+```text
 
 ### Alternatives Considered
 
@@ -385,7 +385,7 @@ jobs:
       - name: Stop local stack
         if: always()
         run: python -m tooling.test.local-stack down
-```
+```text
 
 ### Developer Workflow
 
@@ -403,7 +403,7 @@ cargo test --ignored  # Load tests
 
 # Stop when done
 python -m tooling.test.local-stack down
-```
+```text
 
 ## References
 

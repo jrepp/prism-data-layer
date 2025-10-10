@@ -120,7 +120,7 @@ proto/*.proto
     └──> Deployment configs
          ├── Capacity specs
          └── Backend routing
-```
+```text
 
 ### Example: Complete Data Model
 
@@ -176,7 +176,7 @@ message ProfileSettings {
   string timezone = 2;
   string language = 3;
 }
-```
+```text
 
 This **single file** generates:
 
@@ -198,7 +198,7 @@ impl UserProfile {
         // ...
     }
 }
-```
+```text
 
 2. **Postgres schema**:
 ```sql
@@ -213,7 +213,7 @@ CREATE TABLE user_profile (
 );
 
 CREATE INDEX idx_user_profile_email ON user_profile(email);
-```
+```text
 
 3. **TypeScript types** for admin UI:
 ```typescript
@@ -226,7 +226,7 @@ export interface UserProfile {
   updatedAt: number;
   settings?: ProfileSettings;
 }
-```
+```text
 
 4. **Deployment config** (auto-generated):
 ```yaml
@@ -239,7 +239,7 @@ capacity:
 cache:
   enabled: true
   ttl_seconds: 300
-```
+```text
 
 ### Alternatives Considered
 

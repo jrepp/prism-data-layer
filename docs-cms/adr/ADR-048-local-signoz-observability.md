@@ -72,7 +72,7 @@ Signoz Components:
 ├── Query Service (API + UI :3301)
 ├── ClickHouse (storage :9000)
 └── AlertManager (optional)
-```
+```text
 
 ## Decision
 
@@ -212,7 +212,7 @@ networks:
     driver: bridge
   prism:
     external: true  # Connect to Prism components
-```
+```text
 
 ### OpenTelemetry Collector Configuration
 
@@ -279,7 +279,7 @@ service:
       receivers: [otlp]
       processors: [memory_limiter, resource, batch]
       exporters: [clickhouse]
-```
+```text
 
 ### Prism Proxy Integration
 
@@ -312,7 +312,7 @@ pub fn init_tracer(config: &ObservabilityConfig) -> Result<Tracer> {
 
     Ok(tracer)
 }
-```
+```text
 
 ### Plugin Integration
 
@@ -344,7 +344,7 @@ func InitTracer(serviceName string) error {
     otel.SetTracerProvider(tp)
     return nil
 }
-```
+```text
 
 ## Usage
 
@@ -360,7 +360,7 @@ docker-compose -f docker-compose.signoz.yml ps
 
 # Access UI
 open http://localhost:3301
-```
+```text
 
 ### Starting Prism with Signoz
 
@@ -376,7 +376,7 @@ cargo run --release
 cd plugins/postgres
 OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4317 \
     go run ./cmd/server
-```
+```text
 
 ### Viewing Traces
 
@@ -393,7 +393,7 @@ docker-compose -f docker-compose.signoz.yml down -v
 
 # Restart fresh
 docker-compose -f docker-compose.signoz.yml up -d
-```
+```text
 
 ## Consequences
 

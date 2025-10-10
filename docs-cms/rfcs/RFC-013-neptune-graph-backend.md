@@ -505,7 +505,7 @@ g.V().has('email', 'alice@example.com').profile()
 Step                                    Count  Traversers  Time (ms)
 =====================================================
 NeptuneGraphStep(vertex,[email.eq(alice)])  1      1           2.345
-```
+```text
 
 ## Testing Strategy
 
@@ -527,7 +527,7 @@ func TestCreateVertex(t *testing.T) {
     require.NoError(t, err)
     assert.Equal(t, "user:test1", resp.Vertex.Id)
 }
-```
+```text
 
 ### Integration Tests
 
@@ -556,7 +556,7 @@ func TestGraphTraversal(t *testing.T) {
     require.NoError(t, err)
     assert.Contains(t, resp.Vertices, vertexWithId("C"))
 }
-```
+```text
 
 ## Migration Path
 

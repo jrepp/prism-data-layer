@@ -68,7 +68,7 @@ Organizations deploying Prism at scale face several challenges:
         │ (Postgres,   │  │ (Kafka,  │  │ (SQLite,    │
         │  Redis)      │  │  NATS)   │  │  Postgres)  │
         └──────────────┘  └──────────┘  └─────────────┘
-```
+```text
 
 ### Components
 
@@ -109,7 +109,7 @@ graph TB
     Agent2 --> Prism5
     Discovery -.->|Returns nearest| Prism1
     Discovery -.->|Returns nearest| Prism4
-```
+```text
 
 ### Deployment Model
 
@@ -205,7 +205,7 @@ message ConfigChange {
 **Push Model** (preferred):
 prism-netgw   →  Watch(config_version)  →  prism-agent
               ←  ConfigUpdate stream     ←
-```
+```text
 
 **Pull Model** (fallback for high latency):
 prism-agent   →  SyncConfig(current_version)  →  prism-netgw
@@ -224,7 +224,7 @@ Global Health (prism-netgw)
 │   │   └── Namespace Health (operational state)
 │   └── Network Health (connectivity, latency)
 └── Control Plane Health (netgw nodes)
-```
+```text
 
 ```protobuf
 message ReportHealthRequest {
@@ -253,7 +253,7 @@ message BackendHealth {
   double latency_ms = 3;
   string error_message = 4;
 }
-```
+```text
 
 ### 4. Service Discovery
 
@@ -279,7 +279,7 @@ message Gateway {
   HealthStatus health = 6;
   int32 load_score = 7;         // 0-100 (lower is better)
 }
-```
+```text
 
 **DNS-based discovery** (alternative):
 ```bash
@@ -292,7 +292,7 @@ dig prism.example.com
 dig prism.example.com
 # → 10.0.1.10 (us-east-1) [if client in North America]
 # → 10.0.2.20 (eu-west-1) [if client in Europe]
-```
+```text
 
 ### 5. Cross-Region Routing
 
@@ -321,7 +321,7 @@ message RouteResponse {
   string target_gateway = 2;
   repeated string fallback_gateways = 3;
 }
-```
+```text
 
 ## Latency and Partition Tolerance
 
@@ -334,20 +334,20 @@ message RouteResponse {
    prism-netgw: Config updated (version 123)
    → Async push to all clusters (fire-and-forget)
    → Eventually consistent (all clusters converge to version 123)
-   ```
+   ```text
 
 2. **Heartbeat with Jitter**: Randomize heartbeat intervals to avoid thundering herd
    ```rust
    let heartbeat_interval = Duration::from_secs(30);
    let jitter = Duration::from_secs(rand::thread_rng().gen_range(0..10));
    sleep(heartbeat_interval + jitter).await;
-   ```
+   ```text
 
 3. **Batch Updates**: Accumulate config changes and push in batches
    ```text
    Instead of: 10 individual namespace updates (10 round trips)
    Do: 1 batch with 10 namespace updates (1 round trip)
-   ```
+   ```text
 
 4. **Caching**: Prism clusters cache config locally (survive netgw downtime)
    ```text
@@ -355,7 +355,7 @@ message RouteResponse {
      - Fetches config from netgw periodically
      - Caches config on disk
      - Uses cached config if netgw unavailable
-   ```
+   ```text
 
 ### Handling Network Partitions
 
@@ -396,7 +396,7 @@ Partition scenario:
   Group B: ap-south-1, ap-northeast-1 (2 nodes, NO QUORUM) → becomes followers
 
 Result: Only Group A can make config changes (split-brain prevented)
-```
+```text
 
 ## API Specification
 
@@ -435,7 +435,7 @@ service ControlPlaneService {
   // Metrics
   rpc GetMetrics(GetMetricsRequest) returns (GetMetricsResponse);
 }
-```
+```text
 
 ## Deployment
 
@@ -478,7 +478,7 @@ spec:
       resources:
         requests:
           storage: 10Gi
-```
+```text
 
 ### Agent Deployment (Per Cluster)
 
@@ -510,7 +510,7 @@ spec:
       volumes:
       - name: config-cache
         emptyDir: {}
-```
+```text
 
 ## Security Considerations
 
@@ -524,7 +524,7 @@ tls:
   server_key: /etc/netgw/tls/server.key
   client_ca: /etc/netgw/tls/ca.crt
   client_cert_required: true
-```
+```text
 
 ### 2. Authentication
 
@@ -582,7 +582,7 @@ prism_netgw_config_sync_latency_ms{cluster_id="..."} 234
 prism_netgw_heartbeat_success_total{cluster_id="..."} 12345
 prism_netgw_heartbeat_failure_total{cluster_id="..."} 3
 prism_netgw_heartbeat_latency_ms{cluster_id="..."} 156
-```
+```text
 
 ### Distributed Tracing
 

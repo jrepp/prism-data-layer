@@ -38,7 +38,7 @@ proto/
 │       └── metadata.proto    # Item metadata
 ├── buf.yaml                   # Buf configuration
 └── buf.lock
-```
+```text
 
 2. **Implement Prism custom options**:
    - Message-level: `namespace`, `backend`, `access_pattern`, `estimated_*_rps`, etc.
@@ -55,13 +55,13 @@ buf generate --template buf.gen.rust.yaml
 
 # Generate Python code
 buf generate --template buf.gen.python.yaml
-```
+```text
 
 4. **Create `tooling/codegen`** module:
 ```python
 python -m tooling.codegen generate
 # → Generates Rust, Python, TypeScript from proto
-```
+```text
 
 ### Success Criteria
 - ✅ `prism/options.proto` compiles without errors
@@ -88,7 +88,7 @@ Create minimal gRPC server in Rust that can accept requests and return dummy res
 ```bash
 cargo new --lib proxy
 cd proxy
-```
+```text
 
 2. **Add dependencies** (`Cargo.toml`):
 ```toml
@@ -99,7 +99,7 @@ prost = "0.12"
 tower = "0.4"
 tracing = "0.1"
 tracing-subscriber = "0.3"
-```
+```text
 
 3. **Implement health check service**:
 ```rust
@@ -112,7 +112,7 @@ impl HealthCheck for HealthService {
         Ok(Response::new(HealthCheckResponse { status: "healthy" }))
     }
 }
-```
+```text
 
 4. **Create main server**:
 ```rust
@@ -129,7 +129,7 @@ async fn main() -> Result<()> {
 
     Ok(())
 }
-```
+```text
 
 5. **Add basic logging**:
 ```rust
@@ -137,7 +137,7 @@ tracing_subscriber::fmt()
     .with_target(false)
     .compact()
     .init();
-```
+```text
 
 ### Success Criteria
 - ✅ `cargo build` succeeds
@@ -168,7 +168,7 @@ service KeyValueService {
   rpc Delete(DeleteRequest) returns (DeleteResponse);
   rpc Scan(ScanRequest) returns (stream ScanResponse);
 }
-```
+```text
 
 2. **Create KeyValue types**:
 ```protobuf
@@ -185,12 +185,12 @@ message PutRequest {
   repeated Item items = 3;
 }
 // ... etc
-```
+```text
 
 3. **Regenerate Rust code**:
 ```bash
 buf generate
-```
+```text
 
 4. **Implement stub service** (returns errors):
 ```rust
@@ -204,7 +204,7 @@ impl KeyValue for KeyValueService {
     }
     // ... etc
 }
-```
+```text
 
 5. **Wire into server**:
 ```rust
@@ -213,7 +213,7 @@ Server::builder()
     .add_service(KeyValueServer::new(kv_svc))  // ← New!
     .serve(addr)
     .await?;
-```
+```text
 
 ### Success Criteria
 - ✅ Protobuf compiles cleanly
@@ -246,7 +246,7 @@ pub trait KeyValueBackend: Send + Sync {
     async fn delete(&self, namespace: &str, id: &str, keys: Vec<&[u8]>) -> Result<()>;
     async fn scan(&self, namespace: &str, id: &str) -> Result<Vec<Item>>;
 }
-```
+```text
 
 2. **Implement SQLite backend**:
 ```rust
@@ -277,7 +277,7 @@ impl KeyValueBackend for SqliteBackend {
     }
     // ... etc
 }
-```
+```text
 
 3. **Create schema migration**:
 ```sql
@@ -293,7 +293,7 @@ CREATE TABLE IF NOT EXISTS kv (
 );
 
 CREATE INDEX idx_kv_namespace ON kv(namespace);
-```
+```text
 
 4. **Wire backend into service**:
 ```rust
@@ -311,7 +311,7 @@ impl KeyValue for KeyValueService {
     }
     // ... etc
 }
-```
+```text
 
 5. **Add configuration**:
 ```yaml
@@ -323,7 +323,7 @@ database:
 logging:
   level: debug
   format: json
-```
+```text
 
 ### Success Criteria
 - ✅ Can put data: `grpcurl -d '{"namespace":"test","id":"1","items":[{"key":"aGVsbG8=","value":"d29ybGQ="}]}' localhost:8980 prism.keyvalue.v1.KeyValueService/Put`
@@ -381,7 +381,7 @@ async fn test_put_get_roundtrip() {
     assert_eq!(response.items[0].key, b"profile");
     assert_eq!(response.items[0].value, b"Alice");
 }
-```
+```text
 
 2. **Enhance `docker-compose.test.yml`**:
 ```yaml
@@ -397,7 +397,7 @@ services:
 
   postgres:
     # ... existing config ...
-```
+```text
 
 3. **Create test helper**:
 ```rust
@@ -418,7 +418,7 @@ impl TestFixture {
         Self { client }
     }
 }
-```
+```text
 
 4. **Add CI workflow**:
 ```yaml
@@ -441,7 +441,7 @@ jobs:
 
       - name: Run integration tests
         run: cargo test --test integration_test
-```
+```text
 
 ### Success Criteria
 - ✅ All integration tests pass locally
@@ -496,7 +496,7 @@ impl KeyValueBackend for PostgresBackend {
     }
     // ... etc (similar to SQLite but with Postgres-specific SQL)
 }
-```
+```text
 
 2. **Add connection pooling**:
 ```rust
@@ -504,7 +504,7 @@ let pool = PgPoolOptions::new()
     .max_connections(20)
     .connect(&database_url)
     .await?;
-```
+```text
 
 3. **Create Postgres migrations**:
 ```sql
@@ -521,7 +521,7 @@ CREATE TABLE IF NOT EXISTS kv (
 
 CREATE INDEX idx_kv_namespace ON kv(namespace);
 CREATE INDEX idx_kv_id ON kv(namespace, id);
-```
+```text
 
 4. **Add integration tests for Postgres**:
 ```rust
@@ -536,7 +536,7 @@ async fn test_postgres_backend() {
     // Run same tests as SQLite
     // ... test put, get, delete, scan
 }
-```
+```text
 
 5. **Write documentation**:
    - `docs/getting-started.md`: Quickstart guide

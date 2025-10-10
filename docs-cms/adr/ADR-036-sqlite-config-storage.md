@@ -118,7 +118,7 @@ CREATE TABLE namespace_features (
 ├── config.db           # Primary SQLite database
 ├── config.db-wal       # Write-Ahead Log (SQLite WAL mode)
 └── config.db-shm       # Shared memory file
-```
+```text
 
 ### Admin API Integration
 
@@ -208,7 +208,7 @@ impl ConfigStore {
         Ok(namespaces)
     }
 }
-```
+```text
 
 ## Rationale
 
@@ -333,7 +333,7 @@ pub async fn initialize_config_store() -> Result<ConfigStore> {
 
     Ok(store)
 }
-```
+```text
 
 ### Backup Strategy
 
@@ -353,7 +353,7 @@ cp $DB_PATH $BACKUP_DIR/config-$(date +%Y%m%d).db
 
 # Retain last 30 days
 find $BACKUP_DIR -name "config-*.db" -mtime +30 -delete
-```
+```text
 
 ### Read-Heavy Optimization
 
@@ -382,7 +382,7 @@ impl ConfigStore {
         Ok(Self { pool })
     }
 }
-```
+```text
 
 ### Multi-Instance Deployment (Future)
 

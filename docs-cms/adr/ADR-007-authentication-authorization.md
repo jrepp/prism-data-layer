@@ -34,7 +34,7 @@ Certificate contains:
 - Service name (CN: user-api.prod.company.com)
 - Environment (prod, staging, dev)
 - Expiry (auto-rotated)
-```
+```text
 
 **User-Facing APIs** (if exposed):
 User --> App Backend --[OAuth2 JWT]--> Prism Proxy

@@ -244,7 +244,7 @@ tools/
 └── testutil/                   # Test harness
     ├── proxy.go
     └── fixtures.go
-```
+```text
 
 ### Running Tests
 
@@ -264,7 +264,7 @@ go test ./cmd/... -run E2E
 
 # Specific package
 go test ./internal/migrate -v
-```
+```text
 
 ### CI Configuration
 
@@ -292,7 +292,7 @@ jobs:
         run: |
           go tool cover -func=coverage.out | grep total | \
           awk '{if ($3 < 80.0) {print "Coverage below 80%"; exit 1}}'
-```
+```text
 
 ## References
 

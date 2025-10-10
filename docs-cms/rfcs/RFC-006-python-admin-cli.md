@@ -175,7 +175,7 @@ Visit: https://idp.example.com/activate
 Enter code: WXYZ-1234
 
 Waiting for authentication...
-```
+```text
 
 *Browser opens automatically to verification URL*
 
@@ -446,7 +446,7 @@ prism
     ├── status      # Show plugin health and metrics
     ├── reload      # Hot-reload plugin code
     └── logs        # View plugin logs
-```
+```text
 
 ## Command Specifications
 
@@ -467,7 +467,7 @@ prismctl namespace create my-app \
   --pattern keyvalue \
   --consistency strong \
   --cache-ttl 300
-```
+```text
 
 **Output (Rich table)**:
 ┏━━━━━━━━━━━━┳━━━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━━━━━━━━━┓
@@ -506,7 +506,7 @@ prismctl namespace list --include-inactive
 │ session-cache  │ redis      │ cache      │ 156      │ 89,012     │
 │ metrics-olap   │ clickhouse │ timeseries │ 4        │ 12,345     │
 └────────────────┴────────────┴────────────┴──────────┴────────────┘
-```
+```text
 
 #### Describe Namespace
 
@@ -518,7 +518,7 @@ prismctl namespace describe my-app --show-errors
 
 # Include configuration
 prismctl namespace describe my-app --show-config
-```
+```text
 
 **Output**:
 Namespace: my-app
@@ -590,7 +590,7 @@ Backend Health Status
   Error: Connection refused to broker-3
   Last Success: 5m ago
   Action: Check broker-3 connectivity
-```
+```text
 
 #### Backend Statistics
 
@@ -603,7 +603,7 @@ prismctl backend stats --namespace my-app
 
 # Export to JSON
 prismctl backend stats --output json
-```
+```text
 
 ### Session Management
 
@@ -621,7 +621,7 @@ prismctl session list  # Auto-scopes if .config.yaml has namespace set
 
 # Show long-running sessions
 prismctl session list --duration ">1h"
-```
+```text
 
 **Output**:
 ┏━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━━━━━━━┓
@@ -660,7 +660,7 @@ Statistics:
   Success: 3 (75%)
   Avg Latency: 38.05ms
   P99 Latency: 145ms
-```
+```text
 
 ### Configuration Management
 
@@ -678,7 +678,7 @@ prismctl config show  # Uses namespace from .config.yaml if present
 
 # Export configuration
 prismctl config show --output yaml > prism-config.yaml
-```
+```text
 
 #### Validate Configuration
 
@@ -688,7 +688,7 @@ prismctl config validate prism-config.yaml
 
 # Dry-run mode
 prismctl config validate prism-config.yaml --dry-run
-```
+```text
 
 **Output**:
 Validating configuration: prism-config.yaml
@@ -747,7 +747,7 @@ Backend Health:
   ✓ Redis         (3 instances)
   ✓ ClickHouse    (2 instances)
   ✗ Kafka         (1 degraded)
-```
+```text
 
 #### Export Metrics
 
@@ -757,7 +757,7 @@ prismctl metrics export --format prometheus > metrics.prom
 
 # JSON format with metadata
 prismctl metrics export --format json --include-metadata > metrics.json
-```
+```text
 
 ### Shadow Traffic
 
@@ -776,7 +776,7 @@ prismctl shadow enable user-profiles \
   --target postgres-16-replica \
   --ramp-up "10%,25%,50%,100%" \
   --interval 1h
-```
+```text
 
 **Output**:
 Enabling shadow traffic for namespace 'user-profiles'
@@ -841,7 +841,7 @@ Query Compatibility:
   ✓ Performance parity achieved
 
 ✓ Target performing well, ready for next stage
-```
+```text
 
 ### Plugin Management
 
@@ -861,7 +861,7 @@ prismctl plugin list --status disabled
 
 # Show plugin versions
 prismctl plugin list --show-versions
-```
+```text
 
 **Output**:
 ┏━━━━━━━━━━━━━━┳━━━━━━━━━┳━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━┓
@@ -904,7 +904,7 @@ Installing plugin: mongodb
 Plugin 'mongodb' installed successfully
 Supported operations: get, set, query, aggregate
 Ready to create namespaces with backend: mongodb
-```
+```text
 
 #### Update Plugin
 
@@ -917,7 +917,7 @@ prismctl plugin update mongodb --version 1.1.0
 
 # Dry-run mode (check compatibility without applying)
 prismctl plugin update mongodb --dry-run
-```
+```text
 
 **Output (with warnings)**:
 Updating plugin: mongodb (1.0.0 → 1.1.0)
@@ -967,7 +967,7 @@ Actions:
   ⚠ Use --force to stop all kafka namespaces
 
 Plugin 'kafka' disabled successfully
-```
+```text
 
 #### Plugin Status
 
@@ -980,7 +980,7 @@ prismctl plugin status mongodb --show-errors
 
 # Live monitoring mode
 prismctl plugin status mongodb --watch
-```
+```text
 
 **Output**:
 Plugin Status: mongodb (v1.0.0)
@@ -1041,7 +1041,7 @@ Reloading plugin: mongodb
 Plugin 'mongodb' reloaded successfully
 Namespaces affected: 7 (all healthy)
 Reload time: 2.3s (zero downtime)
-```
+```text
 
 #### View Plugin Logs
 
@@ -1057,7 +1057,7 @@ prismctl plugin logs mongodb --level error
 
 # Show logs from specific time range
 prismctl plugin logs mongodb --since "1h ago"
-```
+```text
 
 **Output**:
 Tailing logs: mongodb (Ctrl+C to stop)
@@ -1178,7 +1178,7 @@ tools/
 ├── acceptance_test.go       # testscript runner
 ├── go.mod
 └── go.sum
-```
+```text
 
 ### Example Implementation (Namespace Commands)
 
@@ -1326,7 +1326,7 @@ def describe(
     except Exception as e:
         console.print(f"[red]Error describing namespace: {e}[/red]")
         raise typer.Exit(1)
-```
+```text
 
 ### Admin gRPC Client Wrapper
 
@@ -1423,7 +1423,7 @@ class AdminClient:
 
     def __exit__(self, *args):
         self.channel.close()
-```
+```text
 
 ## Use-Case Recommendations
 
@@ -1475,7 +1475,7 @@ backend:
   cache_ttl: 300
 
 # Sessions, config, metrics will auto-scope to this namespace unless --namespace specified
-```
+```text
 
 **Example `~/.prism/config.yaml` (user-level)**:
 ```yaml
@@ -1498,7 +1498,7 @@ timeouts:
 logging:
   level: info
   file: ~/.prism/cli.log
-```
+```text
 
 **Usage pattern**:
 ```bash
@@ -1514,7 +1514,7 @@ prismctl session list --namespace other-app
 # Parent directory search:
 cd ~/projects/my-app/src/handlers
 prismctl session list          # Finds .config.yaml in ~/projects/my-app/
-```
+```text
 
 ### Environment Variables
 
@@ -1523,7 +1523,7 @@ prismctl session list          # Finds .config.yaml in ~/projects/my-app/
 export PRISM_ENDPOINT="prism.example.com:50052"
 export PRISM_AUTH_METHOD="oauth2"
 export PRISM_OUTPUT_FORMAT="json"
-```
+```text
 
 ## Performance and UX
 
@@ -1587,7 +1587,7 @@ def test_namespace_list_json():
         data = json.loads(result.stdout)
         assert len(data) == 2
         assert data[0]["name"] == "ns1"
-```
+```text
 
 ### Integration Tests
 
@@ -1617,7 +1617,7 @@ def test_create_and_list_namespace(admin_client):
 
     # Cleanup
     admin_client.delete_namespace("test-integration")
-```
+```text
 
 ## Deployment
 
@@ -1634,7 +1634,7 @@ uv pip install prism-cli
 # Verify installation
 prismctl --version
 prismctl --help
-```
+```text
 
 ### Shell Completion
 
@@ -1647,7 +1647,7 @@ prismctl --install-completion zsh
 
 # Fish
 prismctl --install-completion fish
-```
+```text
 
 ## Migration Path
 
@@ -1708,7 +1708,7 @@ CLI logs structured events:
   "duration_ms": 234,
   "status": "success"
 }
-```
+```text
 
 ## Security Considerations
 
@@ -1767,7 +1767,7 @@ prismctl shadow status <namespace>
 
 prismctl version
 prismctl help [command]
-```
+```text
 
 ### Global Options
 
@@ -1779,7 +1779,7 @@ prismctl help [command]
 --quiet, -q             # Suppress non-error output
 --config <file>         # CLI config file
 --help, -h              # Show help
-```
+```text
 
 ---
 

@@ -92,7 +92,7 @@ prismctl
     ├── status     # Check stack health
     ├── use        # Switch stack provider
     └── providers  # List available providers
-```
+```text
 
 #### 3. Shared Configuration
 
@@ -119,7 +119,7 @@ plugins:
   postgres:
     image: prism/postgres-plugin:latest
     port: 9090
-```
+```text
 
 **Benefits**:
 - ✅ Single source of truth for configuration
@@ -144,7 +144,7 @@ prismctl stack init --provider hashicorp
 # - PostgreSQL (via Docker)
 # - Kafka (via Docker)
 # - NATS (via Docker)
-```
+```text
 
 **Configuration** (`~/.prism/stacks/hashicorp.yaml`):
 ```yaml
@@ -177,7 +177,7 @@ services:
     enabled: true
     image: nats:latest
     ports: [4222, 8222]
-```
+```text
 
 **Stack operations**:
 ```go
@@ -203,7 +203,7 @@ func (s *HashicorpStack) Start(ctx context.Context) error {
 
     return nil
 }
-```
+```text
 
 #### 2. Docker Compose
 
@@ -215,7 +215,7 @@ prismctl stack init --provider docker-compose
 
 # Uses docker-compose.yml for all services
 prismctl stack start
-```
+```text
 
 **Configuration** (`~/.prism/stacks/docker-compose.yaml`):
 ```yaml
@@ -228,7 +228,7 @@ services:
   kafka: {}
   nats: {}
   redis: {}
-```
+```text
 
 **Stack operations**:
 ```go
@@ -243,7 +243,7 @@ func (s *DockerComposeStack) Start(ctx context.Context) error {
     )
     return cmd.Run()
 }
-```
+```text
 
 #### 3. AWS
 
@@ -258,7 +258,7 @@ prismctl stack init --provider aws
 # - MSK (Kafka) cluster
 # - Secrets Manager for credentials
 # - VPC, subnets, security groups
-```
+```text
 
 **Configuration** (`~/.prism/stacks/aws.yaml`):
 ```yaml
@@ -282,7 +282,7 @@ services:
   secrets_manager:
     enabled: true
     secrets: [postgres-admin, kafka-creds]
-```
+```text
 
 #### 4. Kubernetes
 
@@ -294,7 +294,7 @@ prismctl stack init --provider kubernetes
 
 # Applies Helm charts or manifests
 prismctl stack start
-```
+```text
 
 ### Stack Provider Interface
 
@@ -336,7 +336,7 @@ type Endpoints struct {
     Kafka    []string
     NATS     string
 }
-```
+```text
 
 ### Implementation Example
 
@@ -378,7 +378,7 @@ func createStackProvider(name string) (StackProvider, error) {
         return nil, fmt.Errorf("unknown provider: %s", name)
     }
 }
-```
+```text
 
 **Stack start**:
 ```go
@@ -415,7 +415,7 @@ func runStackStart(cmd *cobra.Command, args []string) error {
 
     return nil
 }
-```
+```text
 
 ## Bootstrap Workflow
 
@@ -454,7 +454,7 @@ prismctl stack start
 # 4. Use prismctl for admin operations
 prismctl health
 prismctl namespace create my-app
-```
+```text
 
 ### One-Command Bootstrap
 
@@ -467,7 +467,7 @@ prismctl stack bootstrap
 # Equivalent to:
 # prismctl stack init
 # prismctl stack start
-```
+```text
 
 ## Configuration Files
 

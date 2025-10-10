@@ -79,7 +79,7 @@ From Netflix metrics:
    │  PostgreSQL  │      │    Redis     │      │    Kafka     │
    │   Cluster    │      │   Cluster    │      │   Cluster    │
    └──────────────┘      └──────────────┘      └──────────────┘
-```
+```text
 
 ### Connector Buffer Responsibilities
 
@@ -111,7 +111,7 @@ impl PostgresPlugin {
         Ok(result)
     }
 }
-```
+```text
 
 **After** (plugin delegates to connector):
 ```rust
@@ -126,7 +126,7 @@ impl PostgresPlugin {
         Ok(self.to_plugin_response(response))
     }
 }
-```
+```text
 
 ## Rationale
 
@@ -158,7 +158,7 @@ spec:
   resources:
     cpu: "1"
     connections: 500  # Many connections per instance
-```
+```text
 
 **2. Language Choice**
 
@@ -179,7 +179,7 @@ Plugin crashes → Connector keeps connections alive → New plugin instance rec
 
 Without separation:
 Plugin crashes → All connections lost → Reconnect storm to database
-```
+```text
 
 **4. Global Resource Management**
 
@@ -191,7 +191,7 @@ type PostgresConnector struct {
     // All plugin instances share this pool
     rateLimiter rate.Limiter  // Max 10K QPS globally
 }
-```
+```text
 
 ### Why Go for Connectors?
 
@@ -290,7 +290,7 @@ message ConnectorStats {
   int64 queued_requests = 4;
   double avg_latency_ms = 5;
 }
-```
+```text
 
 ### PostgreSQL Connector Example (Go)
 
@@ -337,7 +337,7 @@ func (c *PostgresConnector) Execute(ctx context.Context, req *pb.ExecuteRequest)
     c.circuitBreaker.RecordSuccess()
     return &pb.ExecuteResponse{Success: true, Result: result}, nil
 }
-```
+```text
 
 ### Deployment Topology
 
@@ -365,7 +365,7 @@ spec:
     env:
     - name: CONNECTOR_ENDPOINT
       value: "localhost:50200"  # Talk to sidecar connector
-```
+```text
 
 **Option 2: Shared Connector Pool** (For bare metal):
 ┌─────────────────────┐
