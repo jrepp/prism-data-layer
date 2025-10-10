@@ -25,6 +25,7 @@ Exit Codes:
 """
 
 import argparse
+import json
 import os
 import re
 import subprocess
@@ -33,6 +34,20 @@ from pathlib import Path
 from typing import Dict, List, Set, Tuple
 from dataclasses import dataclass, field
 from enum import Enum
+
+try:
+    import frontmatter
+    from pydantic import ValidationError
+    from tooling.doc_schemas import (
+        ADRFrontmatter, RFCFrontmatter, MemoFrontmatter, GenericDocFrontmatter
+    )
+    ENHANCED_VALIDATION = True
+except ImportError:
+    ENHANCED_VALIDATION = False
+    print("⚠️  Enhanced validation disabled: install python-frontmatter and pydantic")
+    print("   Run: uv sync")
+    frontmatter = None
+    ValidationError = None
 
 
 class LinkType(Enum):
@@ -131,6 +146,86 @@ class PrismDocValidator:
 
     def _parse_document(self, file_path: Path, doc_type: str) -> Document | None:
         """Parse a markdown file and validate frontmatter"""
+
+        # Use enhanced validation if available
+        if ENHANCED_VALIDATION:
+            return self._parse_document_enhanced(file_path, doc_type)
+        else:
+            return self._parse_document_basic(file_path, doc_type)
+
+    def _parse_document_enhanced(self, file_path: Path, doc_type: str) -> Document | None:
+        """Parse document with python-frontmatter and pydantic validation"""
+        try:
+            # Parse frontmatter
+            post = frontmatter.load(file_path)
+
+            if not post.metadata:
+                error = "Missing YAML frontmatter"
+                self.log(f"   ✗ {file_path.name}: {error}")
+                doc = Document(file_path=file_path, doc_type=doc_type, title="Unknown")
+                doc.errors.append(error)
+                return doc
+
+            # Validate against schema
+            schema = None
+            try:
+                if doc_type == "adr":
+                    schema = ADRFrontmatter(**post.metadata)
+                elif doc_type == "rfc":
+                    schema = RFCFrontmatter(**post.metadata)
+                elif "MEMO-" in file_path.name:
+                    schema = MemoFrontmatter(**post.metadata)
+                else:
+                    # Generic validation for other docs
+                    schema = GenericDocFrontmatter(**post.metadata)
+
+            except ValidationError as e:
+                # Pydantic validation errors - very detailed
+                doc = Document(
+                    file_path=file_path,
+                    doc_type=doc_type,
+                    title=post.metadata.get('title', 'Unknown'),
+                    status=post.metadata.get('status', ''),
+                    date=str(post.metadata.get('date', post.metadata.get('created', ''))),
+                    tags=post.metadata.get('tags', [])
+                )
+
+                for error in e.errors():
+                    field = '.'.join(str(loc) for loc in error['loc'])
+                    msg = error['msg']
+                    error_type = error['type']
+
+                    # Format user-friendly error message
+                    if error_type == 'literal_error':
+                        # Extract allowed values from message
+                        doc.errors.append(f"Frontmatter field '{field}': {msg}")
+                    else:
+                        doc.errors.append(f"Frontmatter field '{field}': {msg}")
+
+                    self.log(f"   ✗ {file_path.name}: {field} - {msg}")
+
+                return doc
+
+            # Success - create document
+            doc = Document(
+                file_path=file_path,
+                doc_type=doc_type,
+                title=post.metadata.get('title', 'Unknown'),
+                status=post.metadata.get('status', ''),
+                date=str(post.metadata.get('date', post.metadata.get('created', ''))),
+                tags=post.metadata.get('tags', [])
+            )
+
+            self.log(f"   ✓ {file_path.name}: {doc.title}")
+            return doc
+
+        except Exception as e:
+            self.errors.append(f"Error parsing {file_path}: {e}")
+            self.log(f"   ✗ {file_path.name}: {e}")
+            return None
+
+    def _parse_document_basic(self, file_path: Path, doc_type: str) -> Document | None:
+        """Parse document with basic regex (fallback when pydantic not available)"""
         try:
             content = file_path.read_text(encoding='utf-8')
 
@@ -143,10 +238,10 @@ class PrismDocValidator:
                 doc.errors.append(error)
                 return doc
 
-            frontmatter = frontmatter_match.group(1)
+            fm = frontmatter_match.group(1)
 
             # Extract title (required)
-            title_match = re.search(r'^title:\s*["\']?([^"\'\n]+)["\']?', frontmatter, re.MULTILINE)
+            title_match = re.search(r'^title:\s*["\']?([^"\'\n]+)["\']?', fm, re.MULTILINE)
             if not title_match:
                 error = "Missing 'title' in frontmatter"
                 self.log(f"   ✗ {file_path.name}: {error}")
@@ -159,7 +254,7 @@ class PrismDocValidator:
             # Extract status (required for ADRs and RFCs)
             status = ""
             if doc_type in ["adr", "rfc"]:
-                status_match = re.search(r'^status:\s*(.+)$', frontmatter, re.MULTILINE)
+                status_match = re.search(r'^status:\s*(.+)$', fm, re.MULTILINE)
                 if not status_match:
                     error = f"Missing 'status' in frontmatter ({doc_type} requires status)"
                     self.log(f"   ✗ {file_path.name}: {error}")
@@ -170,13 +265,13 @@ class PrismDocValidator:
 
             # Extract date/created
             date = ""
-            date_match = re.search(r'^(?:date|created):\s*(.+)$', frontmatter, re.MULTILINE)
+            date_match = re.search(r'^(?:date|created):\s*(.+)$', fm, re.MULTILINE)
             if date_match:
                 date = date_match.group(1).strip()
 
             # Extract tags (if present)
             tags = []
-            tags_match = re.search(r'^tags:\s*\[([^\]]+)\]', frontmatter, re.MULTILINE)
+            tags_match = re.search(r'^tags:\s*\[([^\]]+)\]', fm, re.MULTILINE)
             if tags_match:
                 tags_str = tags_match.group(1)
                 tags = [t.strip().strip('"').strip("'") for t in tags_str.split(',')]
@@ -345,6 +440,91 @@ class PrismDocValidator:
         else:
             link.is_valid = False
             link.error_message = f"Ambiguous link format: {target}"
+
+    def check_mdx_compilation(self):
+        """Check MDX compilation using @mdx-js/mdx compiler"""
+        self.log("\n🔧 Checking MDX compilation...")
+
+        # Check if Node.js is available
+        try:
+            subprocess.run(['node', '--version'], capture_output=True, timeout=5)
+        except (FileNotFoundError, subprocess.TimeoutExpired):
+            self.log("   ⚠️  Node.js not found, skipping MDX compilation check")
+            return True
+
+        # Check if validate_mdx.mjs exists
+        mdx_validator = self.repo_root / 'docusaurus' / 'validate_mdx.mjs'
+        if not mdx_validator.exists():
+            self.log("   ⚠️  validate_mdx.mjs not found, skipping MDX compilation check")
+            return True
+
+        # Collect all document paths
+        file_paths = [str(doc.file_path) for doc in self.documents]
+
+        if not file_paths:
+            self.log("   ⚠️  No documents to validate")
+            return True
+
+        try:
+            # Call Node.js validator
+            result = subprocess.run(
+                ['node', str(mdx_validator)] + file_paths,
+                capture_output=True,
+                text=True,
+                timeout=60
+            )
+
+            # Parse JSON results
+            try:
+                results = json.loads(result.stdout)
+            except json.JSONDecodeError:
+                error = "Failed to parse MDX validation results"
+                self.errors.append(error)
+                self.log(f"   ✗ {error}")
+                if self.verbose:
+                    self.log(f"      Output: {result.stdout}")
+                    self.log(f"      Error: {result.stderr}")
+                return False
+
+            # Process results
+            has_errors = False
+            for file_result in results:
+                file_path = Path(file_result['file'])
+
+                # Find corresponding document
+                doc = self.file_to_doc.get(file_path)
+                if not doc:
+                    continue
+
+                if not file_result['valid']:
+                    has_errors = True
+                    error_msg = file_result.get('reason', file_result.get('message', 'Unknown MDX error'))
+                    line = file_result.get('line')
+
+                    if line:
+                        error = f"MDX compilation error at line {line}: {error_msg}"
+                    else:
+                        error = f"MDX compilation error: {error_msg}"
+
+                    doc.errors.append(error)
+                    self.log(f"   ✗ {doc.file_path.name}: {error}")
+
+            if not has_errors:
+                self.log("   ✓ All documents compile as valid MDX")
+                return True
+            else:
+                return False
+
+        except subprocess.TimeoutExpired:
+            error = "MDX validation timed out"
+            self.errors.append(error)
+            self.log(f"   ✗ {error}")
+            return False
+        except Exception as e:
+            error = f"Error running MDX validation: {e}"
+            self.errors.append(error)
+            self.log(f"   ✗ {error}")
+            return False
 
     def check_mdx_compatibility(self):
         """Check for MDX parsing issues (unescaped special characters)"""
@@ -667,6 +847,7 @@ class PrismDocValidator:
         self.scan_documents()
         self.extract_links()
         self.validate_links()
+        self.check_mdx_compilation()  # NEW: Check MDX compilation with @mdx-js/mdx
         self.check_mdx_compatibility()
         self.check_cross_plugin_links()
         self.check_formatting()

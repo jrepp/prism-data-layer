@@ -63,7 +63,6 @@ Backend plugins are critical infrastructure components that must:
 
 ### Test Framework Components
 
-```
 Plugin Acceptance Test Framework
 ├── Test Harness (harness/)
 │   ├── plugin_harness.go         # Plugin lifecycle management
@@ -1910,7 +1909,6 @@ ok      github.com/prism/tests/acceptance       25.352s
 
 ### Test Summary Report
 
-```
 Plugin Acceptance Test Results
 ===============================
 

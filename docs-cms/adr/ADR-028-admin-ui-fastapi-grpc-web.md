@@ -36,7 +36,6 @@ Build **Admin UI with FastAPI + gRPC-Web**:
 
 ### Architecture
 
-```
 ┌─────────────────────────────────────────────┐
 │              Browser                        │
 │                                             │
@@ -147,7 +146,6 @@ async def health():
 
 ### Frontend Structure
 
-```
 admin-ui/
 ├── main.py                 # FastAPI app
 ├── requirements.txt        # Python deps

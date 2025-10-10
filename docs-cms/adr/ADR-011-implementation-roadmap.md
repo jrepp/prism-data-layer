@@ -29,7 +29,6 @@ Establish protobuf as single source of truth with code generation pipeline.
 ### Deliverables
 
 1. **Create `proto/` directory structure**:
-```
 proto/
 ├── prism/
 │   ├── options.proto         # Custom Prism tags

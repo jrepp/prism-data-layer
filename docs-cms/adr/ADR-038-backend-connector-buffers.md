@@ -46,7 +46,6 @@ From Netflix metrics:
 
 ### Architecture
 
-```
 ┌────────────────────────────────────────────────────────────────┐
 │                        Prism Proxy (Rust)                       │
 │                                                                 │
@@ -175,12 +174,10 @@ spec:
 
 Plugin crash doesn't lose connections:
 
-```
 Plugin crashes → Connector keeps connections alive → New plugin instance reconnects to connector
 ```
 
 Without separation:
-```
 Plugin crashes → All connections lost → Reconnect storm to database
 ```
 
@@ -371,7 +368,6 @@ spec:
 ```
 
 **Option 2: Shared Connector Pool** (For bare metal):
-```
 ┌─────────────────────┐
 │  Prism Instance 1   │──┐
 └─────────────────────┘  │

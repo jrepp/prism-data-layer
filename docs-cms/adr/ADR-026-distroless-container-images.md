@@ -343,7 +343,6 @@ securityContext:
 
 ### Image Naming Convention
 
-```
 prism/proxy:latest              # Production
 prism/proxy:v1.2.3              # Specific version (production)
 prism/proxy:debug               # Debug variant (latest)
@@ -352,7 +351,6 @@ prism/proxy:v1.2.3-debug        # Debug variant (specific version)
 
 ### File Structure
 
-```
 prism/
 ├── proxy/
 │   ├── Dockerfile              # Proxy image (multi-stage)

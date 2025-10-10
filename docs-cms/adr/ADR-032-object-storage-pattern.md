@@ -728,7 +728,6 @@ pub async fn get_presigned_url(
 
 ## Appendix: Object Storage Decision Tree
 
-```
 Do you need to store binary data > 1MB?
 ├─ Yes → Object Storage (this ADR)
 └─ No

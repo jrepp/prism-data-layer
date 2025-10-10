@@ -56,7 +56,6 @@ Use **gRPC as the primary interface** for Prism data access layer:
 
 ### Architecture
 
-```
 ┌─────────────────────────────────────────────────────────┐
 │                  Prism gRPC Server                      │
 │                   (Port 8980)                           │

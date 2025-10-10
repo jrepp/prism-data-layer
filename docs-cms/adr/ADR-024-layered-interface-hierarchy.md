@@ -36,7 +36,7 @@ Implement **layered interface hierarchy** with clear dependencies:
 
 ### Layer Hierarchy
 
-```
+```text
                     ┌──────────────────────────────────┐
                     │      Client Applications         │
                     └────────────┬─────────────────────┘

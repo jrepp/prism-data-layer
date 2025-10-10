@@ -338,7 +338,6 @@ criterion_main!(benches);
 
 ### Directory Structure
 
-```
 proxy/
 ├── src/
 │   ├── lib.rs

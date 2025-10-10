@@ -54,7 +54,6 @@ Clients may not always specify TTL values when creating dynamic data, either due
 
 ### TTL Precedence Rules
 
-```
 Client-Specified TTL
     ↓ (if not provided)
 Namespace-Level Default TTL

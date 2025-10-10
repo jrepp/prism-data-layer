@@ -67,7 +67,6 @@ Developers need comprehensive observability during local development and testing
 | APM Features | ✅ | ⚠️ Basic | ⚠️ Manual | ✅ |
 
 **Signoz Architecture:**
-```
 Signoz Components:
 ├── OTLP Receiver (gRPC :4317, HTTP :4318)
 ├── Query Service (API + UI :3301)

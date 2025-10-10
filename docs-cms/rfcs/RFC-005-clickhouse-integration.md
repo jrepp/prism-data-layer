@@ -473,7 +473,6 @@ clickhouse:
 ### 7.1 Capacity Planning
 
 **Storage Calculation**:
-```
 daily_volume = events_per_day × avg_event_size_bytes
 compressed_size = daily_volume / compression_ratio
 retention_storage = compressed_size × retention_days × (1 + replica_count)

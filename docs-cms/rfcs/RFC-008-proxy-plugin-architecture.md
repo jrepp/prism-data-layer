@@ -764,6 +764,640 @@ impl MockProxy {
 }
 ```
 
+## Plugin Acceptance Test Framework
+
+### Overview
+
+The Plugin Acceptance Test Framework provides a comprehensive suite of verification tests that ensure plugins correctly implement the `BackendPlugin` interface and behave consistently across all backend types. This framework serves two critical purposes:
+
+1. **Per-Backend Type Verification**: Test each plugin implementation against real backend instances to verify correct protocol implementation
+2. **Cross-Plugin Consistency**: Ensure all plugins handle common concerns (authentication, connection management, error handling) identically
+
+### Test Framework Architecture
+
+```rust
+// tests/acceptance/framework.rs
+
+/// Acceptance test harness that runs plugins against real backends
+pub struct PluginAcceptanceHarness {
+    backend_type: BackendType,
+    backend_instance: Box<dyn TestBackend>,
+    plugin: Box<dyn BackendPlugin>,
+    test_config: TestConfig,
+}
+
+impl PluginAcceptanceHarness {
+    /// Create harness for specific backend type
+    pub async fn new(backend_type: BackendType) -> Result<Self> {
+        let backend_instance = spawn_test_backend(backend_type).await?;
+        let plugin = load_plugin_for_backend(backend_type)?;
+
+        Ok(Self {
+            backend_type,
+            backend_instance,
+            plugin,
+            test_config: TestConfig::default(),
+        })
+    }
+
+    /// Run full acceptance test suite
+    pub async fn run_all_tests(&mut self) -> TestResults {
+        let mut results = TestResults::new();
+
+        // Core plugin lifecycle tests
+        results.add(self.test_initialize().await);
+        results.add(self.test_health_check().await);
+        results.add(self.test_shutdown().await);
+
+        // Authentication tests (reusable across all plugins)
+        results.add(self.run_authentication_suite().await);
+
+        // Backend-specific operation tests
+        results.add(self.run_backend_operations_suite().await);
+
+        // Error handling tests
+        results.add(self.test_error_scenarios().await);
+
+        // Performance baseline tests
+        results.add(self.test_performance_baseline().await);
+
+        results
+    }
+}
+```
+
+### Reusable Authentication Test Suite
+
+**Goal**: Verify all plugins handle credential passing, authentication failures, and credential refresh identically.
+
+```rust
+// tests/acceptance/auth_suite.rs
+
+/// Reusable authentication test suite that works across all plugin types
+pub struct AuthenticationTestSuite {
+    harness: Arc<PluginAcceptanceHarness>,
+}
+
+impl AuthenticationTestSuite {
+    pub async fn run(&self) -> Vec<TestResult> {
+        vec![
+            self.test_valid_credentials().await,
+            self.test_invalid_credentials().await,
+            self.test_missing_credentials().await,
+            self.test_expired_credentials().await,
+            self.test_credential_rotation().await,
+            self.test_connection_pool_auth().await,
+        ]
+    }
+
+    /// Test plugin initializes successfully with valid credentials
+    async fn test_valid_credentials(&self) -> TestResult {
+        let init_req = InitializeRequest {
+            namespace: "test-auth".to_string(),
+            backend_type: self.harness.backend_type.to_string(),
+            config: self.harness.test_config.clone(),
+            credentials: hashmap! {
+                "username" => "test_user",
+                "password" => "test_pass",
+            },
+            ..Default::default()
+        };
+
+        let resp = self.harness.plugin.initialize(init_req).await;
+
+        TestResult::assert_ok(resp, "Plugin should initialize with valid credentials")
+    }
+
+    /// Test plugin fails gracefully with invalid credentials
+    async fn test_invalid_credentials(&self) -> TestResult {
+        let init_req = InitializeRequest {
+            namespace: "test-auth-invalid".to_string(),
+            backend_type: self.harness.backend_type.to_string(),
+            config: self.harness.test_config.clone(),
+            credentials: hashmap! {
+                "username" => "invalid_user",
+                "password" => "wrong_pass",
+            },
+            ..Default::default()
+        };
+
+        let resp = self.harness.plugin.initialize(init_req).await;
+
+        TestResult::assert_err(
+            resp,
+            "Plugin should reject invalid credentials",
+            ErrorCode::UNAUTHENTICATED
+        )
+    }
+
+    /// Test plugin handles missing credentials
+    async fn test_missing_credentials(&self) -> TestResult {
+        let init_req = InitializeRequest {
+            namespace: "test-auth-missing".to_string(),
+            backend_type: self.harness.backend_type.to_string(),
+            config: self.harness.test_config.clone(),
+            credentials: hashmap! {},  // Empty credentials
+            ..Default::default()
+        };
+
+        let resp = self.harness.plugin.initialize(init_req).await;
+
+        TestResult::assert_err(
+            resp,
+            "Plugin should detect missing credentials",
+            ErrorCode::INVALID_ARGUMENT
+        )
+    }
+
+    /// Test plugin handles credential expiration/rotation
+    async fn test_credential_rotation(&self) -> TestResult {
+        // Initialize with valid credentials
+        self.harness.plugin.initialize(valid_creds()).await?;
+
+        // Simulate credential rotation in backend
+        self.harness.backend_instance.rotate_credentials().await?;
+
+        // Execute operation - should fail with auth error
+        let exec_req = ExecuteRequest {
+            operation: "get".to_string(),
+            params: test_params(),
+            ..Default::default()
+        };
+
+        let resp = self.harness.plugin.execute(exec_req).await;
+
+        // Plugin should detect expired credentials
+        assert_eq!(resp.error_code, ErrorCode::UNAUTHENTICATED);
+
+        // Reinitialize with new credentials
+        self.harness.plugin.initialize(rotated_creds()).await?;
+
+        // Operation should now succeed
+        let resp = self.harness.plugin.execute(exec_req.clone()).await;
+        TestResult::assert_ok(resp, "Plugin should work after credential rotation")
+    }
+
+    /// Test connection pool handles authentication per-connection
+    async fn test_connection_pool_auth(&self) -> TestResult {
+        // Initialize plugin with pool size > 1
+        let init_req = InitializeRequest {
+            config: ConnectionPoolConfig {
+                pool_size: 5,
+                ..Default::default()
+            },
+            credentials: valid_creds(),
+            ..Default::default()
+        };
+
+        self.harness.plugin.initialize(init_req).await?;
+
+        // Execute multiple concurrent operations
+        let operations: Vec<_> = (0..10)
+            .map(|i| {
+                let plugin = self.harness.plugin.clone();
+                tokio::spawn(async move {
+                    plugin.execute(ExecuteRequest {
+                        operation: "get".to_string(),
+                        params: test_params_for_key(i),
+                        ..Default::default()
+                    }).await
+                })
+            })
+            .collect();
+
+        // All operations should succeed (each connection authenticated)
+        let results: Vec<_> = futures::future::join_all(operations).await;
+
+        TestResult::assert_all_ok(
+            results,
+            "All pooled connections should authenticate successfully"
+        )
+    }
+}
+```
+
+### Per-Backend Verification Tests
+
+**Goal**: Verify each plugin correctly implements backend-specific protocols using actual backend instances.
+
+```rust
+// tests/acceptance/backend_verification.rs
+
+/// Backend-specific verification tests
+pub trait BackendVerificationSuite {
+    async fn test_basic_operations(&self) -> Vec<TestResult>;
+    async fn test_error_handling(&self) -> Vec<TestResult>;
+    async fn test_concurrency(&self) -> Vec<TestResult>;
+    async fn test_backend_specific_features(&self) -> Vec<TestResult>;
+}
+
+/// PostgreSQL plugin verification
+pub struct PostgresVerificationSuite {
+    harness: Arc<PluginAcceptanceHarness>,
+    postgres: PostgresTestInstance,
+}
+
+impl BackendVerificationSuite for PostgresVerificationSuite {
+    async fn test_basic_operations(&self) -> Vec<TestResult> {
+        vec![
+            self.test_insert().await,
+            self.test_select().await,
+            self.test_update().await,
+            self.test_delete().await,
+            self.test_transaction().await,
+        ]
+    }
+
+    async fn test_backend_specific_features(&self) -> Vec<TestResult> {
+        vec![
+            self.test_prepared_statements().await,
+            self.test_json_types().await,
+            self.test_array_types().await,
+            self.test_listen_notify().await,
+        ]
+    }
+}
+
+impl PostgresVerificationSuite {
+    async fn test_insert(&self) -> TestResult {
+        // Insert data via plugin
+        let exec_req = ExecuteRequest {
+            operation: "insert".to_string(),
+            params: InsertParams {
+                table: "users".to_string(),
+                data: json!({"id": 1, "name": "Alice"}),
+            },
+            ..Default::default()
+        };
+
+        let resp = self.harness.plugin.execute(exec_req).await?;
+
+        // Verify data exists in actual PostgreSQL instance
+        let row = self.postgres.query_one("SELECT * FROM users WHERE id = 1").await?;
+        assert_eq!(row.get::<_, String>("name"), "Alice");
+
+        TestResult::pass("PostgreSQL plugin correctly inserts data")
+    }
+
+    async fn test_prepared_statements(&self) -> TestResult {
+        // Execute same query multiple times
+        for i in 0..100 {
+            let exec_req = ExecuteRequest {
+                operation: "query".to_string(),
+                params: QueryParams {
+                    sql: "SELECT * FROM users WHERE id = $1".to_string(),
+                    params: vec![i.into()],
+                },
+                ..Default::default()
+            };
+
+            self.harness.plugin.execute(exec_req).await?;
+        }
+
+        // Verify plugin uses prepared statements (check metrics)
+        let metrics = self.harness.plugin.get_metrics().await?;
+        assert!(
+            metrics.prepared_statements_cached > 0,
+            "Plugin should cache prepared statements"
+        );
+
+        TestResult::pass("PostgreSQL plugin uses prepared statements")
+    }
+}
+
+/// Kafka plugin verification
+pub struct KafkaVerificationSuite {
+    harness: Arc<PluginAcceptanceHarness>,
+    kafka: KafkaTestCluster,
+}
+
+impl BackendVerificationSuite for KafkaVerificationSuite {
+    async fn test_basic_operations(&self) -> Vec<TestResult> {
+        vec![
+            self.test_produce().await,
+            self.test_consume().await,
+            self.test_subscribe().await,
+        ]
+    }
+
+    async fn test_backend_specific_features(&self) -> Vec<TestResult> {
+        vec![
+            self.test_partitioning().await,
+            self.test_consumer_groups().await,
+            self.test_exactly_once_semantics().await,
+            self.test_transactions().await,
+        ]
+    }
+}
+
+impl KafkaVerificationSuite {
+    async fn test_produce(&self) -> TestResult {
+        // Produce message via plugin
+        let exec_req = ExecuteRequest {
+            operation: "produce".to_string(),
+            params: ProduceParams {
+                topic: "test-topic".to_string(),
+                key: "key1".to_string(),
+                value: b"test message".to_vec(),
+            },
+            ..Default::default()
+        };
+
+        let resp = self.harness.plugin.execute(exec_req).await?;
+
+        // Verify message in actual Kafka cluster
+        let consumer = self.kafka.create_consumer("test-group").await?;
+        consumer.subscribe(&["test-topic"]).await?;
+
+        let message = consumer.recv().await?;
+        assert_eq!(message.payload(), b"test message");
+
+        TestResult::pass("Kafka plugin correctly produces messages")
+    }
+
+    async fn test_consumer_groups(&self) -> TestResult {
+        // Create multiple consumers in same group
+        let consumers = vec![
+            self.create_plugin_consumer("group1").await?,
+            self.create_plugin_consumer("group1").await?,
+            self.create_plugin_consumer("group1").await?,
+        ];
+
+        // Produce 100 messages
+        for i in 0..100 {
+            self.produce_via_plugin(&format!("msg-{}", i)).await?;
+        }
+
+        // Each consumer should receive ~33 messages (partitioned)
+        let counts: Vec<_> = consumers.iter()
+            .map(|c| c.message_count())
+            .collect();
+
+        // Verify messages distributed across consumers
+        assert!(counts.iter().all(|&c| c > 20 && c < 50));
+
+        TestResult::pass("Kafka plugin correctly partitions messages across consumer group")
+    }
+}
+
+/// Redis plugin verification
+pub struct RedisVerificationSuite {
+    harness: Arc<PluginAcceptanceHarness>,
+    redis: RedisTestInstance,
+}
+
+impl BackendVerificationSuite for RedisVerificationSuite {
+    async fn test_basic_operations(&self) -> Vec<TestResult> {
+        vec![
+            self.test_get_set().await,
+            self.test_delete().await,
+            self.test_exists().await,
+            self.test_expire().await,
+        ]
+    }
+
+    async fn test_backend_specific_features(&self) -> Vec<TestResult> {
+        vec![
+            self.test_pub_sub().await,
+            self.test_lua_scripts().await,
+            self.test_pipelining().await,
+            self.test_transactions().await,
+        ]
+    }
+}
+```
+
+### Test Backend Lifecycle Management
+
+**Goal**: Automatically spin up/tear down real backend instances for acceptance tests.
+
+```rust
+// tests/acceptance/test_backends.rs
+
+/// Trait for managing test backend instances
+#[async_trait]
+pub trait TestBackend: Send + Sync {
+    async fn start(&mut self) -> Result<()>;
+    async fn stop(&mut self) -> Result<()>;
+    async fn reset(&mut self) -> Result<()>;
+    fn connection_config(&self) -> ConnectionConfig;
+    fn credentials(&self) -> Credentials;
+}
+
+/// Spawn test backend using Docker/Testcontainers
+pub async fn spawn_test_backend(backend_type: BackendType) -> Result<Box<dyn TestBackend>> {
+    match backend_type {
+        BackendType::Postgres => Ok(Box::new(PostgresTestInstance::new().await?)),
+        BackendType::Redis => Ok(Box::new(RedisTestInstance::new().await?)),
+        BackendType::Kafka => Ok(Box::new(KafkaTestCluster::new().await?)),
+        BackendType::ClickHouse => Ok(Box::new(ClickHouseTestInstance::new().await?)),
+    }
+}
+
+/// PostgreSQL test instance using testcontainers
+pub struct PostgresTestInstance {
+    container: Container<Postgres>,
+    connection_pool: PgPool,
+}
+
+impl PostgresTestInstance {
+    pub async fn new() -> Result<Self> {
+        let container = Postgres::default()
+            .with_tag("16")
+            .with_env("POSTGRES_PASSWORD", "test")
+            .start()
+            .await?;
+
+        let connection_string = format!(
+            "postgres://postgres:test@localhost:{}",
+            container.get_host_port(5432).await?
+        );
+
+        let pool = PgPool::connect(&connection_string).await?;
+
+        // Initialize test schema
+        sqlx::query(
+            "CREATE TABLE IF NOT EXISTS users (
+                id SERIAL PRIMARY KEY,
+                name TEXT NOT NULL,
+                email TEXT UNIQUE
+            )"
+        )
+        .execute(&pool)
+        .await?;
+
+        Ok(Self {
+            container,
+            connection_pool: pool,
+        })
+    }
+
+    pub async fn query_one(&self, sql: &str) -> Result<PgRow> {
+        sqlx::query(sql).fetch_one(&self.connection_pool).await
+    }
+}
+
+#[async_trait]
+impl TestBackend for PostgresTestInstance {
+    async fn start(&mut self) -> Result<()> {
+        // Container already started in new()
+        Ok(())
+    }
+
+    async fn stop(&mut self) -> Result<()> {
+        self.container.stop().await
+    }
+
+    async fn reset(&mut self) -> Result<()> {
+        // Truncate all tables
+        sqlx::query("TRUNCATE TABLE users RESTART IDENTITY CASCADE")
+            .execute(&self.connection_pool)
+            .await?;
+        Ok(())
+    }
+
+    fn connection_config(&self) -> ConnectionConfig {
+        ConnectionConfig {
+            host: "localhost".to_string(),
+            port: self.container.get_host_port_blocking(5432),
+            database: "postgres".to_string(),
+        }
+    }
+
+    fn credentials(&self) -> Credentials {
+        Credentials {
+            username: "postgres".to_string(),
+            password: "test".to_string(),
+        }
+    }
+}
+```
+
+### Running Acceptance Tests
+
+**Test organization**:
+
+```bash
+tests/
+├── acceptance/
+│   ├── framework.rs              # Test harness
+│   ├── auth_suite.rs             # Reusable auth tests
+│   ├── backend_verification.rs   # Per-backend test traits
+│   ├── test_backends.rs          # Docker backend management
+│   │
+│   ├── postgres_test.rs          # PostgreSQL acceptance tests
+│   ├── redis_test.rs             # Redis acceptance tests
+│   ├── kafka_test.rs             # Kafka acceptance tests
+│   └── clickhouse_test.rs        # ClickHouse acceptance tests
+│
+└── fixtures/
+    ├── test_data.sql              # Seed data for PostgreSQL
+    ├── test_messages.json         # Seed data for Kafka
+    └── test_keys.txt              # Seed data for Redis
+```
+
+**Running tests**:
+
+```bash
+# Run all acceptance tests
+cargo test --test acceptance
+
+# Run only PostgreSQL plugin acceptance tests
+cargo test --test acceptance postgres
+
+# Run only authentication suite across all plugins
+cargo test --test acceptance auth_suite
+
+# Run with real backend instances (requires Docker)
+PRISM_TEST_MODE=integration cargo test --test acceptance
+
+# Run against specific backend version
+POSTGRES_VERSION=15 cargo test --test acceptance postgres
+```
+
+**Test output**:
+
+running 45 tests
+test acceptance::postgres::auth_suite ... ok (2.3s)
+test acceptance::postgres::basic_operations ... ok (1.8s)
+test acceptance::postgres::prepared_statements ... ok (3.2s)
+test acceptance::redis::auth_suite ... ok (0.9s)
+test acceptance::redis::pub_sub ... ok (1.2s)
+test acceptance::kafka::auth_suite ... ok (4.5s)
+test acceptance::kafka::consumer_groups ... ok (8.1s)
+
+Authentication Suite Results:
+  PostgreSQL: ✓ 6/6 tests passed
+  Redis:      ✓ 6/6 tests passed
+  Kafka:      ✓ 6/6 tests passed
+  ClickHouse: ✓ 6/6 tests passed
+
+Backend-Specific Results:
+  PostgreSQL: ✓ 15/15 tests passed
+  Redis:      ✓ 12/12 tests passed
+  Kafka:      ✓ 18/18 tests passed
+  ClickHouse: ✓ 10/10 tests passed
+
+test result: ok. 45 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out
+```
+
+### CI/CD Integration
+
+**GitHub Actions workflow**:
+
+```yaml
+# .github/workflows/plugin-acceptance.yml
+name: Plugin Acceptance Tests
+
+on: [push, pull_request]
+
+jobs:
+  acceptance:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        backend: [postgres, redis, kafka, clickhouse]
+        backend_version:
+          - postgres: ["14", "15", "16"]
+          - redis: ["7.0", "7.2"]
+          - kafka: ["3.5", "3.6"]
+          - clickhouse: ["23.8", "24.1"]
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+
+      - name: Start Docker
+        run: docker compose up -d
+
+      - name: Run acceptance tests
+        run: |
+          BACKEND_TYPE=${{ matrix.backend }} \
+          BACKEND_VERSION=${{ matrix.backend_version }} \
+          cargo test --test acceptance ${{ matrix.backend }}
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: acceptance-test-results-${{ matrix.backend }}
+          path: target/test-results/
+```
+
+### Benefits of Acceptance Test Framework
+
+1. **Consistency**: All plugins tested with same authentication suite
+2. **Real Backends**: Tests use actual backend instances (not mocks)
+3. **Confidence**: Comprehensive verification before production deployment
+4. **CI/CD Ready**: Automated testing on every commit
+5. **Version Matrix**: Test against multiple backend versions
+6. **Reusability**: Authentication tests reused across all plugins
+7. **Documentation**: Tests serve as examples for plugin developers
+
 ## Migration Path
 
 ### Phase 1: Plugin Interface Definition (Week 1-2)

@@ -745,7 +745,6 @@ prism cache warmup product-catalog
 
 ## Appendix: Cache Strategy Decision Tree
 
-```
 What's your access pattern?
 ├─ Read-heavy (90%+ reads)
 │  ├─ Can tolerate stale reads? → Look-Aside

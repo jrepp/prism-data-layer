@@ -502,7 +502,6 @@ g.V().has('email', 'alice@example.com').profile()
 ```
 
 **Example output**:
-```
 Step                                    Count  Traversers  Time (ms)
 =====================================================
 NeptuneGraphStep(vertex,[email.eq(alice)])  1      1           2.345

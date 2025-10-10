@@ -121,7 +121,6 @@ graph TB
 
 Each support service has its own Docker Compose file:
 
-```
 local-dev/
 ├── signoz/
 │   ├── docker-compose.signoz.yml

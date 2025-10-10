@@ -34,7 +34,6 @@ The Prism data layer interface provides:
 
 ### 1.3 Service Overview
 
-```
 ┌────────────────────────────────────────────┐
 │           Session Service (v1)             │
 │  - CreateSession, CloseSession, Heartbeat  │
@@ -1241,7 +1240,6 @@ resp, err := client.Publish(ctx, req)
 ### 11.2 Authentication
 
 Session tokens in metadata:
-```
 x-session-token: sess-abc123def456
 ```
 

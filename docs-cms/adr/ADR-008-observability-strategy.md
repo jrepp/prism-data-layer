@@ -37,7 +37,6 @@ Adopt **OpenTelemetry** from day one for metrics, logs, and traces. Use **Promet
 
 ### Architecture
 
-```
 ┌─────────────┐
 │ Prism Proxy │
 │             │
@@ -173,7 +172,6 @@ Development: `DEBUG` level
 
 **Trace Example**:
 
-```
 GET /namespaces/user-profiles/items/user123
 │
 ├─ [2.5ms] prism.proxy.handle_request

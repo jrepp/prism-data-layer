@@ -289,7 +289,6 @@ pub fn record_pool_metrics(pool: &Pool, namespace: &str, backend: &str) {
 ### Configuration Tuning Guidance
 
 **Start with conservative sizes**:
-```
 pool_size = max(min_size, expected_p99_rps * p99_query_latency_seconds)
 ```
 

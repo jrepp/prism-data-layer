@@ -169,7 +169,6 @@ prismctl login --local
 ```
 
 **Output**:
-```
 Opening browser for authentication...
 
 Visit: https://idp.example.com/activate
@@ -180,7 +179,6 @@ Waiting for authentication...
 
 *Browser opens automatically to verification URL*
 
-```
 ✓ Authenticated as alice@company.com
 Token expires in 1 hour
 Token cached to ~/.prism/token
@@ -410,7 +408,6 @@ prismctl namespace list
 
 ### Command Structure
 
-```
 prism
 ├── namespace
 │   ├── create      # Create new namespace
@@ -473,7 +470,6 @@ prismctl namespace create my-app \
 ```
 
 **Output (Rich table)**:
-```
 ┏━━━━━━━━━━━━┳━━━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━━━━━━━━━┓
 ┃ Namespace  ┃ Backend  ┃ Pattern    ┃ Status       ┃
 ┡━━━━━━━━━━━━╇━━━━━━━━━━╇━━━━━━━━━━━━╇━━━━━━━━━━━━━━┩
@@ -502,7 +498,6 @@ prismctl namespace list --include-inactive
 ```
 
 **Output**:
-```
 ┏━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━━━━━┳━━━━━━━━━━━━┓
 ┃ Namespace      ┃ Backend    ┃ Pattern    ┃ Sessions ┃ RPS        ┃
 ┡━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━╇━━━━━━━━━━━━╇━━━━━━━━━━╇━━━━━━━━━━━━┩
@@ -526,7 +521,6 @@ prismctl namespace describe my-app --show-config
 ```
 
 **Output**:
-```
 Namespace: my-app
 Status: Active
 Created: 2025-10-01 14:23:45 UTC
@@ -570,7 +564,6 @@ prismctl backend health --detailed
 ```
 
 **Output**:
-```
 Backend Health Status
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -631,7 +624,6 @@ prismctl session list --duration ">1h"
 ```
 
 **Output**:
-```
 ┏━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━━━━━━━┓
 ┃ Session ID    ┃ Principal            ┃ Namespace      ┃ Duration   ┃ Requests   ┃ RPS        ┃
 ┡━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━╇━━━━━━━━━━━━╇━━━━━━━━━━━━┩
@@ -655,7 +647,6 @@ prismctl session trace sess-abc123 --duration 60s --output trace.json
 ```
 
 **Output (live streaming)**:
-```
 Tracing session sess-abc123 (Ctrl+C to stop)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -700,7 +691,6 @@ prismctl config validate prism-config.yaml --dry-run
 ```
 
 **Output**:
-```
 Validating configuration: prism-config.yaml
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -734,7 +724,6 @@ prismctl metrics summary --since "1h ago" --namespace my-app
 ```
 
 **Output**:
-```
 Prism Metrics Summary (Last 1 hour)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -790,7 +779,6 @@ prismctl shadow enable user-profiles \
 ```
 
 **Output**:
-```
 Enabling shadow traffic for namespace 'user-profiles'
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -818,7 +806,6 @@ prismctl shadow status user-profiles
 ```
 
 **Output**:
-```
 Shadow Traffic Status: user-profiles
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -877,7 +864,6 @@ prismctl plugin list --show-versions
 ```
 
 **Output**:
-```
 ┏━━━━━━━━━━━━━━┳━━━━━━━━━┳━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━┓
 ┃ Plugin       ┃ Version ┃ Status   ┃ Namespaces       ┃ Health     ┃
 ┡━━━━━━━━━━━━━━╇━━━━━━━━━╇━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━┩
@@ -906,7 +892,6 @@ prismctl plugin install mongodb --config plugin-config.yaml
 ```
 
 **Output**:
-```
 Installing plugin: mongodb
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -935,7 +920,6 @@ prismctl plugin update mongodb --dry-run
 ```
 
 **Output (with warnings)**:
-```
 Updating plugin: mongodb (1.0.0 → 1.1.0)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -972,7 +956,6 @@ prismctl plugin disable kafka --force
 ```
 
 **Output**:
-```
 Disabling plugin: kafka
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -1000,7 +983,6 @@ prismctl plugin status mongodb --watch
 ```
 
 **Output**:
-```
 Plugin Status: mongodb (v1.0.0)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -1045,7 +1027,6 @@ prismctl plugin reload mongodb --tail
 ```
 
 **Output**:
-```
 Reloading plugin: mongodb
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -1079,7 +1060,6 @@ prismctl plugin logs mongodb --since "1h ago"
 ```
 
 **Output**:
-```
 Tailing logs: mongodb (Ctrl+C to stop)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -1168,7 +1148,6 @@ service AdminService {
 
 ### Project Structure (Go Implementation)
 
-```
 tools/
 ├── cmd/
 │   └── prismctl/

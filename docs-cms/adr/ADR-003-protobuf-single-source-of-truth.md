@@ -90,7 +90,6 @@ extend google.protobuf.MethodOptions {
 
 ### Code Generation Pipeline
 
-```
 proto/*.proto
     │
     ├──> Rust code (prost)
@@ -319,7 +318,6 @@ cache:
 
 ### Project Structure
 
-```
 proto/
 ├── prism/
 │   ├── options.proto          # Custom Prism options

@@ -40,7 +40,6 @@ The Prism data proxy sits between client applications and heterogeneous backends
 
 ## Architecture Overview
 
-```
 ┌──────────────────────────────────────────────────────────────────┐
 │                      Authentication Boundaries                   │
 └──────────────────────────────────────────────────────────────────┘
@@ -54,7 +53,6 @@ Output: Backend-specific credentials (mTLS, passwords, API keys)
 
 ### Ports and Security Zones
 
-```
 ┌─────────────────────────────────────────────────────────────────┐
 │                        Security Zones                           │
 └─────────────────────────────────────────────────────────────────┘
@@ -285,7 +283,6 @@ impl CertificateReloader {
 
 ### Per-Backend Authentication Strategies
 
-```
 ┌─────────────────────────────────────────────────────────────────┐
 │                 Backend Authentication Matrix                   │
 └─────────────────────────────────────────────────────────────────┘
@@ -1264,7 +1261,6 @@ backends:
 
 ### Credential Isolation
 
-```
 Principle: Clients never see backend credentials
 
 ✓ Client presents certificate → Proxy validates
@@ -1275,7 +1271,6 @@ Principle: Clients never see backend credentials
 
 ### Credential Rotation
 
-```
 Automatic rotation schedule:
 
 1. Vault generates new credentials (TTL: 1 hour)

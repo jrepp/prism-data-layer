@@ -24,7 +24,6 @@ Modern distributed applications require complex reliability patterns, but implem
 
 **Solution**: Prism provides a **layered architecture** that separates concerns:
 
-```
 ┌──────────────────────────────────────────────────────────┐
 │         Layer 3: Client API (What)                       │
 │  Queue | PubSub | Reader | Transact | Cache             │
@@ -174,7 +173,6 @@ for operation in client.consume("orders"):
    - **Guarantee**: Zero lost operations
 
 **Real-World Example:**
-```
 Problem: E-commerce order processing - cannot lose orders
 Challenge: Proxy crashes between accepting order and publishing to Kafka
 
@@ -244,7 +242,6 @@ process_video(video_bytes)
 4. **Layer 1**: Publishes lightweight message to Kafka (just metadata)
 
 **Real-World Example:**
-```
 Problem: ML team publishes 50GB model weights per training run
 Before Prism: Manual S3 upload + manual message with S3 key
 With Prism: Standard publish() API, Prism handles everything
@@ -296,7 +293,6 @@ with client.transaction() as tx:
 4. **Background**: Outbox publisher polls table, publishes to Kafka, marks published
 
 **Real-World Example:**
-```
 Problem: E-commerce order completion must trigger notification
 Before Prism: Dual write bug caused missed notifications
 With Prism: Outbox pattern guarantees delivery
@@ -360,7 +356,6 @@ def cache_invalidator():
 5. **Layer 1**: Publishes to Kafka topic
 
 **Real-World Example:**
-```
 Problem: Keep Elasticsearch search index synced with PostgreSQL
 Before Prism: Dual write (update DB, update ES) - race conditions
 With Prism: CDC automatically streams changes, ES consumes
@@ -421,7 +416,6 @@ with client.transaction() as tx:
 5. **Background**: Outbox publisher sends lightweight Kafka message
 
 **Real-World Example:**
-```
 Problem: ML platform releases 50GB models, needs atomic model registry + notification
 Before Prism: Manual S3 + outbox implementation, 500 LOC
 With Prism: Standard transactional API, Prism composes patterns
@@ -477,7 +471,6 @@ product = client.get("products", product_id)  # Gets updated price
 3. **Next Read**: Cache miss → Fresh data
 
 **Real-World Example:**
-```
 Problem: Product catalog with millions of reads/sec, frequent price updates
 Before Prism: Manual cache + manual invalidation, stale data bugs
 With Prism: Declare cache + CDC, Prism handles everything
@@ -1324,7 +1317,6 @@ impl PatternChain {
 
 **Example execution with Outbox + Claim Check**:
 
-```
 Publish Flow:
   App → [Layer 3: PubSub API]
     → [Layer 2: Outbox Pattern] (begin transaction)
@@ -1640,7 +1632,6 @@ backend: kafka
 
 ### Pattern Metrics
 
-```
 # Claim Check
 prism_pattern_claim_check_stored_total{namespace="videos"} 1234
 prism_pattern_claim_check_retrieved_total{namespace="videos"} 1230
@@ -1660,7 +1651,6 @@ prism_pattern_chain_duration_seconds{namespace="videos", pattern="outbox"} 0.008
 
 ### Distributed Tracing
 
-```
 Trace: Publish large video
 ├─ Span: PubSubService.Publish [12ms]
 │  ├─ Span: OutboxPattern.process_publish [8ms]

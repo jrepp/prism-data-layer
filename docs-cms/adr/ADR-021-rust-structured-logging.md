@@ -61,7 +61,6 @@ async fn handle_put(namespace: &str, items: Vec<Item>, backend: &Backend) -> Res
 
 ### Architecture
 
-```
 Application Code
       │
       ├─ tracing::info!()      ─┐

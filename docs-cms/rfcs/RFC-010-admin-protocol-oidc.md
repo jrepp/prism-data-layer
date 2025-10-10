@@ -36,7 +36,6 @@ Platform teams require secure, authenticated access to Prism administration with
 
 ### Architecture
 
-```
 ┌───────────────────────────────────────────────────────────────┐
 │                      Admin Workflow                           │
 └───────────────────────────────────────────────────────────────┘
@@ -58,7 +57,6 @@ Administrator → OIDC Provider → Admin CLI/UI → Prism Admin API → Backend
 
 ### Protocol Stack
 
-```
 ┌────────────────────────────────────────────────┐
 │ Admin Client (CLI/UI/Automation)               │
 └────────────────┬───────────────────────────────┘
@@ -463,7 +461,6 @@ service AdminService {
 
 All requests must include:
 
-```
 authorization: Bearer <jwt_token>
 request-id: <uuid>  // Optional but recommended
 ```

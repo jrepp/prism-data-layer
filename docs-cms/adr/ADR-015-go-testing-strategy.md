@@ -224,7 +224,6 @@ func StartTestProxy(t *testing.T, cfg ProxyConfig) *TestProxy {
 
 ### Directory Structure
 
-```
 tools/
 ├── cmd/
 │   ├── prism-cli/

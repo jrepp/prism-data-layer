@@ -36,7 +36,6 @@ Implement **container plugin model** with standardized contracts:
 
 ### Container Architecture
 
-```
 ┌─────────────────────────────────────────────────────────────┐
 │                  Prism Core Proxy                           │
 │                  (gRPC Server)                              │

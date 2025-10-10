@@ -46,7 +46,6 @@ Organizations deploying Prism at scale face several challenges:
 
 ### High-Level Design
 
-```
 ┌─────────────────────────────────────────────────────────────────┐
 │                      prism-netgw Control Plane                  │
 │                    (Raft consensus, multi-region)               │
@@ -114,7 +113,6 @@ graph TB
 
 ### Deployment Model
 
-```
 ┌─────────────────────────────────────────────────────────────────┐
 │                    Global Control Plane                         │
 │                                                                 │
@@ -205,13 +203,11 @@ message ConfigChange {
 ```
 
 **Push Model** (preferred):
-```
 prism-netgw   →  Watch(config_version)  →  prism-agent
               ←  ConfigUpdate stream     ←
 ```
 
 **Pull Model** (fallback for high latency):
-```
 prism-agent   →  SyncConfig(current_version)  →  prism-netgw
               ←  SyncConfigResponse            ←
 ```
@@ -220,7 +216,6 @@ prism-agent   →  SyncConfig(current_version)  →  prism-netgw
 
 **Hierarchical Health Model**:
 
-```
 Global Health (prism-netgw)
 ├── Cluster Health (per region)
 │   ├── Gateway Health (per Prism instance)
@@ -335,7 +330,7 @@ message RouteResponse {
 **Strategies**:
 
 1. **Async Configuration Push**: Don't block on config sync
-   ```
+   ```text
    prism-netgw: Config updated (version 123)
    → Async push to all clusters (fire-and-forget)
    → Eventually consistent (all clusters converge to version 123)
@@ -349,13 +344,13 @@ message RouteResponse {
    ```
 
 3. **Batch Updates**: Accumulate config changes and push in batches
-   ```
+   ```text
    Instead of: 10 individual namespace updates (10 round trips)
    Do: 1 batch with 10 namespace updates (1 round trip)
    ```
 
 4. **Caching**: Prism clusters cache config locally (survive netgw downtime)
-   ```
+   ```text
    prism-agent:
      - Fetches config from netgw periodically
      - Caches config on disk
@@ -374,7 +369,6 @@ message RouteResponse {
 3. **Heartbeat Failure**: Cluster marked as "Unknown" in control plane
 4. **Reconnection**: When partition heals, cluster syncs latest config
 
-```
 ┌──────────────┐                ┌──────────────┐
 │  prism-netgw │ ─── X ────────▶│ eu-west-1    │
 │  (leader)    │                 │  (isolated)  │
@@ -394,7 +388,6 @@ message RouteResponse {
 
 **Solution**: Raft consensus with quorum.
 
-```
 Cluster: 5 netgw nodes (us-east-1, us-west-2, eu-west-1, ap-south-1, ap-northeast-1)
 Quorum: 3 nodes
 
@@ -537,7 +530,6 @@ tls:
 
 Agents authenticate via client certificates:
 
-```
 CN=prism-agent,O=aws-us-east-1-prod,OU=prism-cluster
 ```
 
@@ -578,7 +570,6 @@ All control plane operations logged:
 
 ### Metrics
 
-```
 # Cluster metrics
 prism_netgw_clusters_total{region="us-east-1",cloud_provider="aws"} 5
 prism_netgw_cluster_health{cluster_id="...",status="healthy"} 1
@@ -595,7 +586,6 @@ prism_netgw_heartbeat_latency_ms{cluster_id="..."} 156
 
 ### Distributed Tracing
 
-```
 Trace: RegisterCluster
 ├─ netgw: ValidateRequest (2ms)
 ├─ netgw: StoreCluster → etcd (45ms)

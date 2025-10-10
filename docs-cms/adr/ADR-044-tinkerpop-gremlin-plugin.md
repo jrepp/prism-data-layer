@@ -32,7 +32,6 @@ Create a **generic TinkerPop/Gremlin plugin** that:
 
 ### Plugin Hierarchy
 
-```
 prism-graph-plugin (generic)
 ├── gremlin-core/          # Generic Gremlin client
 │   ├── connection.go      # WebSocket connection pool
@@ -440,7 +439,6 @@ func TestGraphTraversal(t *testing.T) {
 
 Generic plugin enables **community-contributed backends**:
 
-```
 prism-plugins/
 ├── official/
 │   ├── neptune/           # AWS Neptune (official)

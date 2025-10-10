@@ -34,7 +34,7 @@ Use **fork-join concurrency model** with worker pools:
 
 ### Architecture
 
-```
+```text
                     ┌─────────────┐
                     │  Work Queue  │
                     └──────┬──────┘

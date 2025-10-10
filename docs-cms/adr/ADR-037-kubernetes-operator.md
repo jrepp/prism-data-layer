@@ -151,7 +151,6 @@ status:
 
 ### Operator Architecture
 
-```
 ┌──────────────────────────────────────────────────────────┐
 │                  Kubernetes Cluster                       │
 │                                                           │
@@ -313,7 +312,6 @@ spec:
 
 ### Project Structure
 
-```
 prism-operator/
 ├── Dockerfile
 ├── Makefile

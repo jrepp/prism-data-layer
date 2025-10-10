@@ -36,7 +36,7 @@ Use **Tokio async runtime** with established concurrency patterns:
 
 ### Architecture
 
-```
+```text
                     ┌─────────────┐
                     │  gRPC Server│
                     └──────┬──────┘

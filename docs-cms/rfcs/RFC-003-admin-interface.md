@@ -36,7 +36,6 @@ Prism requires administrative capabilities beyond the data plane APIs. Operators
 
 ### Architecture Overview
 
-```
 ┌──────────────────────────────────────────────────────────┐
 │                    Admin Clients                         │
 │                                                            │
@@ -200,7 +199,6 @@ metadata:
 
 **Architecture:**
 
-```
 Browser → HTTP/gRPC-Web → FastAPI → gRPC → Prism Admin API
 ```
 
@@ -231,7 +229,6 @@ async def grpc_proxy(method: str, request: bytes):
 
 **Frontend Structure:**
 
-```
 admin-ui/static/
 ├── index.html          # Main page
 ├── css/

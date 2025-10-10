@@ -107,7 +107,6 @@ logger.Info("starting migration")
 
 ### Package Structure
 
-```
 tools/internal/
   log/
     log.go           # slog wrapper with context helpers

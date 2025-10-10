@@ -80,7 +80,6 @@ prismctl stack start            # Infrastructure management
 
 The `stack` subcommand fits naturally into prismctl's structure:
 
-```
 prismctl
 ├── namespace      # Manage Prism namespaces
 ├── plugin         # Manage backend plugins
@@ -474,7 +473,6 @@ prismctl stack bootstrap
 
 After `prismctl stack init`, the structure is:
 
-```
 ~/.prism/
 ├── config.yaml                    # Main prismctl config
 ├── stacks/

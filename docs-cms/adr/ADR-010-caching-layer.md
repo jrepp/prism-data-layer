@@ -30,7 +30,6 @@ Implement **optional look-aside caching** at the proxy layer, configurable per-n
 
 ### Look-Aside Cache Pattern
 
-```
 Read Path:
 ┌──────┐    ┌───────┐    ┌──────┐    ┌──────────┐
 │Client│───▶│ Proxy │───▶│Cache │───▶│ Backend  │
@@ -196,7 +195,6 @@ impl<B: KeyValueBackend> KeyValueBackend for CachedBackend<B> {
 
 ### Cache Key Design
 
-```
 Format: {namespace}:{id}:{key_hex}
 
 Examples:

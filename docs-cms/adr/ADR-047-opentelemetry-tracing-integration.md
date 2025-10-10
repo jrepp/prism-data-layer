@@ -39,7 +39,6 @@ Implement **end-to-end OpenTelemetry tracing** across all Prism components:
 **Problem**: Request takes 150ms. Where is the time spent?
 
 **With tracing**:
-```
 prism.handle_request           [150ms total]
 ├─ prism.auth.verify            [5ms]
 ├─ prism.routing.select_plugin  [2ms]
@@ -81,7 +80,6 @@ sequenceDiagram
 
 Use **W3C Trace Context** standard:
 
-```
 traceparent: 00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01
              │  │                                │                └─ flags (sampled)
              │  │                                └─ span_id (16 hex)
@@ -754,7 +752,6 @@ services:
 
 ### Trace Example (Jaeger UI)
 
-```
 Trace ID: 0af7651916cd43dd8448eb211c80319c
 Duration: 142ms
 Spans: 7

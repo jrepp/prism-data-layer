@@ -150,7 +150,6 @@ require (
 
 ### Package Structure
 
-```
 tools/
 ├── cmd/
 │   ├── prism-cli/

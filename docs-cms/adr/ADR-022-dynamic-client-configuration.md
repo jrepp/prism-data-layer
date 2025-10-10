@@ -35,7 +35,6 @@ Implement **Dynamic Client Configuration** with protobuf descriptors:
 
 ### Configuration Architecture
 
-```
 ┌─────────────────────────────────────────────────────────┐
 │                    Prism Server                         │
 │                                                           │
@@ -275,7 +274,6 @@ message ValidateConfigResponse {
 
 ### Client Connection Flow
 
-```
 Client                          Prism Server
   │                                  │
   │  1. Connect with auth           │
@@ -507,7 +505,6 @@ prism-admin schema check \
 
 Server stores named configurations:
 
-```
 config/
 ├── named/
 │   ├── user-profiles.yaml

@@ -152,7 +152,6 @@ var _ = Describe("Namespace", func() {
 
 ### Directory Structure
 
-```
 tools/
 ├── cmd/
 │   └── prismctl/
@@ -379,7 +378,6 @@ prismctl namespace delete json-test --force
 
 ### Test Organization
 
-```
 testdata/script/
 ├── smoke/              # Fast smoke tests
 │   ├── help.txtar

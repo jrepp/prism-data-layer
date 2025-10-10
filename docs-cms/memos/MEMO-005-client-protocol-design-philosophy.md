@@ -178,7 +178,6 @@ message SetRequest {
 - ❌ Too many services = maintenance burden
 
 **Example**:
-```
 Proxy with 6 generic services: ~10k LOC, 50MB binary
 Proxy with 20 use-case services: ~40k LOC, 150MB binary
 ```
@@ -236,7 +235,6 @@ service CacheAsideService { ... }         // Read-through cache
 
 #### Pattern Coordinators Live in Plugins, Not Core Proxy
 
-```
 ┌─────────────────────────────────────────────────────────┐
 │                   Prism Proxy (Core)                    │
 │  ┌──────────────────────────────────────────────────┐   │
@@ -433,7 +431,6 @@ service EventSourcingService { ... }      // Audit-logged mutations
 
 **Proposal**: Yes, but patterns should compose via Layer 1 APIs (not directly call each other).
 
-```
 SagaService (Layer 2)
   ↓ uses
 KeyValueService (Layer 1)

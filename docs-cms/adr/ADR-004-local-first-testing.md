@@ -40,7 +40,6 @@ Adopt a **local-first testing strategy**: All backends must support running loca
 
 ### Architecture
 
-```
 Developer Laptop
 ┌────────────────────────────────────────┐
 │  Tests (Rust, Python)                  │

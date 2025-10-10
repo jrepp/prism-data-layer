@@ -32,7 +32,6 @@ Use **shadow traffic** pattern: Duplicate writes to old and new backends, compar
 
 ### Shadow Traffic Pattern
 
-```
 Client Request
       │
       ▼
@@ -185,7 +184,6 @@ async fn get(&self, request: GetRequest) -> Result<GetResponse> {
 ```
 
 **Monitor mismatch rate**:
-```
 shadow_reads_mismatch_rate =
     shadow_reads_mismatch / (shadow_reads_match + shadow_reads_mismatch)
 

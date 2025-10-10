@@ -149,7 +149,6 @@ async fn get_item(key: &str) -> Result<Item, KeyValueError> {
 
 ### Module Structure
 
-```
 proxy/src/
 ├── error.rs          # Top-level error types
 ├── backend/

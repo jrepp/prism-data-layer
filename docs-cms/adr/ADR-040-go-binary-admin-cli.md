@@ -221,7 +221,6 @@ Compare to Python:
 ### Implementation: prismctl
 
 **Directory structure**:
-```
 tools/
 └── cmd/
     └── prismctl/

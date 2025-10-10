@@ -47,7 +47,6 @@ Patterns are ordered by complexity and value. Prism will implement in this order
 
 #### Architecture
 
-```
 ┌─────────────────────────────────────────────────────────────┐
 │                    Application Layer                        │
 │              (Sees unified interface)                       │
@@ -151,7 +150,6 @@ let log = client.get("user-activity-logs", "user:12345:2025-01-15").await?;
 
 #### Architecture
 
-```
 ┌─────────────────────────────────────────────────────────┐
 │                   Application                           │
 └─────────────────────────────────────────────────────────┘
@@ -252,7 +250,6 @@ let order = client.get("order-writes", "order:789").await?;
 
 #### Architecture
 
-```
 ┌─────────────────────────────────────────────────────────┐
 │                   Producer                              │
 └─────────────────────────────────────────────────────────┘
@@ -369,7 +366,6 @@ assert_eq!(event.raw_video.len(), 50_000_000);
 
 #### Architecture
 
-```
 ┌─────────────────────────────────────────────────────────┐
 │                   Application                           │
 └─────────────────────────────────────────────────────────┘
@@ -550,7 +546,6 @@ graph TD
 
 #### Architecture
 
-```
 ┌─────────────────────────────────────────────────────────┐
 │                   Application                           │
 │               (Normal CRUD operations)                  │
@@ -703,7 +698,6 @@ db.execute("UPDATE users SET email = 'new@example.com' WHERE id = 42")
 
 #### Architecture
 
-```
 ┌─────────────────────────────────────────────────────────┐
 │                   Application                           │
 └─────────────────────────────────────────────────────────┘
@@ -817,7 +811,6 @@ let listings = client.query("product-listings", filters).await?;
 
 #### Architecture
 
-```
 ┌─────────────────────────────────────────────────────────┐
 │                   Application                           │
 └─────────────────────────────────────────────────────────┘
@@ -1165,7 +1158,6 @@ Prism generates:
 
 Pattern-specific metrics:
 
-```
 # Tiered Storage
 prism_tiered_storage_tier_size{namespace="user-activity-logs", tier="hot"} 8.5e9
 prism_tiered_storage_promotion_count{namespace="user-activity-logs"} 1234

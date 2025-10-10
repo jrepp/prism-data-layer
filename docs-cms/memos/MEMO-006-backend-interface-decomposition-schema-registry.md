@@ -427,7 +427,6 @@ implements:
 2. **Specialized backends focus**: Kafka (streaming), Neptune (graph), ClickHouse (analytics)
 3. **Test backends minimal**: MemStore implements just enough for local development
 4. **No backend implements all 45 interfaces**: Backends specialize in what they're good at
-```
 
 ### Layer 3: Pattern Schemas with Slots
 
@@ -509,7 +508,6 @@ implementation:
       operation: Publish(identity, message)  # Fan-out
     - slot: durability  # If configured
       operation: Enqueue(identity, message)  # For offline identities
-```
 
 **Example Configuration** (using the pattern):
 
@@ -554,7 +552,6 @@ namespaces:
           connection: "postgresql://localhost:5432/prism"
           table: "iot_message_queue"
           visibility_timeout: 30
-```
 
 ## Capabilities Expressed Through Interfaces
 
@@ -631,7 +628,6 @@ proto/
     ├── multicast_registry.proto
     ├── saga.proto
     └── ...
-```
 
 ## Benefits
 
@@ -649,7 +645,6 @@ slots:
     required_capabilities:
       scan_support: true
       ttl_support: true
-```
 
 ### 2. **Straightforward Configuration Generation**
 
@@ -680,7 +675,6 @@ config = generate_namespace_config(
     registry_backend="redis",
     messaging_backend="nats"
 )
-```
 
 ### 3. **Backend Substitutability**
 
@@ -702,7 +696,6 @@ slots:
   messaging:
     backend: kafka
     interface: pubsub
-```
 
 ### 4. **Pattern Portability**
 
@@ -717,7 +710,6 @@ slots: {registry: postgres, messaging: kafka}
 
 # Combination 3: DynamoDB + SNS
 slots: {registry: dynamodb, messaging: sns}
-```
 
 ## Implementation Phases
 
@@ -804,7 +796,6 @@ namespaces:
         interface: pubsub
         config:
           connection: "nats://localhost:4222"
-```
 
 ## Validation Rules
 
@@ -847,7 +838,6 @@ Slot: messaging
     ✓ pubsub_basic         (nats implements)
 
 ✅ Configuration valid
-```
 
 ## Related Documents
 

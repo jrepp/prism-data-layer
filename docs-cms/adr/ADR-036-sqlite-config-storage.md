@@ -114,7 +114,6 @@ CREATE TABLE namespace_features (
 
 ### File Location
 
-```
 /var/lib/prism/
 ├── config.db           # Primary SQLite database
 ├── config.db-wal       # Write-Ahead Log (SQLite WAL mode)

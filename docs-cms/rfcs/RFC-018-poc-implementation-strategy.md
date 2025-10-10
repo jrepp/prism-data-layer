@@ -230,7 +230,7 @@ With extensive documentation, we risk:
 
 ### RFC Dependency Graph
 
-```
+```text
                     ┌─────────────────────────────────┐
                     │  RFC-016: Local Dev Infra       │
                     │  (Signoz, Dex, Backends)        │
@@ -782,7 +782,6 @@ Add **authentication and authorization** implementing:
 
 ### Overall Timeline
 
-```
 Week 1-2:   POC 1 (KeyValue + MemStore)          ████████
 Week 3-4:   POC 2 (KeyValue + Redis)             ████████
 Week 5-6:   POC 3 (PubSub + NATS)                ████████
@@ -796,7 +795,6 @@ Week 10-11: POC 5 (Authentication)               ████████
 
 After POC 1 establishes foundation:
 
-```
 POC 2 (Redis)         ████████
                               POC 3 (NATS)      ████████
                                                        POC 4 (Multicast) ████████████

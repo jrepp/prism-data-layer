@@ -98,7 +98,6 @@ Use **Go** for tooling, CLI utilities, and select backend adapters.
 
 ### Directory Structure
 
-```
 prism/
 ├── tooling/               # Python orchestration (unchanged)
 ├── tools/                 # Go CLI tools (new)

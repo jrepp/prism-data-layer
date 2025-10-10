@@ -398,7 +398,6 @@ message UnregisterResponse {
 
 The Multicast Registry pattern **composes** three data access primitives:
 
-```
 ┌─────────────────────────────────────────────────────────┐
 │          Multicast Registry Pattern                     │
 ├─────────────────────────────────────────────────────────┤
@@ -479,7 +478,6 @@ The Prism proxy coordinates the pattern by:
 
 ### Proxy State Machine
 
-```
 ┌─────────────┐
 │  Registering │
 │   Identity   │

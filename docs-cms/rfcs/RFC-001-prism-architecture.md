@@ -41,7 +41,6 @@ Prism addresses the complexity of managing multiple data backends in modern appl
 
 ### 2.1 System Components
 
-```
 ┌──────────────────────────────────────────────────────────┐
 │                   Client Applications                    │
 │              (Go, Rust, Python, JavaScript)              │
@@ -196,7 +195,6 @@ Server tracks:
 
 ### 5.1 Layer Hierarchy
 
-```
 ┌────────────────────────────────────────────┐
 │  Layer 5: Use-Case Specific Interfaces    │
 │                                            │

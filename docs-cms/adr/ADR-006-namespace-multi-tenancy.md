@@ -31,7 +31,6 @@ Use **namespaces** as the primary isolation boundary, with **sharded deployments
 
 ### Namespace Design
 
-```
 Namespace = Logical Dataset Name
 
 Examples:
@@ -91,7 +90,6 @@ backend_config:
 
 Netflix uses **sharded deployments** (single-tenant architecture):
 
-```
 ┌─────────────────┐      ┌─────────────────┐      ┌─────────────────┐
 │  Prism Shard 1  │      │  Prism Shard 2  │      │  Prism Shard 3  │
 │                 │      │                 │      │                 │
@@ -121,7 +119,6 @@ fn select_shard(namespace: &str, shards: &[Shard]) -> &Shard {
 
 ### Namespace to Backend Mapping
 
-```
 Namespace: user-profiles
     ↓
 Backend: postgres
@@ -129,7 +126,6 @@ Backend: postgres
 Physical: prism_db.user_profiles table
 ```
 
-```
 Namespace: video-events
     ↓
 Backend: kafka
@@ -137,7 +133,6 @@ Backend: kafka
 Physical: events-video topic (20 partitions)
 ```
 
-```
 Namespace: social-graph
     ↓
 Backend: neptune

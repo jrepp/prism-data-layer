@@ -27,7 +27,6 @@ Use **mTLS for service-to-service** authentication and **OAuth2/JWT for user-fac
 ### Authentication Strategy
 
 **Service-to-Service (Primary)**:
-```
 Service A --[mTLS]--> Prism Proxy --[mTLS]--> Backend
            (cert-based auth)
 
@@ -38,7 +37,6 @@ Certificate contains:
 ```
 
 **User-Facing APIs** (if exposed):
-```
 User --> App Backend --[OAuth2 JWT]--> Prism Proxy
                       (Bearer token)
 
