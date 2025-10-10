@@ -1,0 +1,77 @@
+syntax = "proto3";
+
+package prism.interfaces.keyvalue;
+
+option go_package = "github.com/jrepp/prism-data-layer/proto/gen/prism/interfaces/keyvalue";
+
+// KeyValueTTLInterface defines time-to-live expiration for key-value storage.
+// This interface is OPTIONAL and provides automatic key expiration.
+//
+// Implemented by: Redis, DynamoDB, etcd, MemStore
+// NOT implemented by: PostgreSQL (requires cron/triggers), S3 (lifecycle policies)
+//
+// See MEMO-006 for interface decomposition rationale.
+service KeyValueTTLInterface {
+  // Set or update expiration time for a key
+  rpc Expire(ExpireRequest) returns (ExpireResponse);
+
+  // Get remaining time-to-live for a key
+  rpc GetTTL(GetTTLRequest) returns (GetTTLResponse);
+
+  // Remove expiration from a key (make it persistent)
+  rpc Persist(PersistRequest) returns (PersistResponse);
+}
+
+// Expire request
+message ExpireRequest {
+  // Key to expire
+  string key = 1;
+
+  // Time-to-live in seconds (0 = expire immediately)
+  int64 ttl_seconds = 2;
+}
+
+// Expire response
+message ExpireResponse {
+  // Success indicator
+  bool success = 1;
+
+  // Error message (if success = false)
+  string error = 2;
+
+  // Whether the key existed before expiration was set
+  bool key_existed = 3;
+}
+
+// GetTTL request
+message GetTTLRequest {
+  // Key to check
+  string key = 1;
+}
+
+// GetTTL response
+message GetTTLResponse {
+  // Remaining time-to-live in seconds (-1 = no expiration, -2 = key doesn't exist)
+  int64 ttl_seconds = 1;
+
+  // Error message (if error occurred)
+  string error = 2;
+}
+
+// Persist request
+message PersistRequest {
+  // Key to persist (remove expiration)
+  string key = 1;
+}
+
+// Persist response
+message PersistResponse {
+  // Success indicator
+  bool success = 1;
+
+  // Error message (if success = false)
+  string error = 2;
+
+  // Whether expiration was removed (false if key had no expiration or doesn't exist)
+  bool expiration_removed = 3;
+}

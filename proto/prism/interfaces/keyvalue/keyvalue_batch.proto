@@ -1,0 +1,71 @@
+syntax = "proto3";
+
+package prism.interfaces.keyvalue;
+
+option go_package = "github.com/jrepp/prism-data-layer/proto/gen/prism/interfaces/keyvalue";
+
+import "prism/interfaces/keyvalue/keyvalue_basic.proto";
+
+// KeyValueBatchInterface defines bulk operations for key-value storage.
+// This interface is OPTIONAL and provides efficiency gains for backends
+// that support native batch operations (e.g., Redis MGET/MSET, DynamoDB BatchGetItem).
+//
+// Implemented by: Redis, PostgreSQL, DynamoDB, etcd
+// NOT implemented by: MemStore (simple implementation), S3 (expensive)
+//
+// See MEMO-006 for interface decomposition rationale.
+service KeyValueBatchInterface {
+  // Batch set multiple key-value pairs
+  rpc BatchSet(BatchSetRequest) returns (BatchSetResponse);
+
+  // Batch get multiple keys
+  rpc BatchGet(BatchGetRequest) returns (BatchGetResponse);
+
+  // Batch delete multiple keys
+  rpc BatchDelete(BatchDeleteRequest) returns (BatchDeleteResponse);
+}
+
+// Batch set request
+message BatchSetRequest {
+  // Key-value pairs to set
+  repeated SetRequest requests = 1;
+}
+
+// Batch set response
+message BatchSetResponse {
+  // Results for each key (same order as request)
+  repeated SetResponse results = 1;
+
+  // Overall success (true if all succeeded)
+  bool all_success = 2;
+}
+
+// Batch get request
+message BatchGetRequest {
+  // Keys to retrieve
+  repeated string keys = 1;
+}
+
+// Batch get response
+message BatchGetResponse {
+  // Results for each key (same order as request)
+  repeated GetResponse results = 1;
+
+  // Number of keys found
+  int32 found_count = 2;
+}
+
+// Batch delete request
+message BatchDeleteRequest {
+  // Keys to delete
+  repeated string keys = 1;
+}
+
+// Batch delete response
+message BatchDeleteResponse {
+  // Results for each key (same order as request)
+  repeated DeleteResponse results = 1;
+
+  // Overall success (true if all succeeded)
+  bool all_success = 2;
+}

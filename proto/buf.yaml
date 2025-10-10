@@ -15,8 +15,10 @@ lint:
     - RPC_RESPONSE_STANDARD_NAME
     # Allow unversioned packages for options and common types
     - PACKAGE_VERSION_SUFFIX
+    # Allow "Interface" suffix for backend interface services (Layer 1)
+    # These are thin, composable interfaces, not traditional RPC services
+    - SERVICE_SUFFIX
   enum_zero_value_suffix: _UNSPECIFIED
-  service_suffix: Service
 
 # Breaking change detection
 breaking:

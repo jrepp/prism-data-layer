@@ -1,12 +1,21 @@
 syntax = "proto3";
 
-package prism.pattern;
+package prism.interfaces.keyvalue;
+
+option go_package = "github.com/jrepp/prism-data-layer/proto/gen/prism/interfaces/keyvalue";
 
 import "prism/common/types.proto";
 
-// KeyValue data interface
-// Patterns implementing this interface provide key-value storage
-service KeyValue {
+// KeyValueBasicInterface defines core key-value operations.
+// ALL backends implementing key-value storage MUST support this interface.
+//
+// This is Layer 1 (Backend Interface) in the three-layer architecture:
+// - Layer 1: Thin backend interfaces (this file)
+// - Layer 2: Pattern schemas with slots
+// - Layer 3: Application APIs
+//
+// See MEMO-006 for interface decomposition rationale.
+service KeyValueBasicInterface {
   // Set a key-value pair
   rpc Set(SetRequest) returns (SetResponse);
 
@@ -18,12 +27,6 @@ service KeyValue {
 
   // Check if a key exists
   rpc Exists(ExistsRequest) returns (ExistsResponse);
-
-  // Batch get multiple keys
-  rpc BatchGet(BatchGetRequest) returns (BatchGetResponse);
-
-  // Batch set multiple keys
-  rpc BatchSet(BatchSetRequest) returns (BatchSetResponse);
 }
 
 // Set request
@@ -34,11 +37,8 @@ message SetRequest {
   // Value to store
   bytes value = 2;
 
-  // Time-to-live in seconds (0 = no expiration)
-  int64 ttl_seconds = 3;
-
-  // Optional tags for filtering
-  prism.common.Tags tags = 4;
+  // Optional tags for filtering/metadata
+  prism.common.Tags tags = 3;
 }
 
 // Set response
@@ -96,28 +96,4 @@ message ExistsResponse {
 
   // Error message (if error occurred)
   string error = 2;
-}
-
-// Batch get request
-message BatchGetRequest {
-  // Keys to retrieve
-  repeated string keys = 1;
-}
-
-// Batch get response
-message BatchGetResponse {
-  // Results for each key (same order as request)
-  repeated GetResponse results = 1;
-}
-
-// Batch set request
-message BatchSetRequest {
-  // Key-value pairs to set
-  repeated SetRequest requests = 1;
-}
-
-// Batch set response
-message BatchSetResponse {
-  // Results for each key (same order as request)
-  repeated SetResponse results = 1;
 }

@@ -2,6 +2,8 @@ syntax = "proto3";
 
 package prism.common;
 
+option go_package = "github.com/jrepp/prism-data-layer/proto/gen/prism/common";
+
 import "prism/common/types.proto";
 
 // Metadata for stored items

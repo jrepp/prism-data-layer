@@ -1,14 +1,20 @@
 syntax = "proto3";
 
-package prism.pattern;
+package prism.interfaces;
 
-option go_package = "github.com/jrepp/prism-data-layer/patterns/core/gen/prism/pattern";
+option go_package = "github.com/jrepp/prism-data-layer/proto/gen/prism/interfaces";
 
 import "google/protobuf/struct.proto";
 
-// Pattern lifecycle management service
-// All patterns MUST implement this interface
-service PatternLifecycle {
+// LifecycleInterface defines pattern lifecycle management operations.
+// ALL pattern executors MUST implement this interface for initialization,
+// health checks, and graceful shutdown.
+//
+// This is a cross-cutting interface used by all patterns regardless of their
+// specific data model or backend interfaces.
+//
+// See MEMO-006 for interface decomposition rationale.
+service LifecycleInterface {
   // Initialize the pattern with configuration
   rpc Initialize(InitializeRequest) returns (InitializeResponse);
 
@@ -54,8 +60,8 @@ message PatternMetadata {
   // Pattern version
   string version = 2;
 
-  // Capabilities supported by this pattern
-  repeated string capabilities = 3;
+  // Interfaces implemented by this pattern
+  repeated string interfaces = 3;
 
   // Additional metadata
   map<string, string> extra = 4;

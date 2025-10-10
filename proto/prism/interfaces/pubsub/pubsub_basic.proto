@@ -1,0 +1,99 @@
+syntax = "proto3";
+
+package prism.interfaces.pubsub;
+
+option go_package = "github.com/jrepp/prism-data-layer/proto/gen/prism/interfaces/pubsub";
+
+// PubSubBasicInterface defines core publish-subscribe messaging.
+// ALL backends implementing pub/sub messaging MUST support this interface.
+//
+// This is Layer 1 (Backend Interface) in the three-layer architecture:
+// - Layer 1: Thin backend interfaces (this file)
+// - Layer 2: Pattern schemas with slots
+// - Layer 3: Application APIs
+//
+// Implemented by: Redis, NATS, Kafka, RabbitMQ, SNS/SQS
+//
+// See MEMO-006 for interface decomposition rationale.
+service PubSubBasicInterface {
+  // Publish a message to a topic
+  rpc Publish(PublishRequest) returns (PublishResponse);
+
+  // Subscribe to a topic (streaming)
+  rpc Subscribe(SubscribeRequest) returns (stream Message);
+
+  // Unsubscribe from a topic
+  rpc Unsubscribe(UnsubscribeRequest) returns (UnsubscribeResponse);
+}
+
+// Publish a message to a topic
+message PublishRequest {
+  // Topic to publish to
+  string topic = 1;
+
+  // Message payload
+  bytes payload = 2;
+
+  // Optional metadata
+  map<string, string> metadata = 3;
+}
+
+// Publish response
+message PublishResponse {
+  // Success indicator
+  bool success = 1;
+
+  // Unique message identifier (if supported by backend)
+  string message_id = 2;
+
+  // Error message (if success = false)
+  string error = 3;
+}
+
+// Subscribe to a topic
+message SubscribeRequest {
+  // Topic to subscribe to
+  string topic = 1;
+
+  // Unique subscriber identifier
+  string subscriber_id = 2;
+
+  // Optional subscription options
+  map<string, string> options = 3;
+}
+
+// Message received from subscription
+message Message {
+  // Topic this message was published to
+  string topic = 1;
+
+  // Message payload
+  bytes payload = 2;
+
+  // Message metadata
+  map<string, string> metadata = 3;
+
+  // Unique message identifier
+  string message_id = 4;
+
+  // Timestamp when message was published (Unix epoch milliseconds)
+  int64 timestamp = 5;
+}
+
+// Unsubscribe from a topic
+message UnsubscribeRequest {
+  // Topic to unsubscribe from
+  string topic = 1;
+
+  // Subscriber identifier
+  string subscriber_id = 2;
+}
+
+// Unsubscribe response
+message UnsubscribeResponse {
+  // Success indicator
+  bool success = 1;
+
+  // Error message (if success = false)
+  string error = 2;
+}
