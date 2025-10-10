@@ -1,4 +1,5 @@
 ---
+id: rfc-011
 title: "RFC-011: Data Proxy Authentication (Input/Output)"
 status: Proposed
 author: Platform Team

@@ -1,4 +1,5 @@
 ---
+id: netflix-summary
 title: "Netflix Data Gateway: Key Lessons"
 sidebar_label: "Summary"
 sidebar_position: 1

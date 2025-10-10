@@ -1,4 +1,5 @@
 ---
+id: adr-046
 title: "ADR-046: Dex IDP for Local Identity Testing"
 status: Accepted
 date: 2025-10-09

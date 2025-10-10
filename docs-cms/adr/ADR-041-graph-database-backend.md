@@ -1,4 +1,5 @@
 ---
+id: adr-041
 title: "ADR-041: Graph Database Backend Support"
 status: Accepted
 date: 2025-10-09

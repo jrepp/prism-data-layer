@@ -1,4 +1,5 @@
 ---
+id: memo-003
 title: "MEMO-003: Documentation-First Development Approach"
 author: Platform Team
 created: 2025-10-09

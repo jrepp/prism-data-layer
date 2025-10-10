@@ -1,4 +1,5 @@
 ---
+id: adr-002
 title: "ADR-002: Client-Originated Configuration"
 status: Accepted
 date: 2025-10-05

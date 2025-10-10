@@ -1,4 +1,5 @@
 ---
+id: adr-036
 title: "ADR-036: Local SQLite Storage for Namespace Configuration"
 status: Proposed
 date: 2025-10-08

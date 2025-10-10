@@ -1,4 +1,5 @@
 ---
+id: memo-006
 title: "MEMO-006: Backend Interface Decomposition and Schema Registry"
 author: Platform Team
 created: 2025-10-09

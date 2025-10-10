@@ -1,4 +1,5 @@
 ---
+id: adr-030
 title: "ADR-030: Schema Recording with Protobuf Tagging"
 status: Accepted
 date: 2025-10-08

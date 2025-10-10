@@ -1,4 +1,5 @@
 ---
+id: rfc-004
 title: "RFC-004: Redis Integration for Cache, PubSub, and Vector Search"
 status: Proposed
 author: Core Team

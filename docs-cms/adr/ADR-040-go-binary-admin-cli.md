@@ -1,4 +1,5 @@
 ---
+id: adr-040
 title: "ADR-040: Go Binary for Admin CLI (prismctl)"
 status: Accepted
 date: 2025-10-09

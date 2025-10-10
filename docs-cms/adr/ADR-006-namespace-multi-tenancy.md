@@ -1,4 +1,5 @@
 ---
+id: adr-006
 title: "ADR-006: Namespace and Multi-Tenancy"
 status: Accepted
 date: 2025-10-05

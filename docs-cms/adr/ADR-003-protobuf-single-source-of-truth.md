@@ -1,4 +1,5 @@
 ---
+id: adr-003
 title: "ADR-003: Protobuf as Single Source of Truth"
 status: Accepted
 date: 2025-10-05

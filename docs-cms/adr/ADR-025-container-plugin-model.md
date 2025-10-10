@@ -1,4 +1,5 @@
 ---
+id: adr-025
 title: "ADR-025: Container Plugin Model"
 status: Accepted
 date: 2025-10-07

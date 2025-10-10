@@ -1,4 +1,5 @@
 ---
+id: netflix-dual-write-migration
 title: "Dual-Write Migration Pattern"
 sidebar_label: "Dual-Write Migration"
 sidebar_position: 7

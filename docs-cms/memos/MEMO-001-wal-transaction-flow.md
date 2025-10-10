@@ -1,4 +1,5 @@
 ---
+id: memo-001
 title: "WAL Full Transaction Flow with Authorization and Session Management"
 date: 2025-10-08
 tags: [architecture, wal, security, session-management]

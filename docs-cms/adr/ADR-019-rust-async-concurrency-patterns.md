@@ -1,4 +1,5 @@
 ---
+id: adr-019
 title: "ADR-019: Rust Async Concurrency Patterns"
 status: Accepted
 date: 2025-10-07

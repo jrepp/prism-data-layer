@@ -1,4 +1,5 @@
 ---
+id: adr-034
 title: "ADR-034: Product/Feature Sharding Strategy"
 status: Proposed
 date: 2025-10-08

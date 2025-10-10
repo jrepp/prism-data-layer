@@ -1,4 +1,5 @@
 ---
+id: adr-042
 title: "ADR-042: AWS SQS Queue Backend Plugin"
 status: Proposed
 date: 2025-10-09

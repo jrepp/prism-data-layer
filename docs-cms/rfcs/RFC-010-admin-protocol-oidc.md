@@ -1,4 +1,5 @@
 ---
+id: rfc-010
 title: "RFC-010: Admin Protocol with OIDC Authentication"
 status: Proposed
 author: Platform Team

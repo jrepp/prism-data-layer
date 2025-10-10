@@ -1,4 +1,5 @@
 ---
+id: adr-047
 title: "ADR-047: OpenTelemetry Tracing Integration"
 status: Accepted
 date: 2025-10-09

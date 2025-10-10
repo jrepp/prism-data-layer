@@ -1,4 +1,5 @@
 ---
+id: adr-044
 title: "ADR-044: TinkerPop/Gremlin Generic Plugin"
 status: Accepted
 date: 2025-10-09

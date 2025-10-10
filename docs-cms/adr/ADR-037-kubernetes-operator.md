@@ -1,4 +1,5 @@
 ---
+id: adr-037
 title: "ADR-037: Kubernetes Operator with Custom Resource Definitions"
 status: Proposed
 date: 2025-10-08

@@ -1,3 +1,8 @@
+---
+id: "adr-index"
+title: "Architecture Decision Records"
+sidebar_label: "ADR Index"
+---
 # Architecture Decision Records (ADRs)
 
 This directory contains records of architectural decisions made for Prism.

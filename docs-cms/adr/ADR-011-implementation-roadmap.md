@@ -1,4 +1,5 @@
 ---
+id: adr-011
 title: "ADR-011: Implementation Roadmap and Next Steps"
 status: Accepted
 date: 2025-10-05

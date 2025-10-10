@@ -1,4 +1,5 @@
 ---
+id: rfc-012
 title: "RFC-012: Prism Network Gateway (prism-netgw) - Multi-Region Control Plane"
 status: Draft
 author: Platform Team

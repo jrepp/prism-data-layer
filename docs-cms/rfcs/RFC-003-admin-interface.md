@@ -1,4 +1,5 @@
 ---
+id: rfc-003
 title: "RFC-003: Admin Interface for Prism"
 status: Proposed
 author: Platform Team

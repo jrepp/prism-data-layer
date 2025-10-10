@@ -1,4 +1,5 @@
 ---
+id: adr-023
 title: "ADR-023: gRPC-First Interface Design"
 status: Accepted
 date: 2025-10-07

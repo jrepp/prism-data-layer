@@ -1,4 +1,5 @@
 ---
+id: adr-007
 title: "ADR-007: Authentication and Authorization"
 status: Accepted
 date: 2025-10-05

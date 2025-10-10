@@ -1,4 +1,5 @@
 ---
+id: adr-021
 title: "ADR-021: Rust Structured Logging with Tracing"
 status: Accepted
 date: 2025-10-07

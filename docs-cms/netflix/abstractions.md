@@ -1,4 +1,5 @@
 ---
+id: netflix-abstractions
 title: "Netflix Data Abstractions"
 sidebar_label: "Abstractions"
 sidebar_position: 3

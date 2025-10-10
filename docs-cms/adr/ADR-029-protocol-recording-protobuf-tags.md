@@ -1,4 +1,5 @@
 ---
+id: adr-029
 title: "ADR-029: Protocol Recording with Protobuf Tagging"
 status: Accepted
 date: 2025-10-07

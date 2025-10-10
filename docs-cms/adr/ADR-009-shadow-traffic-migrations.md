@@ -1,4 +1,5 @@
 ---
+id: adr-009
 title: "ADR-009: Shadow Traffic for Migrations"
 status: Accepted
 date: 2025-10-05

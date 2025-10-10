@@ -1,4 +1,5 @@
 ---
+id: adr-017
 title: "ADR-017: Go Structured Logging with slog"
 status: Accepted
 date: 2025-10-07

@@ -1,4 +1,5 @@
 ---
+id: adr-024
 title: "ADR-024: Layered Interface Hierarchy"
 status: Accepted
 date: 2025-10-07

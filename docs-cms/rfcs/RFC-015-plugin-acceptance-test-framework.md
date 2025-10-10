@@ -1,4 +1,5 @@
 ---
+id: rfc-015
 title: "RFC-015: Plugin Acceptance Test Framework (Go Implementation)"
 status: Draft
 date: 2025-10-09

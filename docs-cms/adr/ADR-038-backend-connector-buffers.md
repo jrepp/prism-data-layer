@@ -1,4 +1,5 @@
 ---
+id: adr-038
 title: "ADR-038: Backend Connector Buffer Architecture"
 status: Proposed
 date: 2025-10-08

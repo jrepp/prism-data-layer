@@ -1,4 +1,5 @@
 ---
+id: netflix-scale
 title: "Netflix Data Gateway Scale Metrics"
 sidebar_label: "Scale"
 sidebar_position: 2

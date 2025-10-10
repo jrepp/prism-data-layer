@@ -1,4 +1,5 @@
 ---
+id: adr-014
 title: "ADR-014: Go Concurrency Patterns"
 status: Accepted
 date: 2025-10-07

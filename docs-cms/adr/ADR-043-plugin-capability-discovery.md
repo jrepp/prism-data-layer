@@ -1,4 +1,5 @@
 ---
+id: adr-043
 title: "ADR-043: Plugin Capability Discovery System"
 status: Accepted
 date: 2025-10-09

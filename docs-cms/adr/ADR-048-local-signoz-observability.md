@@ -1,4 +1,5 @@
 ---
+id: adr-048
 title: "ADR-048: Local Signoz Instance for Observability Testing"
 status: Accepted
 date: 2025-10-09

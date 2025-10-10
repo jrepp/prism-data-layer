@@ -1,4 +1,5 @@
 ---
+id: rfc-017
 title: "RFC-017: Multicast Registry Pattern"
 status: Draft
 author: Platform Team

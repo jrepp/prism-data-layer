@@ -1,4 +1,5 @@
 ---
+id: adr-018
 title: "ADR-018: Rust Error Handling Strategy"
 status: Accepted
 date: 2025-10-07

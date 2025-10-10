@@ -1,4 +1,5 @@
 ---
+id: adr-004
 title: "ADR-004: Local-First Testing Strategy"
 status: Accepted
 date: 2025-10-05

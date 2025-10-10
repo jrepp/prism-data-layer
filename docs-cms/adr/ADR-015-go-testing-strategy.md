@@ -1,4 +1,5 @@
 ---
+id: adr-015
 title: "ADR-015: Go Testing Strategy"
 status: Accepted
 date: 2025-10-07

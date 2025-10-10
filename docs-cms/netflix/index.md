@@ -1,4 +1,5 @@
 ---
+id: netflix-index
 title: "Netflix Data Gateway Reference"
 sidebar_label: "Overview"
 sidebar_position: 0

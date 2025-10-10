@@ -1,4 +1,5 @@
 ---
+id: rfc-005
 title: "RFC-005: ClickHouse Integration for Time Series Analytics"
 status: Proposed
 author: Core Team

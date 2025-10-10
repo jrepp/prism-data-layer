@@ -1,4 +1,5 @@
 ---
+id: adr-022
 title: "ADR-022: Dynamic Client Configuration System"
 status: Accepted
 date: 2025-10-07

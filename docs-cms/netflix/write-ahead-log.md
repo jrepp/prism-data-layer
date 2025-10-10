@@ -1,4 +1,5 @@
 ---
+id: netflix-write-ahead-log
 title: "Netflix Write-Ahead Log (WAL)"
 sidebar_label: "Write-Ahead Log"
 sidebar_position: 5

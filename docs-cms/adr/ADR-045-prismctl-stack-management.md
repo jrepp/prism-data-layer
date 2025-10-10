@@ -1,4 +1,5 @@
 ---
+id: adr-045
 title: "ADR-045: prismctl Stack Management Subcommand"
 status: Accepted
 date: 2025-10-09

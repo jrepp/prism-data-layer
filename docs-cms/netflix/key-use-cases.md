@@ -1,4 +1,5 @@
 ---
+id: netflix-key-use-cases
 title: "Netflix Data Gateway Use Cases"
 sidebar_label: "Use Cases"
 sidebar_position: 4

@@ -1,4 +1,5 @@
 ---
+id: adr-049
 title: "ADR-049: Podman and Container Optimization for Instant Testing"
 status: Accepted
 date: 2025-10-09

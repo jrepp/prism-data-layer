@@ -1,4 +1,5 @@
 ---
+id: adr-005
 title: "ADR-005: Backend Plugin Architecture"
 status: Accepted
 date: 2025-10-05

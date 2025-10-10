@@ -1,4 +1,5 @@
 ---
+id: adr-010
 title: "ADR-010: Caching Layer Design"
 status: Accepted
 date: 2025-10-05

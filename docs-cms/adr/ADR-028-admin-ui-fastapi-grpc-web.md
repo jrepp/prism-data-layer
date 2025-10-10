@@ -1,4 +1,5 @@
 ---
+id: adr-028
 title: "ADR-028: Admin UI with FastAPI and gRPC-Web"
 status: Accepted
 date: 2025-10-07

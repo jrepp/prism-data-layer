@@ -1,4 +1,5 @@
 ---
+id: memo-005
 title: "MEMO-005: Client Protocol Design Philosophy - Composition vs Use-Case Specificity"
 author: Platform Team
 created: 2025-10-09

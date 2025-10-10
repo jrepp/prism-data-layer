@@ -1,4 +1,5 @@
 ---
+id: memo-002
 title: "MEMO-002: Admin Protocol Security Review and Improvements"
 date: 2025-10-09
 author: System

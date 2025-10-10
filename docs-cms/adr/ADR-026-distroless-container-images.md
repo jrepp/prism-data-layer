@@ -1,4 +1,5 @@
 ---
+id: adr-026
 title: "ADR-026: Distroless Base Images for Container Components"
 status: Accepted
 date: 2025-10-07

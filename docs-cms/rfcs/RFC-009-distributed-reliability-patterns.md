@@ -1,4 +1,5 @@
 ---
+id: rfc-009
 title: "RFC-009: Distributed Reliability Data Patterns"
 status: Proposed
 author: System

@@ -1,4 +1,5 @@
 ---
+id: adr-008
 title: "ADR-008: Observability Strategy"
 status: Accepted
 date: 2025-10-05

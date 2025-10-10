@@ -1,4 +1,5 @@
 ---
+id: adr-020
 title: "ADR-020: Rust Testing Strategy"
 status: Accepted
 date: 2025-10-07

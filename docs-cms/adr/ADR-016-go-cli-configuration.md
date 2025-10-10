@@ -1,4 +1,5 @@
 ---
+id: adr-016
 title: "ADR-016: Go CLI and Configuration Management"
 status: Accepted
 date: 2025-10-07

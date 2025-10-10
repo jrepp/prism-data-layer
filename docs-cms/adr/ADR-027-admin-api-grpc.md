@@ -1,4 +1,5 @@
 ---
+id: adr-027
 title: "ADR-027: Admin API via gRPC"
 status: Accepted
 date: 2025-10-07

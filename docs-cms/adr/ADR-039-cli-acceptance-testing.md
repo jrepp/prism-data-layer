@@ -1,4 +1,5 @@
 ---
+id: adr-039
 title: "ADR-039: CLI Acceptance Testing with testscript"
 status: Accepted
 date: 2025-10-09

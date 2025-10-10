@@ -1,4 +1,5 @@
 ---
+id: adr-013
 title: "ADR-013: Go Error Handling Strategy"
 status: Accepted
 date: 2025-10-07

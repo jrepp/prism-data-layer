@@ -1,4 +1,5 @@
 ---
+id: adr-001
 title: "ADR-001: Rust for the Proxy Implementation"
 status: Accepted
 date: 2025-10-05

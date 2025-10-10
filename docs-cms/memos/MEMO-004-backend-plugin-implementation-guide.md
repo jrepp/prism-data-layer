@@ -1,4 +1,5 @@
 ---
+id: memo-004
 title: "MEMO-004: Backend Plugin Implementation Guide"
 author: Platform Team
 created: 2025-10-09

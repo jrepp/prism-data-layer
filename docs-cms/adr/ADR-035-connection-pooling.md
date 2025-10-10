@@ -1,4 +1,5 @@
 ---
+id: adr-035
 title: "ADR-035: Database Connection Pooling vs Direct Connections"
 status: Proposed
 date: 2025-10-08
