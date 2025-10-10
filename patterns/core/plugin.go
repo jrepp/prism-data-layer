@@ -78,26 +78,43 @@ func Bootstrap(plugin Plugin, configPath string) error {
 		return fmt.Errorf("failed to load config: %w", err)
 	}
 
+	return BootstrapWithConfig(plugin, config)
+}
+
+// BootstrapWithConfig initializes and runs a plugin with a pre-loaded configuration
+func BootstrapWithConfig(plugin Plugin, config *Config) error {
 	// Create root context
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
+	slog.Info("initializing plugin",
+		"name", plugin.Name(),
+		"version", plugin.Version(),
+		"control_plane_port", config.ControlPlane.Port)
+
 	// Initialize plugin
 	if err := plugin.Initialize(ctx, config); err != nil {
+		slog.Error("failed to initialize plugin", "error", err)
 		return fmt.Errorf("failed to initialize plugin: %w", err)
 	}
+	slog.Info("plugin initialized successfully", "name", plugin.Name())
 
 	// Start control plane server
+	slog.Info("starting control plane server", "port", config.ControlPlane.Port)
 	controlPlane := NewControlPlaneServer(plugin, config.ControlPlane.Port)
 	if err := controlPlane.Start(ctx); err != nil {
+		slog.Error("failed to start control plane", "error", err)
 		return fmt.Errorf("failed to start control plane: %w", err)
 	}
 	defer controlPlane.Stop(ctx)
+	slog.Info("control plane server started", "port", config.ControlPlane.Port)
 
 	// Start plugin
+	slog.Info("starting plugin", "name", plugin.Name())
 	errChan := make(chan error, 1)
 	go func() {
 		if err := plugin.Start(ctx); err != nil {
+			slog.Error("plugin start error", "name", plugin.Name(), "error", err)
 			errChan <- fmt.Errorf("plugin error: %w", err)
 		}
 	}()
@@ -119,14 +136,14 @@ func Bootstrap(plugin Plugin, configPath string) error {
 	}
 
 	// Graceful shutdown
-	slog.Info("shutting down plugin")
+	slog.Info("shutting down plugin", "name", plugin.Name())
 	cancel()
 
 	if err := plugin.Stop(ctx); err != nil {
-		slog.Error("error stopping plugin", "error", err)
+		slog.Error("error stopping plugin", "name", plugin.Name(), "error", err)
 		return err
 	}
 
-	slog.Info("plugin stopped successfully")
+	slog.Info("plugin stopped successfully", "name", plugin.Name())
 	return nil
 }

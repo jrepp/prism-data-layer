@@ -1,0 +1,123 @@
+syntax = "proto3";
+
+package prism.pattern;
+
+import "prism/common/types.proto";
+
+// KeyValue data interface
+// Patterns implementing this interface provide key-value storage
+service KeyValue {
+  // Set a key-value pair
+  rpc Set(SetRequest) returns (SetResponse);
+
+  // Get a value by key
+  rpc Get(GetRequest) returns (GetResponse);
+
+  // Delete a key
+  rpc Delete(DeleteRequest) returns (DeleteResponse);
+
+  // Check if a key exists
+  rpc Exists(ExistsRequest) returns (ExistsResponse);
+
+  // Batch get multiple keys
+  rpc BatchGet(BatchGetRequest) returns (BatchGetResponse);
+
+  // Batch set multiple keys
+  rpc BatchSet(BatchSetRequest) returns (BatchSetResponse);
+}
+
+// Set request
+message SetRequest {
+  // Key to set
+  string key = 1;
+
+  // Value to store
+  bytes value = 2;
+
+  // Time-to-live in seconds (0 = no expiration)
+  int64 ttl_seconds = 3;
+
+  // Optional tags for filtering
+  prism.common.Tags tags = 4;
+}
+
+// Set response
+message SetResponse {
+  // Success indicator
+  bool success = 1;
+
+  // Error message (if success = false)
+  string error = 2;
+}
+
+// Get request
+message GetRequest {
+  // Key to retrieve
+  string key = 1;
+}
+
+// Get response
+message GetResponse {
+  // Whether the key was found
+  bool found = 1;
+
+  // Value (only present if found = true)
+  bytes value = 2;
+
+  // Error message (if error occurred)
+  string error = 3;
+}
+
+// Delete request
+message DeleteRequest {
+  // Key to delete
+  string key = 1;
+}
+
+// Delete response
+message DeleteResponse {
+  // Success indicator
+  bool success = 1;
+
+  // Error message (if success = false)
+  string error = 2;
+}
+
+// Exists request
+message ExistsRequest {
+  // Key to check
+  string key = 1;
+}
+
+// Exists response
+message ExistsResponse {
+  // Whether the key exists
+  bool exists = 1;
+
+  // Error message (if error occurred)
+  string error = 2;
+}
+
+// Batch get request
+message BatchGetRequest {
+  // Keys to retrieve
+  repeated string keys = 1;
+}
+
+// Batch get response
+message BatchGetResponse {
+  // Results for each key (same order as request)
+  repeated GetResponse results = 1;
+}
+
+// Batch set request
+message BatchSetRequest {
+  // Key-value pairs to set
+  repeated SetRequest requests = 1;
+}
+
+// Batch set response
+message BatchSetResponse {
+  // Results for each key (same order as request)
+  repeated SetResponse results = 1;
+}

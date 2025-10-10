@@ -9,22 +9,20 @@ Prism is a Rust-based data access gateway that provides unified, type-safe acces
 ## Quick Start
 
 ```bash
-# Install dependencies
-curl -LsSf https://astral.sh/uv/install.sh | sh
-uv sync
+# Install development tools
+make install-tools
 
-# Start local backend services
-python -m tooling.test.local-stack up
+# Build everything
+make
 
-# Run the proxy
-cd proxy && cargo run --release
+# Run all tests
+make test
 
-# In another terminal, run the admin UI
-cd admin && ember serve
-
-# Run tests
-cargo test --workspace
+# Run integration tests
+make test-integration
 ```
+
+See **[BUILDING.md](./BUILDING.md)** for complete build and test instructions.
 
 ## What is Prism?
 
@@ -131,77 +129,86 @@ message User {
 
 ```
 prism/
-├── admin/          # Ember admin UI for management
+├── Makefile        # Build system (run 'make help')
+├── BUILDING.md     # Build and test documentation
+├── CLAUDE.md       # Project philosophy and guidelines
 ├── proxy/          # Rust gateway (core of Prism)
-├── backends/       # Pluggable backend implementations
-│   ├── kafka/
-│   ├── nats/
-│   ├── postgres/
-│   ├── sqlite/
-│   └── neptune/
+├── patterns/       # Go backend patterns (pluggable)
+│   ├── core/       # Shared pattern SDK
+│   ├── memstore/   # In-memory key-value pattern
+│   └── ...
 ├── proto/          # Protobuf definitions (source of truth)
-├── tooling/        # Python utilities (codegen, testing, deploy)
-├── tests/          # Integration and load tests
-└── docs/           # Architecture docs, ADRs, requirements
+├── tooling/        # Python utilities (validation, deployment)
+├── docs-cms/       # Documentation source (ADRs, RFCs, memos)
+├── docusaurus/     # Documentation site configuration
+└── docs/           # Built documentation (GitHub Pages)
 ```
 
 ## Documentation
 
-- **[CLAUDE.md](./CLAUDE.md)**: Project philosophy and guidance
-- **[Architecture Decision Records](./docs/adr/)**: Why we made key design choices
-- **[Requirements](./docs/requirements/)**: Detailed functional and non-functional requirements
-- **[Netflix Reference](./docs/netflix/)**: Materials that inspired Prism
-- **[GitHub Pages](https://jrepp.github.io/prism-data-layer/)**: Live documentation site with search
+- **[BUILDING.md](./BUILDING.md)**: Build, test, and development workflow
+- **[CLAUDE.md](./CLAUDE.md)**: Project philosophy and guidelines
+- **[Architecture Decision Records](https://jrepp.github.io/prism-data-layer/adr)**: Design decisions
+- **[RFCs](https://jrepp.github.io/prism-data-layer/rfc)**: Technical proposals
+- **[GitHub Pages](https://jrepp.github.io/prism-data-layer/)**: Live documentation site
 
 ### Contributing to Documentation
 
 **⚠️ CRITICAL: Run validation before pushing documentation changes:**
 
 ```bash
-# Full validation (required before push)
-uv run tooling/validate_docs.py
+# Using Makefile (recommended)
+make docs-validate
 
-# Quick check during development (skip slow build)
-uv run tooling/validate_docs.py --skip-build
+# Or directly with uv
+uv run tooling/validate_docs.py
 ```
 
-See [tooling/README.md](./tooling/README.md) for detailed documentation validation guide.
+This validates frontmatter, links, and MDX syntax. See [CLAUDE.md](./CLAUDE.md) for details.
 
 ## Development
 
 ### Prerequisites
 
-- Rust 1.75+ (for proxy)
-- Node.js 20+ (for admin UI)
-- Python 3.11+ (for tooling)
-- Docker (for local backends)
+- Rust 1.70+ (for proxy)
+- Go 1.21+ (for patterns)
+- Python 3.10+ with uv (for tooling)
+- Protocol Buffers compiler (protoc)
+- Node.js 18+ (for documentation)
+
+Install all tools: `make install-tools`
 
 ### Building
 
 ```bash
-# Build proxy
-cd proxy && cargo build --release
+# Build everything (default target)
+make
 
-# Build admin UI
-cd admin && npm install && ember build
+# Build in debug mode (faster)
+make build-dev
 
-# Generate code from proto definitions
-python -m tooling.codegen
+# Build specific components
+make build-proxy
+make build-patterns
 ```
 
 ### Testing
 
 ```bash
-# Unit tests
-cargo test
+# Run all unit tests
+make test
 
-# Integration tests (requires local-stack)
-python -m tooling.test.local-stack up
-cargo test --features integration
+# Run integration tests
+make test-integration
 
-# Load tests
-python -m tooling.test.load-test --help
+# Run everything (CI mode)
+make test-all
+
+# Generate coverage reports
+make coverage
 ```
+
+See **[BUILDING.md](./BUILDING.md)** for complete documentation on building, testing, and development workflow.
 
 ## Roadmap
 

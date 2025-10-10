@@ -2,6 +2,8 @@ syntax = "proto3";
 
 package prism.common;
 
+option go_package = "github.com/jrepp/prism-data-layer/patterns/core/gen/prism/common";
+
 // Timestamp (epoch milliseconds for consistency with Kafka)
 message Timestamp {
   int64 millis = 1;

@@ -7,6 +7,7 @@ import (
 	"net"
 	"time"
 
+	pb "github.com/jrepp/prism-data-layer/patterns/core/gen/prism/pattern"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/health"
@@ -41,6 +42,11 @@ func (s *ControlPlaneServer) Start(ctx context.Context) error {
 
 	// Create gRPC server
 	s.grpcServer = grpc.NewServer()
+
+	// Register PatternLifecycle service
+	lifecycleService := NewLifecycleService(s.plugin)
+	pb.RegisterPatternLifecycleServer(s.grpcServer, lifecycleService)
+	slog.Info("registered PatternLifecycle service", "plugin", s.plugin.Name())
 
 	// Register health check service
 	healthServer := health.NewServer()

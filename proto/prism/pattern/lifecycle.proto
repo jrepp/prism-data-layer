@@ -1,0 +1,119 @@
+syntax = "proto3";
+
+package prism.pattern;
+
+option go_package = "github.com/jrepp/prism-data-layer/patterns/core/gen/prism/pattern";
+
+import "google/protobuf/struct.proto";
+
+// Pattern lifecycle management service
+// All patterns MUST implement this interface
+service PatternLifecycle {
+  // Initialize the pattern with configuration
+  rpc Initialize(InitializeRequest) returns (InitializeResponse);
+
+  // Start the pattern (begin serving requests)
+  rpc Start(StartRequest) returns (StartResponse);
+
+  // Stop the pattern (graceful shutdown)
+  rpc Stop(StopRequest) returns (StopResponse);
+
+  // Check pattern health
+  rpc HealthCheck(HealthCheckRequest) returns (HealthCheckResponse);
+}
+
+// Initialize request
+message InitializeRequest {
+  // Pattern name
+  string name = 1;
+
+  // Pattern version
+  string version = 2;
+
+  // Configuration as JSON
+  google.protobuf.Struct config = 3;
+}
+
+// Initialize response
+message InitializeResponse {
+  // Success indicator
+  bool success = 1;
+
+  // Error message (if success = false)
+  string error = 2;
+
+  // Pattern metadata
+  PatternMetadata metadata = 3;
+}
+
+// Pattern metadata
+message PatternMetadata {
+  // Pattern name
+  string name = 1;
+
+  // Pattern version
+  string version = 2;
+
+  // Capabilities supported by this pattern
+  repeated string capabilities = 3;
+
+  // Additional metadata
+  map<string, string> extra = 4;
+}
+
+// Start request
+message StartRequest {
+  // Empty for now, may include runtime options later
+}
+
+// Start response
+message StartResponse {
+  // Success indicator
+  bool success = 1;
+
+  // Error message (if success = false)
+  string error = 2;
+
+  // gRPC endpoint for data operations (if different from lifecycle endpoint)
+  string data_endpoint = 3;
+}
+
+// Stop request
+message StopRequest {
+  // Graceful shutdown timeout in seconds
+  int32 timeout_seconds = 1;
+}
+
+// Stop response
+message StopResponse {
+  // Success indicator
+  bool success = 1;
+
+  // Error message (if success = false)
+  string error = 2;
+}
+
+// Health check request
+message HealthCheckRequest {
+  // Empty for now
+}
+
+// Health check response
+message HealthCheckResponse {
+  // Health status
+  HealthStatus status = 1;
+
+  // Human-readable message
+  string message = 2;
+
+  // Detailed health metrics
+  map<string, string> details = 3;
+}
+
+// Health status enumeration
+enum HealthStatus {
+  HEALTH_STATUS_UNSPECIFIED = 0;
+  HEALTH_STATUS_HEALTHY = 1;      // Pattern is healthy
+  HEALTH_STATUS_DEGRADED = 2;     // Pattern is running but unhealthy
+  HEALTH_STATUS_UNHEALTHY = 3;    // Pattern is not functioning
+}
