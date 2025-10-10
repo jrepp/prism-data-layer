@@ -1,14 +1,16 @@
 ---
-id: rfc-021
-title: "RFC-021: POC 1 - KeyValue with MemStore Implementation Plan"
-status: Proposed
+id: rfc-026
+title: "RFC-026: POC 1 - KeyValue with MemStore Implementation Plan (Original)"
+status: Superseded
 author: Platform Team
 created: 2025-10-09
 updated: 2025-10-09
-tags: [poc, implementation, keyvalue, memstore, walking-skeleton, workstreams]
+tags: [poc, implementation, keyvalue, memstore, walking-skeleton, workstreams, superseded]
 ---
 
-# RFC-021: POC 1 - KeyValue with MemStore Implementation Plan
+# RFC-026: POC 1 - KeyValue with MemStore Implementation Plan (Original)
+
+**Note**: This RFC has been superseded by [RFC-021: Three Minimal Plugins](/rfc/rfc-021), which provides a more focused approach with three minimal plugins instead of a single complex MemStore plugin.
 
 ## Summary
 
