@@ -1,6 +1,7 @@
 ---
 id: memos-index
 title: Technical Memos
+slug: /
 ---
 
 # Technical Memos
