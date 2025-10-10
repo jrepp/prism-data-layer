@@ -1093,7 +1093,7 @@ prismctl plugin build
 prismctl plugin publish --registry https://plugins.prism.io
 ```
 
-See [RFC-008: Plugin Development Experience](./RFC-008-proxy-plugin-architecture.md#plugin-development-experience) for complete development guide.
+See [RFC-008: Plugin Development Experience](/rfc/rfc-008#plugin-development-experience) for complete development guide.
 
 ## Protobuf Integration
 
