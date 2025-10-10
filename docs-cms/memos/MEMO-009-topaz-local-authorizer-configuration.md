@@ -1,10 +1,17 @@
 ---
-title: "MEMO-009: Topaz Local Authorizer Configuration for Development and Integration Testing"
-status: Active
 author: Platform Team
 created: 2025-10-09
+id: memo-009
+status: Active
+tags:
+- topaz
+- authorization
+- development
+- testing
+- local-infrastructure
+title: 'MEMO-009: Topaz Local Authorizer Configuration for Development and Integration
+  Testing'
 updated: 2025-10-09
-tags: [topaz, authorization, development, testing, local-infrastructure]
 ---
 
 # MEMO-009: Topaz Local Authorizer Configuration

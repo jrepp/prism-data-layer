@@ -1,10 +1,16 @@
 ---
-title: "MEMO-008: Vault Token Exchange Flow for Plugin Authentication"
-status: Active
 author: Platform Team
 created: 2025-10-09
+id: memo-008
+status: Active
+tags:
+- vault
+- authentication
+- security
+- plugins
+- credentials
+title: 'MEMO-008: Vault Token Exchange Flow for Plugin Authentication'
 updated: 2025-10-09
-tags: [vault, authentication, security, plugins, credentials]
 ---
 
 # MEMO-008: Vault Token Exchange Flow for Plugin Authentication

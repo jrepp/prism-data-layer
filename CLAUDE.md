@@ -315,7 +315,23 @@ uv run tooling/convert_to_frontmatter.py
 
 # Fix broken doc links (relative paths, wrong case)
 uv run tooling/fix_doc_links.py
+
+# Comprehensive migration (frontmatter + links + consistency)
+uv run tooling/migrate_docs_format.py [--dry-run] [--verbose]
 ```
+
+**Migration script** (`migrate_docs_format.py`):
+- Ensures frontmatter has correct lowercase IDs (adr-001, rfc-015, memo-004)
+- Fixes titles to include proper ID prefix (ADR-001:, RFC-015:, MEMO-004:)
+- Converts all links to absolute lowercase paths
+- Can run in `--dry-run` mode to preview changes
+- Use `--verbose` to see detailed changes
+
+**When to use migration script**:
+- After adding new documentation files
+- When importing external docs
+- Before major releases to ensure consistency
+- If validation reports frontmatter errors
 
 ### Git Hooks
 
