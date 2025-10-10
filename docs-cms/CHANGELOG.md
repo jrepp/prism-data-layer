@@ -12,6 +12,69 @@ Quick access to recently updated documentation. Changes listed in reverse chrono
 
 ### 2025-10-09
 
+#### RFC-020: Streaming HTTP Listener - API-Specific Adapter Pattern (NEW)
+**Link**: [RFC-020](/rfc/RFC-020-streaming-http-listener-api-adapter)
+
+**Summary**: Comprehensive RFC defining streaming HTTP listener architecture that bridges external HTTP/JSON protocols to Prism's internal gRPC/Protobuf layer:
+- **API-Specific Adapters**: Each adapter implements ONE external API contract (MCP, Agent-to-Agent, custom APIs)
+- Thin translation layer with no business logic (pure protocol translation)
+- Streaming support: SSE (Server-Sent Events), WebSocket, HTTP chunked encoding
+- Three deployment options: sidecar, separate service, or serverless (AWS Lambda)
+- MCP backend interface decomposition: 5 interfaces across 3 data models (KeyValue, Queue, Stream)
+- New MCP interfaces: mcp_tool (tool calling), mcp_resource (resource access), mcp_prompt (prompt templates)
+- AI tool orchestration pattern: Combines MCP backend + execution queue + result stream
+- Performance: &lt;3ms P95 adapter overhead, 30,000 RPS with HTTP/JSON translation
+- Complete Go implementation examples with protocol translation helpers
+- Configuration examples for MCP tool server, SSE event streaming, and agent-to-agent coordination
+
+**Key Innovation**: API-specific adapters satisfy external protocol contracts while transparently mapping to internal gRPC primitives. MCP treated as backend plugin with decomposed interfaces following MEMO-006 principles. Enables AI tool calling, resource access, and prompt management via HTTP/JSON while leveraging Prism's backend flexibility.
+
+**Impact**: Enables seamless integration of HTTP-based APIs (MCP, A2A) with Prism's gRPC core without modifying proxy. Easy adapter authoring pattern for new protocols. MCP backend decomposition provides foundation for AI tool orchestration with queue-based execution and result streaming.
+
+---
+
+#### ADR-050: Topaz for Policy-Based Authorization (NEW)
+**Link**: [ADR-050](/adr/ADR-050-topaz-policy-authorization)
+
+**Summary**: Architecture decision to use Topaz by Aserto for fine-grained policy-based authorization:
+- **Topaz Selection**: Evaluated OPA alone, cloud IAM, Zanzibar systems (SpiceDB, Ory Keto) - Topaz chosen for best balance
+- Relationship-Based Access Control (ReBAC) inspired by Google Zanzibar
+- Sidecar deployment pattern for &lt;5ms P99 local authorization checks
+- Complete integration examples: Rust proxy middleware, Python CLI, FastAPI admin UI
+- Directory schema modeling users, groups, namespaces, backends with relationships
+- Three example policies: namespace isolation, time-based maintenance windows, PII protection
+- Performance: P50 &lt;0.5ms, P95 &lt;2ms, P99 &lt;5ms for local sidecar checks
+- 10,000+ authorization checks per second capacity
+- Docker Compose for local dev, Kubernetes sidecar for production
+- Fail-closed by default with opt-in fail-open per namespace
+
+**Key Innovation**: Local sidecar authorization combines OPA's policy expressiveness with Zanzibar-style relationship modeling. Real-time policy updates without proxy restarts. Centralized policy management (Git) with decentralized enforcement (local sidecars).
+
+**Impact**: Enables multi-tenancy isolation, role-based access control, attribute-based policies, and resource-level permissions with production-ready performance. Foundation for defense-in-depth security across proxy and plugin layers.
+
+---
+
+#### RFC-019: Plugin SDK Authorization Layer (NEW)
+**Link**: [RFC-019](/rfc/RFC-019-plugin-sdk-authorization-layer)
+
+**Summary**: Standardized authorization layer in Prism core plugin SDK enabling backend plugins to validate tokens and enforce policies:
+- **Defense-in-Depth**: Authorization enforced at proxy AND plugin layers
+- Three core components: TokenValidator (JWT/OIDC), TopazClient (policy queries), AuditLogger (structured logging)
+- Complete Go SDK implementation with Authorizer interface orchestrating all components
+- gRPC interceptors for automatic authorization on all plugin methods
+- Token validation with JWKS caching (&lt;1ms with caching)
+- Topaz policy checks with 5s decision caching (&lt;1ms P99 cache hit)
+- Async audit logging with buffered events (&lt;0.1ms overhead)
+- Fail-closed by default with configurable fail-open for local testing
+- Configuration examples: production (token + policy enabled) vs local dev (disabled with audit)
+- Plugin integration patterns: automatic (gRPC interceptor) vs manual (fine-grained control)
+
+**Key Innovation**: Backend plugins validate authorization independently of proxy, creating defense-in-depth security. SDK provides reusable authorization primitives so plugins just call SDK (no reimplementation). Authorization overhead &lt;3ms P99 with caching enabled.
+
+**Impact**: Eliminates plugin-level security vulnerabilities. Prevents bypassing proxy authorization by connecting directly to plugins. Consistent policy enforcement across all backends. Complete audit trail of data access at plugin layer. Enables zero-trust architecture.
+
+---
+
 #### MEMO-006: Backend Interface Decomposition and Schema Registry (NEW)
 **Link**: [MEMO-006](/memos/MEMO-006-backend-interface-decomposition-schema-registry)
 
