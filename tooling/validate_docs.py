@@ -42,12 +42,16 @@ try:
         ADRFrontmatter, RFCFrontmatter, MemoFrontmatter, GenericDocFrontmatter
     )
     ENHANCED_VALIDATION = True
-except ImportError:
-    ENHANCED_VALIDATION = False
-    print("⚠️  Enhanced validation disabled: install python-frontmatter and pydantic")
-    print("   Run: uv sync")
-    frontmatter = None
-    ValidationError = None
+except ImportError as e:
+    print("\n❌ CRITICAL ERROR: Required dependencies not found", file=sys.stderr)
+    print("   Missing: python-frontmatter and/or pydantic", file=sys.stderr)
+    print("   These are REQUIRED for proper frontmatter validation.", file=sys.stderr)
+    print("\n   Fix:", file=sys.stderr)
+    print("   $ uv sync", file=sys.stderr)
+    print("\n   Then run validation with:", file=sys.stderr)
+    print("   $ uv run tooling/validate_docs.py", file=sys.stderr)
+    print(f"\n   Error details: {e}\n", file=sys.stderr)
+    sys.exit(2)
 
 
 class LinkType(Enum):
@@ -207,12 +211,7 @@ class PrismDocValidator:
 
     def _parse_document(self, file_path: Path, doc_type: str) -> Document | None:
         """Parse a markdown file and validate frontmatter"""
-
-        # Use enhanced validation if available
-        if ENHANCED_VALIDATION:
-            return self._parse_document_enhanced(file_path, doc_type)
-        else:
-            return self._parse_document_basic(file_path, doc_type)
+        return self._parse_document_enhanced(file_path, doc_type)
 
     def _parse_document_enhanced(self, file_path: Path, doc_type: str) -> Document | None:
         """Parse document with python-frontmatter and pydantic validation"""
@@ -283,90 +282,6 @@ class PrismDocValidator:
         except Exception as e:
             self.errors.append(f"Error parsing {file_path}: {e}")
             self.log(f"   ✗ {file_path.name}: {e}")
-            return None
-
-    def _parse_document_basic(self, file_path: Path, doc_type: str) -> Document | None:
-        """Parse document with basic regex (fallback when pydantic not available)"""
-        try:
-            content = file_path.read_text(encoding='utf-8')
-
-            # Check for frontmatter
-            frontmatter_match = re.match(r'^---\s*\n(.*?)\n---\s*\n', content, re.DOTALL)
-            if not frontmatter_match:
-                error = f"Missing YAML frontmatter"
-                self.log(f"   ✗ {file_path.name}: {error}")
-                doc = Document(file_path=file_path, doc_type=doc_type, title="Unknown")
-                doc.errors.append(error)
-                return doc
-
-            fm = frontmatter_match.group(1)
-
-            # Extract title (required)
-            title_match = re.search(r'^title:\s*["\']?([^"\'\n]+)["\']?', fm, re.MULTILINE)
-            if not title_match:
-                error = "Missing 'title' in frontmatter"
-                self.log(f"   ✗ {file_path.name}: {error}")
-                doc = Document(file_path=file_path, doc_type=doc_type, title="Unknown")
-                doc.errors.append(error)
-                return doc
-
-            title = title_match.group(1).strip().strip('"').strip("'")
-
-            # Extract status (required for ADRs and RFCs)
-            status = ""
-            if doc_type in ["adr", "rfc"]:
-                status_match = re.search(r'^status:\s*(.+)$', fm, re.MULTILINE)
-                if not status_match:
-                    error = f"Missing 'status' in frontmatter ({doc_type} requires status)"
-                    self.log(f"   ✗ {file_path.name}: {error}")
-                    doc = Document(file_path=file_path, doc_type=doc_type, title=title)
-                    doc.errors.append(error)
-                    return doc
-                status = status_match.group(1).strip()
-
-            # Extract date/created
-            date = ""
-            date_match = re.search(r'^(?:date|created):\s*(.+)$', fm, re.MULTILINE)
-            if date_match:
-                date = date_match.group(1).strip()
-
-            # Extract tags (if present)
-            tags = []
-            tags_match = re.search(r'^tags:\s*\[([^\]]+)\]', fm, re.MULTILINE)
-            if tags_match:
-                tags_str = tags_match.group(1)
-                tags = [t.strip().strip('"').strip("'") for t in tags_str.split(',')]
-
-                # Validate tags format
-                for tag in tags:
-                    if not tag:
-                        error = "Empty tag found in frontmatter tags array"
-                        self.log(f"   ⚠️  {file_path.name}: {error}")
-                        doc = Document(file_path=file_path, doc_type=doc_type, title=title, status=status, date=date, tags=tags)
-                        doc.errors.append(error)
-                        return doc
-                    # Check for invalid characters (tags should be lowercase, hyphenated)
-                    if not re.match(r'^[a-z0-9\-]+$', tag):
-                        error = f"Invalid tag '{tag}' - tags should be lowercase, hyphenated (e.g., 'data-access', 'backend')"
-                        self.log(f"   ⚠️  {file_path.name}: {error}")
-                        doc = Document(file_path=file_path, doc_type=doc_type, title=title, status=status, date=date, tags=tags)
-                        doc.errors.append(error)
-                        return doc
-
-            doc = Document(
-                file_path=file_path,
-                doc_type=doc_type,
-                title=title,
-                status=status,
-                date=date,
-                tags=tags
-            )
-
-            self.log(f"   ✓ {file_path.name}: {title}")
-            return doc
-
-        except Exception as e:
-            self.errors.append(f"Error parsing {file_path}: {e}")
             return None
 
     def extract_links(self):
