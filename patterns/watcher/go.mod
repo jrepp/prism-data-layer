@@ -1,4 +1,4 @@
-module github.com/jrepp/prism-data-layer/plugins/watcher
+module github.com/jrepp/prism-data-layer/patterns/watcher
 
 go 1.23
 

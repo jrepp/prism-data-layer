@@ -95,7 +95,7 @@ prism/
 ├── admin/                 # FastAPI-based admin UI
 ├── cli/                   # Python admin CLI (prismctl)
 ├── proxy/                 # Rust high-performance gateway
-├── plugins/               # Go backend plugins (containers)
+├── patterns/               # Go backend plugins (containers)
 │   ├── core/              # Shared plugin package
 │   ├── postgres/          # PostgreSQL plugin
 │   ├── kafka/             # Kafka plugin
@@ -211,7 +211,7 @@ The bootstrap script creates:
 ~/.prism/
 ├── config.yaml          # Admin CLI configuration
 ├── token                # OIDC token cache
-└── plugins/             # Standard plugin manifests
+└── patterns/             # Standard plugin manifests
     ├── postgres.yaml    # PostgreSQL plugin spec
     ├── kafka.yaml       # Kafka plugin spec
     └── redis.yaml       # Redis plugin spec
@@ -243,10 +243,10 @@ uv run --with prismctl prism health
 alias prism="uv run --with prismctl prism"
 
 # Build backend plugins
-cd plugins && make build
+cd patterns && make build
 
 # Watch plugins for changes and auto-rebuild
-cd plugins && go run ./watcher --reload
+cd patterns && go run ./watcher --reload
 
 # Run proxy locally
 cd proxy && cargo run --release
@@ -539,7 +539,7 @@ jobs:
       - name: Enforce coverage thresholds
         run: |
           # Core SDK: 85% minimum
-          cd plugins/core
+          cd patterns/core
           COVERAGE=$(go test -coverprofile=coverage.out ./... && \
                      go tool cover -func=coverage.out | grep total | \
                      awk '{print $3}' | sed 's/%//')

@@ -1,4 +1,4 @@
-module github.com/jrepp/prism-data-layer/plugins/core
+module github.com/jrepp/prism-data-layer/patterns/core
 
 go 1.24.0
 

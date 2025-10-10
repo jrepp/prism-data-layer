@@ -7,8 +7,8 @@ import (
 	"os"
 	"time"
 
+	"github.com/jrepp/prism-data-layer/patterns/core"
 	"github.com/redis/go-redis/v9"
-	"github.com/jrepp/prism-data-layer/plugins/core"
 )
 
 const (
@@ -195,11 +195,11 @@ func (p *RedisPlugin) Health(ctx context.Context) (*core.HealthStatus, error) {
 			Status:  core.HealthDegraded,
 			Message: "redis degraded",
 			Details: map[string]string{
-				"latency_ms":   fmt.Sprintf("%.2f", latency.Seconds()*1000),
-				"total_conns":  fmt.Sprintf("%d", stats.TotalConns),
-				"idle_conns":   fmt.Sprintf("%d", stats.IdleConns),
-				"pool_size":    fmt.Sprintf("%d", p.config.PoolSize),
-				"pool_usage":   fmt.Sprintf("%.1f%%", poolUsage*100),
+				"latency_ms":  fmt.Sprintf("%.2f", latency.Seconds()*1000),
+				"total_conns": fmt.Sprintf("%d", stats.TotalConns),
+				"idle_conns":  fmt.Sprintf("%d", stats.IdleConns),
+				"pool_size":   fmt.Sprintf("%d", p.config.PoolSize),
+				"pool_usage":  fmt.Sprintf("%.1f%%", poolUsage*100),
 			},
 		}, nil
 	}

@@ -6,7 +6,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/jrepp/prism-data-layer/plugins/core"
+	"github.com/jrepp/prism-data-layer/patterns/core"
 )
 
 // MemStore implements an in-memory key-value store plugin

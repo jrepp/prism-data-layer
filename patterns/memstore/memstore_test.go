@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/jrepp/prism-data-layer/plugins/core"
+	"github.com/jrepp/prism-data-layer/patterns/core"
 )
 
 func TestMemStore_SetGet(t *testing.T) {

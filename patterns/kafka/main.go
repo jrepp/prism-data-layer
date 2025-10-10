@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
-	"github.com/jrepp/prism-data-layer/plugins/core"
+	"github.com/jrepp/prism-data-layer/patterns/core"
 )
 
 const (

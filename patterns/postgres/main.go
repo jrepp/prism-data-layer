@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/jrepp/prism-data-layer/plugins/core"
+	"github.com/jrepp/prism-data-layer/patterns/core"
 )
 
 const (

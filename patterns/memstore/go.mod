@@ -1,8 +1,8 @@
-module github.com/jrepp/prism-data-layer/plugins/memstore
+module github.com/jrepp/prism-data-layer/patterns/memstore
 
 go 1.24.0
 
-require github.com/jrepp/prism-data-layer/plugins/core v0.0.0
+require github.com/jrepp/prism-data-layer/patterns/core v0.0.0
 
 require (
 	golang.org/x/net v0.42.0 // indirect
@@ -14,4 +14,4 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
-replace github.com/jrepp/prism-data-layer/plugins/core => ../core
+replace github.com/jrepp/prism-data-layer/patterns/core => ../core

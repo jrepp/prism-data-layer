@@ -5,8 +5,8 @@ import (
 	"log"
 	"os"
 
-	"github.com/jrepp/prism-data-layer/plugins/core"
-	"github.com/jrepp/prism-data-layer/plugins/memstore"
+	"github.com/jrepp/prism-data-layer/patterns/core"
+	"github.com/jrepp/prism-data-layer/patterns/memstore"
 )
 
 func main() {
