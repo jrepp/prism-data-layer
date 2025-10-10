@@ -160,6 +160,12 @@ const config: Config = {
   // Enable Mermaid and configure markdown
   markdown: {
     mermaid: true,
+    format: 'md', // Treat files as markdown, not MDX (prevents parsing code blocks as JS)
+    mdx1Compat: {
+      comments: true,
+      admonitions: true,
+      headingIds: true,
+    },
   },
 
   themeConfig: {

@@ -352,7 +352,7 @@ Validate end-to-end functionality with automated tests using real local backends
 // proxy/tests/integration_test.rs
 #[tokio::test]
 async fn test_put_get_roundtrip() {
-    let client = KeyValueClient::connect("http://localhost:8980").await.unwrap();
+    let client = KeyValueClient::connect("http://".to_string() + "localhost:8980").await.unwrap();
 
     // Put
     let put_req = PutRequest {

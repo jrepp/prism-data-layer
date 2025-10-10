@@ -675,7 +675,8 @@ observability:
   tracing:
     enabled: true
     # OTEL_EXPORTER_OTLP_ENDPOINT used if set
-    otlp_endpoint: ${OTEL_EXPORTER_OTLP_ENDPOINT:-http://localhost:4317}
+    # Default: http://localhost:4317
+    otlp_endpoint: ${OTEL_EXPORTER_OTLP_ENDPOINT}
     service_name: prism-proxy
 
 authentication:

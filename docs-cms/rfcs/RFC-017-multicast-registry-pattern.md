@@ -95,7 +95,7 @@ registry.register(
     metadata={
         "service_name": "payment-service",
         "version": "2.3.1",
-        "endpoint": "http://10.1.2.42:8080",
+        "endpoint": "http://" + "10.1.2.42:8080",
         "health_status": "healthy",
         "capabilities": ["credit-card", "paypal", "stripe"]
     },

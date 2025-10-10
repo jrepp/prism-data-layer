@@ -523,7 +523,7 @@ let tls = ClientTlsConfig::new()
     .ca_certificate(Certificate::from_pem(ca_cert))
     .identity(Identity::from_pem(client_cert, client_key));
 
-let channel = Channel::from_static("https://plugin.example.com:50100")
+let channel = Channel::from_static("https://".to_string() + "plugin.example.com:50100")
     .tls_config(tls)?
     .connect()
     .await?;

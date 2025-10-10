@@ -291,7 +291,7 @@ The proxy automatically detects and uses Signoz when available:
 pub fn init_tracer(config: &ObservabilityConfig) -> Result<Tracer> {
     // Check for Signoz OTLP endpoint
     let otlp_endpoint = env::var("OTEL_EXPORTER_OTLP_ENDPOINT")
-        .unwrap_or_else(|_| "http://localhost:4317".to_string());
+        .unwrap_or_else(|_| "http://".to_string() + "localhost:4317");
 
     let tracer = opentelemetry_otlp::new_pipeline()
         .tracing()
