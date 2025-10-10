@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env -S uv run python3
 """
 Document Validation and Link Checker for Prism
 
@@ -11,6 +11,7 @@ Validates markdown documents for:
 - Docusaurus build validation
 
 ⚠️ CRITICAL: Run this before pushing documentation changes!
+⚠️ MUST use "uv run" - script requires pydantic and python-frontmatter
 
 Usage:
     uv run tooling/validate_docs.py
@@ -18,10 +19,13 @@ Usage:
     uv run tooling/validate_docs.py --skip-build  # Skip Docusaurus build check
     uv run tooling/validate_docs.py --fix  # Auto-fix issues where possible
 
+    OR run directly (shebang will invoke uv):
+    ./tooling/validate_docs.py
+
 Exit Codes:
     0 - All documents valid
     1 - Validation errors found
-    2 - Script error
+    2 - Missing dependencies (must use "uv run")
 """
 
 import argparse
