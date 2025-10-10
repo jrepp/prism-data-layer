@@ -4,28 +4,342 @@ package prism.common;
 
 option go_package = "github.com/jrepp/prism-data-layer/proto/gen/prism/common";
 
-// Standard error response
+import "google/protobuf/duration.proto";
+import "google/protobuf/timestamp.proto";
+
+// Error represents a structured error response with rich context for distributed systems.
+//
+// Design Philosophy:
+// - Simple by default, rich when needed
+// - Machine-readable (codes, categories) and human-readable (messages, hints)
+// - Supports error chaining across service boundaries
+// - Provides actionable recovery information
+// - Enables proper observability and debugging
+//
+// Based on Google's API error model (google.rpc.Status) with Prism-specific extensions.
 message Error {
+  // Error code (HTTP-style for broad compatibility)
   ErrorCode code = 1;
+
+  // Human-readable error message (English, for developers)
   string message = 2;
-  map<string, string> details = 3;
-  string request_id = 4;
+
+  // Request ID for correlation across services
+  string request_id = 3;
+
+  // Error category for classification and metrics
+  ErrorCategory category = 4;
+
+  // Error severity (not all errors are equal)
+  ErrorSeverity severity = 5;
+
+  // When the error occurred
+  google.protobuf.Timestamp timestamp = 6;
+
+  // Service/component that generated the error
+  string source = 7;
+
+  // Namespace context (which tenant/namespace)
+  string namespace = 8;
+
+  // Retry policy guidance
+  optional RetryPolicy retry_policy = 9;
+
+  // Structured error details (field violations, backend errors, etc.)
+  repeated ErrorDetail details = 10;
+
+  // Cause chain (errors that led to this error)
+  repeated Error causes = 11;
+
+  // Links to documentation or help resources
+  repeated ErrorLink help_links = 12;
+
+  // Additional context (key-value pairs)
+  map<string, string> metadata = 13;
+
+  // Stack trace (for debugging, should be filtered in production responses)
+  optional string stack_trace = 14 [deprecated = true];  // Use debug_info instead
+
+  // Debug information (only populated in debug mode)
+  optional DebugInfo debug_info = 15;
 }
 
+// ErrorCode uses HTTP status codes for broad compatibility
 enum ErrorCode {
   ERROR_CODE_UNSPECIFIED = 0;
 
-  // Client errors (4xx)
-  ERROR_CODE_INVALID_REQUEST = 400;
-  ERROR_CODE_UNAUTHORIZED = 401;
-  ERROR_CODE_FORBIDDEN = 403;
-  ERROR_CODE_NOT_FOUND = 404;
-  ERROR_CODE_CONFLICT = 409;
-  ERROR_CODE_PRECONDITION_FAILED = 412;
-  ERROR_CODE_RATE_LIMITED = 429;
+  // 2xx Success (shouldn't appear in errors, but here for completeness)
+  ERROR_CODE_OK = 200;
 
-  // Server errors (5xx)
-  ERROR_CODE_INTERNAL = 500;
-  ERROR_CODE_BACKEND_UNAVAILABLE = 503;
-  ERROR_CODE_TIMEOUT = 504;
+  // 4xx Client Errors (caller should fix)
+  ERROR_CODE_BAD_REQUEST = 400;           // Invalid request syntax/parameters
+  ERROR_CODE_UNAUTHORIZED = 401;          // Authentication required
+  ERROR_CODE_FORBIDDEN = 403;             // Authenticated but not authorized
+  ERROR_CODE_NOT_FOUND = 404;             // Resource doesn't exist
+  ERROR_CODE_METHOD_NOT_ALLOWED = 405;    // Operation not supported
+  ERROR_CODE_CONFLICT = 409;              // Resource state conflict
+  ERROR_CODE_GONE = 410;                  // Resource permanently deleted
+  ERROR_CODE_PRECONDITION_FAILED = 412;   // Precondition not met (e.g., CAS)
+  ERROR_CODE_PAYLOAD_TOO_LARGE = 413;     // Request exceeds size limits
+  ERROR_CODE_UNPROCESSABLE_ENTITY = 422;  // Validation failed
+  ERROR_CODE_TOO_MANY_REQUESTS = 429;     // Rate limit exceeded
+
+  // 5xx Server Errors (caller should retry)
+  ERROR_CODE_INTERNAL_ERROR = 500;        // Unexpected internal error
+  ERROR_CODE_NOT_IMPLEMENTED = 501;       // Feature not implemented
+  ERROR_CODE_BAD_GATEWAY = 502;           // Upstream backend error
+  ERROR_CODE_SERVICE_UNAVAILABLE = 503;   // Temporarily unavailable
+  ERROR_CODE_GATEWAY_TIMEOUT = 504;       // Upstream timeout
+  ERROR_CODE_INSUFFICIENT_STORAGE = 507;  // Backend storage full
+
+  // Custom Prism Errors (600+)
+  ERROR_CODE_BACKEND_ERROR = 600;         // Backend-specific error
+  ERROR_CODE_PATTERN_ERROR = 601;         // Pattern-level semantic error
+  ERROR_CODE_INTERFACE_NOT_SUPPORTED = 602; // Backend doesn't implement interface
+  ERROR_CODE_SLOT_ERROR = 603;            // Pattern slot configuration error
+  ERROR_CODE_CIRCUIT_BREAKER_OPEN = 604;  // Circuit breaker preventing requests
+}
+
+// ErrorCategory classifies errors for metrics, alerting, and handling
+enum ErrorCategory {
+  ERROR_CATEGORY_UNSPECIFIED = 0;
+  ERROR_CATEGORY_CLIENT_ERROR = 1;        // User/application error
+  ERROR_CATEGORY_SERVER_ERROR = 2;        // Internal service error
+  ERROR_CATEGORY_BACKEND_ERROR = 3;       // Backend storage error
+  ERROR_CATEGORY_NETWORK_ERROR = 4;       // Network connectivity issue
+  ERROR_CATEGORY_TIMEOUT_ERROR = 5;       // Operation timed out
+  ERROR_CATEGORY_RATE_LIMIT_ERROR = 6;    // Quota/rate limit exceeded
+  ERROR_CATEGORY_AUTHORIZATION_ERROR = 7; // Permission denied
+  ERROR_CATEGORY_VALIDATION_ERROR = 8;    // Input validation failed
+  ERROR_CATEGORY_RESOURCE_ERROR = 9;      // Resource not found/unavailable
+  ERROR_CATEGORY_CONCURRENCY_ERROR = 10;  // Concurrent modification conflict
+}
+
+// ErrorSeverity indicates impact level for prioritization
+enum ErrorSeverity {
+  ERROR_SEVERITY_UNSPECIFIED = 0;
+  ERROR_SEVERITY_DEBUG = 1;       // Informational, no action needed
+  ERROR_SEVERITY_INFO = 2;        // Notable but expected (e.g., cache miss)
+  ERROR_SEVERITY_WARNING = 3;     // Degraded but functional
+  ERROR_SEVERITY_ERROR = 4;       // Operation failed, action may be needed
+  ERROR_SEVERITY_CRITICAL = 5;    // Severe failure, immediate action required
+}
+
+// RetryPolicy provides guidance on how/when to retry
+message RetryPolicy {
+  // Whether this error is retryable
+  bool retryable = 1;
+
+  // Minimum delay before retry
+  google.protobuf.Duration retry_after = 2;
+
+  // Maximum number of retries recommended
+  int32 max_retries = 3;
+
+  // Backoff strategy
+  BackoffStrategy backoff_strategy = 4;
+
+  // Backoff multiplier (for exponential backoff)
+  double backoff_multiplier = 5;
+
+  // Human-readable retry advice
+  string retry_advice = 6;
+}
+
+// BackoffStrategy for retry timing
+enum BackoffStrategy {
+  BACKOFF_STRATEGY_UNSPECIFIED = 0;
+  BACKOFF_STRATEGY_IMMEDIATE = 1;     // Retry immediately
+  BACKOFF_STRATEGY_LINEAR = 2;        // Linear backoff (delay * attempt)
+  BACKOFF_STRATEGY_EXPONENTIAL = 3;   // Exponential backoff (delay * multiplier^attempt)
+  BACKOFF_STRATEGY_JITTER = 4;        // Exponential with random jitter
+  BACKOFF_STRATEGY_NEVER = 5;         // Don't retry (permanent failure)
+}
+
+// ErrorDetail provides structured error information
+message ErrorDetail {
+  // Detail type discriminator
+  oneof detail {
+    FieldViolation field_violation = 1;
+    BackendError backend_error = 2;
+    PatternError pattern_error = 3;
+    QuotaViolation quota_violation = 4;
+    PreconditionFailure precondition_failure = 5;
+    ResourceInfo resource_info = 6;
+  }
+}
+
+// FieldViolation describes validation errors
+message FieldViolation {
+  // Field path (e.g., "key", "value", "ttl_seconds")
+  string field = 1;
+
+  // What was wrong with the field
+  string description = 2;
+
+  // Invalid value (truncated if large)
+  string invalid_value = 3;
+
+  // Constraint that was violated
+  string constraint = 4;
+}
+
+// BackendError provides backend-specific context
+message BackendError {
+  // Backend type (redis, postgres, kafka, nats, etc.)
+  string backend_type = 1;
+
+  // Backend instance identifier
+  string backend_instance = 2;
+
+  // Backend-specific error code
+  string backend_error_code = 3;
+
+  // Backend error message
+  string backend_error_message = 4;
+
+  // Operation that failed
+  string operation = 5;
+
+  // Connection pool state
+  optional ConnectionPoolState pool_state = 6;
+
+  // Additional backend-specific metadata
+  map<string, string> backend_metadata = 7;
+}
+
+// ConnectionPoolState provides pool health context
+message ConnectionPoolState {
+  int32 active_connections = 1;
+  int32 idle_connections = 2;
+  int32 max_connections = 3;
+  int32 wait_count = 4;
+  google.protobuf.Duration wait_duration = 5;
+}
+
+// PatternError provides pattern-specific context
+message PatternError {
+  // Pattern type (keyvalue, pubsub, stream, etc.)
+  string pattern_type = 1;
+
+  // Interface that caused the error
+  string interface_name = 2;
+
+  // Slot name (for multi-slot patterns like multicast-registry)
+  optional string slot_name = 3;
+
+  // Semantic error (e.g., "TTL not supported", "Batch size exceeded")
+  string semantic_error = 4;
+
+  // Supported operations for this pattern/backend combination
+  repeated string supported_operations = 5;
+}
+
+// QuotaViolation describes resource quota exhaustion
+message QuotaViolation {
+  // Quota dimension (e.g., "requests_per_second", "storage_bytes")
+  string dimension = 1;
+
+  // Current usage
+  int64 current = 2;
+
+  // Quota limit
+  int64 limit = 3;
+
+  // When quota resets
+  google.protobuf.Timestamp reset_time = 4;
+}
+
+// PreconditionFailure describes failed preconditions
+message PreconditionFailure {
+  // Precondition type (e.g., "ETAG_MISMATCH", "VERSION_CONFLICT")
+  string type = 1;
+
+  // Field affected
+  string field = 2;
+
+  // Expected value
+  string expected = 3;
+
+  // Actual value
+  string actual = 4;
+
+  // Description
+  string description = 5;
+}
+
+// ResourceInfo provides context about the affected resource
+message ResourceInfo {
+  // Resource type (e.g., "key", "topic", "stream")
+  string resource_type = 1;
+
+  // Resource identifier
+  string resource_id = 2;
+
+  // Resource state
+  string state = 3;
+
+  // Additional resource metadata
+  map<string, string> metadata = 4;
+}
+
+// ErrorLink provides documentation references
+message ErrorLink {
+  // Link title
+  string title = 1;
+
+  // URL to documentation or runbook
+  string url = 2;
+
+  // Link type (documentation, runbook, troubleshooting, api-reference)
+  string link_type = 3;
+}
+
+// DebugInfo contains detailed debugging information
+// Should only be populated in debug/development mode
+message DebugInfo {
+  // Stack trace from error origin
+  repeated string stack_entries = 1;
+
+  // Internal state snapshot
+  string detail = 2;
+
+  // Trace ID for distributed tracing
+  string trace_id = 3;
+
+  // Span ID for distributed tracing
+  string span_id = 4;
+
+  // Additional debug metadata
+  map<string, string> debug_metadata = 5;
+}
+
+// ErrorResponse wraps errors in RPC responses
+message ErrorResponse {
+  // Primary error
+  Error error = 1;
+
+  // Whether the operation was partially successful
+  bool partial_success = 2;
+
+  // Number of operations that succeeded (for batch operations)
+  int32 success_count = 3;
+
+  // Number of operations that failed
+  int32 failure_count = 4;
+
+  // Per-item errors (for batch operations)
+  repeated ItemError item_errors = 5;
+}
+
+// ItemError represents an error for a specific item in a batch
+message ItemError {
+  // Item index in the batch
+  int32 index = 1;
+
+  // Item identifier (key, ID, etc.)
+  string item_id = 2;
+
+  // Error for this item
+  Error error = 3;
 }

@@ -2,6 +2,8 @@ syntax = "proto3";
 
 package prism;
 
+option go_package = "github.com/jrepp/prism-data-layer/proto/gen/prism";
+
 import "google/protobuf/descriptor.proto";
 
 //
