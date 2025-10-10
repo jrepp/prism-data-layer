@@ -1,4 +1,5 @@
 ---
+id: rfc-index
 title: Request for Comments (RFCs)
 slug: /
 ---

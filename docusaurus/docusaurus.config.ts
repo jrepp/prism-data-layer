@@ -32,11 +32,6 @@ const config: Config = {
   tagline: 'High-Performance Data Access Gateway',
   favicon: 'img/favicon.ico',
 
-  // Future flags, see https://docusaurus.io/docs/api/docusaurus-config#future
-  future: {
-    v4: true, // Improve compatibility with the upcoming Docusaurus v4
-  },
-
   // Set the production url of your site here
   url: 'https://jrepp.github.io',
   // Set the /<baseUrl>/ pathname under which your site is served
@@ -56,6 +51,11 @@ const config: Config = {
   projectName: 'prism-data-layer',
 
   onBrokenLinks: 'warn',
+  onBrokenMarkdownLinks: 'warn',
+
+  future: {
+    v4: true, // Improve compatibility with the upcoming Docusaurus v4
+  },
 
   // Even if you don't use internationalization, you can use this field to set
   // useful metadata like html lang. For example, if your site is Chinese, you
@@ -70,13 +70,10 @@ const config: Config = {
       'classic',
       {
         docs: {
-          path: '../docs-cms',
           sidebarPath: './sidebars.ts',
-          // Use docs-cms as centralized documentation source
-          // Exclude subdirectories that have their own plugins
-          exclude: ['**/adr/**', '**/rfcs/**', '**/memos/**', '**/netflix/**'],
+          // Uses ./docs directory (default)
           routeBasePath: 'docs',
-          editUrl: 'https://github.com/jrepp/prism-data-layer/tree/main/docs-cms/',
+          editUrl: 'https://github.com/jrepp/prism-data-layer/tree/main/docusaurus/',
         },
         blog: false, // Disable blog
         theme: {
@@ -95,6 +92,7 @@ const config: Config = {
         routeBasePath: 'adr',
         sidebarPath: './sidebars-adr.ts',
         editUrl: 'https://github.com/jrepp/prism-data-layer/tree/main/docs-cms/',
+        exclude: ['**/README.md', '**/000-template.md'],
       },
     ],
     [
