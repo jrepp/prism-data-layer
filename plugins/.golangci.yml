@@ -1,0 +1,72 @@
+# golangci-lint configuration for Prism plugins
+# Based on RFC-022 (Core Plugin SDK Code Layout)
+
+run:
+  timeout: 5m
+  tests: true
+  skip-dirs:
+    - vendor
+  skip-files:
+    - ".*\\.pb\\.go$"
+
+linters-settings:
+  errcheck:
+    check-type-assertions: true
+    check-blank: true
+
+  govet:
+    enable-all: true
+
+  gocyclo:
+    min-complexity: 15
+
+  goconst:
+    min-len: 3
+    min-occurrences: 3
+
+  misspell:
+    locale: US
+
+  lll:
+    line-length: 120
+
+  gofmt:
+    simplify: true
+
+  goimports:
+    local-prefixes: github.com/jrepp/prism-data-layer/plugins
+
+linters:
+  enable:
+    - errcheck      # Unchecked errors
+    - gosimple      # Simplify code
+    - govet         # Vet examines Go source code
+    - ineffassign   # Unused assignments
+    - staticcheck   # Static analysis
+    - typecheck     # Type checker
+    - unused        # Unused constants, variables, functions
+    - gofmt         # Formatting
+    - goimports     # Import organization
+    - misspell      # Spelling
+    - goconst       # Repeated strings
+    - gocyclo       # Cyclomatic complexity
+    - lll           # Line length
+    - gosec         # Security issues
+    - revive        # Fast, configurable linter
+
+  disable:
+    - varcheck      # Deprecated
+    - structcheck   # Deprecated
+    - deadcode      # Deprecated
+
+issues:
+  exclude-rules:
+    # Exclude some linters from test files
+    - path: _test\.go
+      linters:
+        - gocyclo
+        - errcheck
+        - gosec
+
+  max-issues-per-linter: 0
+  max-same-issues: 0

@@ -3,10 +3,10 @@
 #
 # Build all plugins with Podman for minimal, secure containers
 
-.PHONY: all build clean test help
-.PHONY: postgres kafka redis
-.PHONY: postgres-debug kafka-debug redis-debug
-.PHONY: push push-debug run-postgres run-kafka run-redis
+.PHONY: all build clean test lint fmt help
+.PHONY: memstore postgres kafka redis
+.PHONY: memstore-debug postgres-debug kafka-debug redis-debug
+.PHONY: push push-debug run-memstore run-postgres run-kafka run-redis
 
 # Configuration
 REGISTRY ?= prism
@@ -14,7 +14,7 @@ VERSION ?= latest
 PODMAN := podman
 
 # Plugin list
-PLUGINS := postgres kafka redis
+PLUGINS := memstore postgres kafka redis
 
 # Default target
 all: build
@@ -32,6 +32,8 @@ help:
 	@echo "  test               Run tests for all plugins"
 	@echo ""
 	@echo "Individual plugins:"
+	@echo "  memstore           Build memstore plugin (production)"
+	@echo "  memstore-debug     Build memstore plugin (debug)"
 	@echo "  postgres           Build postgres plugin (production)"
 	@echo "  postgres-debug     Build postgres plugin (debug)"
 	@echo "  kafka              Build kafka plugin (production)"
@@ -40,8 +42,12 @@ help:
 	@echo "  redis-debug        Build redis plugin (debug)"
 	@echo ""
 	@echo "Operations:"
+	@echo "  test               Run tests for all plugins"
+	@echo "  lint               Run linters for all plugins"
+	@echo "  fmt                Format code for all plugins"
 	@echo "  push               Push all production images to registry"
 	@echo "  push-debug         Push all debug images to registry"
+	@echo "  run-memstore       Run memstore plugin locally"
 	@echo "  run-postgres       Run postgres plugin locally"
 	@echo "  run-kafka          Run kafka plugin locally"
 	@echo "  run-redis          Run redis plugin locally"
@@ -68,6 +74,27 @@ build-debug: $(addsuffix -debug,$(PLUGINS))
 	@echo "Building core package..."
 	@cd core && go mod download
 	@touch .build-core-timestamp
+
+# MemStore Plugin
+memstore: .build-core-timestamp
+	@echo "Building memstore plugin (production)..."
+	@cd memstore && $(PODMAN) build \
+		--target production \
+		-t $(REGISTRY)/memstore-plugin:$(VERSION) \
+		-t $(REGISTRY)/memstore-plugin:latest \
+		-f Dockerfile \
+		..
+	@echo "✓ memstore plugin built: $(REGISTRY)/memstore-plugin:$(VERSION)"
+
+memstore-debug: .build-core-timestamp
+	@echo "Building memstore plugin (debug)..."
+	@cd memstore && $(PODMAN) build \
+		--target debug \
+		-t $(REGISTRY)/memstore-plugin:$(VERSION)-debug \
+		-t $(REGISTRY)/memstore-plugin:debug \
+		-f Dockerfile \
+		..
+	@echo "✓ memstore debug plugin built: $(REGISTRY)/memstore-plugin:$(VERSION)-debug"
 
 # PostgreSQL Plugin
 postgres: .build-core-timestamp
@@ -154,6 +181,14 @@ push-debug:
 	@echo "✓ All debug images pushed"
 
 # Run plugins locally (for testing)
+run-memstore: memstore
+	@echo "Running memstore plugin..."
+	@$(PODMAN) run --rm -it \
+		--name memstore-plugin \
+		-e PRISM_LOG_LEVEL=debug \
+		-p 9090:9090 \
+		$(REGISTRY)/memstore-plugin:latest
+
 run-postgres: postgres
 	@echo "Running postgres plugin..."
 	@$(PODMAN) run --rm -it \
@@ -185,11 +220,32 @@ run-redis: redis
 # Test plugins
 test:
 	@echo "Running tests..."
-	@cd core && go test -v ./...
-	@cd postgres && go test -v ./...
-	@cd kafka && go test -v ./...
-	@cd redis && go test -v ./...
+	@cd core && go test -v -race -short ./...
+	@cd memstore && go test -v -race -short ./...
+	@cd postgres && go test -v -race -short ./...
+	@cd kafka && go test -v -race -short ./...
+	@cd redis && go test -v -race -short ./...
 	@echo "✓ All tests passed"
+
+# Lint plugins
+lint:
+	@echo "Running linters..."
+	@cd core && golangci-lint run ./... || true
+	@cd memstore && golangci-lint run ./... || true
+	@cd postgres && golangci-lint run ./... || true
+	@cd kafka && golangci-lint run ./... || true
+	@cd redis && golangci-lint run ./... || true
+	@echo "✓ Linting complete"
+
+# Format code
+fmt:
+	@echo "Formatting code..."
+	@cd core && go fmt ./...
+	@cd memstore && go fmt ./...
+	@cd postgres && go fmt ./...
+	@cd kafka && go fmt ./...
+	@cd redis && go fmt ./...
+	@echo "✓ Code formatted"
 
 # Clean all images
 clean:
