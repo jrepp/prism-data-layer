@@ -10,26 +10,37 @@ This file provides guidance to Claude Code when working with the Prism data acce
 
 ```bash
 # THIS IS A BLOCKING REQUIREMENT - NEVER SKIP
+# MUST use "uv run" - script will FAIL without proper dependencies
 uv run tooling/validate_docs.py
 ```
 
 **YOU MUST**:
-1. ✅ Run `uv run tooling/validate_docs.py` BEFORE committing documentation changes
-2. ✅ Fix ALL errors reported by validation
-3. ✅ Ensure validation passes with "SUCCESS" message
-4. ❌ NEVER commit/push documentation if validation fails
-5. ❌ NEVER skip validation "to save time" or "fix later"
+1. ✅ **ALWAYS use `uv run`** - Script requires pydantic and python-frontmatter dependencies
+2. ✅ Run `uv run tooling/validate_docs.py` BEFORE committing documentation changes
+3. ✅ Fix ALL errors reported by validation (frontmatter, links, MDX syntax)
+4. ✅ Ensure validation passes with "✅ SUCCESS" message
+5. ❌ **NEVER run `python3 tooling/validate_docs.py` directly** - will fail with exit code 2
+6. ❌ NEVER commit/push documentation if validation fails
+7. ❌ NEVER skip validation "to save time" or "fix later"
+
+**Why "uv run" is mandatory**:
+- Script uses **strict validation mode only** (no fallback)
+- Requires `pydantic` for frontmatter schema validation
+- Requires `python-frontmatter` for YAML parsing
+- Running without `uv run` will immediately fail with clear error message
+- This prevents local validation passing while CI fails
 
 **Why this is non-negotiable**:
 - MDX compilation errors break GitHub Pages builds
 - Broken links create 404s for users
 - Unescaped `<` and `>` characters cause build failures
+- Missing frontmatter fields (author, created, updated) cause schema errors
 - Pushing broken docs wastes CI/CD resources and delays deployment
 
 **If validation fails**:
-- Fix errors immediately
-- Re-run validation until it passes
-- Only then proceed with git commit/push
+1. Fix errors immediately (frontmatter fields, MDX escaping, broken links)
+2. Re-run validation with `uv run tooling/validate_docs.py` until it passes
+3. Only then proceed with git commit/push
 
 ---
 
@@ -246,6 +257,7 @@ See the [CRITICAL REQUIREMENT section at the top of this file](#-critical-requir
 
 ```bash
 # 🚨 BLOCKING REQUIREMENT - Run before committing documentation
+# ⚠️  MUST use "uv run" - script will FAIL without it
 uv run tooling/validate_docs.py
 
 # Development iteration (faster, skip build)
@@ -256,18 +268,23 @@ uv run tooling/validate_docs.py --verbose
 ```
 
 **What validation checks**:
-- ✓ YAML frontmatter (required fields: title, status, date, tags)
+- ✓ **Frontmatter schema** (ADR: title, status, date, deciders, tags, id)
+- ✓ **Frontmatter schema** (RFC: title, status, author, created, updated, tags, id)
+- ✓ **Frontmatter schema** (MEMO: title, author, created, updated, tags, id)
 - ✓ Internal/external links (no 404s)
 - ✓ MDX syntax compatibility (catches `<` and `>` issues that break builds)
+- ✓ Code block language labels (prevents MDX parsing errors)
 - ✓ Cross-plugin link problems (relative paths across plugins don't work)
 - ✓ TypeScript compilation (docusaurus config)
 - ✓ Full Docusaurus build (ensures GitHub Pages will succeed)
 
 **REMEMBER**:
+- ❌ **NEVER use `python3 tooling/validate_docs.py` directly** - will fail immediately
 - ❌ NEVER commit documentation without running validation first
 - ❌ NEVER push if validation fails
+- ✅ **ALWAYS use `uv run`** for proper dependency loading
 - ✅ ALWAYS fix errors before proceeding
-- ✅ ALWAYS verify "SUCCESS" message before git commit
+- ✅ ALWAYS verify "✅ SUCCESS" message before git commit
 
 **Other documentation tools**:
 ```bash
