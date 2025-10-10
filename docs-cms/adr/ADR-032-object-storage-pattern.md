@@ -1,16 +1,14 @@
 ---
 id: adr-032
-title: ADR-032 Object Storage Pattern with MinIO
+title: "ADR-032: Object Storage Pattern with MinIO"
 sidebar_label: ADR-032 Object Storage
 status: Accepted
+date: 2025-10-08
+deciders: System Architecture Team
+tags: [object-storage, minio, s3, blobs, local-testing]
 ---
 
 # ADR-032: Object Storage Pattern with MinIO
-
-**Status**: Accepted
-**Date**: 2025-10-08
-**Decision Makers**: System Architecture Team
-**Tags**: `object-storage`, `minio`, `s3`, `blobs`, `local-testing`
 
 ## Context
 

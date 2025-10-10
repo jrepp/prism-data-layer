@@ -1,9 +1,12 @@
 ---
 id: rfc-008
-title: RFC-008 Proxy Plugin Architecture
+title: "RFC-008: Proxy Plugin Architecture"
 sidebar_label: RFC-008 Plugin Architecture
 status: Draft
+author: System
+created: 2025-10-08
 ---
+
 
 # RFC-008: Proxy Plugin Architecture and Responsibility Separation
 

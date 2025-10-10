@@ -1,10 +1,10 @@
 ---
-title: 'RFC-009: Distributed Reliability Data Patterns'
+title: "RFC-009: Distributed Reliability Data Patterns"
 status: Proposed
-date: 2025-10-08
-authors: [System]
-tags: ['architecture', 'reliability', 'data-patterns', 'distributed-systems']
+author: System
+created: 2025-10-08
 ---
+
 
 # RFC-009: Distributed Reliability Data Patterns
 

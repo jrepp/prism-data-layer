@@ -1,9 +1,12 @@
 ---
 id: rfc-007
-title: RFC-007 Cache Strategies for Data Layer
+title: "RFC-007: Cache Strategies for Data Layer"
 sidebar_label: RFC-007 Cache Strategies
 status: Draft
+author: System
+created: 2025-10-08
 ---
+
 
 # RFC-007: Cache Strategies for Data Layer
 

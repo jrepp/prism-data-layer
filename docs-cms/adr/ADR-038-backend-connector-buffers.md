@@ -2,7 +2,7 @@
 title: "ADR-038: Backend Connector Buffer Architecture"
 status: Proposed
 date: 2025-10-08
-deciders: [System]
+deciders: System
 tags: ['architecture', 'performance', 'backend', 'isolation', 'scalability']
 ---
 

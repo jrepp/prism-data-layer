@@ -2,7 +2,7 @@
 title: "ADR-039: CLI Acceptance Testing with testscript"
 status: Accepted
 date: 2025-10-09
-deciders: [System]
+deciders: System
 tags: [testing, cli, go, acceptance-testing, developer-experience]
 ---
 

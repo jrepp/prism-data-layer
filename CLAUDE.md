@@ -10,11 +10,11 @@ This file provides guidance to Claude Code when working with the Prism data acce
 
 ```bash
 # THIS IS A BLOCKING REQUIREMENT - NEVER SKIP
-python3 tooling/validate_docs.py
+uv run tooling/validate_docs.py
 ```
 
 **YOU MUST**:
-1. ✅ Run `python3 tooling/validate_docs.py` BEFORE committing documentation changes
+1. ✅ Run `uv run tooling/validate_docs.py` BEFORE committing documentation changes
 2. ✅ Fix ALL errors reported by validation
 3. ✅ Ensure validation passes with "SUCCESS" message
 4. ❌ NEVER commit/push documentation if validation fails
@@ -246,13 +246,13 @@ See the [CRITICAL REQUIREMENT section at the top of this file](#-critical-requir
 
 ```bash
 # 🚨 BLOCKING REQUIREMENT - Run before committing documentation
-python3 tooling/validate_docs.py
+uv run tooling/validate_docs.py
 
 # Development iteration (faster, skip build)
-python3 tooling/validate_docs.py --skip-build
+uv run tooling/validate_docs.py --skip-build
 
 # Verbose debugging
-python3 tooling/validate_docs.py --verbose
+uv run tooling/validate_docs.py --verbose
 ```
 
 **What validation checks**:
@@ -374,7 +374,7 @@ tags: [architecture, backend, security]
 
 **Converting to Frontmatter:**
 ```bash
-python3 tooling/convert_to_frontmatter.py
+uv run tooling/convert_to_frontmatter.py
 ```
 
 Key ADRs:

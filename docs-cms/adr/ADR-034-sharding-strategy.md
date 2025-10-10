@@ -2,7 +2,7 @@
 title: "ADR-034: Product/Feature Sharding Strategy"
 status: Proposed
 date: 2025-10-08
-deciders: [System]
+deciders: System
 tags: ['architecture', 'deployment', 'reliability', 'operations', 'performance']
 ---
 

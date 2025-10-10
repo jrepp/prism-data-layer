@@ -2,7 +2,7 @@
 title: "ADR-036: Local SQLite Storage for Namespace Configuration"
 status: Proposed
 date: 2025-10-08
-deciders: [System]
+deciders: System
 tags: ['configuration', 'deployment', 'reliability', 'operations']
 ---
 

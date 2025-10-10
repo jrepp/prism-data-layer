@@ -1,9 +1,12 @@
 ---
 id: rfc-006
-title: RFC-006 Admin CLI (prismctl)
+title: "RFC-006: Admin CLI (prismctl)"
 sidebar_label: RFC-006 Admin CLI
 status: Superseded
+author: System
+created: 2025-10-08
 ---
+
 
 # RFC-006: Admin CLI (prismctl)
 **Author**: System

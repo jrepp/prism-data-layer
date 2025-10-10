@@ -1,16 +1,14 @@
 ---
 id: adr-031
-title: ADR-031 TTL Defaults for Client-Configured Data
+title: "ADR-031: TTL Defaults for Client-Configured Data"
 sidebar_label: ADR-031 TTL Defaults
 status: Accepted
+date: 2025-10-08
+deciders: System Architecture Team
+tags: [data-lifecycle, cache, cleanup, operations]
 ---
 
 # ADR-031: TTL Defaults for Client-Configured Dynamic Data
-
-**Status**: Accepted
-**Date**: 2025-10-08
-**Decision Makers**: System Architecture Team
-**Tags**: `data-lifecycle`, `cache`, `cleanup`, `operations`
 
 ## Context
 

@@ -52,7 +52,7 @@ jobs:
           python-version: '3.11'
 
       - name: Validate documentation
-        run: python3 tooling/validate_docs.py
+        run: uv run tooling/validate_docs.py
 
       - name: Build documentation
         run: uv run tooling/build_docs.py

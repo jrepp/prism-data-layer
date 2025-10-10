@@ -2,7 +2,7 @@
 title: "ADR-037: Kubernetes Operator with Custom Resource Definitions"
 status: Proposed
 date: 2025-10-08
-deciders: [System]
+deciders: System
 tags: ['operations', 'deployment', 'kubernetes', 'automation', 'dx']
 ---
 

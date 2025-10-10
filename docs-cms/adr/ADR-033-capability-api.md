@@ -2,7 +2,7 @@
 title: "ADR-033: Capability API for Prism Instance Queries"
 status: Proposed
 date: 2025-10-08
-deciders: [System]
+deciders: System
 tags: ['api-design', 'client-server', 'versioning', 'operations']
 ---
 
