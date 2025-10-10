@@ -318,7 +318,7 @@ for attempt in 1..=5 {
 **After**: 0.5s sleep + retry
 
 **Rationale**:
-- Most patterns start in <500ms
+- Most patterns start in &lt;500ms
 - Retry handles edge cases where pattern takes longer
 - Net result: 30% faster integration tests
 
@@ -331,7 +331,7 @@ for attempt in 1..=5 {
 - Connection failure reasons
 
 **Example**:
-```
+```text
 WARN pattern=redis attempt=2 next_delay_ms=200 error="connection refused" gRPC connection attempt failed, retrying
 INFO pattern=redis attempts=3 gRPC client connected successfully
 ```
@@ -378,7 +378,7 @@ INFO pattern=redis attempts=3 gRPC client connected successfully
 
 ### Unit Test Results
 
-```
+```text
 running 18 tests (proxy/src/)
 test pattern::tests::test_pattern_manager_creation ... ok
 test pattern::tests::test_register_pattern ... ok
@@ -394,7 +394,7 @@ test result: ok. 18 passed; 0 failed
 
 ### Edge Case Test Results
 
-```
+```text
 running 21 tests (proxy/tests/edge_cases_test.rs)
 test test_concurrent_health_checks ... ok
 test test_concurrent_pattern_registration ... ok
@@ -418,7 +418,7 @@ test result: ok. 16 passed; 0 failed; 5 ignored
 
 ### Integration Test Results
 
-```
+```text
 running 2 tests (proxy/tests/integration_test.rs)
 test test_proxy_with_memstore_pattern ... ok
 test test_proxy_with_redis_pattern ... ok
@@ -492,7 +492,7 @@ test result: ok. 2 passed; 0 failed; finished in 2.25s
 
 5. **Slow Startup Handling**
    - Configurable timeout per pattern
-   - Warning on slow startup (>2s)
+   - Warning on slow startup (&gt;2s)
    - Startup time metrics
 
 ### Low Priority (Production Hardening)
