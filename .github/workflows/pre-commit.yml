@@ -1,0 +1,161 @@
+name: Pre-Commit Checks
+
+on:
+  push:
+    branches-ignore: [main]
+  pull_request:
+
+# Cancel in-progress runs for the same PR/branch
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # Fast checks that run on every push
+  quick-checks:
+    name: Quick Checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+
+      - name: Cache Rust dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            proxy/target/
+          key: ${{ runner.os }}-cargo-quick-${{ hashFiles('proxy/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-quick-
+            ${{ runner.os }}-cargo-
+
+      - name: Format check
+        run: |
+          echo "## Format Check" >> $GITHUB_STEP_SUMMARY
+          cd proxy && cargo fmt --all -- --check && echo "✅ Rust formatting OK" >> $GITHUB_STEP_SUMMARY || (echo "❌ Rust formatting failed" >> $GITHUB_STEP_SUMMARY && exit 1)
+
+      - name: Rust quick lint
+        run: |
+          echo "## Lint Check" >> $GITHUB_STEP_SUMMARY
+          cd proxy && cargo clippy --all-targets -- -D warnings && echo "✅ Clippy checks passed" >> $GITHUB_STEP_SUMMARY || (echo "❌ Clippy checks failed" >> $GITHUB_STEP_SUMMARY && exit 1)
+
+      - name: Go format check
+        run: |
+          # Check if any Go files need formatting
+          unformatted=$(gofmt -l patterns/ tests/ 2>/dev/null || true)
+          if [ -n "$unformatted" ]; then
+            echo "❌ Go files need formatting:" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            echo "$unformatted" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            exit 1
+          else
+            echo "✅ Go formatting OK" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Go vet
+        run: |
+          cd patterns/core && go vet ./...
+          cd ../memstore && go vet ./...
+          echo "✅ Go vet passed" >> $GITHUB_STEP_SUMMARY
+
+  # Fast unit tests (no containers)
+  fast-tests:
+    name: Fast Unit Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+
+      - name: Setup protoc
+        uses: arduino/setup-protoc@v3
+        with:
+          version: '25.x'
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install protoc-gen-go
+        run: |
+          go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
+          go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
+
+      - name: Cache Rust dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            proxy/target/
+          key: ${{ runner.os }}-cargo-test-quick-${{ hashFiles('proxy/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-test-quick-
+            ${{ runner.os }}-cargo-
+
+      - name: Generate protobuf code
+        run: make proto-go
+
+      - name: Run Rust unit tests
+        run: |
+          echo "## Rust Tests" >> $GITHUB_STEP_SUMMARY
+          cd proxy && cargo test --lib && echo "✅ Rust tests passed" >> $GITHUB_STEP_SUMMARY
+
+      - name: Run Go core tests
+        run: |
+          echo "## Go Core Tests" >> $GITHUB_STEP_SUMMARY
+          cd patterns/core && go test -v -short ./... && echo "✅ Core tests passed" >> $GITHUB_STEP_SUMMARY
+
+      - name: Run Go memstore tests
+        run: |
+          echo "## Go MemStore Tests" >> $GITHUB_STEP_SUMMARY
+          cd patterns/memstore && go test -v -short ./... && echo "✅ MemStore tests passed" >> $GITHUB_STEP_SUMMARY
+
+      - name: Run integration tests
+        run: |
+          echo "## Integration Tests" >> $GITHUB_STEP_SUMMARY
+          cd tests/integration && go test -v -short -timeout 3m ./... && echo "✅ Integration tests passed" >> $GITHUB_STEP_SUMMARY
+
+  # Pre-commit status (required for push)
+  pre-commit-status:
+    name: Pre-Commit Status
+    runs-on: ubuntu-latest
+    needs: [quick-checks, fast-tests]
+    if: always()
+
+    steps:
+      - name: Check status
+        run: |
+          if [[ "${{ needs.quick-checks.result }}" != "success" ]] || \
+             [[ "${{ needs.fast-tests.result }}" != "success" ]]; then
+            echo "❌ Pre-commit checks failed"
+            echo "Please run 'make pre-commit' locally before pushing"
+            exit 1
+          else
+            echo "✅ Pre-commit checks passed"
+          fi
