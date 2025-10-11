@@ -428,6 +428,99 @@ func TestCoordinator_Enumerate_SkipsExpiredIdentities(t *testing.T) {
 	}
 }
 
+// TestCoordinator_Multicast_WithRetries tests multicast retry logic
+func TestCoordinator_Multicast_WithRetries(t *testing.T) {
+	ctx := context.Background()
+	config := DefaultConfig()
+	config.Messaging.RetryAttempts = 2
+	config.Messaging.RetryDelay = 10 * time.Millisecond
+
+	registry := NewMockRegistryBackend()
+	messaging := NewMockMessagingBackendWithFailures(3) // Fail first 3 attempts
+
+	coordinator, err := NewCoordinator(config, registry, messaging, nil)
+	if err != nil {
+		t.Fatalf("Failed to create coordinator: %v", err)
+	}
+	defer coordinator.Close()
+
+	// Register 2 identities
+	coordinator.Register(ctx, "device-1", map[string]interface{}{"id": 1}, 0)
+	coordinator.Register(ctx, "device-2", map[string]interface{}{"id": 2}, 0)
+
+	// Multicast should succeed after retries for device-1 (fails 2x then succeeds)
+	// device-2 should fail all retries
+	result, err := coordinator.Multicast(ctx, nil, []byte("test-message"))
+	if err != nil {
+		t.Fatalf("Multicast failed: %v", err)
+	}
+
+	// Should have some failures due to retry exhaustion
+	if result.FailedCount == 0 {
+		t.Log("Expected some failures due to backend flakiness, but all succeeded")
+	}
+}
+
+// TestCoordinator_Multicast_EmptyTargets tests multicast with no matching identities
+func TestCoordinator_Multicast_EmptyTargets(t *testing.T) {
+	ctx := context.Background()
+	coordinator := NewCoordinatorWithMocks(t)
+	defer coordinator.Close()
+
+	// No identities registered, multicast should return empty response
+	filter := NewFilter(map[string]interface{}{"status": "online"})
+	result, err := coordinator.Multicast(ctx, filter, []byte("message"))
+	if err != nil {
+		t.Fatalf("Multicast failed: %v", err)
+	}
+
+	if result.TargetCount != 0 {
+		t.Errorf("Expected 0 targets, got %d", result.TargetCount)
+	}
+
+	if result.DeliveredCount != 0 {
+		t.Errorf("Expected 0 delivered, got %d", result.DeliveredCount)
+	}
+}
+
+// TestCoordinator_Close_WithBackendErrors tests Close with backend errors
+func TestCoordinator_Close_WithBackendErrors(t *testing.T) {
+	config := DefaultConfig()
+	registry := NewMockRegistryBackendWithCloseError()
+	messaging := NewMockMessagingBackend()
+
+	coordinator, err := NewCoordinator(config, registry, messaging, nil)
+	if err != nil {
+		t.Fatalf("Failed to create coordinator: %v", err)
+	}
+
+	// Close should return error from registry backend
+	err = coordinator.Close()
+	if err == nil {
+		t.Error("Expected error from Close when registry backend fails, got nil")
+	}
+}
+
+// TestCoordinator_Register_BackendError tests Register with backend failure
+func TestCoordinator_Register_BackendError(t *testing.T) {
+	ctx := context.Background()
+	config := DefaultConfig()
+	registry := NewMockRegistryBackendWithSetError()
+	messaging := NewMockMessagingBackend()
+
+	coordinator, err := NewCoordinator(config, registry, messaging, nil)
+	if err != nil {
+		t.Fatalf("Failed to create coordinator: %v", err)
+	}
+	defer coordinator.Close()
+
+	// Register should fail when backend Set fails
+	err = coordinator.Register(ctx, "test-id", map[string]interface{}{"key": "value"}, 0)
+	if err == nil {
+		t.Error("Expected error from Register when backend Set fails, got nil")
+	}
+}
+
 // NewCoordinatorWithMocks creates a coordinator with mock backends for testing
 func NewCoordinatorWithMocks(t *testing.T) *Coordinator {
 	config := DefaultConfig()

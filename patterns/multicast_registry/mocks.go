@@ -143,3 +143,60 @@ func (m *MockMessagingBackend) GetPublishedCount(topic string) int {
 
 	return len(m.published[topic])
 }
+
+// MockRegistryBackendWithCloseError fails on Close
+type MockRegistryBackendWithCloseError struct {
+	*MockRegistryBackend
+}
+
+func NewMockRegistryBackendWithCloseError() *MockRegistryBackendWithCloseError {
+	return &MockRegistryBackendWithCloseError{
+		MockRegistryBackend: NewMockRegistryBackend(),
+	}
+}
+
+func (m *MockRegistryBackendWithCloseError) Close() error {
+	return fmt.Errorf("mock: Close failed intentionally")
+}
+
+// MockRegistryBackendWithSetError fails on Set
+type MockRegistryBackendWithSetError struct {
+	*MockRegistryBackend
+}
+
+func NewMockRegistryBackendWithSetError() *MockRegistryBackendWithSetError {
+	return &MockRegistryBackendWithSetError{
+		MockRegistryBackend: NewMockRegistryBackend(),
+	}
+}
+
+func (m *MockRegistryBackendWithSetError) Set(ctx context.Context, identity string, metadata map[string]interface{}, ttl time.Duration) error {
+	return fmt.Errorf("mock: Set failed intentionally")
+}
+
+// MockMessagingBackendWithFailures fails first N publish attempts
+type MockMessagingBackendWithFailures struct {
+	*MockMessagingBackend
+	failuresRemaining int
+	mu                sync.Mutex
+}
+
+func NewMockMessagingBackendWithFailures(failures int) *MockMessagingBackendWithFailures {
+	return &MockMessagingBackendWithFailures{
+		MockMessagingBackend: NewMockMessagingBackend(),
+		failuresRemaining:    failures,
+	}
+}
+
+func (m *MockMessagingBackendWithFailures) Publish(ctx context.Context, topic string, payload []byte) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	if m.failuresRemaining > 0 {
+		m.failuresRemaining--
+		return fmt.Errorf("mock: Publish failed (remaining failures: %d)", m.failuresRemaining)
+	}
+
+	// After failures exhausted, delegate to parent
+	return m.MockMessagingBackend.Publish(ctx, topic, payload)
+}
