@@ -9,23 +9,18 @@ import (
 	"syscall"
 )
 
-// Plugin represents a backend driver lifecycle.
-//
-// TERMINOLOGY (from MEMO-006):
-// - Backend: The actual storage/messaging system (Redis, PostgreSQL, Kafka, NATS, etc.)
-// - Backend Driver: The Go implementation that interfaces with a backend (this interface)
-// - Pattern: The data access pattern being implemented (KeyValue, PubSub, Stream, etc.)
-// - Interface: Thin proto service definitions (keyvalue_basic, keyvalue_ttl, pubsub_basic, etc.)
-//
-// A Backend Driver (Plugin):
-// - Connects to a specific Backend (e.g., Redis, PostgreSQL)
-// - Implements one or more Patterns (e.g., KeyValue, PubSub)
-// - Supports multiple Interfaces within those patterns (e.g., keyvalue_basic + keyvalue_ttl)
-//
-// Example: The Redis backend driver implements:
-// - KeyValue pattern (keyvalue_basic, keyvalue_scan, keyvalue_ttl interfaces)
-// - PubSub pattern (pubsub_basic, pubsub_wildcards interfaces)
-// - Stream pattern (stream_basic, stream_consumer_groups interfaces)
+// PluginConfig contains plugin metadata
+type PluginConfig struct {
+	Name    string `yaml:"name"`
+	Version string `yaml:"version"`
+}
+
+// ControlPlaneConfig contains control plane settings
+type ControlPlaneConfig struct {
+	Port int `yaml:"port"`
+}
+
+// Plugin represents a backend driver lifecycle
 type Plugin interface {
 	// Name returns the backend driver name (e.g., "redis", "postgres", "kafka")
 	Name() string
@@ -46,15 +41,14 @@ type Plugin interface {
 	Health(ctx context.Context) (*HealthStatus, error)
 }
 
-// BackendDriver is a type alias for Plugin to make terminology clearer.
-// Use this when the context makes it clear we're referring to a backend driver.
+// BackendDriver is a type alias for Plugin to make terminology clearer
 type BackendDriver = Plugin
 
 // HealthStatus represents backend driver health
 type HealthStatus struct {
 	Status  HealthState
 	Message string
-	Details map[string]string // Backend-specific details (connection count, latency, etc.)
+	Details map[string]string // Backend-specific details
 }
 
 // HealthState represents backend driver health state

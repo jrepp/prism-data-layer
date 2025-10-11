@@ -7,22 +7,14 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-// Config represents plugin configuration
+// Config represents the main plugin configuration
+// See also: plugin.go, backend.go, consumer.go for specific config types
 type Config struct {
-	Plugin       PluginConfig       `yaml:"plugin"`
-	ControlPlane ControlPlaneConfig `yaml:"control_plane"`
-	Backend      map[string]any     `yaml:"backend"` // Backend-specific config
-}
-
-// PluginConfig contains plugin metadata
-type PluginConfig struct {
-	Name    string `yaml:"name"`
-	Version string `yaml:"version"`
-}
-
-// ControlPlaneConfig contains control plane settings
-type ControlPlaneConfig struct {
-	Port int `yaml:"port"`
+	Plugin       PluginConfig              `yaml:"plugin"`
+	ControlPlane ControlPlaneConfig        `yaml:"control_plane"`
+	Backend      map[string]any            `yaml:"backend"`  // Legacy: single backend config
+	Backends     map[string]*BackendConfig `yaml:"backends"` // Named backends registry
+	Consumer     *ConsumerConfig           `yaml:"consumer"` // Consumer pattern config
 }
 
 // LoadConfig loads configuration from YAML file
@@ -45,7 +37,7 @@ func LoadConfig(path string) (*Config, error) {
 	return &config, nil
 }
 
-// GetBackendConfig extracts backend-specific configuration
+// GetBackendConfig extracts backend-specific configuration (legacy single backend)
 func (c *Config) GetBackendConfig(target interface{}) error {
 	// Marshal backend config back to YAML
 	data, err := yaml.Marshal(c.Backend)
