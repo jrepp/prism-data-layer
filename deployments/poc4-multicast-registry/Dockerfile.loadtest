@@ -1,0 +1,40 @@
+# Dockerfile for prism-loadtest CLI tool
+
+FROM golang:1.23-alpine AS builder
+
+WORKDIR /build
+
+# Install build dependencies
+RUN apk add --no-cache git make
+
+# Copy Go modules files
+COPY cmd/prism-loadtest/go.mod cmd/prism-loadtest/go.sum cmd/prism-loadtest/
+COPY patterns/multicast_registry/go.mod patterns/multicast_registry/go.sum patterns/multicast_registry/
+COPY patterns/core/go.mod patterns/core/go.sum patterns/core/
+
+# Download dependencies
+WORKDIR /build/cmd/prism-loadtest
+RUN go mod download
+
+# Copy source code
+WORKDIR /build
+COPY cmd/ cmd/
+COPY patterns/ patterns/
+
+# Build CLI tool
+WORKDIR /build/cmd/prism-loadtest
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o prism-loadtest .
+
+# Final stage - minimal runtime image
+FROM alpine:latest
+
+RUN apk --no-cache add ca-certificates
+
+WORKDIR /app
+
+# Copy built binary
+COPY --from=builder /build/cmd/prism-loadtest/prism-loadtest /app/
+
+# Set binary as entrypoint
+ENTRYPOINT ["/app/prism-loadtest"]
+CMD ["--help"]

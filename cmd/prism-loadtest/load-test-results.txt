@@ -1,0 +1,67 @@
+Starting Mixed Workload load test...
+  Rate: 100 req/sec
+  Duration: 1m0s
+  Mix: 50% register, 30% enumerate, 20% multicast
+
+Load test running...
+[5s] Total: 600 (119.99 req/sec) | Register: 305, Enumerate: 167, Multicast: 128
+[10s] Total: 1100 (109.99 req/sec) | Register: 553, Enumerate: 312, Multicast: 235
+[15s] Total: 1599 (106.59 req/sec) | Register: 793, Enumerate: 458, Multicast: 348
+[20s] Total: 2100 (105.00 req/sec) | Register: 1046, Enumerate: 606, Multicast: 448
+[25s] Total: 2600 (104.00 req/sec) | Register: 1291, Enumerate: 760, Multicast: 549
+[30s] Total: 3100 (103.33 req/sec) | Register: 1542, Enumerate: 905, Multicast: 653
+[35s] Total: 3600 (102.85 req/sec) | Register: 1798, Enumerate: 1052, Multicast: 750
+[40s] Total: 4100 (102.50 req/sec) | Register: 2039, Enumerate: 1222, Multicast: 839
+[45s] Total: 4600 (102.22 req/sec) | Register: 2286, Enumerate: 1373, Multicast: 941
+[50s] Total: 5100 (102.00 req/sec) | Register: 2541, Enumerate: 1514, Multicast: 1045
+[55s] Total: 5600 (101.81 req/sec) | Register: 2793, Enumerate: 1672, Multicast: 1135
+
+Waiting for workers to finish (1m0s elapsed)...
+
+============================================================
+Mixed Workload Load Test Results
+============================================================
+
+Overall:
+  Total Operations: 6099
+  Register:         3053 (50.1%)
+  Enumerate:        1829 (30.0%)
+  Multicast:        1217 (20.0%)
+
+Register Operations:
+  Total Requests:   3053
+  Successful:       3053 (100.00%)
+  Failed:           0
+  Latency Min:      268µs
+  Latency Max:      96.195ms
+  Latency Avg:      1.411ms
+  Latency P50:      1ms
+  Latency P95:      5ms
+  Latency P99:      50ms
+
+Enumerate Operations:
+  Total Requests:   1829
+  Successful:       1829 (100.00%)
+  Failed:           0
+  Latency Min:      19µs
+  Latency Max:      70.654ms
+  Latency Avg:      393µs
+  Latency P50:      500µs
+  Latency P95:      500µs
+  Latency P99:      5ms
+
+Multicast Operations:
+  Total Requests:   1217
+  Successful:       1217 (100.00%)
+  Failed:           0
+  Latency Min:      1.473ms
+  Latency Max:      56.026523s
+  Latency Avg:      2.429122s
+  Latency P50:      50ms
+  Latency P95:      100ms
+  Latency P99:      100ms
+  Total Targets:    1780045
+  Delivered:        1633877 (91.79%)
+  Failed:           146168
+
+============================================================

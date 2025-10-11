@@ -1,0 +1,62 @@
+version: '3.8'
+
+services:
+  # Redis - Registry backend for identity metadata storage
+  redis:
+    image: redis:7-alpine
+    container_name: poc4-redis
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - poc4-network
+
+  # NATS - Messaging backend for multicast delivery
+  nats:
+    image: nats:2-alpine
+    container_name: poc4-nats
+    ports:
+      - "4222:4222"  # Client connections
+      - "8222:8222"  # HTTP management
+    command: ["-js", "-m", "8222"]
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8222/healthz"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - poc4-network
+
+  # Prism Load Test Tool - Will run load tests against the pattern
+  loadtest:
+    build:
+      context: ../../
+      dockerfile: deployments/poc4-multicast-registry/Dockerfile.loadtest
+    container_name: poc4-loadtest
+    depends_on:
+      redis:
+        condition: service_healthy
+      nats:
+        condition: service_healthy
+    environment:
+      - REDIS_ADDR=redis:6379
+      - NATS_SERVERS=nats://nats:4222
+    networks:
+      - poc4-network
+    # Command can be overridden at runtime
+    command: ["sleep", "infinity"]
+
+volumes:
+  redis-data:
+    driver: local
+
+networks:
+  poc4-network:
+    driver: bridge
