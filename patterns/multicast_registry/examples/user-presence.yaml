@@ -1,0 +1,103 @@
+# Example: User Presence and Chat Rooms
+# Use case: Track online users and broadcast messages to rooms/groups
+
+pattern: multicast-registry
+name: user-presence
+
+slots:
+  registry:
+    backend: redis
+    config:
+      addr: "localhost:6379"
+      password: ""
+      db: 1
+      prefix: "presence:user:"
+      ttl_default: 60  # 1 minute (requires frequent heartbeats)
+
+  messaging:
+    backend: nats
+    config:
+      servers: ["nats://localhost:4222"]
+      topic_prefix: "users."
+      delivery: at-most-once
+      retry_attempts: 1
+      retry_delay: 50ms
+
+config:
+  pattern_name: user-presence
+  default_ttl: 60s
+  max_identities: 100000  # Support large user base
+  max_filter_depth: 3
+  max_clauses: 10
+
+# Usage examples:
+
+# 1. User joins a room (register presence)
+#    POST /api/patterns/user-presence/register
+#    {
+#      "identity": "user-alice-session-xyz",
+#      "metadata": {
+#        "user_id": "alice",
+#        "display_name": "Alice",
+#        "status": "online",
+#        "room": "engineering",
+#        "joined_at": "2025-10-11T10:30:00Z"
+#      },
+#      "ttl": 60
+#    }
+
+# 2. Get all users in a room
+#    POST /api/patterns/user-presence/enumerate
+#    {
+#      "filter": {
+#        "room": "engineering",
+#        "status": "online"
+#      }
+#    }
+
+# 3. Broadcast message to room
+#    POST /api/patterns/user-presence/multicast
+#    {
+#      "filter": {
+#        "room": "engineering"
+#      },
+#      "payload": {
+#        "type": "chat_message",
+#        "from": "alice",
+#        "message": "Hello everyone!",
+#        "timestamp": "2025-10-11T10:31:00Z"
+#      }
+#    }
+
+# 4. Get users by status (online, away, busy)
+#    POST /api/patterns/user-presence/enumerate
+#    {
+#      "filter": {
+#        "status": "away"
+#      }
+#    }
+
+# 5. Broadcast admin announcement to all online users
+#    POST /api/patterns/user-presence/multicast
+#    {
+#      "filter": {
+#        "status": "online"
+#      },
+#      "payload": {
+#        "type": "admin_announcement",
+#        "message": "Server maintenance in 10 minutes",
+#        "priority": "high"
+#      }
+#    }
+
+# 6. User leaves room (unregister)
+#    POST /api/patterns/user-presence/unregister
+#    {
+#      "identity": "user-alice-session-xyz"
+#    }
+
+# Performance considerations:
+# - Short TTL (60s) requires frequent heartbeats from clients
+# - Use connection-based heartbeats (WebSocket ping/pong)
+# - Scale messaging backend (NATS cluster) for high user counts
+# - Consider pagination for enumerate with >100 results

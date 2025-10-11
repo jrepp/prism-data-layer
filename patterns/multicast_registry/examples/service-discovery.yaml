@@ -1,0 +1,115 @@
+# Example: Microservice Discovery and Health Broadcasting
+# Use case: Service registry with health check broadcasting
+
+pattern: multicast-registry
+name: service-discovery
+
+slots:
+  registry:
+    backend: redis
+    config:
+      addr: "localhost:6379"
+      password: ""
+      db: 2
+      prefix: "services:"
+      ttl_default: 30  # 30 seconds (aggressive health check)
+
+  messaging:
+    backend: nats
+    config:
+      servers: ["nats://localhost:4222"]
+      topic_prefix: "services."
+      delivery: at-most-once
+      retry_attempts: 3
+      retry_delay: 200ms
+
+config:
+  pattern_name: service-discovery
+  default_ttl: 30s
+  max_identities: 1000  # Reasonable for microservice clusters
+  max_filter_depth: 3
+  max_clauses: 15
+
+# Usage examples:
+
+# 1. Service registers on startup
+#    POST /api/patterns/service-discovery/register
+#    {
+#      "identity": "payment-service-pod-abc123",
+#      "metadata": {
+#        "service_name": "payment-service",
+#        "version": "2.1.0",
+#        "environment": "production",
+#        "datacenter": "us-west-2",
+#        "health_status": "healthy",
+#        "endpoints": ["https://payment-1.internal:8080"],
+#        "capabilities": ["credit_card", "paypal", "apple_pay"]
+#      },
+#      "ttl": 30
+#    }
+
+# 2. Discover all healthy payment services
+#    POST /api/patterns/service-discovery/enumerate
+#    {
+#      "filter": {
+#        "service_name": "payment-service",
+#        "health_status": "healthy",
+#        "environment": "production"
+#      }
+#    }
+
+# 3. Broadcast configuration update to all payment services
+#    POST /api/patterns/service-discovery/multicast
+#    {
+#      "filter": {
+#        "service_name": "payment-service"
+#      },
+#      "payload": {
+#        "type": "config_update",
+#        "config": {
+#          "rate_limit": 1000,
+#          "timeout_ms": 5000
+#        }
+#      }
+#    }
+
+# 4. Find services in specific datacenter
+#    POST /api/patterns/service-discovery/enumerate
+#    {
+#      "filter": {
+#        "datacenter": "us-west-2",
+#        "health_status": "healthy"
+#      }
+#    }
+
+# 5. Broadcast drain command before deployment
+#    POST /api/patterns/service-discovery/multicast
+#    {
+#      "filter": {
+#        "service_name": "payment-service",
+#        "version": "2.0.0"  # Old version
+#      },
+#      "payload": {
+#        "type": "drain_connections",
+#        "graceful_shutdown_seconds": 30
+#      }
+#    }
+
+# 6. Service health check fails (unregister)
+#    POST /api/patterns/service-discovery/unregister
+#    {
+#      "identity": "payment-service-pod-abc123"
+#    }
+
+# Integration patterns:
+# - Services send heartbeats every 10-15 seconds
+# - Missed 2-3 heartbeats = automatic unregister (TTL expires)
+# - Load balancers query enumerate for active endpoints
+# - Circuit breakers use health_status for routing decisions
+# - Deployment systems use multicast for graceful shutdowns
+
+# Monitoring:
+# - Track service_registration_count by service_name
+# - Track ttl_expiration_rate (service crash detection)
+# - Track multicast_command_delivery (ops commands)
+# - Alert on enumerate_latency_p99 (service discovery speed)
