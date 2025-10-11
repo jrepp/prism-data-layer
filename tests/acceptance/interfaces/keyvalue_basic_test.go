@@ -3,6 +3,7 @@ package interfaces_test
 import (
 	"context"
 	"fmt"
+	"os"
 	"testing"
 	"time"
 
@@ -13,6 +14,27 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+var (
+	sharedRedisBackend *backends.RedisBackend
+	testCtx            context.Context
+)
+
+// TestMain sets up shared Redis container once for all interface tests
+func TestMain(m *testing.M) {
+	testCtx = context.Background()
+
+	// Start Redis container once for all tests
+	sharedRedisBackend = backends.SetupRedis(&testing.T{}, testCtx)
+
+	// Run all tests
+	code := m.Run()
+
+	// Cleanup after all tests
+	sharedRedisBackend.Cleanup()
+
+	os.Exit(code)
+}
 
 // KeyValueBasicDriver defines the interface for basic KeyValue operations
 // This maps to prism.interfaces.keyvalue.KeyValueBasicInterface proto service
@@ -31,24 +53,21 @@ type BackendDriverSetup struct {
 	SupportsScan bool
 }
 
-// setupRedisDriver creates a Redis backend driver for testing
+// setupRedisDriver creates a Redis backend driver for testing using shared container
 func setupRedisDriver(t *testing.T, ctx context.Context) (KeyValueBasicDriver, func()) {
 	t.Helper()
-
-	// Start Redis backend using centralized backend utility
-	backend := backends.SetupRedis(t, ctx)
 
 	// Create Redis driver
 	driver := redis.New()
 
-	// Configure with testcontainer
+	// Configure with shared testcontainer
 	config := &core.Config{
 		Plugin: core.PluginConfig{
 			Name:    "redis-test",
 			Version: "0.1.0",
 		},
 		Backend: map[string]any{
-			"address": backend.ConnectionString,
+			"address": sharedRedisBackend.ConnectionString,
 		},
 	}
 
@@ -61,7 +80,7 @@ func setupRedisDriver(t *testing.T, ctx context.Context) (KeyValueBasicDriver, f
 
 	cleanup := func() {
 		harness.Cleanup()
-		backend.Cleanup()
+		// Don't cleanup backend - it's shared across tests
 	}
 
 	return driver, cleanup
@@ -82,96 +101,79 @@ func setupMemStoreDriver(t *testing.T, ctx context.Context) (KeyValueBasicDriver
 func TestKeyValueBasicInterface_SetGet(t *testing.T) {
 	ctx := context.Background()
 
-	// Table of backend drivers to test
-	backendDrivers := []BackendDriverSetup{
-		{
-			Name:         "Redis",
-			SetupFunc:    setupRedisDriver,
-			SupportsTTL:  true,
-			SupportsScan: true,
-		},
-		{
-			Name:         "MemStore",
-			SetupFunc:    setupMemStoreDriver,
-			SupportsTTL:  true,
-			SupportsScan: false, // MemStore doesn't implement keyvalue_scan interface
-		},
-		// Add more backend drivers here:
-		// {
-		//     Name:         "PostgreSQL",
-		//     SetupFunc:    setupPostgresDriver,
-		//     SupportsTTL:  false,
-		//     SupportsScan: true,
-		// },
-	}
-
-	for _, backendSetup := range backendDrivers {
+	for _, backendSetup := range GetStandardBackends() {
 		t.Run(backendSetup.Name, func(t *testing.T) {
 			driver, cleanup := backendSetup.SetupFunc(t, ctx)
 			defer cleanup()
 
 			t.Run("Set and Get", func(t *testing.T) {
-				err := driver.Set("test-key", []byte("test-value"), 0)
+				key := fmt.Sprintf("%s:test-key", t.Name())
+				err := driver.Set(key, []byte("test-value"), 0)
 				require.NoError(t, err)
 
-				value, found, err := driver.Get("test-key")
+				value, found, err := driver.Get(key)
 				require.NoError(t, err)
 				assert.True(t, found, "Key should be found")
 				assert.Equal(t, "test-value", string(value))
 			})
 
 			t.Run("Get Non-Existent Key", func(t *testing.T) {
-				value, found, err := driver.Get("non-existent-key")
+				key := fmt.Sprintf("%s:non-existent-key", t.Name())
+				value, found, err := driver.Get(key)
 				require.NoError(t, err)
 				assert.False(t, found, "Key should not be found")
 				assert.Nil(t, value)
 			})
 
 			t.Run("Overwrite Existing Key", func(t *testing.T) {
-				err := driver.Set("overwrite-key", []byte("original"), 0)
+				key := fmt.Sprintf("%s:overwrite-key", t.Name())
+				err := driver.Set(key, []byte("original"), 0)
 				require.NoError(t, err)
 
-				err = driver.Set("overwrite-key", []byte("updated"), 0)
+				err = driver.Set(key, []byte("updated"), 0)
 				require.NoError(t, err)
 
-				value, found, err := driver.Get("overwrite-key")
+				value, found, err := driver.Get(key)
 				require.NoError(t, err)
 				assert.True(t, found)
 				assert.Equal(t, "updated", string(value))
 			})
 
 			t.Run("Binary Data", func(t *testing.T) {
+				key := fmt.Sprintf("%s:binary-key", t.Name())
 				binaryData := []byte{0x00, 0x01, 0x02, 0xFF, 0xFE, 0xFD}
-				err := driver.Set("binary-key", binaryData, 0)
+				err := driver.Set(key, binaryData, 0)
 				require.NoError(t, err)
 
-				value, found, err := driver.Get("binary-key")
+				value, found, err := driver.Get(key)
 				require.NoError(t, err)
 				assert.True(t, found)
 				assert.Equal(t, binaryData, value)
 			})
 
 			t.Run("Empty Value", func(t *testing.T) {
-				err := driver.Set("empty-key", []byte(""), 0)
+				key := fmt.Sprintf("%s:empty-key", t.Name())
+				err := driver.Set(key, []byte(""), 0)
 				require.NoError(t, err)
 
-				value, found, err := driver.Get("empty-key")
+				value, found, err := driver.Get(key)
 				require.NoError(t, err)
 				assert.True(t, found)
 				assert.Equal(t, "", string(value))
 			})
 
 			t.Run("Large Value", func(t *testing.T) {
+				key := fmt.Sprintf("%s:large-key", t.Name())
 				// Create 1MB value
 				largeValue := make([]byte, 1024*1024)
 				for i := range largeValue {
 					largeValue[i] = byte(i % 256)
 				}
 
-				err := driver.Set("large-key", largeValue, 0)
+				err := driver.Set(key, largeValue, 0)
 				require.NoError(t, err, "Should handle large values")
 
-				value, found, err := driver.Get("large-key")
+				value, found, err := driver.Get(key)
 				require.NoError(t, err)
 				assert.True(t, found)
 				assert.Equal(t, len(largeValue), len(value))
@@ -184,41 +186,28 @@ func TestKeyValueBasicInterface_SetGet(t *testing.T) {
 func TestKeyValueBasicInterface_Delete(t *testing.T) {
 	ctx := context.Background()
 
-	backendDrivers := []BackendDriverSetup{
-		{
-			Name:         "Redis",
-			SetupFunc:    setupRedisDriver,
-			SupportsTTL:  true,
-			SupportsScan: true,
-		},
-		{
-			Name:         "MemStore",
-			SetupFunc:    setupMemStoreDriver,
-			SupportsTTL:  true,
-			SupportsScan: false,
-		},
-	}
-
-	for _, backendSetup := range backendDrivers {
+	for _, backendSetup := range GetStandardBackends() {
 		t.Run(backendSetup.Name, func(t *testing.T) {
 			driver, cleanup := backendSetup.SetupFunc(t, ctx)
 			defer cleanup()
 
 			t.Run("Delete Existing Key", func(t *testing.T) {
-				err := driver.Set("delete-me", []byte("temporary"), 0)
+				key := fmt.Sprintf("%s:delete-me", t.Name())
+				err := driver.Set(key, []byte("temporary"), 0)
 				require.NoError(t, err)
 
-				err = driver.Delete("delete-me")
+				err = driver.Delete(key)
 				require.NoError(t, err)
 
-				_, found, err := driver.Get("delete-me")
+				_, found, err := driver.Get(key)
 				require.NoError(t, err)
 				assert.False(t, found, "Key should be deleted")
 			})
 
 			t.Run("Delete Non-Existent Key", func(t *testing.T) {
+				key := fmt.Sprintf("%s:non-existent-key", t.Name())
 				// Should not error when deleting non-existent key
-				err := driver.Delete("non-existent-key")
+				err := driver.Delete(key)
 				assert.NoError(t, err, "Deleting non-existent key should not error")
 			})
 		})
@@ -229,37 +218,24 @@ func TestKeyValueBasicInterface_Delete(t *testing.T) {
 func TestKeyValueBasicInterface_Exists(t *testing.T) {
 	ctx := context.Background()
 
-	backendDrivers := []BackendDriverSetup{
-		{
-			Name:         "Redis",
-			SetupFunc:    setupRedisDriver,
-			SupportsTTL:  true,
-			SupportsScan: true,
-		},
-		{
-			Name:         "MemStore",
-			SetupFunc:    setupMemStoreDriver,
-			SupportsTTL:  true,
-			SupportsScan: false,
-		},
-	}
-
-	for _, backendSetup := range backendDrivers {
+	for _, backendSetup := range GetStandardBackends() {
 		t.Run(backendSetup.Name, func(t *testing.T) {
 			driver, cleanup := backendSetup.SetupFunc(t, ctx)
 			defer cleanup()
 
 			t.Run("Exists Returns True for Existing Key", func(t *testing.T) {
-				err := driver.Set("exists-key", []byte("value"), 0)
+				key := fmt.Sprintf("%s:exists-key", t.Name())
+				err := driver.Set(key, []byte("value"), 0)
 				require.NoError(t, err)
 
-				exists, err := driver.Exists("exists-key")
+				exists, err := driver.Exists(key)
 				require.NoError(t, err)
 				assert.True(t, exists, "Key should exist")
 			})
 
 			t.Run("Exists Returns False for Non-Existent Key", func(t *testing.T) {
-				exists, err := driver.Exists("non-existent-key")
+				key := fmt.Sprintf("%s:non-existent-key", t.Name())
+				exists, err := driver.Exists(key)
 				require.NoError(t, err)
 				assert.False(t, exists, "Key should not exist")
 			})
@@ -271,22 +247,7 @@ func TestKeyValueBasicInterface_Exists(t *testing.T) {
 func TestKeyValueBasicInterface_ConcurrentOperations(t *testing.T) {
 	ctx := context.Background()
 
-	backendDrivers := []BackendDriverSetup{
-		{
-			Name:         "Redis",
-			SetupFunc:    setupRedisDriver,
-			SupportsTTL:  true,
-			SupportsScan: true,
-		},
-		{
-			Name:         "MemStore",
-			SetupFunc:    setupMemStoreDriver,
-			SupportsTTL:  true,
-			SupportsScan: false,
-		},
-	}
-
-	for _, backendSetup := range backendDrivers {
+	for _, backendSetup := range GetStandardBackends() {
 		t.Run(backendSetup.Name, func(t *testing.T) {
 			driver, cleanup := backendSetup.SetupFunc(t, ctx)
 			defer cleanup()
@@ -301,7 +262,7 @@ func TestKeyValueBasicInterface_ConcurrentOperations(t *testing.T) {
 				for w := 0; w < numWorkers; w++ {
 					go func(workerID int) {
 						for i := 0; i < opsPerWorker; i++ {
-							key := fmt.Sprintf("worker-%d-key-%d", workerID, i)
+							key := fmt.Sprintf("%s:worker-%d-key-%d", t.Name(), workerID, i)
 							value := fmt.Sprintf("worker-%d-value-%d", workerID, i)
 							if err := driver.Set(key, []byte(value), 0); err != nil {
 								done <- err
@@ -321,7 +282,7 @@ func TestKeyValueBasicInterface_ConcurrentOperations(t *testing.T) {
 				// Verify all keys were written
 				for w := 0; w < numWorkers; w++ {
 					for i := 0; i < opsPerWorker; i++ {
-						key := fmt.Sprintf("worker-%d-key-%d", w, i)
+						key := fmt.Sprintf("%s:worker-%d-key-%d", t.Name(), w, i)
 						expectedValue := fmt.Sprintf("worker-%d-value-%d", w, i)
 						value, found, err := driver.Get(key)
 						require.NoError(t, err)
@@ -332,8 +293,9 @@ func TestKeyValueBasicInterface_ConcurrentOperations(t *testing.T) {
 			})
 
 			t.Run("Concurrent Reads", func(t *testing.T) {
-				// Set up test data
-				err := driver.Set("shared-key", []byte("shared-value"), 0)
+				// Set up test data with unique key
+				key := fmt.Sprintf("%s:shared-key", t.Name())
+				err := driver.Set(key, []byte("shared-value"), 0)
 				require.NoError(t, err)
 
 				const numReaders = 20
@@ -342,7 +304,7 @@ func TestKeyValueBasicInterface_ConcurrentOperations(t *testing.T) {
 				// Launch readers
 				for r := 0; r < numReaders; r++ {
 					go func() {
-						value, found, err := driver.Get("shared-key")
+						value, found, err := driver.Get(key)
 						if err != nil {
 							done <- err
 							return

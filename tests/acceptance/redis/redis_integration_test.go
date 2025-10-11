@@ -3,6 +3,7 @@ package redis_test
 import (
 	"context"
 	"fmt"
+	"os"
 	"testing"
 	"time"
 
@@ -14,24 +15,39 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+var (
+	redisBackend *backends.RedisBackend
+	testCtx      context.Context
+)
+
+// TestMain sets up the Redis container once for all tests
+func TestMain(m *testing.M) {
+	testCtx = context.Background()
+
+	// Start Redis container once
+	redisBackend = backends.SetupRedis(&testing.T{}, testCtx)
+
+	// Run all tests
+	code := m.Run()
+
+	// Cleanup after all tests
+	redisBackend.Cleanup()
+
+	os.Exit(code)
+}
+
 func TestRedisPattern_BasicOperations(t *testing.T) {
-	ctx := context.Background()
-
-	// Start Redis container using centralized backend utility
-	backend := backends.SetupRedis(t, ctx)
-	defer backend.Cleanup()
-
 	// Create Redis pattern
 	redisPlugin := redis.New()
 
-	// Configure with testcontainer
+	// Configure with shared testcontainer
 	config := &core.Config{
 		Plugin: core.PluginConfig{
 			Name:    "redis-test",
 			Version: "0.1.0",
 		},
 		Backend: map[string]any{
-			"address": backend.ConnectionString,
+			"address": redisBackend.ConnectionString,
 		},
 	}
 
@@ -44,54 +60,61 @@ func TestRedisPattern_BasicOperations(t *testing.T) {
 	require.NoError(t, err, "Plugin did not become healthy")
 
 	t.Run("Set and Get", func(t *testing.T) {
-		err := redisPlugin.Set("test-key", []byte("test-value"), 0)
+		key := fmt.Sprintf("%s:test-key", t.Name())
+		err := redisPlugin.Set(key, []byte("test-value"), 0)
 		require.NoError(t, err)
 
-		value, found, err := redisPlugin.Get("test-key")
+		value, found, err := redisPlugin.Get(key)
 		require.NoError(t, err)
 		assert.True(t, found)
 		assert.Equal(t, "test-value", string(value))
 	})
 
 	t.Run("Get Non-Existent Key", func(t *testing.T) {
-		value, found, err := redisPlugin.Get("non-existent")
+		key := fmt.Sprintf("%s:non-existent", t.Name())
+		value, found, err := redisPlugin.Get(key)
 		require.NoError(t, err)
 		assert.False(t, found)
 		assert.Nil(t, value)
 	})
 
 	t.Run("Delete", func(t *testing.T) {
-		err := redisPlugin.Set("delete-me", []byte("temporary"), 0)
+		key := fmt.Sprintf("%s:delete-me", t.Name())
+		err := redisPlugin.Set(key, []byte("temporary"), 0)
 		require.NoError(t, err)
 
-		err = redisPlugin.Delete("delete-me")
+		err = redisPlugin.Delete(key)
 		require.NoError(t, err)
 
-		_, found, err := redisPlugin.Get("delete-me")
+		_, found, err := redisPlugin.Get(key)
 		require.NoError(t, err)
 		assert.False(t, found)
 	})
 
 	t.Run("Exists", func(t *testing.T) {
-		err := redisPlugin.Set("exists-key", []byte("value"), 0)
+		keyExists := fmt.Sprintf("%s:exists-key", t.Name())
+		keyNonExistent := fmt.Sprintf("%s:non-existent", t.Name())
+
+		err := redisPlugin.Set(keyExists, []byte("value"), 0)
 		require.NoError(t, err)
 
-		exists, err := redisPlugin.Exists("exists-key")
+		exists, err := redisPlugin.Exists(keyExists)
 		require.NoError(t, err)
 		assert.True(t, exists)
 
-		exists, err = redisPlugin.Exists("non-existent")
+		exists, err = redisPlugin.Exists(keyNonExistent)
 		require.NoError(t, err)
 		assert.False(t, exists)
 	})
 
 	t.Run("TTL Expiration", func(t *testing.T) {
+		key := fmt.Sprintf("%s:ttl-key", t.Name())
 		// Set key with 2 second TTL
-		err := redisPlugin.Set("ttl-key", []byte("expires-soon"), 2)
+		err := redisPlugin.Set(key, []byte("expires-soon"), 2)
 		require.NoError(t, err)
 
 		// Key should exist immediately
-		value, found, err := redisPlugin.Get("ttl-key")
+		value, found, err := redisPlugin.Get(key)
 		require.NoError(t, err)
 		assert.True(t, found)
 		assert.Equal(t, "expires-soon", string(value))
@@ -100,7 +123,7 @@ func TestRedisPattern_BasicOperations(t *testing.T) {
 		time.Sleep(3 * time.Second)
 
 		// Key should be gone
-		_, found, err = redisPlugin.Get("ttl-key")
+		_, found, err = redisPlugin.Get(key)
 		require.NoError(t, err)
 		assert.False(t, found, "Key should have expired")
 	})
@@ -108,7 +131,7 @@ func TestRedisPattern_BasicOperations(t *testing.T) {
 	t.Run("Multiple Keys", func(t *testing.T) {
 		// Set multiple keys
 		for i := 0; i < 10; i++ {
-			key := fmt.Sprintf("multi-key-%d", i)
+			key := fmt.Sprintf("%s:multi-key-%d", t.Name(), i)
 			value := fmt.Sprintf("multi-value-%d", i)
 			err := redisPlugin.Set(key, []byte(value), 0)
 			require.NoError(t, err)
@@ -116,7 +139,7 @@ func TestRedisPattern_BasicOperations(t *testing.T) {
 
 		// Verify all keys
 		for i := 0; i < 10; i++ {
-			key := fmt.Sprintf("multi-key-%d", i)
+			key := fmt.Sprintf("%s:multi-key-%d", t.Name(), i)
 			expectedValue := fmt.Sprintf("multi-value-%d", i)
 			value, found, err := redisPlugin.Get(key)
 			require.NoError(t, err)
@@ -126,24 +149,26 @@ func TestRedisPattern_BasicOperations(t *testing.T) {
 	})
 
 	t.Run("Overwrite Existing Key", func(t *testing.T) {
-		err := redisPlugin.Set("overwrite", []byte("original"), 0)
+		key := fmt.Sprintf("%s:overwrite", t.Name())
+		err := redisPlugin.Set(key, []byte("original"), 0)
 		require.NoError(t, err)
 
-		err = redisPlugin.Set("overwrite", []byte("updated"), 0)
+		err = redisPlugin.Set(key, []byte("updated"), 0)
 		require.NoError(t, err)
 
-		value, found, err := redisPlugin.Get("overwrite")
+		value, found, err := redisPlugin.Get(key)
 		require.NoError(t, err)
 		assert.True(t, found)
 		assert.Equal(t, "updated", string(value))
 	})
 
 	t.Run("Binary Data", func(t *testing.T) {
+		key := fmt.Sprintf("%s:binary-key", t.Name())
 		binaryData := []byte{0x00, 0x01, 0x02, 0xFF, 0xFE, 0xFD}
-		err := redisPlugin.Set("binary-key", binaryData, 0)
+		err := redisPlugin.Set(key, binaryData, 0)
 		require.NoError(t, err)
 
-		value, found, err := redisPlugin.Get("binary-key")
+		value, found, err := redisPlugin.Get(key)
 		require.NoError(t, err)
 		assert.True(t, found)
 		assert.Equal(t, binaryData, value)
@@ -151,12 +176,6 @@ func TestRedisPattern_BasicOperations(t *testing.T) {
 }
 
 func TestRedisPattern_ConcurrentOperations(t *testing.T) {
-	ctx := context.Background()
-
-	// Start Redis container using centralized backend utility
-	backend := backends.SetupRedis(t, ctx)
-	defer backend.Cleanup()
-
 	redisPlugin := redis.New()
 	config := &core.Config{
 		Plugin: core.PluginConfig{
@@ -164,7 +183,7 @@ func TestRedisPattern_ConcurrentOperations(t *testing.T) {
 			Version: "0.1.0",
 		},
 		Backend: map[string]any{
-			"address":   backend.ConnectionString,
+			"address":   redisBackend.ConnectionString,
 			"pool_size": 20, // Larger pool for concurrent operations
 		},
 	}
@@ -185,7 +204,7 @@ func TestRedisPattern_ConcurrentOperations(t *testing.T) {
 		for w := 0; w < numWorkers; w++ {
 			go func(workerID int) {
 				for i := 0; i < opsPerWorker; i++ {
-					key := fmt.Sprintf("worker-%d-key-%d", workerID, i)
+					key := fmt.Sprintf("%s:worker-%d-key-%d", t.Name(), workerID, i)
 					value := fmt.Sprintf("worker-%d-value-%d", workerID, i)
 					if err := redisPlugin.Set(key, []byte(value), 0); err != nil {
 						done <- err
@@ -205,7 +224,7 @@ func TestRedisPattern_ConcurrentOperations(t *testing.T) {
 		// Verify all keys were written
 		for w := 0; w < numWorkers; w++ {
 			for i := 0; i < opsPerWorker; i++ {
-				key := fmt.Sprintf("worker-%d-key-%d", w, i)
+				key := fmt.Sprintf("%s:worker-%d-key-%d", t.Name(), w, i)
 				expectedValue := fmt.Sprintf("worker-%d-value-%d", w, i)
 				value, found, err := redisPlugin.Get(key)
 				require.NoError(t, err)
@@ -216,8 +235,9 @@ func TestRedisPattern_ConcurrentOperations(t *testing.T) {
 	})
 
 	t.Run("Concurrent Reads", func(t *testing.T) {
-		// Set up test data
-		err := redisPlugin.Set("shared-key", []byte("shared-value"), 0)
+		// Set up test data with unique key
+		key := fmt.Sprintf("%s:shared-key", t.Name())
+		err := redisPlugin.Set(key, []byte("shared-value"), 0)
 		require.NoError(t, err)
 
 		const numReaders = 20
@@ -226,7 +246,7 @@ func TestRedisPattern_ConcurrentOperations(t *testing.T) {
 		// Launch readers
 		for r := 0; r < numReaders; r++ {
 			go func() {
-				value, found, err := redisPlugin.Get("shared-key")
+				value, found, err := redisPlugin.Get(key)
 				if err != nil {
 					done <- err
 					return
@@ -252,12 +272,6 @@ func TestRedisPattern_ConcurrentOperations(t *testing.T) {
 }
 
 func TestRedisPattern_HealthCheck(t *testing.T) {
-	ctx := context.Background()
-
-	// Start Redis container using centralized backend utility
-	backend := backends.SetupRedis(t, ctx)
-	defer backend.Cleanup()
-
 	plugin := redis.New()
 	config := &core.Config{
 		Plugin: core.PluginConfig{
@@ -265,7 +279,7 @@ func TestRedisPattern_HealthCheck(t *testing.T) {
 			Version: "0.1.0",
 		},
 		Backend: map[string]any{
-			"address": backend.ConnectionString,
+			"address": redisBackend.ConnectionString,
 		},
 	}
 
@@ -286,12 +300,6 @@ func TestRedisPattern_HealthCheck(t *testing.T) {
 }
 
 func TestRedisPattern_ErrorHandling(t *testing.T) {
-	ctx := context.Background()
-
-	// Start Redis container using centralized backend utility
-	backend := backends.SetupRedis(t, ctx)
-	defer backend.Cleanup()
-
 	redisPlugin := redis.New()
 	config := &core.Config{
 		Plugin: core.PluginConfig{
@@ -299,7 +307,7 @@ func TestRedisPattern_ErrorHandling(t *testing.T) {
 			Version: "0.1.0",
 		},
 		Backend: map[string]any{
-			"address": backend.ConnectionString,
+			"address": redisBackend.ConnectionString,
 		},
 	}
 
@@ -308,21 +316,23 @@ func TestRedisPattern_ErrorHandling(t *testing.T) {
 
 	t.Run("Delete Non-Existent Key", func(t *testing.T) {
 		// Should not error
-		err := redisPlugin.Delete("non-existent-key")
+		key := fmt.Sprintf("%s:non-existent-key", t.Name())
+		err := redisPlugin.Delete(key)
 		assert.NoError(t, err, "Deleting non-existent key should not error")
 	})
 
 	t.Run("Large Value", func(t *testing.T) {
+		key := fmt.Sprintf("%s:large-key", t.Name())
 		// Create 1MB value
 		largeValue := make([]byte, 1024*1024)
 		for i := range largeValue {
 			largeValue[i] = byte(i % 256)
 		}
 
-		err := redisPlugin.Set("large-key", largeValue, 0)
+		err := redisPlugin.Set(key, largeValue, 0)
 		require.NoError(t, err, "Should handle large values")
 
-		value, found, err := redisPlugin.Get("large-key")
+		value, found, err := redisPlugin.Get(key)
 		require.NoError(t, err)
 		assert.True(t, found)
 		assert.Equal(t, len(largeValue), len(value))

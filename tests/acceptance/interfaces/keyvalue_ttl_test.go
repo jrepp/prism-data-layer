@@ -25,22 +25,7 @@ func TestKeyValueTTLInterface_Expiration(t *testing.T) {
 	ctx := context.Background()
 
 	// Only test backends that support TTL
-	backendDrivers := []BackendDriverSetup{
-		{
-			Name:         "Redis",
-			SetupFunc:    setupRedisDriver,
-			SupportsTTL:  true,
-			SupportsScan: true,
-		},
-		{
-			Name:         "MemStore",
-			SetupFunc:    setupMemStoreDriver,
-			SupportsTTL:  true,
-			SupportsScan: false,
-		},
-	}
-
-	for _, backendSetup := range backendDrivers {
+	for _, backendSetup := range GetStandardBackends() {
 		if !backendSetup.SupportsTTL {
 			continue // Skip backends that don't support TTL
 		}
@@ -160,16 +145,7 @@ func TestKeyValueTTLInterface_Expiration(t *testing.T) {
 func TestKeyValueTTLInterface_EdgeCases(t *testing.T) {
 	ctx := context.Background()
 
-	backendDrivers := []BackendDriverSetup{
-		{
-			Name:         "Redis",
-			SetupFunc:    setupRedisDriver,
-			SupportsTTL:  true,
-			SupportsScan: true,
-		},
-	}
-
-	for _, backendSetup := range backendDrivers {
+	for _, backendSetup := range GetStandardBackends() {
 		if !backendSetup.SupportsTTL {
 			continue
 		}

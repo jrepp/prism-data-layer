@@ -1,0 +1,371 @@
+
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<title>redis: Go Coverage Report</title>
+		<style>
+			body {
+				background: black;
+				color: rgb(80, 80, 80);
+			}
+			body, pre, #legend span {
+				font-family: Menlo, monospace;
+				font-weight: bold;
+			}
+			#topbar {
+				background: black;
+				position: fixed;
+				top: 0; left: 0; right: 0;
+				height: 42px;
+				border-bottom: 1px solid rgb(80, 80, 80);
+			}
+			#content {
+				margin-top: 50px;
+			}
+			#nav, #legend {
+				float: left;
+				margin-left: 10px;
+			}
+			#legend {
+				margin-top: 12px;
+			}
+			#nav {
+				margin-top: 10px;
+			}
+			#legend span {
+				margin: 0 5px;
+			}
+			.cov0 { color: rgb(192, 0, 0) }
+.cov1 { color: rgb(128, 128, 128) }
+.cov2 { color: rgb(116, 140, 131) }
+.cov3 { color: rgb(104, 152, 134) }
+.cov4 { color: rgb(92, 164, 137) }
+.cov5 { color: rgb(80, 176, 140) }
+.cov6 { color: rgb(68, 188, 143) }
+.cov7 { color: rgb(56, 200, 146) }
+.cov8 { color: rgb(44, 212, 149) }
+.cov9 { color: rgb(32, 224, 152) }
+.cov10 { color: rgb(20, 236, 155) }
+
+		</style>
+	</head>
+	<body>
+		<div id="topbar">
+			<div id="nav">
+				<select id="files">
+				
+				<option value="file0">github.com/jrepp/prism-data-layer/patterns/redis/cmd/redis/main.go (0.0%)</option>
+				
+				<option value="file1">github.com/jrepp/prism-data-layer/patterns/redis/redis.go (86.2%)</option>
+				
+				</select>
+			</div>
+			<div id="legend">
+				<span>not tracked</span>
+			
+				<span class="cov0">not covered</span>
+				<span class="cov8">covered</span>
+			
+			</div>
+		</div>
+		<div id="content">
+		
+		<pre class="file" id="file0" style="display: none">package main
+
+import (
+        "flag"
+        "log"
+        "log/slog"
+        "os"
+
+        "github.com/jrepp/prism-data-layer/patterns/core"
+        "github.com/jrepp/prism-data-layer/patterns/redis"
+)
+
+func main() <span class="cov0" title="0">{
+        configPath := flag.String("config", "config.yaml", "Path to configuration file")
+        grpcPort := flag.Int("grpc-port", 0, "gRPC control plane port (overrides config)")
+        flag.Parse()
+
+        // Initialize logging
+        logger := slog.New(slog.NewJSONHandler(os.Stdout, &amp;slog.HandlerOptions{
+                Level: slog.LevelInfo,
+        }))
+        slog.SetDefault(logger)
+
+        slog.Info("redis pattern starting",
+                "config_path", *configPath,
+                "grpc_port_override", *grpcPort)
+
+        // Load configuration (use defaults if file doesn't exist)
+        config, err := core.LoadConfig(*configPath)
+        if err != nil </span><span class="cov0" title="0">{
+                slog.Warn("failed to load config, using defaults", "error", err, "config_path", *configPath)
+                // Create default config
+                config = &amp;core.Config{
+                        Plugin: core.PluginConfig{
+                                Name:    "redis",
+                                Version: "0.1.0",
+                        },
+                        ControlPlane: core.ControlPlaneConfig{
+                                Port: 9091, // Default port (different from memstore)
+                        },
+                        Backend: map[string]any{
+                                "address":  "localhost:6379",
+                                "password": "",
+                                "db":       0,
+                        },
+                }
+        }</span>
+
+        // Override gRPC port if provided via flag
+        <span class="cov0" title="0">if *grpcPort != 0 </span><span class="cov0" title="0">{
+                slog.Info("overriding control plane port from flag",
+                        "config_port", config.ControlPlane.Port,
+                        "flag_port", *grpcPort)
+                config.ControlPlane.Port = *grpcPort
+        }</span>
+
+        // Create Redis plugin
+        <span class="cov0" title="0">plugin := redis.New()
+
+        // Bootstrap plugin lifecycle with config
+        if err := core.BootstrapWithConfig(plugin, config); err != nil </span><span class="cov0" title="0">{
+                log.Printf("Fatal error: %v\n", err)
+                os.Exit(1)
+        }</span>
+}
+</pre>
+		
+		<pre class="file" id="file1" style="display: none">package redis
+
+import (
+        "context"
+        "fmt"
+        "time"
+
+        "github.com/jrepp/prism-data-layer/patterns/core"
+        "github.com/redis/go-redis/v9"
+)
+
+// RedisPattern implements a Redis-backed key-value store plugin
+type RedisPattern struct {
+        name    string
+        version string
+        client  *redis.Client
+        config  *Config
+}
+
+// Config holds Redis-specific configuration
+type Config struct {
+        Address         string        `yaml:"address"`
+        Password        string        `yaml:"password"`
+        DB              int           `yaml:"db"`
+        MaxRetries      int           `yaml:"max_retries"`
+        PoolSize        int           `yaml:"pool_size"`
+        ConnMaxIdleTime time.Duration `yaml:"conn_max_idle_time"`
+        DialTimeout     time.Duration `yaml:"dial_timeout"`
+        ReadTimeout     time.Duration `yaml:"read_timeout"`
+        WriteTimeout    time.Duration `yaml:"write_timeout"`
+}
+
+// New creates a new Redis plugin
+func New() *RedisPattern <span class="cov8" title="1">{
+        return &amp;RedisPattern{
+                name:    "redis",
+                version: "0.1.0",
+        }
+}</span>
+
+// Name returns the plugin name
+func (r *RedisPattern) Name() string <span class="cov8" title="1">{
+        return r.name
+}</span>
+
+// Version returns the plugin version
+func (r *RedisPattern) Version() string <span class="cov8" title="1">{
+        return r.version
+}</span>
+
+// Initialize prepares the plugin with configuration
+func (r *RedisPattern) Initialize(ctx context.Context, config *core.Config) error <span class="cov8" title="1">{
+        // Extract backend-specific config
+        var backendConfig Config
+        if err := config.GetBackendConfig(&amp;backendConfig); err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("failed to parse backend config: %w", err)
+        }</span>
+
+        // Apply defaults
+        <span class="cov8" title="1">if backendConfig.Address == "" </span><span class="cov8" title="1">{
+                backendConfig.Address = "localhost:6379"
+        }</span>
+        <span class="cov8" title="1">if backendConfig.MaxRetries == 0 </span><span class="cov8" title="1">{
+                backendConfig.MaxRetries = 3
+        }</span>
+        <span class="cov8" title="1">if backendConfig.PoolSize == 0 </span><span class="cov8" title="1">{
+                backendConfig.PoolSize = 10
+        }</span>
+        <span class="cov8" title="1">if backendConfig.ConnMaxIdleTime == 0 </span><span class="cov8" title="1">{
+                backendConfig.ConnMaxIdleTime = 5 * time.Minute
+        }</span>
+        <span class="cov8" title="1">if backendConfig.DialTimeout == 0 </span><span class="cov8" title="1">{
+                backendConfig.DialTimeout = 5 * time.Second
+        }</span>
+        <span class="cov8" title="1">if backendConfig.ReadTimeout == 0 </span><span class="cov8" title="1">{
+                backendConfig.ReadTimeout = 3 * time.Second
+        }</span>
+        <span class="cov8" title="1">if backendConfig.WriteTimeout == 0 </span><span class="cov8" title="1">{
+                backendConfig.WriteTimeout = 3 * time.Second
+        }</span>
+
+        <span class="cov8" title="1">r.config = &amp;backendConfig
+
+        // Create Redis client with connection pool
+        r.client = redis.NewClient(&amp;redis.Options{
+                Addr:            backendConfig.Address,
+                Password:        backendConfig.Password,
+                DB:              backendConfig.DB,
+                MaxRetries:      backendConfig.MaxRetries,
+                PoolSize:        backendConfig.PoolSize,
+                ConnMaxIdleTime: backendConfig.ConnMaxIdleTime,
+                DialTimeout:     backendConfig.DialTimeout,
+                ReadTimeout:     backendConfig.ReadTimeout,
+                WriteTimeout:    backendConfig.WriteTimeout,
+        })
+
+        // Test connection
+        if err := r.client.Ping(ctx).Err(); err != nil </span><span class="cov8" title="1">{
+                return fmt.Errorf("failed to connect to Redis: %w", err)
+        }</span>
+
+        <span class="cov8" title="1">return nil</span>
+}
+
+// Start begins serving requests
+func (r *RedisPattern) Start(ctx context.Context) error <span class="cov0" title="0">{
+        // Redis client is ready, just wait for context cancellation
+        &lt;-ctx.Done()
+        return nil
+}</span>
+
+// Stop gracefully shuts down the plugin
+func (r *RedisPattern) Stop(ctx context.Context) error <span class="cov8" title="1">{
+        if r.client != nil </span><span class="cov8" title="1">{
+                return r.client.Close()
+        }</span>
+        <span class="cov0" title="0">return nil</span>
+}
+
+// Health returns the plugin health status
+func (r *RedisPattern) Health(ctx context.Context) (*core.HealthStatus, error) <span class="cov8" title="1">{
+        // Check Redis connection with PING
+        if err := r.client.Ping(ctx).Err(); err != nil </span><span class="cov8" title="1">{
+                return &amp;core.HealthStatus{
+                        Status:  core.HealthUnhealthy,
+                        Message: fmt.Sprintf("Redis ping failed: %v", err),
+                        Details: map[string]string{
+                                "error": err.Error(),
+                        },
+                }, nil
+        }</span>
+
+        // Get pool stats
+        <span class="cov8" title="1">stats := r.client.PoolStats()
+
+        status := core.HealthHealthy
+        message := fmt.Sprintf("healthy, %d connections", stats.TotalConns)
+
+        // Check if pool is near capacity
+        if stats.TotalConns &gt;= uint32(r.config.PoolSize*90/100) </span><span class="cov0" title="0">{
+                status = core.HealthDegraded
+                message = fmt.Sprintf("pool near capacity: %d/%d connections", stats.TotalConns, r.config.PoolSize)
+        }</span>
+
+        <span class="cov8" title="1">return &amp;core.HealthStatus{
+                Status:  status,
+                Message: message,
+                Details: map[string]string{
+                        "total_conns": fmt.Sprintf("%d", stats.TotalConns),
+                        "idle_conns":  fmt.Sprintf("%d", stats.IdleConns),
+                        "pool_size":   fmt.Sprintf("%d", r.config.PoolSize),
+                },
+        }, nil</span>
+}
+
+// Set stores a value with optional TTL
+func (r *RedisPattern) Set(key string, value []byte, ttlSeconds int64) error <span class="cov8" title="1">{
+        ctx := context.Background()
+
+        if ttlSeconds &gt; 0 </span><span class="cov8" title="1">{
+                duration := time.Duration(ttlSeconds) * time.Second
+                return r.client.Set(ctx, key, value, duration).Err()
+        }</span>
+
+        <span class="cov8" title="1">return r.client.Set(ctx, key, value, 0).Err()</span>
+}
+
+// Get retrieves a value by key
+func (r *RedisPattern) Get(key string) ([]byte, bool, error) <span class="cov8" title="1">{
+        ctx := context.Background()
+
+        value, err := r.client.Get(ctx, key).Bytes()
+        if err == redis.Nil </span><span class="cov8" title="1">{
+                return nil, false, nil // Key not found
+        }</span>
+        <span class="cov8" title="1">if err != nil </span><span class="cov0" title="0">{
+                return nil, false, err
+        }</span>
+
+        <span class="cov8" title="1">return value, true, nil</span>
+}
+
+// Delete removes a key
+func (r *RedisPattern) Delete(key string) error <span class="cov8" title="1">{
+        ctx := context.Background()
+        return r.client.Del(ctx, key).Err()
+}</span>
+
+// Exists checks if a key exists
+func (r *RedisPattern) Exists(key string) (bool, error) <span class="cov8" title="1">{
+        ctx := context.Background()
+
+        count, err := r.client.Exists(ctx, key).Result()
+        if err != nil </span><span class="cov0" title="0">{
+                return false, err
+        }</span>
+
+        <span class="cov8" title="1">return count &gt; 0, nil</span>
+}
+</pre>
+		
+		</div>
+	</body>
+	<script>
+	(function() {
+		var files = document.getElementById('files');
+		var visible;
+		files.addEventListener('change', onChange, false);
+		function select(part) {
+			if (visible)
+				visible.style.display = 'none';
+			visible = document.getElementById(part);
+			if (!visible)
+				return;
+			files.value = part;
+			visible.style.display = 'block';
+			location.hash = part;
+		}
+		function onChange() {
+			select(files.value);
+			window.scrollTo(0, 0);
+		}
+		if (location.hash != "") {
+			select(location.hash.substr(1));
+		}
+		if (!visible) {
+			select("file0");
+		}
+	})();
+	</script>
+</html>

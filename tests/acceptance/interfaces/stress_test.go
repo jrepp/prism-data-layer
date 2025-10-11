@@ -24,22 +24,7 @@ func TestKeyValueInterface_StressTest(t *testing.T) {
 
 	ctx := context.Background()
 
-	backendDrivers := []BackendDriverSetup{
-		{
-			Name:         "Redis",
-			SetupFunc:    setupRedisDriver,
-			SupportsTTL:  true,
-			SupportsScan: true,
-		},
-		{
-			Name:         "MemStore",
-			SetupFunc:    setupMemStoreDriver,
-			SupportsTTL:  true,
-			SupportsScan: false,
-		},
-	}
-
-	for _, backendSetup := range backendDrivers {
+	for _, backendSetup := range GetStandardBackends() {
 		t.Run(backendSetup.Name, func(t *testing.T) {
 			driver, cleanup := backendSetup.SetupFunc(t, ctx)
 			defer cleanup()
@@ -136,22 +121,7 @@ func TestKeyValueInterface_TTLConcurrency(t *testing.T) {
 
 	ctx := context.Background()
 
-	backendDrivers := []BackendDriverSetup{
-		{
-			Name:         "Redis",
-			SetupFunc:    setupRedisDriver,
-			SupportsTTL:  true,
-			SupportsScan: true,
-		},
-		{
-			Name:         "MemStore",
-			SetupFunc:    setupMemStoreDriver,
-			SupportsTTL:  true,
-			SupportsScan: false,
-		},
-	}
-
-	for _, backendSetup := range backendDrivers {
+	for _, backendSetup := range GetStandardBackends() {
 		if !backendSetup.SupportsTTL {
 			continue
 		}

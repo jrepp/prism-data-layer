@@ -1104,5 +1104,297 @@ go get github.com/testcontainers/testcontainers-go
 
 ## Revision History
 
+- 2025-10-10: **Implementation Update** - Documented architecture refactoring (drivers vs patterns), interface metadata system, SDK pattern for drivers, and interface-based acceptance testing
 - 2025-10-09: Re-prioritized backends based on internal needs (Kafka, NATS, Neptune, PostgreSQL first); added MemStore in-memory plugin as simplest reference implementation
 - 2025-10-09: Initial draft with backend comparison matrix, implementability scoring, and demo plugin configurations
+
+---
+
+## Implementation Learnings (2025-10-10)
+
+### Architecture Refactoring: Drivers vs Patterns
+
+**Problem**: Initial implementation conflated backend drivers (Redis, Postgres) with patterns (KeyValue, PubSub).
+
+**Solution**: Established clear separation:
+
+```text
+Backends (Redis, PostgreSQL, Kafka)
+    ↓
+Backend Drivers (drivers/redis, drivers/postgres)
+    ↓
+Patterns (patterns/keyvalue, patterns/pubsub)
+    ↓
+Applications (client code)
+```
+
+**Directory Structure**:
+- `drivers/memstore/` - In-memory driver (moved from patterns/memstore)
+- `drivers/redis/` - Redis driver (moved from patterns/redis)
+- `patterns/keyvalue/` - KeyValue pattern that wraps backend drivers
+- `patterns/pubsub/` - PubSub pattern that wraps NATS/Kafka drivers
+- `patterns/stream/` - Stream pattern that wraps Kafka driver
+
+**Key Insight**: Patterns are **client-facing abstractions**. Drivers are **backend-specific implementations**. One pattern can use multiple driver backends.
+
+### Backend Interface Metadata System
+
+**Implemented**: `patterns/core/interfaces.go` - Declarative metadata for pattern slot matching
+
+**45 Backend Interface Constants**:
+```go
+// KeyValue interfaces (6)
+InterfaceKeyValueBasic         // Set, Get, Delete, Exists
+InterfaceKeyValueScan          // Scan, ScanKeys, Count
+InterfaceKeyValueTTL           // Expire, GetTTL, Persist
+InterfaceKeyValueTransactional // BeginTx, Commit, Rollback
+InterfaceKeyValueBatch         // BatchSet, BatchGet, BatchDelete
+InterfaceKeyValueCAS           // CompareAndSwap
+
+// PubSub interfaces (5)
+InterfacePubSubBasic           // Publish, Subscribe, Unsubscribe
+InterfacePubSubWildcards       // Pattern subscriptions
+InterfacePubSubPersistent      // Durable messages with offsets
+InterfacePubSubFiltering       // Server-side filtering
+InterfacePubSubOrdering        // Message ordering guarantees
+
+// Stream interfaces (5)
+InterfaceStreamBasic           // Append, Read, GetLatestOffset
+InterfaceStreamConsumerGroups  // CreateGroup, Join, Ack
+InterfaceStreamReplay          // SeekToOffset, SeekToTimestamp
+InterfaceStreamRetention       // SetRetention, Compact
+InterfaceStreamPartitioning    // GetPartitions, AppendToPartition
+
+// ...and 29 more across Queue, List, Set, SortedSet, TimeSeries, Graph, Document
+```
+
+**Driver Metadata Example** (MemStore):
+```go
+func (m *MemStore) Metadata() *core.BackendInterfaceMetadata {
+    return &core.BackendInterfaceMetadata{
+        DriverName: "memstore",
+        Version:    "0.1.0",
+        Interfaces: []core.BackendInterface{
+            core.InterfaceKeyValueBasic,  // Set, Get, Delete, Exists
+            core.InterfaceKeyValueTTL,    // TTL support
+        },
+        Description:            "In-memory Go map for local testing",
+        ConnectionStringFormat: "mem://local",
+    }
+}
+```
+
+**Driver Metadata Example** (Redis - 24 interfaces!):
+```go
+func (r *RedisPattern) Metadata() *core.BackendInterfaceMetadata {
+    return &core.BackendInterfaceMetadata{
+        DriverName: "redis",
+        Version:    "0.1.0",
+        Interfaces: []core.BackendInterface{
+            // KeyValue (5 of 6)
+            core.InterfaceKeyValueBasic, core.InterfaceKeyValueScan,
+            core.InterfaceKeyValueTTL, core.InterfaceKeyValueTransactional,
+            core.InterfaceKeyValueBatch,
+
+            // PubSub (2 of 5)
+            core.InterfacePubSubBasic, core.InterfacePubSubWildcards,
+
+            // Stream (4 of 5)
+            core.InterfaceStreamBasic, core.InterfaceStreamConsumerGroups,
+            core.InterfaceStreamReplay, core.InterfaceStreamRetention,
+
+            // List (4 of 4)
+            core.InterfaceListBasic, core.InterfaceListIndexing,
+            core.InterfaceListRange, core.InterfaceListBlocking,
+
+            // Set (4 of 4)
+            core.InterfaceSetBasic, core.InterfaceSetOperations,
+            core.InterfaceSetCardinality, core.InterfaceSetRandom,
+
+            // SortedSet (5 of 5)
+            core.InterfaceSortedSetBasic, core.InterfaceSortedSetRange,
+            core.InterfaceSortedSetRank, core.InterfaceSortedSetOperations,
+            core.InterfaceSortedSetLex,
+        },
+        Description:            "In-memory data structure store with persistence",
+        ConnectionStringFormat: "redis://host:port/db or rediss://host:port/db (TLS)",
+    }
+}
+```
+
+**Usage**: At configuration time, patterns can query driver metadata to match requirements:
+```go
+// Pattern requires these interfaces for a slot
+required := []core.BackendInterface{
+    core.InterfaceKeyValueBasic,
+    core.InterfaceKeyValueTTL,
+}
+
+// Check if driver implements all required interfaces
+driver := memstore.New()
+metadata := driver.Metadata()
+if metadata.ImplementsAll(required) {
+    // Driver is suitable for this pattern slot
+}
+```
+
+### SDK Pattern for Backend Drivers
+
+**Implemented**: `patterns/core/serve.go` - `ServeBackendDriver()` function
+
+**Before** (65 lines of boilerplate in every driver):
+```go
+func main() {
+    configPath := flag.String("config", "config.yaml", ...)
+    grpcPort := flag.Int("grpc-port", 0, ...)
+    flag.Parse()
+
+    logger := slog.New(slog.NewJSONHandler(os.Stdout, ...))
+    slog.SetDefault(logger)
+
+    config, err := core.LoadConfig(*configPath)
+    if err != nil {
+        // Create default config...
+    }
+
+    if *grpcPort != 0 {
+        config.ControlPlane.Port = *grpcPort
+    }
+
+    plugin := memstore.New()
+
+    if err := core.BootstrapWithConfig(plugin, config); err != nil {
+        log.Fatal(err)
+    }
+}
+```
+
+**After** (25 lines with SDK pattern):
+```go
+func main() {
+    core.ServeBackendDriver(func() core.Plugin {
+        return memstore.New()
+    }, core.ServeOptions{
+        DefaultName:    "memstore",
+        DefaultVersion: "0.1.0",
+        DefaultPort:    0, // Dynamic port allocation
+        ConfigPath:     "config.yaml",
+    })
+}
+```
+
+**SDK Handles**:
+- Flag parsing (--config, --grpc-port, --debug)
+- Logging setup (structured JSON logging)
+- Config loading with defaults
+- Dynamic port allocation (0 = OS assigns available port)
+- Driver lifecycle (Initialize → Start → Stop)
+- Error handling and logging
+
+**Result**: Reduced driver main.go from 65 lines to 25 lines (62% reduction). All common logic moved to SDK.
+
+### Interface-Based Acceptance Testing
+
+**Implemented**: `tests/acceptance/interfaces/` - Test interfaces across multiple backends
+
+**Structure**:
+```go
+// tests/acceptance/interfaces/keyvalue_basic_test.go
+
+// Define interface being tested
+type KeyValueBasicDriver interface {
+    Set(key string, value []byte, ttlSeconds int64) error
+    Get(key string) ([]byte, bool, error)
+    Delete(key string) error
+    Exists(key string) (bool, error)
+}
+
+// Backend driver setup table
+backendDrivers := []BackendDriverSetup{
+    {
+        Name:         "Redis",
+        SetupFunc:    setupRedisDriver,  // Uses testcontainers
+        SupportsTTL:  true,
+        SupportsScan: true,
+    },
+    {
+        Name:         "MemStore",
+        SetupFunc:    setupMemStoreDriver,  // In-process, no container
+        SupportsTTL:  true,
+        SupportsScan: false,  // Intentionally minimal
+    },
+    // Add PostgreSQL, DynamoDB, etcd here...
+}
+
+// Single test runs against ALL backends
+for _, backend := range backendDrivers {
+    t.Run(backend.Name, func(t *testing.T) {
+        driver, cleanup := backend.SetupFunc(t, ctx)
+        defer cleanup()
+
+        // Test Set/Get
+        err := driver.Set("test-key", []byte("test-value"), 0)
+        require.NoError(t, err)
+
+        value, found, err := driver.Get("test-key")
+        require.NoError(t, err)
+        assert.True(t, found)
+        assert.Equal(t, "test-value", string(value))
+    })
+}
+```
+
+**Benefits**:
+- **Single test suite** validates multiple backend drivers
+- **Easy to add new backends**: 3 lines of code in table
+- **Interface compliance verification**: Ensures drivers implement contracts correctly
+- **Consistent behavior**: Same assertions across all backends
+
+**Test Files**:
+- `keyvalue_basic_test.go` - Tests KeyValue basic operations (Set, Get, Delete, Exists)
+- `keyvalue_ttl_test.go` - Tests TTL expiration (only runs on TTL-supporting backends)
+
+**Key Insight**: Test the **interface** (KeyValue), not the backend (Redis). Backends are interchangeable implementations.
+
+### Updated Terminology (MEMO-006 Alignment)
+
+**Documented in**: `patterns/core/plugin.go`
+
+```go
+// Plugin represents a backend driver lifecycle.
+//
+// TERMINOLOGY (from MEMO-006):
+// - Backend: The actual storage/messaging system (Redis, PostgreSQL, Kafka, NATS, etc.)
+// - Backend Driver: The Go implementation that interfaces with a backend (this interface)
+// - Pattern: The data access pattern being implemented (KeyValue, PubSub, Stream, etc.)
+// - Interface: Thin proto service definitions (keyvalue_basic, keyvalue_ttl, pubsub_basic, etc.)
+//
+// A Backend Driver (Plugin):
+// - Connects to a specific Backend (e.g., Redis, PostgreSQL)
+// - Implements one or more Patterns (e.g., KeyValue, PubSub)
+// - Supports multiple Interfaces within those patterns (e.g., keyvalue_basic + keyvalue_ttl)
+//
+// Example: The Redis backend driver implements:
+// - KeyValue pattern (keyvalue_basic, keyvalue_scan, keyvalue_ttl interfaces)
+// - PubSub pattern (pubsub_basic, pubsub_wildcards interfaces)
+// - Stream pattern (stream_basic, stream_consumer_groups interfaces)
+```
+
+### Implementation Status
+
+**Completed**:
+- ✅ MemStore driver with metadata (drivers/memstore/)
+- ✅ Redis driver with metadata (drivers/redis/)
+- ✅ KeyValue pattern (patterns/keyvalue/)
+- ✅ Backend interface metadata system (patterns/core/interfaces.go)
+- ✅ SDK pattern for drivers (patterns/core/serve.go)
+- ✅ Interface-based acceptance tests (tests/acceptance/interfaces/)
+- ✅ Both drivers compile and build successfully
+
+**Next Steps**:
+- Create PostgreSQL driver (drivers/postgres/)
+- Create Meilisearch driver for search (drivers/meilisearch/)
+- Create PubSub pattern (patterns/pubsub/) using NATS driver
+- Create Stream pattern (patterns/stream/) using Kafka driver
+- Add more interface-based tests (batch, scan, transactional)
+- Run full acceptance test suite

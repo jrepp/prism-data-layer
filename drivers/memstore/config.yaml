@@ -1,0 +1,10 @@
+plugin:
+  name: memstore
+  version: 0.1.0
+
+control_plane:
+  port: 9090
+
+backend:
+  max_keys: 10000        # Maximum number of keys to store
+  cleanup_period: 60s    # How often to cleanup expired keys

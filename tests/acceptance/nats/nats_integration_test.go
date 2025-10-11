@@ -3,6 +3,7 @@ package nats_test
 import (
 	"context"
 	"fmt"
+	"os"
 	"sync"
 	"testing"
 	"time"
@@ -15,24 +16,39 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+var (
+	natsBackend *backends.NATSBackend
+	testCtx     context.Context
+)
+
+// TestMain sets up the NATS container once for all tests
+func TestMain(m *testing.M) {
+	testCtx = context.Background()
+
+	// Start NATS container once
+	natsBackend = backends.SetupNATS(&testing.T{}, testCtx)
+
+	// Run all tests
+	code := m.Run()
+
+	// Cleanup after all tests
+	natsBackend.Cleanup()
+
+	os.Exit(code)
+}
+
 func TestNATSPattern_BasicPubSub(t *testing.T) {
-	ctx := context.Background()
-
-	// Start NATS container using centralized backend utility
-	backend := backends.SetupNATS(t, ctx)
-	defer backend.Cleanup()
-
 	// Create NATS pattern
 	natsPlugin := nats.New()
 
-	// Configure with testcontainer
+	// Configure with shared testcontainer
 	config := &core.Config{
 		Plugin: core.PluginConfig{
 			Name:    "nats-test",
 			Version: "0.1.0",
 		},
 		Backend: map[string]any{
-			"url": backend.ConnectionString,
+			"url": natsBackend.ConnectionString,
 		},
 	}
 
@@ -45,8 +61,8 @@ func TestNATSPattern_BasicPubSub(t *testing.T) {
 	require.NoError(t, err, "Plugin did not become healthy")
 
 	t.Run("Publish and Subscribe", func(t *testing.T) {
-		topic := "test.topic"
-		subscriberID := "subscriber-1"
+		topic := fmt.Sprintf("%s.topic", t.Name())
+		subscriberID := fmt.Sprintf("%s-subscriber-1", t.Name())
 		payload := []byte("test message")
 
 		// Subscribe
@@ -78,8 +94,8 @@ func TestNATSPattern_BasicPubSub(t *testing.T) {
 	})
 
 	t.Run("Multiple Messages", func(t *testing.T) {
-		topic := "test.multi"
-		subscriberID := "subscriber-2"
+		topic := fmt.Sprintf("%s.multi", t.Name())
+		subscriberID := fmt.Sprintf("%s-subscriber-2", t.Name())
 
 		msgChan, err := natsPlugin.Subscribe(harness.Context(), topic, subscriberID)
 		require.NoError(t, err)
@@ -115,8 +131,8 @@ func TestNATSPattern_BasicPubSub(t *testing.T) {
 	})
 
 	t.Run("Unsubscribe Stops Messages", func(t *testing.T) {
-		topic := "test.unsub"
-		subscriberID := "subscriber-3"
+		topic := fmt.Sprintf("%s.unsub", t.Name())
+		subscriberID := fmt.Sprintf("%s-subscriber-3", t.Name())
 
 		msgChan, err := natsPlugin.Subscribe(harness.Context(), topic, subscriberID)
 		require.NoError(t, err)
@@ -157,12 +173,6 @@ func TestNATSPattern_BasicPubSub(t *testing.T) {
 }
 
 func TestNATSPattern_Fanout(t *testing.T) {
-	ctx := context.Background()
-
-	// Start NATS container using centralized backend utility
-	backend := backends.SetupNATS(t, ctx)
-	defer backend.Cleanup()
-
 	natsPlugin := nats.New()
 	config := &core.Config{
 		Plugin: core.PluginConfig{
@@ -170,7 +180,7 @@ func TestNATSPattern_Fanout(t *testing.T) {
 			Version: "0.1.0",
 		},
 		Backend: map[string]any{
-			"url": backend.ConnectionString,
+			"url": natsBackend.ConnectionString,
 		},
 	}
 
@@ -181,7 +191,7 @@ func TestNATSPattern_Fanout(t *testing.T) {
 	require.NoError(t, err)
 
 	t.Run("Multiple Subscribers Receive Same Message", func(t *testing.T) {
-		topic := "test.fanout"
+		topic := fmt.Sprintf("%s.fanout", t.Name())
 		payload := []byte("broadcast message")
 
 		const numSubscribers = 5
@@ -190,7 +200,7 @@ func TestNATSPattern_Fanout(t *testing.T) {
 
 		// Create subscribers
 		for i := 0; i < numSubscribers; i++ {
-			subscriberID := fmt.Sprintf("fanout-subscriber-%d", i)
+			subscriberID := fmt.Sprintf("%s-fanout-subscriber-%d", t.Name(), i)
 			subscriberIDs = append(subscriberIDs, subscriberID)
 
 			msgChan, err := natsPlugin.Subscribe(harness.Context(), topic, subscriberID)
@@ -233,12 +243,6 @@ func TestNATSPattern_Fanout(t *testing.T) {
 }
 
 func TestNATSPattern_MessageOrdering(t *testing.T) {
-	ctx := context.Background()
-
-	// Start NATS container using centralized backend utility
-	backend := backends.SetupNATS(t, ctx)
-	defer backend.Cleanup()
-
 	natsPlugin := nats.New()
 	config := &core.Config{
 		Plugin: core.PluginConfig{
@@ -246,7 +250,7 @@ func TestNATSPattern_MessageOrdering(t *testing.T) {
 			Version: "0.1.0",
 		},
 		Backend: map[string]any{
-			"url": backend.ConnectionString,
+			"url": natsBackend.ConnectionString,
 		},
 	}
 
@@ -257,8 +261,8 @@ func TestNATSPattern_MessageOrdering(t *testing.T) {
 	require.NoError(t, err)
 
 	t.Run("Messages Delivered In Order", func(t *testing.T) {
-		topic := "test.ordering"
-		subscriberID := "order-subscriber"
+		topic := fmt.Sprintf("%s.ordering", t.Name())
+		subscriberID := fmt.Sprintf("%s-order-subscriber", t.Name())
 
 		msgChan, err := natsPlugin.Subscribe(harness.Context(), topic, subscriberID)
 		require.NoError(t, err)
@@ -290,12 +294,6 @@ func TestNATSPattern_MessageOrdering(t *testing.T) {
 }
 
 func TestNATSPattern_ConcurrentPublish(t *testing.T) {
-	ctx := context.Background()
-
-	// Start NATS container using centralized backend utility
-	backend := backends.SetupNATS(t, ctx)
-	defer backend.Cleanup()
-
 	natsPlugin := nats.New()
 	config := &core.Config{
 		Plugin: core.PluginConfig{
@@ -303,7 +301,7 @@ func TestNATSPattern_ConcurrentPublish(t *testing.T) {
 			Version: "0.1.0",
 		},
 		Backend: map[string]any{
-			"url": backend.ConnectionString,
+			"url": natsBackend.ConnectionString,
 		},
 	}
 
@@ -314,7 +312,7 @@ func TestNATSPattern_ConcurrentPublish(t *testing.T) {
 	require.NoError(t, err)
 
 	t.Run("Multiple Publishers", func(t *testing.T) {
-		topic := "test.concurrent"
+		topic := fmt.Sprintf("%s.concurrent", t.Name())
 
 		const numPublishers = 10
 		const messagesPerPublisher = 10
@@ -349,12 +347,6 @@ func TestNATSPattern_ConcurrentPublish(t *testing.T) {
 }
 
 func TestNATSPattern_HealthCheck(t *testing.T) {
-	ctx := context.Background()
-
-	// Start NATS container using centralized backend utility
-	backend := backends.SetupNATS(t, ctx)
-	defer backend.Cleanup()
-
 	natsPlugin := nats.New()
 	config := &core.Config{
 		Plugin: core.PluginConfig{
@@ -362,7 +354,7 @@ func TestNATSPattern_HealthCheck(t *testing.T) {
 			Version: "0.1.0",
 		},
 		Backend: map[string]any{
-			"url": backend.ConnectionString,
+			"url": natsBackend.ConnectionString,
 		},
 	}
 
@@ -384,12 +376,6 @@ func TestNATSPattern_HealthCheck(t *testing.T) {
 }
 
 func TestNATSPattern_WildcardSubscriptions(t *testing.T) {
-	ctx := context.Background()
-
-	// Start NATS container using centralized backend utility
-	backend := backends.SetupNATS(t, ctx)
-	defer backend.Cleanup()
-
 	natsPlugin := nats.New()
 	config := &core.Config{
 		Plugin: core.PluginConfig{
@@ -397,7 +383,7 @@ func TestNATSPattern_WildcardSubscriptions(t *testing.T) {
 			Version: "0.1.0",
 		},
 		Backend: map[string]any{
-			"url": backend.ConnectionString,
+			"url": natsBackend.ConnectionString,
 		},
 	}
 
@@ -408,9 +394,9 @@ func TestNATSPattern_WildcardSubscriptions(t *testing.T) {
 	require.NoError(t, err)
 
 	t.Run("Wildcard Subscription", func(t *testing.T) {
-		// Subscribe to wildcard topic
-		wildcard := "events.*"
-		subscriberID := "wildcard-sub"
+		// Subscribe to wildcard topic with unique prefix
+		wildcard := fmt.Sprintf("%s.events.*", t.Name())
+		subscriberID := fmt.Sprintf("%s-wildcard-sub", t.Name())
 
 		msgChan, err := natsPlugin.Subscribe(harness.Context(), wildcard, subscriberID)
 		require.NoError(t, err)
@@ -419,7 +405,11 @@ func TestNATSPattern_WildcardSubscriptions(t *testing.T) {
 		time.Sleep(100 * time.Millisecond)
 
 		// Publish to multiple topics that match wildcard
-		topics := []string{"events.created", "events.updated", "events.deleted"}
+		topics := []string{
+			fmt.Sprintf("%s.events.created", t.Name()),
+			fmt.Sprintf("%s.events.updated", t.Name()),
+			fmt.Sprintf("%s.events.deleted", t.Name()),
+		}
 		for _, topic := range topics {
 			payload := []byte(fmt.Sprintf("payload for %s", topic))
 			_, err := natsPlugin.Publish(harness.Context(), topic, payload, nil)
