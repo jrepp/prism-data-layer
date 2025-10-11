@@ -269,6 +269,165 @@ func TestCoordinator_Concurrent(t *testing.T) {
 	}
 }
 
+// TestCoordinator_Unregister_Idempotent tests unregistering non-existent identity
+func TestCoordinator_Unregister_Idempotent(t *testing.T) {
+	ctx := context.Background()
+	coordinator := NewCoordinatorWithMocks(t)
+	defer coordinator.Close()
+
+	// Unregister identity that doesn't exist (should succeed - idempotent)
+	err := coordinator.Unregister(ctx, "non-existent-identity")
+	if err != nil {
+		t.Errorf("Unregister non-existent should be idempotent, got error: %v", err)
+	}
+}
+
+// TestCoordinator_Close tests proper shutdown
+func TestCoordinator_Close(t *testing.T) {
+	coordinator := NewCoordinatorWithMocks(t)
+
+	// Close should clean up resources
+	err := coordinator.Close()
+	if err != nil {
+		t.Errorf("Close failed: %v", err)
+	}
+
+	// Closing again should be safe (backends should handle double close)
+	// Note: mock backends handle this gracefully
+}
+
+// TestCoordinator_CleanupExpired tests TTL-based cleanup
+func TestCoordinator_CleanupExpired(t *testing.T) {
+	ctx := context.Background()
+	coordinator := NewCoordinatorWithMocks(t)
+	defer coordinator.Close()
+
+	// Register identity with very short TTL
+	shortTTL := 100 * time.Millisecond
+	err := coordinator.Register(ctx, "temp-session", map[string]interface{}{"temp": true}, shortTTL)
+	if err != nil {
+		t.Fatalf("Register failed: %v", err)
+	}
+
+	// Verify exists immediately
+	results, err := coordinator.Enumerate(ctx, nil)
+	if err != nil {
+		t.Fatalf("Enumerate failed: %v", err)
+	}
+	if len(results) != 1 {
+		t.Errorf("Expected 1 identity before expiration, got %d", len(results))
+	}
+
+	// Wait for TTL to expire
+	time.Sleep(150 * time.Millisecond)
+
+	// Enumerate should skip expired (client-side filtering in Enumerate checks ExpiresAt)
+	results, err = coordinator.Enumerate(ctx, nil)
+	if err != nil {
+		t.Fatalf("Enumerate after expiration failed: %v", err)
+	}
+	if len(results) != 0 {
+		t.Errorf("Expected 0 identities after expiration, got %d", len(results))
+	}
+
+	// Manually trigger cleanup (normally done by background goroutine)
+	coordinator.performCleanup()
+
+	// Verify identity was removed from internal map
+	coordinator.mu.RLock()
+	_, exists := coordinator.identities["temp-session"]
+	coordinator.mu.RUnlock()
+
+	if exists {
+		t.Error("Expected identity to be removed from internal map after cleanup")
+	}
+}
+
+// TestCoordinator_Register_MaxIdentitiesLimit tests max identities enforcement
+func TestCoordinator_Register_MaxIdentitiesLimit(t *testing.T) {
+	ctx := context.Background()
+	config := DefaultConfig()
+	config.MaxIdentities = 3 // Set low limit for testing
+
+	registry := NewMockRegistryBackend()
+	messaging := NewMockMessagingBackend()
+
+	coordinator, err := NewCoordinator(config, registry, messaging, nil)
+	if err != nil {
+		t.Fatalf("Failed to create coordinator: %v", err)
+	}
+	defer coordinator.Close()
+
+	// Register up to limit (should succeed)
+	for i := 1; i <= 3; i++ {
+		identity := "user-" + string(rune('0'+i))
+		err := coordinator.Register(ctx, identity, map[string]interface{}{"id": i}, 0)
+		if err != nil {
+			t.Fatalf("Register %d failed: %v", i, err)
+		}
+	}
+
+	// Exceeding limit should fail
+	err = coordinator.Register(ctx, "user-4", map[string]interface{}{"id": 4}, 0)
+	if err == nil {
+		t.Error("Expected error when exceeding max identities limit, got nil")
+	}
+}
+
+// TestCoordinator_NewCoordinator_RequiresBackends tests validation
+func TestCoordinator_NewCoordinator_RequiresBackends(t *testing.T) {
+	config := DefaultConfig()
+
+	// Missing registry backend
+	_, err := NewCoordinator(config, nil, NewMockMessagingBackend(), nil)
+	if err == nil {
+		t.Error("Expected error when registry backend is nil, got nil")
+	}
+
+	// Missing messaging backend
+	_, err = NewCoordinator(config, NewMockRegistryBackend(), nil, nil)
+	if err == nil {
+		t.Error("Expected error when messaging backend is nil, got nil")
+	}
+}
+
+// TestCoordinator_Enumerate_SkipsExpiredIdentities tests client-side expiration filtering
+func TestCoordinator_Enumerate_SkipsExpiredIdentities(t *testing.T) {
+	ctx := context.Background()
+	coordinator := NewCoordinatorWithMocks(t)
+	defer coordinator.Close()
+
+	// Register 2 identities: one with TTL, one without
+	err := coordinator.Register(ctx, "permanent", map[string]interface{}{"type": "permanent"}, 0)
+	if err != nil {
+		t.Fatalf("Register permanent failed: %v", err)
+	}
+
+	err = coordinator.Register(ctx, "temporary", map[string]interface{}{"type": "temporary"}, 50*time.Millisecond)
+	if err != nil {
+		t.Fatalf("Register temporary failed: %v", err)
+	}
+
+	// Both should exist initially
+	results, _ := coordinator.Enumerate(ctx, nil)
+	if len(results) != 2 {
+		t.Errorf("Expected 2 identities initially, got %d", len(results))
+	}
+
+	// Wait for temporary to expire
+	time.Sleep(100 * time.Millisecond)
+
+	// Enumerate should only return permanent (temporary is expired)
+	results, _ = coordinator.Enumerate(ctx, nil)
+	if len(results) != 1 {
+		t.Errorf("Expected 1 identity after expiration, got %d", len(results))
+	}
+
+	if len(results) > 0 && results[0].ID != "permanent" {
+		t.Errorf("Expected permanent identity, got %s", results[0].ID)
+	}
+}
+
 // NewCoordinatorWithMocks creates a coordinator with mock backends for testing
 func NewCoordinatorWithMocks(t *testing.T) *Coordinator {
 	config := DefaultConfig()

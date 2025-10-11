@@ -348,3 +348,109 @@ func TestLessThan_StringLexicographic(t *testing.T) {
 		t.Error("Expected true for version 1.9.5 < 2.0.0 (lexicographic)")
 	}
 }
+
+// Test 31: Equality with bool type
+func TestEquality_Bool(t *testing.T) {
+	nodeTrue := &EqualityNode{Field: "active", Value: true}
+	nodeFalse := &EqualityNode{Field: "active", Value: false}
+
+	metadata := map[string]interface{}{"active": true}
+
+	if !nodeTrue.Evaluate(metadata) {
+		t.Error("Expected true for active=true")
+	}
+
+	if nodeFalse.Evaluate(metadata) {
+		t.Error("Expected false for active=false when actual is true")
+	}
+}
+
+// Test 32: Equality with int64 type
+func TestEquality_Int64(t *testing.T) {
+	node := &EqualityNode{Field: "timestamp", Value: int64(1234567890)}
+	metadata := map[string]interface{}{"timestamp": int64(1234567890)}
+
+	if !node.Evaluate(metadata) {
+		t.Error("Expected true for int64 timestamp equality")
+	}
+}
+
+// Test 33: GreaterThan with int64
+func TestGreaterThan_Int64(t *testing.T) {
+	node := &GreaterThanNode{Field: "size", Value: int64(1000)}
+	metadata := map[string]interface{}{"size": int64(2000)}
+
+	if !node.Evaluate(metadata) {
+		t.Error("Expected true for size=2000 > 1000 (int64)")
+	}
+}
+
+// Test 34: GreaterThan with float64
+func TestGreaterThan_Float64(t *testing.T) {
+	node := &GreaterThanNode{Field: "price", Value: 99.99}
+	metadata := map[string]interface{}{"price": 149.99}
+
+	if !node.Evaluate(metadata) {
+		t.Error("Expected true for price=149.99 > 99.99 (float64)")
+	}
+}
+
+// Test 35: GreaterThan with string (lexicographic)
+func TestGreaterThan_String(t *testing.T) {
+	node := &GreaterThanNode{Field: "name", Value: "alice"}
+	metadata := map[string]interface{}{"name": "bob"}
+
+	if !node.Evaluate(metadata) {
+		t.Error("Expected true for name=bob > alice (lexicographic)")
+	}
+}
+
+// Test 36: LessThan with int64
+func TestLessThan_Int64(t *testing.T) {
+	node := &LessThanNode{Field: "offset", Value: int64(10000)}
+	metadata := map[string]interface{}{"offset": int64(5000)}
+
+	if !node.Evaluate(metadata) {
+		t.Error("Expected true for offset=5000 < 10000 (int64)")
+	}
+}
+
+// Test 37: GreaterThan with unsupported type (should return false)
+func TestGreaterThan_UnsupportedType(t *testing.T) {
+	node := &GreaterThanNode{Field: "data", Value: []int{1, 2, 3}}
+	metadata := map[string]interface{}{"data": []int{4, 5, 6}}
+
+	if node.Evaluate(metadata) {
+		t.Error("Expected false for unsupported type comparison")
+	}
+}
+
+// Test 38: LessThan with unsupported type (should return false)
+func TestLessThan_UnsupportedType(t *testing.T) {
+	node := &LessThanNode{Field: "data", Value: []int{1, 2, 3}}
+	metadata := map[string]interface{}{"data": []int{4, 5, 6}}
+
+	if node.Evaluate(metadata) {
+		t.Error("Expected false for unsupported type comparison")
+	}
+}
+
+// Test 39: Equality with nil values (default case)
+func TestEquality_NilValues(t *testing.T) {
+	node := &EqualityNode{Field: "nullable", Value: nil}
+	metadata := map[string]interface{}{"nullable": nil}
+
+	if !node.Evaluate(metadata) {
+		t.Error("Expected true for nil == nil (default case)")
+	}
+}
+
+// Test 40: Contains with empty substring
+func TestContains_EmptySubstring(t *testing.T) {
+	node := &ContainsNode{Field: "text", Substring: ""}
+	metadata := map[string]interface{}{"text": "hello world"}
+
+	if !node.Evaluate(metadata) {
+		t.Error("Expected true for empty substring (always matches)")
+	}
+}
