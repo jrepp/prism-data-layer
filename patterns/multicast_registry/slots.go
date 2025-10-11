@@ -3,6 +3,8 @@ package multicast_registry
 import (
 	"context"
 	"time"
+
+	"github.com/prism/patterns/multicast_registry/backends"
 )
 
 // RegistryBackend defines the interface for identity registry storage
@@ -11,17 +13,17 @@ type RegistryBackend interface {
 	Set(ctx context.Context, identity string, metadata map[string]interface{}, ttl time.Duration) error
 
 	// Get retrieves identity metadata
-	Get(ctx context.Context, identity string) (*Identity, error)
+	Get(ctx context.Context, identity string) (*backends.Identity, error)
 
 	// Scan returns all identities (no filtering)
-	Scan(ctx context.Context) ([]*Identity, error)
+	Scan(ctx context.Context) ([]*backends.Identity, error)
 
 	// Delete removes an identity
 	Delete(ctx context.Context, identity string) error
 
 	// Enumerate queries identities with filter
 	// Backend-native filtering if supported, otherwise returns all for client-side filtering
-	Enumerate(ctx context.Context, filter *Filter) ([]*Identity, error)
+	Enumerate(ctx context.Context, filter *backends.Filter) ([]*backends.Identity, error)
 
 	// Close closes backend connections
 	Close() error
@@ -57,52 +59,13 @@ type DurabilityBackend interface {
 	Close() error
 }
 
-// Identity represents a registered identity with metadata
-type Identity struct {
-	ID           string                 `json:"identity"`
-	Metadata     map[string]interface{} `json:"metadata"`
-	RegisteredAt time.Time              `json:"registered_at"`
-	ExpiresAt    *time.Time             `json:"expires_at,omitempty"`
-	TTL          time.Duration          `json:"ttl,omitempty"`
-}
+// Type aliases for convenience (avoid backends. prefix everywhere)
+type Identity = backends.Identity
+type Filter = backends.Filter
 
-// Filter represents a metadata filter expression
-type Filter struct {
-	// Simple equality map for POC 4 (Week 1)
-	// Example: {"status": "online", "room": "engineering"}
-	Conditions map[string]interface{}
-
-	// Advanced filter AST (Week 3)
-	// Will be implemented in filter package
-	AST interface{} `json:"ast,omitempty"`
-}
-
-// NewFilter creates a simple equality filter
+// NewFilter creates a simple equality filter (delegates to backends package)
 func NewFilter(conditions map[string]interface{}) *Filter {
-	return &Filter{
-		Conditions: conditions,
-	}
-}
-
-// Matches evaluates the filter against identity metadata (client-side)
-func (f *Filter) Matches(metadata map[string]interface{}) bool {
-	if f == nil || len(f.Conditions) == 0 {
-		return true // No filter = match all
-	}
-
-	// Simple equality matching for POC 4
-	for key, expectedValue := range f.Conditions {
-		actualValue, exists := metadata[key]
-		if !exists {
-			return false
-		}
-		// TODO: Type-aware comparison (Week 3)
-		if actualValue != expectedValue {
-			return false
-		}
-	}
-
-	return true
+	return backends.NewFilter(conditions)
 }
 
 // DeliveryResult represents the result of a multicast delivery attempt
