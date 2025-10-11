@@ -4,10 +4,11 @@ go 1.24.0
 
 require (
 	github.com/jrepp/prism-data-layer/patterns/core v0.0.0
+	github.com/jrepp/prism-data-layer/patterns/memstore v0.0.0-20251010231143-1b1778c9ef05
 	github.com/jrepp/prism-data-layer/patterns/nats v0.0.0
 	github.com/jrepp/prism-data-layer/patterns/redis v0.0.0
 	github.com/jrepp/prism-data-layer/tests/testing v0.0.0
-	github.com/stretchr/testify v1.10.0
+	github.com/stretchr/testify v1.11.1
 )
 
 require (
@@ -62,7 +63,9 @@ require (
 	go.opentelemetry.io/auto/sdk v1.1.0 // indirect
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.49.0 // indirect
 	go.opentelemetry.io/otel v1.37.0 // indirect
+	go.opentelemetry.io/otel/exporters/stdout/stdouttrace v1.24.0 // indirect
 	go.opentelemetry.io/otel/metric v1.37.0 // indirect
+	go.opentelemetry.io/otel/sdk v1.37.0 // indirect
 	go.opentelemetry.io/otel/trace v1.37.0 // indirect
 	golang.org/x/crypto v0.42.0 // indirect
 	golang.org/x/net v0.43.0 // indirect
@@ -76,6 +79,7 @@ require (
 
 replace (
 	github.com/jrepp/prism-data-layer/patterns/core => ../../patterns/core
+	github.com/jrepp/prism-data-layer/patterns/memstore => ../../patterns/memstore
 	github.com/jrepp/prism-data-layer/patterns/nats => ../../patterns/nats
 	github.com/jrepp/prism-data-layer/patterns/redis => ../../patterns/redis
 	github.com/jrepp/prism-data-layer/tests/testing => ../testing

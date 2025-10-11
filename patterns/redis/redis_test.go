@@ -78,14 +78,18 @@ func TestRedisPattern_Initialize(t *testing.T) {
 			},
 			wantErr: false,
 		},
+		// Removed "defaults applied" test case - flaky because it depends on whether
+		// Redis is actually running on localhost:6379. Use invalid address test instead.
 		{
-			name: "defaults applied",
+			name: "invalid address",
 			config: &core.Config{
 				Plugin:       core.PluginConfig{Name: "redis", Version: "0.1.0"},
 				ControlPlane: core.ControlPlaneConfig{Port: 9091},
-				Backend:      map[string]any{},
+				Backend: map[string]any{
+					"address": "localhost:9999", // Invalid port that's unlikely to have Redis
+				},
 			},
-			wantErr: true, // Will fail to connect with default localhost:6379
+			wantErr: true,
 		},
 	}
 

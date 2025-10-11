@@ -9,35 +9,55 @@ import (
 	"syscall"
 )
 
-// Plugin represents a backend plugin lifecycle
+// Plugin represents a backend driver lifecycle.
+//
+// TERMINOLOGY (from MEMO-006):
+// - Backend: The actual storage/messaging system (Redis, PostgreSQL, Kafka, NATS, etc.)
+// - Backend Driver: The Go implementation that interfaces with a backend (this interface)
+// - Pattern: The data access pattern being implemented (KeyValue, PubSub, Stream, etc.)
+// - Interface: Thin proto service definitions (keyvalue_basic, keyvalue_ttl, pubsub_basic, etc.)
+//
+// A Backend Driver (Plugin):
+// - Connects to a specific Backend (e.g., Redis, PostgreSQL)
+// - Implements one or more Patterns (e.g., KeyValue, PubSub)
+// - Supports multiple Interfaces within those patterns (e.g., keyvalue_basic + keyvalue_ttl)
+//
+// Example: The Redis backend driver implements:
+// - KeyValue pattern (keyvalue_basic, keyvalue_scan, keyvalue_ttl interfaces)
+// - PubSub pattern (pubsub_basic, pubsub_wildcards interfaces)
+// - Stream pattern (stream_basic, stream_consumer_groups interfaces)
 type Plugin interface {
-	// Name returns the plugin name (e.g., "postgres", "kafka")
+	// Name returns the backend driver name (e.g., "redis", "postgres", "kafka")
 	Name() string
 
-	// Version returns the plugin version
+	// Version returns the backend driver version
 	Version() string
 
-	// Initialize prepares the plugin with configuration
+	// Initialize prepares the backend driver with configuration
 	Initialize(ctx context.Context, config *Config) error
 
 	// Start begins serving requests
 	Start(ctx context.Context) error
 
-	// Stop gracefully shuts down the plugin
+	// Stop gracefully shuts down the backend driver
 	Stop(ctx context.Context) error
 
-	// Health returns the plugin health status
+	// Health returns the backend driver health status
 	Health(ctx context.Context) (*HealthStatus, error)
 }
 
-// HealthStatus represents plugin health
+// BackendDriver is a type alias for Plugin to make terminology clearer.
+// Use this when the context makes it clear we're referring to a backend driver.
+type BackendDriver = Plugin
+
+// HealthStatus represents backend driver health
 type HealthStatus struct {
 	Status  HealthState
 	Message string
-	Details map[string]string
+	Details map[string]string // Backend-specific details (connection count, latency, etc.)
 }
 
-// HealthState represents health state
+// HealthState represents backend driver health state
 type HealthState int
 
 const (

@@ -106,13 +106,18 @@ func (m *MemStore) Health(ctx context.Context) (*core.HealthStatus, error) {
 		message = fmt.Sprintf("at capacity: %d/%d keys", keyCount, m.config.MaxKeys)
 	}
 
+	details := map[string]string{
+		"keys": fmt.Sprintf("%d", keyCount),
+	}
+
+	if m.config != nil {
+		details["max_keys"] = fmt.Sprintf("%d", m.config.MaxKeys)
+	}
+
 	return &core.HealthStatus{
 		Status:  status,
 		Message: message,
-		Details: map[string]string{
-			"keys":     fmt.Sprintf("%d", keyCount),
-			"max_keys": fmt.Sprintf("%d", m.config.MaxKeys),
-		},
+		Details: details,
 	}, nil
 }
 
@@ -172,6 +177,21 @@ func (m *MemStore) Delete(key string) error {
 	return nil
 }
 
+// Exists checks if a key exists (and is not expired)
+func (m *MemStore) Exists(key string) (bool, error) {
+	// Check if key is expired
+	if exp, ok := m.ttl.Load(key); ok {
+		if time.Now().After(exp.(time.Time)) {
+			m.data.Delete(key)
+			m.ttl.Delete(key)
+			return false, nil
+		}
+	}
+
+	_, ok := m.data.Load(key)
+	return ok, nil
+}
+
 // cleanupExpiredKeys periodically removes expired keys
 func (m *MemStore) cleanupExpiredKeys(ctx context.Context) {
 	ticker := time.NewTicker(m.config.CleanupPeriod)
@@ -194,5 +214,32 @@ func (m *MemStore) cleanupExpiredKeys(ctx context.Context) {
 				return true
 			})
 		}
+	}
+}
+
+// Compile-time interface compliance checks
+// These ensure that MemStore implements the expected interfaces
+var (
+	_ core.Plugin                  = (*MemStore)(nil) // Core plugin interface
+	_ core.KeyValueBasicInterface  = (*MemStore)(nil) // KeyValue basic operations
+	_ core.InterfaceSupport        = (*MemStore)(nil) // Interface introspection
+)
+
+// SupportsInterface returns true if MemStore implements the named interface
+func (m *MemStore) SupportsInterface(interfaceName string) bool {
+	supported := map[string]bool{
+		"Plugin":                 true,
+		"KeyValueBasicInterface": true,
+		"InterfaceSupport":       true,
+	}
+	return supported[interfaceName]
+}
+
+// ListInterfaces returns all interfaces that MemStore implements
+func (m *MemStore) ListInterfaces() []string {
+	return []string{
+		"Plugin",
+		"KeyValueBasicInterface",
+		"InterfaceSupport",
 	}
 }

@@ -1,4 +1,9 @@
 version: v2
+managed:
+  enabled: true
+  override:
+    - file_option: go_package_prefix
+      value: github.com/jrepp/prism-data-layer/patterns/core/gen
 plugins:
   - remote: buf.build/protocolbuffers/go
     out: ../patterns/core/gen

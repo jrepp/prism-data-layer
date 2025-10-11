@@ -204,3 +204,30 @@ func (r *RedisPattern) Exists(key string) (bool, error) {
 
 	return count > 0, nil
 }
+
+// Compile-time interface compliance checks
+// These ensure that RedisPattern implements the expected interfaces
+var (
+	_ core.Plugin                  = (*RedisPattern)(nil) // Core plugin interface
+	_ core.KeyValueBasicInterface  = (*RedisPattern)(nil) // KeyValue basic operations
+	_ core.InterfaceSupport        = (*RedisPattern)(nil) // Interface introspection
+)
+
+// SupportsInterface returns true if RedisPattern implements the named interface
+func (r *RedisPattern) SupportsInterface(interfaceName string) bool {
+	supported := map[string]bool{
+		"Plugin":                 true,
+		"KeyValueBasicInterface": true,
+		"InterfaceSupport":       true,
+	}
+	return supported[interfaceName]
+}
+
+// ListInterfaces returns all interfaces that RedisPattern implements
+func (r *RedisPattern) ListInterfaces() []string {
+	return []string{
+		"Plugin",
+		"KeyValueBasicInterface",
+		"InterfaceSupport",
+	}
+}

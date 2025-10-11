@@ -38,7 +38,7 @@ func setupTestNATS(t *testing.T) (*NATSPattern, *natsserver.Server) {
 	}
 
 	// Initialize pattern
-	plugin := New().(*NATSPattern)
+	plugin := New()
 	ctx := context.Background()
 	if err := plugin.Initialize(ctx, config); err != nil {
 		server.Shutdown()
@@ -445,7 +445,7 @@ func TestNATSPattern_UnsubscribeNonExistent(t *testing.T) {
 }
 
 func TestNATSPattern_PublishWithoutConnection(t *testing.T) {
-	plugin := New().(*NATSPattern)
+	plugin := New()
 	plugin.name = "test"
 	plugin.version = "0.1.0"
 	// Don't initialize (no connection)
@@ -458,7 +458,7 @@ func TestNATSPattern_PublishWithoutConnection(t *testing.T) {
 }
 
 func TestNATSPattern_SubscribeWithoutConnection(t *testing.T) {
-	plugin := New().(*NATSPattern)
+	plugin := New()
 	plugin.name = "test"
 	plugin.version = "0.1.0"
 	// Don't initialize (no connection)
@@ -471,7 +471,7 @@ func TestNATSPattern_SubscribeWithoutConnection(t *testing.T) {
 }
 
 func TestNATSPattern_NameAndVersion(t *testing.T) {
-	plugin := New().(*NATSPattern)
+	plugin := New()
 
 	if plugin.Name() != "nats" {
 		t.Errorf("Expected name 'nats', got '%s'", plugin.Name())
@@ -500,7 +500,7 @@ func TestNATSPattern_InitializeWithDefaults(t *testing.T) {
 		},
 	}
 
-	plugin := New().(*NATSPattern)
+	plugin := New()
 	ctx := context.Background()
 
 	if err := plugin.Initialize(ctx, config); err != nil {
@@ -530,7 +530,7 @@ func TestNATSPattern_InitializeFailure(t *testing.T) {
 		},
 	}
 
-	plugin := New().(*NATSPattern)
+	plugin := New()
 	ctx := context.Background()
 
 	err := plugin.Initialize(ctx, config)

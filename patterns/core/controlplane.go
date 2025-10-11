@@ -72,6 +72,16 @@ func (s *ControlPlaneServer) Start(ctx context.Context) error {
 	return nil
 }
 
+// Port returns the actual port the control plane is listening on
+// This is useful when using dynamic port allocation (port 0)
+func (s *ControlPlaneServer) Port() int {
+	if s.listener != nil {
+		addr := s.listener.Addr().(*net.TCPAddr)
+		return addr.Port
+	}
+	return s.port
+}
+
 // Stop gracefully stops the control plane server
 func (s *ControlPlaneServer) Stop(ctx context.Context) error {
 	if s.grpcServer != nil {

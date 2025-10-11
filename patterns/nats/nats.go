@@ -270,3 +270,30 @@ type Message struct {
 	MessageID string
 	Timestamp int64
 }
+
+// Compile-time interface compliance checks
+// These ensure that NATSPattern implements the expected interfaces
+var (
+	_ core.Plugin           = (*NATSPattern)(nil) // Core plugin interface
+	_ core.InterfaceSupport = (*NATSPattern)(nil) // Interface introspection
+	// TODO: Add core.PubSubBasicInterface once signature is aligned (context param, message type)
+)
+
+// SupportsInterface returns true if NATSPattern implements the named interface
+func (n *NATSPattern) SupportsInterface(interfaceName string) bool {
+	supported := map[string]bool{
+		"Plugin":               true,
+		"PubSubBasicInterface": true, // Functional support, but signature differs slightly
+		"InterfaceSupport":     true,
+	}
+	return supported[interfaceName]
+}
+
+// ListInterfaces returns all interfaces that NATSPattern implements
+func (n *NATSPattern) ListInterfaces() []string {
+	return []string{
+		"Plugin",
+		"PubSubBasicInterface",
+		"InterfaceSupport",
+	}
+}

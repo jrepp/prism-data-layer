@@ -74,7 +74,7 @@ build-dev: ## Build all components in debug mode (faster)
 
 ##@ Testing
 
-test: test-proxy test-patterns ## Run all tests
+test: test-proxy test-patterns test-acceptance test-integration-go ## Run all tests (unit, acceptance, integration)
 	$(call print_green,All tests passed)
 
 test-proxy: ## Run Rust proxy unit tests
@@ -109,11 +109,16 @@ test-integration: build-memstore ## Run integration tests (requires built MemSto
 	@cd proxy && cargo test --test integration_test -- --ignored --nocapture
 	$(call print_green,Integration tests passed)
 
-test-all: test test-integration ## Run all tests including integration tests
-	$(call print_green,All tests (unit + integration) passed)
+test-all: test test-integration test-integration-go test-acceptance ## Run all tests (unit, integration, acceptance)
+	$(call print_green,All tests (unit + integration + acceptance) passed)
 
-test-acceptance: test-acceptance-redis test-acceptance-nats ## Run all acceptance tests with testcontainers
+test-acceptance: test-acceptance-interfaces test-acceptance-redis test-acceptance-nats ## Run all acceptance tests with testcontainers
 	$(call print_green,All acceptance tests passed)
+
+test-acceptance-interfaces: ## Run interface-based acceptance tests (tests multiple backends)
+	$(call print_blue,Running interface-based acceptance tests...)
+	@cd tests/acceptance/interfaces && go test -v -timeout 10m ./...
+	$(call print_green,Interface-based acceptance tests passed)
 
 test-acceptance-redis: ## Run Redis acceptance tests with testcontainers
 	$(call print_blue,Running Redis acceptance tests...)
@@ -129,6 +134,11 @@ test-acceptance-quiet: ## Run all acceptance tests in quiet mode (suppress conta
 	$(call print_blue,Running acceptance tests in quiet mode...)
 	@PRISM_TEST_QUIET=1 $(MAKE) test-acceptance
 	$(call print_green,All acceptance tests passed (quiet mode))
+
+test-integration-go: ## Run Go integration tests (proxy-pattern lifecycle)
+	$(call print_blue,Running Go integration tests...)
+	@cd tests/integration && go test -v -timeout 5m ./...
+	$(call print_green,Go integration tests passed)
 
 ##@ Code Coverage
 
@@ -169,7 +179,14 @@ coverage-core: ## Generate Core SDK coverage report
 	@cd patterns/core && go tool cover -html=coverage.out -o coverage.html
 	$(call print_green,Core SDK coverage: patterns/core/coverage.html)
 
-coverage-acceptance: coverage-acceptance-redis coverage-acceptance-nats ## Generate coverage for acceptance tests
+coverage-acceptance: coverage-acceptance-interfaces coverage-acceptance-redis coverage-acceptance-nats ## Generate coverage for acceptance tests
+
+coverage-acceptance-interfaces: ## Generate interface-based acceptance test coverage
+	$(call print_blue,Generating interface-based acceptance test coverage...)
+	@cd tests/acceptance/interfaces && go test -coverprofile=coverage.out -timeout 10m ./...
+	@cd tests/acceptance/interfaces && go tool cover -func=coverage.out | grep total
+	@cd tests/acceptance/interfaces && go tool cover -html=coverage.out -o coverage.html
+	$(call print_green,Interface acceptance coverage: tests/acceptance/interfaces/coverage.html)
 
 coverage-acceptance-redis: ## Generate Redis acceptance test coverage
 	$(call print_blue,Generating Redis acceptance test coverage...)
@@ -184,6 +201,13 @@ coverage-acceptance-nats: ## Generate NATS acceptance test coverage
 	@cd tests/acceptance/nats && go tool cover -func=coverage.out | grep total
 	@cd tests/acceptance/nats && go tool cover -html=coverage.out -o coverage.html
 	$(call print_green,NATS acceptance coverage: tests/acceptance/nats/coverage.html)
+
+coverage-integration: ## Generate Go integration test coverage
+	$(call print_blue,Generating Go integration test coverage...)
+	@cd tests/integration && go test -coverprofile=coverage.out -timeout 5m ./...
+	@cd tests/integration && go tool cover -func=coverage.out | grep total
+	@cd tests/integration && go tool cover -html=coverage.out -o coverage.html
+	$(call print_green,Integration coverage: tests/integration/coverage.html)
 
 ##@ Protobuf
 
@@ -224,6 +248,10 @@ clean-patterns: ## Clean pattern binaries
 	@rm -f patterns/nats/nats
 	@rm -f patterns/nats/coverage.out patterns/nats/coverage.html
 	@rm -f patterns/core/coverage.out patterns/core/coverage.html
+	@rm -f tests/acceptance/interfaces/coverage.out tests/acceptance/interfaces/coverage.html
+	@rm -f tests/acceptance/redis/coverage.out tests/acceptance/redis/coverage.html
+	@rm -f tests/acceptance/nats/coverage.out tests/acceptance/nats/coverage.html
+	@rm -f tests/integration/coverage.out tests/integration/coverage.html
 	$(call print_green,Patterns cleaned)
 
 clean-proto: ## Clean generated protobuf code
@@ -252,6 +280,10 @@ fmt-go: ## Format Go code
 	@cd patterns/redis && go fmt ./...
 	@cd patterns/nats && go fmt ./...
 	@cd patterns/core && go fmt ./...
+	@cd tests/acceptance/interfaces && go fmt ./...
+	@cd tests/acceptance/redis && go fmt ./...
+	@cd tests/acceptance/nats && go fmt ./...
+	@cd tests/integration && go fmt ./...
 	$(call print_green,Go code formatted)
 
 lint: lint-rust lint-go ## Lint all code
@@ -267,6 +299,10 @@ lint-go: ## Lint Go code
 	@cd patterns/redis && go vet ./...
 	@cd patterns/nats && go vet ./...
 	@cd patterns/core && go vet ./...
+	@cd tests/acceptance/interfaces && go vet ./...
+	@cd tests/acceptance/redis && go vet ./...
+	@cd tests/acceptance/nats && go vet ./...
+	@cd tests/integration && go vet ./...
 	$(call print_green,Go code linted)
 
 ##@ Docker

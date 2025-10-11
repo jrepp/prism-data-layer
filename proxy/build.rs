@@ -10,9 +10,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let proto_root = manifest_path.parent().unwrap().join("proto");
 
     // Proto files to compile
+    // Note: Proto files reorganized to match MEMO-006 three-layer architecture
     let proto_files = vec![
-        proto_root.join("prism/pattern/lifecycle.proto"),
-        proto_root.join("prism/pattern/keyvalue.proto"),
+        proto_root.join("prism/interfaces/lifecycle.proto"),
+        proto_root.join("prism/interfaces/keyvalue/keyvalue_basic.proto"),
     ];
 
     // Include paths for imports
