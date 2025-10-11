@@ -1370,7 +1370,10 @@ opts := []nats.Option{
 
 ---
 
-## POC 4: Multicast Registry (Composite Pattern)
+## POC 4: Multicast Registry (Composite Pattern) 🚧 IN PROGRESS
+
+**Status**: 🚧 **IN PROGRESS** (Started 2025-10-11)
+**Tracking Document**: `docs-cms/pocs/POC-004-MULTICAST-REGISTRY.md`
 
 ### Objective
 

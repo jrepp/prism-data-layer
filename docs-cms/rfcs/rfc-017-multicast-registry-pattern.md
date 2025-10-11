@@ -842,7 +842,11 @@ namespaces:
 
 ## Client API Design
 
-### Python Client API
+> **⚠️ NOTE ON CLIENT EXAMPLES**: The client API examples below use Python syntax for **illustration purposes only**. Python in Prism is reserved for **tooling** (build scripts, validation, deployment automation) and is **not used for application components**.
+>
+> Actual client libraries will be implemented in **Go** (primary) and **Rust** (secondary) for production use. These examples demonstrate the intended API ergonomics and semantics that will be replicated in Go/Rust implementations.
+
+### Python Client API (Conceptual Example)
 
 ```python
 from prism import Client, Filter
