@@ -1,9 +1,9 @@
 //! KeyValue gRPC server implementation
 
-use crate::proto::pattern::key_value_server::KeyValue;
-use crate::proto::pattern::{
+use crate::proto::interfaces::keyvalue::key_value_basic_interface_server::KeyValueBasicInterface;
+use crate::proto::interfaces::keyvalue::{
     DeleteRequest, DeleteResponse, ExistsRequest, ExistsResponse, GetRequest, GetResponse,
-    SetRequest, SetResponse, BatchGetRequest, BatchGetResponse, BatchSetRequest, BatchSetResponse,
+    SetRequest, SetResponse,
 };
 use crate::router::Router;
 use std::sync::Arc;
@@ -21,7 +21,7 @@ impl KeyValueService {
 }
 
 #[tonic::async_trait]
-impl KeyValue for KeyValueService {
+impl KeyValueBasicInterface for KeyValueService {
     async fn set(&self, request: Request<SetRequest>) -> Result<Response<SetResponse>, Status> {
         let _req = request.into_inner();
 
@@ -69,26 +69,6 @@ impl KeyValue for KeyValueService {
             exists: false,
             error: String::new(),
         }))
-    }
-
-    async fn batch_get(
-        &self,
-        request: Request<BatchGetRequest>,
-    ) -> Result<Response<BatchGetResponse>, Status> {
-        let _req = request.into_inner();
-
-        // TODO: Implement batch get
-        Ok(Response::new(BatchGetResponse { results: vec![] }))
-    }
-
-    async fn batch_set(
-        &self,
-        request: Request<BatchSetRequest>,
-    ) -> Result<Response<BatchSetResponse>, Status> {
-        let _req = request.into_inner();
-
-        // TODO: Implement batch set
-        Ok(Response::new(BatchSetResponse { results: vec![] }))
     }
 }
 

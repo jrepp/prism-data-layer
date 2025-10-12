@@ -222,7 +222,7 @@ proto-go: ## Generate Go protobuf code
 		--go-grpc_out=patterns/core/gen \
 		--go-grpc_opt=paths=source_relative \
 		--proto_path=proto \
-		proto/prism/pattern/lifecycle.proto \
+		proto/prism/interfaces/lifecycle.proto \
 		proto/prism/common/types.proto
 	$(call print_green,Go protobuf code generated)
 

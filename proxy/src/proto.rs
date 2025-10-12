@@ -5,6 +5,10 @@ pub mod common {
     include!(concat!(env!("OUT_DIR"), "/prism.common.rs"));
 }
 
-pub mod pattern {
-    include!(concat!(env!("OUT_DIR"), "/prism.pattern.rs"));
+pub mod interfaces {
+    include!(concat!(env!("OUT_DIR"), "/prism.interfaces.rs"));
+
+    pub mod keyvalue {
+        include!(concat!(env!("OUT_DIR"), "/prism.interfaces.keyvalue.rs"));
+    }
 }

@@ -187,7 +187,7 @@ impl Pattern {
                                 error = %e,
                                 "failed to connect gRPC client after max retries"
                             );
-                            return Err(e.into());
+                            return Err(e);
                         }
 
                         tracing::warn!(

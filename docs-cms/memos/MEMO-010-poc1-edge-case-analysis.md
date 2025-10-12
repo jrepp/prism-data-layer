@@ -1,5 +1,5 @@
 ---
-id: memo-010
+id: memo-poc1-edge-cases
 title: "MEMO-010: POC 1 Edge Case Analysis and Foundation Hardening"
 author: Platform Team
 created: 2025-10-10

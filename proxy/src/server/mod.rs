@@ -2,7 +2,7 @@
 
 mod keyvalue;
 
-use crate::proto::pattern::key_value_server::KeyValueServer;
+use crate::proto::interfaces::keyvalue::key_value_basic_interface_server::KeyValueBasicInterfaceServer;
 use crate::router::Router;
 use keyvalue::KeyValueService;
 use std::net::SocketAddr;
@@ -42,7 +42,7 @@ impl ProxyServer {
         // Start gRPC server
         tokio::spawn(async move {
             Server::builder()
-                .add_service(KeyValueServer::new(keyvalue_service))
+                .add_service(KeyValueBasicInterfaceServer::new(keyvalue_service))
                 .serve_with_shutdown(addr, async {
                     shutdown_rx.await.ok();
                 })

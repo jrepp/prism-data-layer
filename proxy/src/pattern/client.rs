@@ -1,7 +1,7 @@
 //! gRPC client for pattern lifecycle communication
 
-use crate::proto::pattern::{
-    pattern_lifecycle_client::PatternLifecycleClient, HealthCheckRequest, InitializeRequest,
+use crate::proto::interfaces::{
+    lifecycle_interface_client::LifecycleInterfaceClient, HealthCheckRequest, InitializeRequest,
     StartRequest, StopRequest,
 };
 use tonic::transport::Channel;
@@ -18,13 +18,13 @@ fn json_value_to_prost_struct(_value: serde_json::Value) -> crate::Result<prost_
 
 /// Pattern gRPC client wrapper
 pub struct PatternClient {
-    client: PatternLifecycleClient<Channel>,
+    client: LifecycleInterfaceClient<Channel>,
 }
 
 impl PatternClient {
     /// Connect to a pattern's gRPC endpoint
     pub async fn connect(endpoint: String) -> crate::Result<Self> {
-        let client = PatternLifecycleClient::connect(endpoint).await?;
+        let client = LifecycleInterfaceClient::connect(endpoint).await?;
         Ok(Self { client })
     }
 
@@ -89,7 +89,7 @@ impl PatternClient {
         let response = self.client.health_check(request).await?;
         let health_response = response.into_inner();
 
-        use crate::proto::pattern::HealthStatus;
+        use crate::proto::interfaces::HealthStatus;
         let status = match HealthStatus::try_from(health_response.status) {
             Ok(HealthStatus::Healthy) => crate::pattern::PatternStatus::Running,
             Ok(HealthStatus::Degraded) => crate::pattern::PatternStatus::Degraded,
