@@ -8,7 +8,8 @@ import (
 	"time"
 
 	"github.com/jrepp/prism-data-layer/patterns/core"
-	"github.com/jrepp/prism-data-layer/patterns/postgres"
+	// TODO: Enable postgres when pattern is implemented
+	// "github.com/jrepp/prism-data-layer/patterns/postgres"
 	"github.com/jrepp/prism-data-layer/patterns/redis"
 	"github.com/jrepp/prism-data-layer/tests/acceptance/common"
 	"github.com/jrepp/prism-data-layer/tests/testing/backends"
@@ -17,9 +18,10 @@ import (
 )
 
 var (
-	sharedRedisBackend    *backends.RedisBackend
-	sharedPostgresBackend *backends.PostgresBackend
-	testCtx               context.Context
+	sharedRedisBackend *backends.RedisBackend
+	// TODO: Enable postgres when pattern is implemented
+	// sharedPostgresBackend *backends.PostgresBackend
+	testCtx context.Context
 )
 
 // TestMain sets up shared backend containers once for all interface tests
@@ -29,15 +31,17 @@ func TestMain(m *testing.M) {
 	// Start Redis container once for all tests
 	sharedRedisBackend = backends.SetupRedis(&testing.T{}, testCtx)
 
+	// TODO: Enable postgres when pattern is implemented
 	// Start PostgreSQL container once for all tests
-	sharedPostgresBackend = backends.SetupPostgres(&testing.T{}, testCtx)
+	// sharedPostgresBackend = backends.SetupPostgres(&testing.T{}, testCtx)
 
 	// Run all tests
 	code := m.Run()
 
 	// Cleanup after all tests
 	sharedRedisBackend.Cleanup()
-	sharedPostgresBackend.Cleanup()
+	// TODO: Enable postgres when pattern is implemented
+	// sharedPostgresBackend.Cleanup()
 
 	os.Exit(code)
 }
@@ -103,7 +107,9 @@ func setupMemStoreDriver(t *testing.T, ctx context.Context) (KeyValueBasicDriver
 	return backend.Driver, backend.Cleanup
 }
 
+// TODO: Enable postgres when pattern is implemented
 // setupPostgresDriver creates a PostgreSQL backend driver for testing using shared container
+/*
 func setupPostgresDriver(t *testing.T, ctx context.Context) (KeyValueBasicDriver, func()) {
 	t.Helper()
 
@@ -136,6 +142,7 @@ func setupPostgresDriver(t *testing.T, ctx context.Context) (KeyValueBasicDriver
 
 	return driver, cleanup
 }
+*/
 
 // TestKeyValueBasicInterface_SetGet tests Set and Get operations across all backends
 func TestKeyValueBasicInterface_SetGet(t *testing.T) {

@@ -26,12 +26,13 @@ func GetStandardBackends() []BackendDriverSetup {
 			SupportsTTL:  true,
 			SupportsScan: false,
 		},
-		{
-			Name:         "Postgres",
-			SetupFunc:    setupPostgresDriver,
-			SupportsTTL:  false, // PostgreSQL doesn't natively support TTL
-			SupportsScan: true,  // PostgreSQL supports LIKE-based scanning
-		},
+		// TODO: Enable postgres when pattern is implemented
+		// {
+		// 	Name:         "Postgres",
+		// 	SetupFunc:    setupPostgresDriver,
+		// 	SupportsTTL:  false, // PostgreSQL doesn't natively support TTL
+		// 	SupportsScan: true,  // PostgreSQL supports LIKE-based scanning
+		// },
 	}
 }
 

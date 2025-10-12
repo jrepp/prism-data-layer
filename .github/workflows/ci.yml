@@ -37,6 +37,25 @@ jobs:
             tests/acceptance/nats/go.sum
             tests/integration/go.sum
 
+      - name: Setup protoc
+        uses: arduino/setup-protoc@v3
+        with:
+          version: '25.x'
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install protoc-gen-go
+        run: |
+          go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
+          go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
+
+      - name: Install buf
+        uses: bufbuild/buf-setup-action@v1
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Generate protobuf code
+        run: make proto-go
+
       - name: Cache Rust dependencies
         uses: actions/cache@v4
         with:
@@ -78,6 +97,12 @@ jobs:
 
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
+
+      - name: Setup protoc
+        uses: arduino/setup-protoc@v3
+        with:
+          version: '25.x'
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Cache Rust dependencies
         uses: actions/cache@v4
@@ -131,7 +156,6 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Generate protobuf code
-        if: matrix.pattern == 'core'
         run: make proto-go
 
       - name: Run tests for ${{ matrix.pattern }}
