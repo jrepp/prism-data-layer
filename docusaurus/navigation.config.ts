@@ -14,7 +14,7 @@ export const navItems = [
   },
   {
     to: '/docs/changelog',
-    label: 'What\'s New',
+    label: 'Change Log',
     position: 'left' as const,
   },
   {
@@ -68,7 +68,7 @@ export const footerLinks = [
         to: '/docs/intro',
       },
       {
-        label: 'What\'s New',
+        label: 'Change Log',
         to: '/docs/changelog',
       },
       {
