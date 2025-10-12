@@ -1,13 +1,14 @@
 ---
-title: "RFC-023: Load Testing Framework Evaluation and Strategy"
+title: "RFC-029: Load Testing Framework Evaluation and Strategy"
 status: Proposed
 author: Platform Team
 created: 2025-10-11
-updated: 2025-10-11
+updated: 2025-10-12
 tags: [load-testing, performance, tooling, evaluation]
+id: rfc-029
 ---
 
-# RFC-023: Load Testing Framework Evaluation and Strategy
+# RFC-029: Load Testing Framework Evaluation and Strategy
 
 ## Summary
 

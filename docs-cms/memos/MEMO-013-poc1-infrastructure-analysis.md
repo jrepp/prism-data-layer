@@ -10,7 +10,7 @@ tags: [poc1, pattern-sdk, load-testing, infrastructure, developer-experience]
 
 ## Executive Summary
 
-Comprehensive analysis of POC 1 infrastructure reveals two critical improvement areas: **Pattern SDK shared complexity** and **load testing strategy**. This memo synthesizes findings from MEMO-012 (SDK analysis) and RFC-023 (load testing evaluation) to provide actionable recommendations for POC 1 implementation.
+Comprehensive analysis of POC 1 infrastructure reveals two critical improvement areas: **Pattern SDK shared complexity** and **load testing strategy**. This memo synthesizes findings from MEMO-014 (SDK analysis) and RFC-029 (load testing evaluation) to provide actionable recommendations for POC 1 implementation.
 
 **Key Recommendations**:
 1. **Extract shared complexity** to Pattern SDK (38% code reduction)
@@ -32,13 +32,13 @@ RFC-021 defines three POC 1 plugins (MemStore, Redis, Kafka) with significant co
 
 ### Analysis Scope
 
-**MEMO-012**: Pattern SDK Shared Complexity
+**MEMO-014**: Pattern SDK Shared Complexity
 - Analyzed all three plugin implementations
 - Identified 10 areas of duplication
 - Proposed SDK enhancements
 - Estimated code reduction: 38%
 
-**RFC-023**: Load Testing Framework Evaluation
+**RFC-029**: Load Testing Framework Evaluation
 - Evaluated 5 frameworks (ghz, k6, fortio, vegeta, custom)
 - Compared against Prism requirements
 - Proposed two-tier testing strategy
@@ -385,7 +385,7 @@ Refactor existing plugins to use new SDK packages:
 
 **Mitigation**:
 - Clear decision matrix (pattern-level vs integration)
-- Documentation in RFC-023
+- Documentation in RFC-029
 - Training/examples for both tools
 
 **Probability**: Low (two tools with clear separation)
@@ -597,8 +597,8 @@ Refactor existing plugins to use new SDK packages:
 
 ## Related Documents
 
-- **[MEMO-012: Pattern SDK Shared Complexity](/memos/memo-012)** - Detailed SDK analysis
-- **[RFC-023: Load Testing Framework Evaluation](/rfc/rfc-023)** - Framework comparison
+- **[MEMO-014: Pattern SDK Shared Complexity](/memos/memo-014)** - Detailed SDK analysis
+- **[RFC-029: Load Testing Framework Evaluation](/rfc/rfc-029)** - Framework comparison
 - **[RFC-021: POC 1 Three Plugins Implementation](/rfc/rfc-021)** - Plugin design
 - **[RFC-022: Core Pattern SDK Code Layout](/rfc/rfc-022)** - SDK structure
 - **[MEMO-010: Load Test Results](/memos/memo-010)** - Custom tool validation
@@ -719,7 +719,7 @@ ghz --proto proto/interfaces/keyvalue_basic.proto \
 
 ## Conclusion
 
-This memo synthesizes findings from MEMO-012 (SDK analysis) and RFC-023 (load testing evaluation) to propose a comprehensive infrastructure strategy for POC 1:
+This memo synthesizes findings from MEMO-014 (SDK analysis) and RFC-029 (load testing evaluation) to propose a comprehensive infrastructure strategy for POC 1:
 
 1. **Extract shared complexity to Pattern SDK** (38% code reduction)
 2. **Adopt two-tier load testing strategy** (pattern + integration)

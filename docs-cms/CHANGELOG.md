@@ -10,6 +10,79 @@ Quick access to recently updated documentation. Changes listed in reverse chrono
 
 ## Recent Changes
 
+### 2025-10-12
+
+#### Test and Build Fixes (UPDATED)
+**Commits**: 39f4992, 57f819d
+
+**Summary**: Fixed critical test failures and lint issues preventing clean builds:
+
+**Test Failure Fix** (39f4992):
+- Removed non-existent `ttl_seconds` field from KeyValueBasicInterface test
+- Issue: Test code referenced field not in proto definition
+- SetRequest only has: key, value, tags (no ttl_seconds in basic interface)
+- All tests now pass: Rust proxy (18 tests), Go patterns (all passed), acceptance tests (100+ tests)
+
+**Protobuf Module Structure Fix** (57f819d):
+- Fixed proto file organization mismatch between Makefile and Rust code
+- Updated Makefile to use correct paths (prism/interfaces/ instead of prism/pattern/)
+- Updated proxy/src/proto.rs to include both interfaces and interfaces.keyvalue modules
+- Fixed all Rust imports from proto::pattern to proto::interfaces/interfaces::keyvalue
+- Changed service names to match proto definitions (LifecycleInterface, KeyValueBasicInterface)
+- Removed batch operations not in KeyValueBasicInterface
+- Fixed clippy warning (removed useless .into() conversion)
+- All lint checks now pass (Rust clippy + Go vet)
+
+**Key Facts**: Root cause was proto file reorganization to prism/interfaces/ structure but Makefile and Rust code still referenced old prism/pattern/ paths. Both issues discovered during `make test` and `make lint` runs. Fixes enable clean CI builds.
+
+**Impact**: Development can proceed with passing tests and lint. Build pipeline unblocked. Foundation for POC 1 implementation is stable.
+
+---
+
+#### POC 1 Infrastructure Analysis Documentation (NEW)
+**Commit**: 48ee562
+**Link**: [MEMO-013](/memos/memo-013)
+
+**Summary**: Comprehensive analysis of Pattern SDK shared complexity and load testing framework evaluation:
+
+**Documents Created**:
+- **MEMO-014** (Pattern SDK): Pattern SDK Shared Complexity Analysis
+- **RFC-029** (Load Testing): Load Testing Framework Evaluation and Strategy
+- **MEMO-013**: POC 1 Infrastructure Analysis (synthesis document)
+
+**Note**: Original numbering (MEMO-012, RFC-023) conflicted with existing documents. Renumbered to MEMO-014 and RFC-029 to maintain sequence integrity.
+
+**Key Findings**:
+- 38% code reduction potential by extracting shared complexity to Pattern SDK
+- Two-tier load testing strategy: custom tool (pattern-level) + ghz (integration-level)
+- 12 areas of duplication across POC 1 plugins (MemStore, Redis, Kafka)
+- Recommended SDK enhancements: connection pool, TTL manager, health check framework
+
+**Pattern SDK Analysis** (MEMO-014):
+- Connection pool manager reduces Redis/Kafka code by ~270 lines
+- TTL manager with heap-based expiration scales to 100K+ keys (vs per-key timers)
+- Health check framework standardizes status reporting
+- Implementation plan: 2-week sprint (5 days SDK + 2 days refactoring)
+- Expected: 2100 LOC → 1300 LOC (38% reduction)
+
+**Load Testing Evaluation** (RFC-029):
+- Evaluated 5 frameworks: ghz (24/30), k6 (20/30), fortio (22/30), vegeta (disqualified), hey/bombardier (disqualified)
+- Recommendation: Keep custom prism-loadtest + add ghz for integration testing
+- Two-tier strategy: pattern-level (prism-loadtest) + integration-level (ghz)
+- Custom tool validated by MEMO-010 (100 req/sec, precise rate limiting, thread-safe)
+
+**POC 1 Infrastructure Synthesis** (MEMO-013):
+- Combines SDK refactoring + load testing enhancements
+- Timeline: 2-week sprint alongside POC 1 implementation
+- Deliverables: Enhanced SDK packages, two-tier load testing, 38% code reduction
+- Success metrics: coverage targets (85%+), performance baselines, reduced plugin LOC
+
+**Key Facts**: Analysis based on RFC-021 POC 1 plugin designs. All three documents validated with `uv run tooling/validate_docs.py` (101 docs, 0 errors). Implementation can proceed in parallel with POC 1.
+
+**Impact**: Provides clear roadmap for Pattern SDK enhancements. Establishes comprehensive load testing strategy. Sets foundation for maintainable, testable plugin implementations.
+
+---
+
 ### 2025-10-11
 
 #### MEMO-012: Developer Experience and Common Workflows (NEW)
@@ -34,12 +107,12 @@ Quick access to recently updated documentation. Changes listed in reverse chrono
 ---
 
 #### CI Validation Fixes - MDX Syntax and Broken Links (UPDATED)
-**Links**: [MEMO-009](/memos/memo-009), [MEMO-010](/memos/memo-010), [RFC-028](/rfc/rfc-028)
+**Links**: [MEMO-009](/memos/memo-009), [MEMO-010](/memos/memo-010), [RFC-029](/rfc/rfc-029)
 
 **Summary**: Fixed MDX compilation errors and broken links identified by CI validation:
 - **MEMO-009**: Escaped `<` character in line 87 (`<1KB` → `&lt;1KB`), added `text` language identifier to code fence on line 322, fixed broken link from `/pocs/poc-004-multicast-registry` to `/memos/memo-009` on line 369, updated relative path to absolute GitHub URL on line 372
 - **MEMO-010**: Escaped all unescaped `<` characters in performance comparison tables (lines 22, 75, 97, 124, 135, 275, 322, 323) to `&lt;`
-- **RFC-028**: Renamed from RFC-022 to RFC-028 (proper RFC numbering sequence)
+- **RFC-029**: Renamed from RFC-022 to RFC-029 (proper RFC numbering sequence)
 
 **Key Facts**: All validation errors resolved. Code fences now have proper language identifiers (prevents "Unexpected FunctionDeclaration" MDX errors). HTML entities properly escaped (`<` → `&lt;`, `>` → `&gt;`). Links updated to use `/memos/` paths instead of deprecated `/pocs/` paths. Full validation passes with GitHub Pages build successful.
 

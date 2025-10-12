@@ -4,7 +4,7 @@ author: Platform Team
 created: 2025-10-11
 updated: 2025-10-11
 tags: [dx, developer-experience, testing, tooling, workflows]
-id: memo-012
+id: memo-012-developer-experience
 ---
 
 # MEMO-012: Developer Experience and Common Workflows
