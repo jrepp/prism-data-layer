@@ -97,9 +97,7 @@ async fn test_concurrent_health_checks() {
     // Run 20 concurrent health checks
     for _ in 0..20 {
         let manager_clone = manager.clone();
-        let handle = tokio::spawn(async move {
-            manager_clone.health_check("test").await
-        });
+        let handle = tokio::spawn(async move { manager_clone.health_check("test").await });
         handles.push(handle);
     }
 
@@ -121,7 +119,10 @@ async fn test_stop_pattern_that_never_started() {
 
     // Stop should succeed even though pattern never started
     let result = manager.stop_pattern("never-started").await;
-    assert!(result.is_ok(), "Should gracefully handle stopping unstarted pattern");
+    assert!(
+        result.is_ok(),
+        "Should gracefully handle stopping unstarted pattern"
+    );
 
     let status = manager.health_check("never-started").await.unwrap();
     assert_eq!(status, PatternStatus::Stopped);
@@ -155,13 +156,22 @@ async fn test_pattern_not_found_operations() {
 
     // Try operations on non-existent pattern
     let start_result = manager.start_pattern("ghost").await;
-    assert!(start_result.is_err(), "Start should fail for non-existent pattern");
+    assert!(
+        start_result.is_err(),
+        "Start should fail for non-existent pattern"
+    );
 
     let stop_result = manager.stop_pattern("ghost").await;
-    assert!(stop_result.is_err(), "Stop should fail for non-existent pattern");
+    assert!(
+        stop_result.is_err(),
+        "Stop should fail for non-existent pattern"
+    );
 
     let health_result = manager.health_check("ghost").await;
-    assert!(health_result.is_err(), "Health check should fail for non-existent pattern");
+    assert!(
+        health_result.is_err(),
+        "Health check should fail for non-existent pattern"
+    );
 }
 
 #[tokio::test]
@@ -197,7 +207,11 @@ async fn test_duplicate_pattern_registration() {
         .unwrap();
 
     let patterns = manager.list_patterns().await;
-    assert_eq!(patterns.len(), 1, "Should have only one pattern (overwritten)");
+    assert_eq!(
+        patterns.len(),
+        1,
+        "Should have only one pattern (overwritten)"
+    );
 }
 
 #[tokio::test]
@@ -261,9 +275,8 @@ async fn test_concurrent_start_attempts_on_same_pattern() {
     // Try to start the same pattern concurrently (all should fail since binary doesn't exist)
     for _ in 0..5 {
         let manager_clone = manager.clone();
-        let handle = tokio::spawn(async move {
-            manager_clone.start_pattern("concurrent-start").await
-        });
+        let handle =
+            tokio::spawn(async move { manager_clone.start_pattern("concurrent-start").await });
         handles.push(handle);
     }
 
@@ -309,8 +322,9 @@ async fn test_health_check_timeout_handling() {
     // Health check with short timeout
     let result = timeout(
         Duration::from_millis(100),
-        manager.health_check("timeout-test")
-    ).await;
+        manager.health_check("timeout-test"),
+    )
+    .await;
 
     assert!(
         result.is_ok(),

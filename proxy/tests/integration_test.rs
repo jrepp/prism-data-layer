@@ -21,7 +21,10 @@ async fn test_proxy_with_memstore_pattern() {
 
     // Skip test if binary doesn't exist
     if !memstore_path.exists() {
-        eprintln!("Skipping test: MemStore binary not found at {:?}", memstore_path);
+        eprintln!(
+            "Skipping test: MemStore binary not found at {:?}",
+            memstore_path
+        );
         eprintln!("Build it with: cd patterns/memstore && go build -o memstore cmd/main.go");
         return;
     }
@@ -40,10 +43,7 @@ async fn test_proxy_with_memstore_pattern() {
     let mut server = ProxyServer::new(router, "127.0.0.1:18980".to_string());
 
     // Start the proxy server
-    server
-        .start()
-        .await
-        .expect("Failed to start proxy server");
+    server.start().await.expect("Failed to start proxy server");
 
     println!("✓ Proxy server started on 127.0.0.1:18980");
 
@@ -78,7 +78,9 @@ async fn test_proxy_with_memstore_pattern() {
         }
         Err(e) => {
             eprintln!("Failed to start MemStore: {}", e);
-            eprintln!("This is expected if MemStore doesn't implement the lifecycle gRPC interface yet");
+            eprintln!(
+                "This is expected if MemStore doesn't implement the lifecycle gRPC interface yet"
+            );
             // Don't fail the test - MemStore might not implement the full protocol yet
         }
     }
@@ -122,10 +124,7 @@ async fn test_proxy_with_redis_pattern() {
     let mut server = ProxyServer::new(router, "127.0.0.1:18982".to_string());
 
     // Start the proxy server
-    server
-        .start()
-        .await
-        .expect("Failed to start proxy server");
+    server.start().await.expect("Failed to start proxy server");
 
     println!("✓ Proxy server started on 127.0.0.1:18982");
 
@@ -240,10 +239,7 @@ async fn test_proxy_with_nats_pattern() {
     let mut server = ProxyServer::new(router, "127.0.0.1:18983".to_string());
 
     // Start the proxy server
-    server
-        .start()
-        .await
-        .expect("Failed to start proxy server");
+    server.start().await.expect("Failed to start proxy server");
 
     println!("✓ Proxy server started on 127.0.0.1:18983");
 

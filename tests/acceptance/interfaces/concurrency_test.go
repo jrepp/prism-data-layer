@@ -299,8 +299,6 @@ func TestKeyValueInterface_AtomicOperations(t *testing.T) {
 	}
 }
 
-
-
 // TestKeyValueInterface_PipelinePattern tests sequential processing stages
 // Tests the Pipeline pattern from RFC-025
 func TestKeyValueInterface_PipelinePattern(t *testing.T) {

@@ -208,9 +208,9 @@ func (r *RedisPattern) Exists(key string) (bool, error) {
 // Compile-time interface compliance checks
 // These ensure that RedisPattern implements the expected interfaces
 var (
-	_ core.Plugin                  = (*RedisPattern)(nil) // Core plugin interface
-	_ core.KeyValueBasicInterface  = (*RedisPattern)(nil) // KeyValue basic operations
-	_ core.InterfaceSupport        = (*RedisPattern)(nil) // Interface introspection
+	_ core.Plugin                 = (*RedisPattern)(nil) // Core plugin interface
+	_ core.KeyValueBasicInterface = (*RedisPattern)(nil) // KeyValue basic operations
+	_ core.InterfaceSupport       = (*RedisPattern)(nil) // Interface introspection
 )
 
 // SupportsInterface returns true if RedisPattern implements the named interface

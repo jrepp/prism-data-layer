@@ -27,12 +27,12 @@ func setupTestNATS(t *testing.T) (*NATSPattern, *natsserver.Server) {
 			Version: "0.1.0",
 		},
 		Backend: map[string]any{
-			"url":               server.ClientURL(),
-			"max_reconnects":    10,
-			"reconnect_wait":    "1s",
-			"timeout":           "2s",
-			"ping_interval":     "5s",
-			"max_pending_msgs":  1000,
+			"url":              server.ClientURL(),
+			"max_reconnects":   10,
+			"reconnect_wait":   "1s",
+			"timeout":          "2s",
+			"ping_interval":    "5s",
+			"max_pending_msgs": 1000,
 			"enable_jetstream": false,
 		},
 	}
@@ -525,7 +525,7 @@ func TestNATSPattern_InitializeFailure(t *testing.T) {
 			Version: "0.1.0",
 		},
 		Backend: map[string]any{
-			"url": "nats://invalid-host-that-does-not-exist:9999",
+			"url":     "nats://invalid-host-that-does-not-exist:9999",
 			"timeout": "100ms",
 		},
 	}

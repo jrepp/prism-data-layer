@@ -26,8 +26,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // - Pattern lifecycle: use client (proxy connects TO patterns)
     // - KeyValue data: use server (clients connect TO proxy)
     tonic_build::configure()
-        .build_server(true)  // Generate server stubs for KeyValue service
-        .build_client(true)  // Generate client stubs for Pattern lifecycle
+        .build_server(true) // Generate server stubs for KeyValue service
+        .build_client(true) // Generate client stubs for Pattern lifecycle
         .compile_protos(&proto_files, &include_paths)?;
 
     // Tell Cargo to rerun build.rs if proto files change

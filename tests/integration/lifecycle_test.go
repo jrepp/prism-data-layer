@@ -8,9 +8,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/jrepp/prism-data-layer/patterns/memstore"
 	"github.com/jrepp/prism-data-layer/patterns/core"
 	pb "github.com/jrepp/prism-data-layer/patterns/core/gen/prism/pattern"
+	"github.com/jrepp/prism-data-layer/patterns/memstore"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"

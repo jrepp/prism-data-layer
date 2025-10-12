@@ -27,7 +27,10 @@ async fn main() -> anyhow::Result<()> {
             pattern_config.name, pattern_config.binary_path
         );
         pattern_manager
-            .register_pattern(pattern_config.name.clone(), pattern_config.binary_path.clone())
+            .register_pattern(
+                pattern_config.name.clone(),
+                pattern_config.binary_path.clone(),
+            )
             .await?;
     }
 

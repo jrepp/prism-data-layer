@@ -94,7 +94,6 @@ mod tests {
         let request = Request::new(SetRequest {
             key: "test-key".to_string(),
             value: b"test-value".to_vec(),
-            ttl_seconds: 0,
             tags: None,
         });
 

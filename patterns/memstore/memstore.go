@@ -220,9 +220,9 @@ func (m *MemStore) cleanupExpiredKeys(ctx context.Context) {
 // Compile-time interface compliance checks
 // These ensure that MemStore implements the expected interfaces
 var (
-	_ core.Plugin                  = (*MemStore)(nil) // Core plugin interface
-	_ core.KeyValueBasicInterface  = (*MemStore)(nil) // KeyValue basic operations
-	_ core.InterfaceSupport        = (*MemStore)(nil) // Interface introspection
+	_ core.Plugin                 = (*MemStore)(nil) // Core plugin interface
+	_ core.KeyValueBasicInterface = (*MemStore)(nil) // KeyValue basic operations
+	_ core.InterfaceSupport       = (*MemStore)(nil) // Interface introspection
 )
 
 // SupportsInterface returns true if MemStore implements the named interface

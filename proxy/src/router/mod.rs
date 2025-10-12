@@ -11,11 +11,17 @@ pub struct Router {
 impl Router {
     /// Create a new router
     pub fn new(pattern_manager: Arc<PatternManager>) -> Self {
-        Self { _pattern_manager: pattern_manager }
+        Self {
+            _pattern_manager: pattern_manager,
+        }
     }
 
     /// Route a request to a pattern
-    pub async fn route_request(&self, _namespace: &str, _request: Vec<u8>) -> crate::Result<Vec<u8>> {
+    pub async fn route_request(
+        &self,
+        _namespace: &str,
+        _request: Vec<u8>,
+    ) -> crate::Result<Vec<u8>> {
         // TODO: Implement request routing
         Ok(Vec::new())
     }

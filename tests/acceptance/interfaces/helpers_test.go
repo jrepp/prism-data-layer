@@ -31,21 +31,21 @@ func GetStandardBackends() []BackendDriverSetup {
 
 // ConcurrencyTestConfig holds configuration for concurrency tests
 type ConcurrencyTestConfig struct {
-	NumWorkers      int
-	OpsPerWorker    int
-	MaxConcurrency  int
-	UseSharedKey    bool
-	VerifyReadback  bool
+	NumWorkers     int
+	OpsPerWorker   int
+	MaxConcurrency int
+	UseSharedKey   bool
+	VerifyReadback bool
 }
 
 // DefaultConcurrencyConfig returns sensible defaults for concurrency tests
 func DefaultConcurrencyConfig() ConcurrencyTestConfig {
 	return ConcurrencyTestConfig{
-		NumWorkers:      10,
-		OpsPerWorker:    10,
-		MaxConcurrency:  5,
-		UseSharedKey:    false,
-		VerifyReadback:  true,
+		NumWorkers:     10,
+		OpsPerWorker:   10,
+		MaxConcurrency: 5,
+		UseSharedKey:   false,
+		VerifyReadback: true,
 	}
 }
 

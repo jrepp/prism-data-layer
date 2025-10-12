@@ -104,10 +104,10 @@ func (b *ErrorBuilder) WithRetryPolicy(policy *pb.RetryPolicy) *ErrorBuilder {
 // Retryable marks the error as retryable with the specified policy.
 func (b *ErrorBuilder) Retryable(retryAfter time.Duration, maxRetries int32, strategy pb.BackoffStrategy) *ErrorBuilder {
 	b.err.RetryPolicy = &pb.RetryPolicy{
-		Retryable:        true,
-		RetryAfter:       durationpb.New(retryAfter),
-		MaxRetries:       maxRetries,
-		BackoffStrategy:  strategy,
+		Retryable:         true,
+		RetryAfter:        durationpb.New(retryAfter),
+		MaxRetries:        maxRetries,
+		BackoffStrategy:   strategy,
 		BackoffMultiplier: 2.0, // Default exponential multiplier
 	}
 	return b

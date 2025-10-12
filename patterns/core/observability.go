@@ -268,8 +268,8 @@ func DefaultObservabilityConfig(serviceName, serviceVersion string) *Observabili
 	return &ObservabilityConfig{
 		ServiceName:    serviceName,
 		ServiceVersion: serviceVersion,
-		MetricsPort:    0,         // Disabled by default
-		EnableTracing:  false,     // Disabled by default
-		TraceExporter:  "stdout",  // Development mode
+		MetricsPort:    0,        // Disabled by default
+		EnableTracing:  false,    // Disabled by default
+		TraceExporter:  "stdout", // Development mode
 	}
 }

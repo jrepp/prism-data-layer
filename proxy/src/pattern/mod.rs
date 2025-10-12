@@ -225,11 +225,7 @@ impl Pattern {
             );
 
             client
-                .initialize(
-                    self.name.clone(),
-                    self.version.clone(),
-                    self.config.clone(),
-                )
+                .initialize(self.name.clone(), self.version.clone(), self.config.clone())
                 .await
                 .map_err(|e| {
                     tracing::error!(
@@ -584,10 +580,7 @@ mod tests {
 
         // Try to start pattern (will fail since binary doesn't exist)
         let result = manager.start_pattern("test-pattern").await;
-        assert!(
-            result.is_err(),
-            "Should fail to start non-existent binary"
-        );
+        assert!(result.is_err(), "Should fail to start non-existent binary");
 
         // Check that status changed to Failed
         let status = manager.health_check("test-pattern").await.unwrap();
@@ -605,7 +598,10 @@ mod tests {
         assert!(result.is_err(), "Should fail to start nonexistent pattern");
 
         let result = manager.health_check("nonexistent").await;
-        assert!(result.is_err(), "Should fail health check for nonexistent pattern");
+        assert!(
+            result.is_err(),
+            "Should fail health check for nonexistent pattern"
+        );
     }
 
     #[tokio::test]
@@ -632,8 +628,8 @@ mod tests {
             "cleanup_period": "60s"
         });
 
-        let pattern = Pattern::new("test".to_string(), PathBuf::from("/test"))
-            .with_config(config.clone());
+        let pattern =
+            Pattern::new("test".to_string(), PathBuf::from("/test")).with_config(config.clone());
 
         assert_eq!(pattern.config, config);
     }
