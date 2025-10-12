@@ -1,565 +1,435 @@
-# Acceptance Test Framework
+# Prism Acceptance Test Framework
 
-This directory implements the **RFC-015 Plugin Acceptance Test Framework** using testcontainers for integration testing of Prism data access patterns.
+**A world-class acceptance testing framework that makes implementing Prism backend drivers a joy.**
 
-## Overview
+## 🎯 Purpose
 
-The acceptance test framework provides:
+This framework transforms backend testing from a chore into a delightful experience by:
 
-- **Real Backend Testing**: Uses Docker containers (testcontainers) for Redis, NATS, and other backends
-- **Pattern Lifecycle Validation**: Tests the complete plugin lifecycle (Initialize → Start → Health → Stop)
-- **Comprehensive Coverage**: Basic operations, concurrent operations, error handling, health checks
-- **Reusable Infrastructure**: Shared backend setup utilities in `tests/testing/backends/`
-- **Common Test Utilities**: PatternHarness for standardized pattern testing
+1. **Pattern-Based Testing** - Tests organized by interface (KeyValue, PubSub), not backend
+2. **Minimal Boilerplate** - Adding a new backend requires ~50 lines of code
+3. **Comprehensive Coverage** - Automatic testing of happy paths, edge cases, and concurrency
+4. **Actionable Reports** - Compliance matrix shows exactly what works and what doesn't
+5. **Self-Documenting** - Tests demonstrate correct implementation
 
-## Architecture
+## 🚀 Quick Start
 
-```
-tests/
-├── testing/               # Cross-cutting test infrastructure
-│   └── backends/          # Backend container setup (Redis, NATS)
-└── acceptance/            # Integration tests using real backends
-    ├── common/            # Shared test utilities (PatternHarness)
-    ├── redis/             # Redis pattern acceptance tests
-    └── nats/              # NATS pattern acceptance tests
-```
+### Adding a New Backend (3 Steps)
 
-### Key Components
-
-#### PatternHarness (`common/harness.go`)
-
-Provides lifecycle management and health polling for patterns:
+**Step 1:** Implement the pattern interface
 
 ```go
-import (
-    "context"
-    "testing"
-    "github.com/jrepp/prism-data-layer/tests/acceptance/common"
-    "github.com/jrepp/prism-data-layer/patterns/redis"
-    "github.com/jrepp/prism-data-layer/patterns/core"
-)
+// patterns/mybackend/mybackend.go
+package mybackend
 
-func TestMyPattern(t *testing.T) {
-    ctx := context.Background()
+import "github.com/jrepp/prism-data-layer/patterns/core"
 
-    // Create pattern instance
-    redisPlugin := redis.New()
-
-    // Configure pattern
-    config := &core.Config{
-        Plugin: core.PluginConfig{
-            Name:    "redis-test",
-            Version: "0.1.0",
-        },
-        Backend: map[string]any{
-            "address": "localhost:6379",
-        },
-    }
-
-    // Use harness for lifecycle management
-    harness := common.NewPatternHarness(t, redisPlugin, config)
-    defer harness.Cleanup()
-
-    // Wait for healthy state
-    err := harness.WaitForHealthy(5 * time.Second)
-    require.NoError(t, err)
-
-    // Run your tests...
+type MyBackend struct {
+    // your implementation
 }
-```
 
-**Features**:
-- Automatic Initialize + Start
-- Health polling with configurable timeout
-- Cleanup registration
-- Context management
-
-#### Backend Utilities (`tests/testing/backends/`)
-
-Centralized container setup for cross-cutting concerns:
-
-```go
-import (
-    "context"
-    "testing"
-    "github.com/jrepp/prism-data-layer/tests/testing/backends"
-)
-
-func TestWithRedis(t *testing.T) {
-    ctx := context.Background()
-
-    // Start Redis container
-    backend := backends.SetupRedis(t, ctx)
-    defer backend.Cleanup()
-
-    // Use connection string (already stripped of redis:// prefix)
-    config := &core.Config{
-        Backend: map[string]any{
-            "address": backend.ConnectionString,
-        },
-    }
-
-    // Run your tests...
+func (m *MyBackend) Set(key string, value []byte, ttlSeconds int64) error {
+    // your implementation
 }
+
+// ... implement other interface methods
+
+var _ core.KeyValueBasicInterface = (*MyBackend)(nil) // compile-time check
 ```
 
-Available backends:
-- `backends.SetupRedis(t, ctx)` - Redis 7 Alpine
-- `backends.SetupNATS(t, ctx)` - NATS 2.10 Alpine
-
-## Running Tests
-
-### Via Makefile (Recommended)
-
-```bash
-# Run all acceptance tests
-make test-acceptance
-
-# Run Redis acceptance tests only
-make test-acceptance-redis
-
-# Run NATS acceptance tests only
-make test-acceptance-nats
-
-# Run all acceptance tests in quiet mode (suppress container logs)
-make test-acceptance-quiet
-
-# Generate coverage reports
-make coverage-acceptance
-make coverage-acceptance-redis
-make coverage-acceptance-nats
-```
-
-### Quiet Mode
-
-Testcontainers produces verbose Docker logs by default. For cleaner output:
-
-```bash
-# Environment variable
-export PRISM_TEST_QUIET=1
-make test-acceptance
-
-# Or use the dedicated target
-make test-acceptance-quiet
-```
-
-**Benefits of Quiet Mode**:
-- Cleaner test output (no Docker container logs)
-- Easier to spot test failures
-- Better for CI/CD pipelines
-- Reduces log noise by ~90%
-
-### Via Go Test Directly
-
-```bash
-# All acceptance tests
-cd tests/acceptance && go test -v -timeout 10m ./...
-
-# Redis tests only
-cd tests/acceptance/redis && go test -v -timeout 10m ./...
-
-# NATS tests only
-cd tests/acceptance/nats && go test -v -timeout 10m ./...
-
-# With coverage
-cd tests/acceptance/redis && go test -coverprofile=coverage.out -timeout 10m ./...
-go tool cover -html=coverage.out -o coverage.html
-```
-
-## Test Organization
-
-### Redis Acceptance Tests (`redis/redis_integration_test.go`)
-
-**13 tests covering**:
-
-1. **Basic Operations** (8 subtests)
-   - Set and Get
-   - Get Non-Existent Key
-   - Delete
-   - Exists
-   - TTL Expiration
-   - Multiple Keys
-   - Overwrite Existing Key
-   - Binary Data
-
-2. **Concurrent Operations** (2 subtests)
-   - Concurrent Writes
-   - Concurrent Reads
-
-3. **Health Check** (1 subtest)
-   - Healthy Status
-
-4. **Error Handling** (2 subtests)
-   - Delete Non-Existent Key
-   - Large Value
-
-**Runtime**: ~5.7 seconds
-
-### NATS Acceptance Tests (`nats/nats_integration_test.go`)
-
-**6 test functions covering**:
-
-1. **Basic Pub/Sub**
-   - Simple publish and subscribe
-   - Message delivery
-   - Unsubscribe
-
-2. **Fanout Pattern**
-   - Multiple subscribers
-   - Broadcast messages
-
-3. **Message Ordering**
-   - Sequential delivery
-
-4. **Concurrent Operations**
-   - Multiple publishers
-   - Multiple subscribers
-
-5. **Health Check**
-   - Healthy status
-   - Connection validation
-
-6. **Wildcard Subscriptions**
-   - Pattern matching (e.g., `events.*`)
-   - Multiple topic delivery
-
-**Runtime**: ~5.9 seconds
-
-## Writing New Acceptance Tests
-
-### 1. Create Test Package
-
-```bash
-mkdir -p tests/acceptance/mypattern
-cd tests/acceptance/mypattern
-```
-
-### 2. Create Test File
+**Step 2:** Register with test framework
 
 ```go
-package mypattern_test
-
-import (
-    "context"
-    "testing"
-    "time"
-
-    "github.com/stretchr/testify/require"
-    "github.com/jrepp/prism-data-layer/tests/acceptance/common"
-    "github.com/jrepp/prism-data-layer/tests/testing/backends"
-    "github.com/jrepp/prism-data-layer/patterns/mypattern"
-    "github.com/jrepp/prism-data-layer/patterns/core"
-)
-
-func TestMyPattern_BasicOperations(t *testing.T) {
-    ctx := context.Background()
-
-    // Start backend container
-    backend := backends.SetupMyBackend(t, ctx)
-    defer backend.Cleanup()
-
-    // Create pattern instance
-    plugin := mypattern.New()
-
-    // Configure pattern
-    config := &core.Config{
-        Plugin: core.PluginConfig{
-            Name:    "mypattern-test",
-            Version: "0.1.0",
-        },
-        Backend: map[string]any{
-            "url": backend.ConnectionString,
-        },
-    }
-
-    // Use harness for lifecycle
-    harness := common.NewPatternHarness(t, plugin, config)
-    defer harness.Cleanup()
-
-    // Wait for healthy
-    err := harness.WaitForHealthy(5 * time.Second)
-    require.NoError(t, err, "Plugin did not become healthy")
-
-    // Run subtests
-    t.Run("Operation 1", func(t *testing.T) {
-        // Test operation 1
-    })
-
-    t.Run("Operation 2", func(t *testing.T) {
-        // Test operation 2
-    })
-}
-```
-
-### 3. Add Backend Setup (if needed)
-
-If your pattern requires a new backend, add it to `tests/testing/backends/`:
-
-```go
-// tests/testing/backends/mybackend.go
+// tests/acceptance/backends/mybackend.go
 package backends
 
 import (
-    "context"
-    "testing"
-
-    "github.com/stretchr/testify/require"
-    tcmybackend "github.com/testcontainers/testcontainers-go/modules/mybackend"
+    "github.com/jrepp/prism-data-layer/tests/acceptance/framework"
 )
 
-type MyBackendBackend struct {
-    ConnectionString string
-    cleanup          func()
+func init() {
+    framework.MustRegisterBackend(framework.Backend{
+        Name:      "MyBackend",
+        SetupFunc: setupMyBackend,
+
+        SupportedPatterns: []framework.Pattern{
+            framework.PatternKeyValueBasic,
+        },
+
+        Capabilities: framework.Capabilities{
+            SupportsTTL:  true,
+            MaxValueSize: 10 * 1024 * 1024, // 10MB
+        },
+    })
 }
 
-func SetupMyBackend(t *testing.T, ctx context.Context) *MyBackendBackend {
-    t.Helper()
+func setupMyBackend(t *testing.T, ctx context.Context) (interface{}, func()) {
+    driver := mybackend.New()
+    // ... initialize driver
 
-    // Start container
-    container, err := tcmybackend.Run(ctx, "mybackend:latest")
-    require.NoError(t, err, "Failed to start MyBackend container")
+    cleanup := func() {
+        driver.Stop(ctx)
+    }
 
-    // Get connection string
-    connStr, err := container.ConnectionString(ctx)
-    require.NoError(t, err, "Failed to get connection string")
+    return driver, cleanup
+}
+```
 
-    return &MyBackendBackend{
-        ConnectionString: connStr,
-        cleanup: func() {
-            if err := container.Terminate(ctx); err != nil {
-                t.Logf("Failed to terminate container: %v", err)
-            }
+**Step 3:** Run tests
+
+```bash
+go test ./tests/acceptance/patterns/keyvalue/...
+```
+
+**That's it!** Your backend now runs through the entire test suite automatically.
+
+## 📊 Example Output
+
+```
+=== RUN   TestKeyValueBasicPattern
+=== RUN   TestKeyValueBasicPattern/MemStore
+=== RUN   TestKeyValueBasicPattern/MemStore/SetAndGet
+=== RUN   TestKeyValueBasicPattern/MemStore/GetNonExistent
+=== RUN   TestKeyValueBasicPattern/MemStore/LargeValue
+--- PASS: TestKeyValueBasicPattern/MemStore (0.15s)
+
+=== RUN   TestKeyValueBasicPattern/Redis
+=== RUN   TestKeyValueBasicPattern/Redis/SetAndGet
+=== RUN   TestKeyValueBasicPattern/Redis/GetNonExistent
+=== RUN   TestKeyValueBasicPattern/Redis/LargeValue
+--- PASS: TestKeyValueBasicPattern/Redis (0.42s)
+
+PASS
+```
+
+## 📁 Framework Architecture
+
+```
+tests/acceptance/
+├── README.md                    # This file
+├── FRAMEWORK_DESIGN.md          # Detailed architecture docs
+│
+├── framework/                   # Core testing infrastructure
+│   ├── types.go                 # Pattern, Backend, Capabilities types
+│   ├── registry.go              # Backend registration system
+│   ├── runner.go                # Test execution engine
+│   └── reporter.go              # Compliance report generation
+│
+├── patterns/                    # Pattern test suites
+│   ├── keyvalue/                # KeyValue pattern tests
+│   │   ├── README.md            # KeyValue requirements
+│   │   ├── basic_test.go        # CRUD operations
+│   │   ├── ttl_test.go          # TTL/expiration
+│   │   └── concurrent_test.go   # Concurrency tests
+│   │
+│   └── pubsub/                  # PubSub pattern tests
+│       └── ... (TODO)
+│
+├── backends/                    # Backend implementations
+│   ├── example.go               # Reference implementation
+│   ├── memstore.go              # MemStore backend
+│   ├── redis.go                 # Redis backend
+│   └── nats.go                  # NATS backend
+│
+└── cmd/acceptance/              # CLI tools (TODO)
+    └── main.go                  # Report generator, test runner
+```
+
+## 🧪 Supported Patterns
+
+### KeyValue Pattern
+
+Backends: MemStore ✅, Redis ✅, PostgreSQL ⏳
+
+**Interfaces:**
+- `KeyValueBasicInterface` - Set, Get, Delete, Exists
+- `KeyValueTTLInterface` - TTL/expiration support
+- `KeyValueScanInterface` - Iteration/scanning (TODO)
+- `KeyValueAtomicInterface` - CAS, increment, decrement (TODO)
+
+**Test Coverage:**
+- ✅ Basic CRUD operations
+- ✅ Binary-safe values
+- ✅ TTL/expiration
+- ✅ Concurrent operations
+- ✅ Edge cases (large values, empty values)
+
+See: [patterns/keyvalue/README.md](patterns/keyvalue/README.md)
+
+### PubSub Pattern
+
+Backends: NATS ✅, Redis ⏳, Kafka ⏳
+
+**Interfaces:**
+- `PubSubBasicInterface` - Publish, Subscribe, Unsubscribe
+- `PubSubOrderingInterface` - Message ordering guarantees (TODO)
+- `PubSubFanoutInterface` - Fan-out patterns (TODO)
+
+See: [patterns/pubsub/README.md](patterns/pubsub/README.md) (TODO)
+
+## 🎯 Running Tests
+
+### All Patterns, All Backends
+
+```bash
+# Run entire acceptance test suite
+go test ./tests/acceptance/...
+
+# Run specific pattern
+go test ./tests/acceptance/patterns/keyvalue/...
+```
+
+### Specific Backend
+
+```bash
+# Test single backend
+go test ./tests/acceptance/patterns/keyvalue/... -run TestKeyValueBasicPattern/Redis
+
+# Test single backend + single test
+go test ./tests/acceptance/patterns/keyvalue/... -run TestKeyValueBasicPattern/Redis/SetAndGet
+```
+
+### With Race Detector
+
+```bash
+go test -race ./tests/acceptance/patterns/keyvalue/...
+```
+
+### Generate Compliance Report
+
+```bash
+# TODO: CLI for reports
+go run ./tests/acceptance/cmd/acceptance/ report
+```
+
+## 🔧 Backend Capabilities
+
+Declare what your backend supports via the `Capabilities` struct:
+
+```go
+Capabilities: framework.Capabilities{
+    // Standard capabilities
+    SupportsTTL:         true,  // Key expiration
+    SupportsScan:        true,  // Iteration
+    SupportsAtomic:      false, // CAS operations
+    SupportsTransactions: false, // ACID transactions
+    SupportsOrdering:    false, // Message ordering
+
+    // Size limits (0 = unlimited)
+    MaxValueSize: 5 * 1024 * 1024, // 5MB
+    MaxKeySize:   512,               // 512 bytes
+
+    // Custom capabilities
+    Custom: map[string]interface{}{
+        "SupportsSecondaryIndexes": true,
+        "IsolationLevel":           "ReadCommitted",
+    },
+}
+```
+
+**Tests requiring unsupported capabilities are automatically skipped with clear messages.**
+
+## 📝 Writing Pattern Tests
+
+Pattern tests run against all compatible backends automatically:
+
+```go
+package keyvalue_test
+
+import (
+    "github.com/jrepp/prism-data-layer/tests/acceptance/framework"
+    _ "github.com/jrepp/prism-data-layer/tests/acceptance/backends" // Register all
+)
+
+func TestKeyValueBasicPattern(t *testing.T) {
+    tests := []framework.PatternTest{
+        {
+            Name: "SetAndGet",
+            Func: testSetAndGet,
+        },
+        {
+            Name: "TTLExpiration",
+            Func: testTTLExpiration,
+            RequiresCapability: "TTL", // Skipped if not supported
         },
     }
+
+    framework.RunPatternTests(t, framework.PatternKeyValueBasic, tests)
 }
 
-func (b *MyBackendBackend) Cleanup() {
-    if b.cleanup != nil {
-        b.cleanup()
-    }
+func testSetAndGet(t *testing.T, driver interface{}, caps framework.Capabilities) {
+    kv := driver.(core.KeyValueBasicInterface)
+
+    err := kv.Set("key", []byte("value"), 0)
+    require.NoError(t, err)
+
+    value, found, err := kv.Get("key")
+    require.NoError(t, err)
+    assert.True(t, found)
+    assert.Equal(t, []byte("value"), value)
 }
 ```
 
-### 4. Add Makefile Targets
+**Key principles:**
+- Use `t.Name()` in keys for test isolation
+- Check capabilities via `RequiresCapability`
+- Test both success and failure paths
+- Keep tests fast (<100ms per test)
 
-Add targets to `/Makefile`:
+## 🏗️ How It Works
 
-```makefile
-test-acceptance-mypattern: ## Run MyPattern acceptance tests
-	$(call print_blue,Running MyPattern acceptance tests...)
-	@cd tests/acceptance/mypattern && go test -v -timeout 10m ./...
-	$(call print_green,MyPattern acceptance tests passed)
+### 1. Backend Registration
 
-coverage-acceptance-mypattern: ## Generate MyPattern acceptance test coverage
-	$(call print_blue,Generating MyPattern acceptance test coverage...)
-	@cd tests/acceptance/mypattern && go test -coverprofile=coverage.out -timeout 10m ./...
-	@cd tests/acceptance/mypattern && go tool cover -func=coverage.out | grep total
-	@cd tests/acceptance/mypattern && go tool cover -html=coverage.out -o coverage.html
-	$(call print_green,MyPattern acceptance coverage: tests/acceptance/mypattern/coverage.html)
+Backends register via `init()` functions:
+
+```go
+func init() {
+    framework.MustRegisterBackend(framework.Backend{
+        Name:              "MyBackend",
+        SetupFunc:         setupMyBackend,
+        SupportedPatterns: []framework.Pattern{framework.PatternKeyValueBasic},
+        Capabilities:      framework.Capabilities{...},
+    })
+}
 ```
 
-Update aggregate targets:
+### 2. Test Execution Flow
 
-```makefile
-test-acceptance: test-acceptance-redis test-acceptance-nats test-acceptance-mypattern
-coverage-acceptance: coverage-acceptance-redis coverage-acceptance-nats coverage-acceptance-mypattern
+1. **Discovery**: Framework finds all backends for a pattern
+2. **Setup**: For each backend, call `SetupFunc` to create driver
+3. **Execution**: Run all tests against the driver in parallel
+4. **Capability Check**: Skip tests requiring unsupported capabilities
+5. **Cleanup**: Call cleanup function
+6. **Reporting**: Generate compliance matrix (TODO)
+
+### 3. Parallel Execution
+
+Tests run in parallel across backends for speed:
+
+```
+=== RUN   TestKeyValueBasicPattern
+=== RUN   TestKeyValueBasicPattern/MemStore   # All run in parallel
+=== RUN   TestKeyValueBasicPattern/Redis
+=== RUN   TestKeyValueBasicPattern/Postgres
 ```
 
-## CI Integration
+## 🐛 Debugging
 
-### GitHub Actions
-
-```yaml
-name: Acceptance Tests
-
-on: [push, pull_request]
-
-jobs:
-  acceptance:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-
-      - uses: actions/setup-go@v4
-        with:
-          go-version: '1.21'
-
-      - name: Run acceptance tests
-        run: make test-acceptance
-
-      - name: Generate coverage
-        run: make coverage-acceptance
-
-      - name: Upload coverage
-        uses: codecov/codecov-action@v3
-        with:
-          files: |
-            tests/acceptance/redis/coverage.out
-            tests/acceptance/nats/coverage.out
-```
-
-### Local Development
-
-Enable pre-commit checks in `.githooks/pre-commit`:
+### Verbose Output
 
 ```bash
-#!/bin/bash
-set -e
-
-echo "Running acceptance tests..."
-make test-acceptance
-
-echo "Checking coverage..."
-make coverage-acceptance
+go test -v ./tests/acceptance/patterns/keyvalue/...
 ```
 
-Install hooks:
+### Single Backend, Single Test
 
 ```bash
-git config core.hooksPath .githooks
+go test ./tests/acceptance/patterns/keyvalue/... \
+  -run TestKeyValueBasicPattern/MyBackend/SetAndGet -v
 ```
 
-## Test Coverage Goals
+### Add Debug Logging
 
-| Component | Minimum | Target | Current |
-|-----------|---------|--------|---------|
-| Redis Tests | 80% | 85% | ~85% |
-| NATS Tests | 80% | 85% | ~85% |
-| PatternHarness | 90% | 95% | N/A |
-
-## Best Practices
-
-### 1. Use testcontainers for Real Backends
-
-❌ **Don't**: Use mocks or in-memory fakes
 ```go
-mockRedis := &MockRedis{}
-```
-
-✅ **Do**: Use real backend containers
-```go
-backend := backends.SetupRedis(t, ctx)
-defer backend.Cleanup()
-```
-
-### 2. Always Use PatternHarness
-
-❌ **Don't**: Manually manage lifecycle
-```go
-err := plugin.Initialize(ctx, config)
-err = plugin.Start(ctx)
-// ... test code ...
-plugin.Stop(ctx)
-```
-
-✅ **Do**: Use PatternHarness for consistency
-```go
-harness := common.NewPatternHarness(t, plugin, config)
-defer harness.Cleanup()
-err := harness.WaitForHealthy(5 * time.Second)
-```
-
-### 3. Use Subtests for Organization
-
-❌ **Don't**: Create one test per operation
-```go
-func TestSet(t *testing.T) { ... }
-func TestGet(t *testing.T) { ... }
-func TestDelete(t *testing.T) { ... }
-```
-
-✅ **Do**: Group related operations in subtests
-```go
-func TestBasicOperations(t *testing.T) {
-    // ... setup ...
-
-    t.Run("Set", func(t *testing.T) { ... })
-    t.Run("Get", func(t *testing.T) { ... })
-    t.Run("Delete", func(t *testing.T) { ... })
+func setupMyBackend(t *testing.T, ctx context.Context) (interface{}, func()) {
+    t.Logf("Setting up MyBackend...")
+    driver := mybackend.New()
+    t.Logf("Driver created: %+v", driver)
+    // ...
 }
 ```
 
-### 4. Set Appropriate Timeouts
+### Common Issues
 
-- **Unit tests**: Default (10s)
-- **Acceptance tests**: 10 minutes (`-timeout 10m`)
-- **Health checks**: 5 seconds
-- **Message delivery**: 2-3 seconds
+**Tests not running?**
+- Ensure backend package is imported: `_ "path/to/backends"`
+- Check that `init()` registers backend without panicking
+- Verify `SupportedPatterns` includes the pattern being tested
 
-### 5. Clean Up Resources
+**Tests skipping?**
+- Check `Capabilities` match test requirements
+- Look for "skipped" messages in verbose output
 
-Always use `defer` for cleanup:
+**Tests failing?**
+- Read error messages carefully - they're designed to be actionable
+- Run single test with `-v` flag for details
+- Check driver Health() status
+- Verify interface compliance
 
-```go
-backend := backends.SetupRedis(t, ctx)
-defer backend.Cleanup()  // Always cleanup
+## 📚 Resources
 
-harness := common.NewPatternHarness(t, plugin, config)
-defer harness.Cleanup()  // Always cleanup
-```
+- **Framework Design**: [FRAMEWORK_DESIGN.md](FRAMEWORK_DESIGN.md) - Comprehensive architecture guide
+- **KeyValue Pattern**: [patterns/keyvalue/README.md](patterns/keyvalue/README.md) - KeyValue interface requirements
+- **Example Backend**: [backends/example.go](backends/example.go) - Fully documented reference implementation
+- **Core Interfaces**: [patterns/core/interfaces.go](../../patterns/core/interfaces.go) - Interface definitions
 
-## Troubleshooting
+## 🎓 Philosophy
 
-### Tests Time Out
+> "The best documentation is code that shows how things should work."
 
-**Problem**: Tests hang or timeout after 10 minutes
+This framework treats tests as:
+1. **Specifications** - Define correct behavior
+2. **Documentation** - Show how to implement patterns
+3. **Quality Gates** - Verify compliance before deployment
+4. **Regression Prevention** - Catch breakage immediately
 
-**Solutions**:
-1. Check if Docker daemon is running: `docker ps`
-2. Check container logs: `docker logs <container-id>`
-3. Increase timeout: `go test -timeout 20m ./...`
-4. Check if pattern's `Start()` method is blocking (should return immediately)
+By running the same tests against all backends, we ensure:
+- **Consistency** - All backends behave identically
+- **Completeness** - Nothing is missed
+- **Confidence** - Changes don't break existing functionality
 
-### Container Fails to Start
+## 📊 Current Status
 
-**Problem**: `Failed to start Redis container` error
+### Implemented Patterns
 
-**Solutions**:
-1. Pull image manually: `docker pull redis:7-alpine`
-2. Check Docker disk space: `docker system df`
-3. Clean up old containers: `docker system prune`
+- ✅ KeyValue Basic
+- ✅ KeyValue TTL
+- ✅ KeyValue Concurrency
+- ⏳ KeyValue Scan (TODO)
+- ⏳ KeyValue Atomic (TODO)
+- ⏳ PubSub Basic (TODO)
+- ⏳ PubSub Ordering (TODO)
+- ⏳ Queue Basic (TODO)
 
-### Health Check Never Succeeds
+### Implemented Backends
 
-**Problem**: `Plugin did not become healthy` error
+- ✅ MemStore (KeyValue)
+- ✅ Redis (KeyValue)
+- ✅ NATS (PubSub)
+- ⏳ PostgreSQL (KeyValue) - TODO
+- ⏳ Kafka (PubSub/Queue) - TODO
 
-**Solutions**:
-1. Verify pattern implements `Health()` correctly
-2. Check if `Initialize()` completes successfully
-3. Check if `Start()` returns immediately (shouldn't block)
-4. Increase health check timeout from 5s to 10s
+## 🤝 Contributing
 
-### Connection Refused Errors
+### Adding Tests
 
-**Problem**: `dial tcp 127.0.0.1:6379: connect: connection refused`
+1. Create test file in appropriate pattern directory
+2. Follow naming convention: `{category}_test.go`
+3. Use framework runner: `framework.RunPatternTests(...)`
+4. Update pattern README with new coverage
+5. Ensure all existing backends pass (or update capabilities)
 
-**Solutions**:
-1. Verify backend setup returns correct connection string
-2. Check if connection string needs prefix stripping (Redis: `redis://` → ``)
-3. Wait longer for container to be ready (testcontainers should handle this)
+### Adding Patterns
 
-## Related Documentation
+1. Define interface in `patterns/core/interfaces.go`
+2. Add pattern constant in `framework/types.go`
+3. Create pattern directory in `patterns/`
+4. Write comprehensive test suite
+5. Document requirements in pattern README
+6. Update this README
 
-- [RFC-015: Plugin Acceptance Test Framework](/rfc/rfc-015)
-- [RFC-018: POC Implementation Strategy](/rfc/rfc-018)
-- [Testing Infrastructure README](../testing/README.md)
-- [testcontainers-go Documentation](https://golang.testcontainers.org/)
-- [Prism CLAUDE.md](../../CLAUDE.md) - TDD workflow and coverage requirements
+## 🚀 Next Steps
 
-## Future Enhancements
+1. ✅ Framework foundation complete
+2. ✅ KeyValue Basic tests migrated
+3. ✅ Backend registration system working
+4. ⏳ Create PubSub pattern tests
+5. ⏳ Build compliance report CLI
+6. ⏳ Add performance benchmarking
+7. ⏳ Implement remaining KeyValue interfaces (Scan, Atomic)
 
-### Planned
+---
 
-- [ ] PostgreSQL acceptance tests
-- [ ] Kafka acceptance tests
-- [ ] Load testing integration
-- [ ] Performance benchmarks
-- [ ] Test data fixtures
+**Happy testing!** 🧪
 
-### Under Consideration
-
-- [ ] Parallel test execution
-- [ ] Test result reporting dashboard
-- [ ] Chaos engineering tests (container failures)
-- [ ] Multi-backend patterns (composite tests)
-- [ ] Shadow traffic testing
+For questions or issues, see [FRAMEWORK_DESIGN.md](FRAMEWORK_DESIGN.md) for comprehensive architecture details or open an issue on GitHub.
