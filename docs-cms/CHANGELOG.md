@@ -10,6 +10,44 @@ Quick access to recently updated documentation. Changes listed in reverse chrono
 
 ## Recent Changes
 
+### 2025-10-11
+
+#### MEMO-012: Developer Experience and Common Workflows (NEW)
+**Link**: [MEMO-012](/memos/memo-012)
+
+**Summary**: Practical guide documenting actual developer workflows, common commands, and testing patterns:
+- **Core Commands**: Documentation validation, pattern builds, proxy runs, load testing
+- **Mental Models**: Three-layer testing (unit → integration → load), TDD workflow (red → green → refactor)
+- **Speed Optimization**: Skip full validation during iteration, parallel testing, incremental builds, reuse running backends
+- **Common Shortcuts**: Bash aliases, Docker Compose profiles, Go test shortcuts
+- **Integration Test Setup**: Multicast Registry example with Redis + NATS backends
+- **Documentation Workflow**: Creating new docs with frontmatter templates, validation steps
+- **Performance Testing**: Benchmark comparison, load test profiles (quick/standard/stress)
+- **Debugging**: gRPC tracing, race detector, container logs
+- **CI/CD**: Pre-commit checklist (tests, race detector, coverage, docs validation, builds)
+- **Fast Iteration Loop**: Watch mode with auto-rebuild and continuous testing
+
+**Key Facts**: Covers only what exists in the codebase - no invented workflows. Includes actual commands from Makefiles, CLAUDE.md, and tooling scripts. Documents three-layer testing approach (MemStore/SQLite → Docker backends → full load tests) for speed optimization.
+
+**Impact**: Provides single reference for new developers to understand actual development practices. Shows how to speed up multi-tier testing by reusing backends and running partial validations. Establishes consistent mental models for TDD and testing layers.
+
+---
+
+#### Documentation Consistency Pass - Pattern SDK Terminology (UPDATED)
+**Links**: [RFC-019](/rfc/rfc-019), [RFC-021](/rfc/rfc-021), [MEMO-008](/memos/memo-008), [MEMO-009](/memos/memo-009)
+
+**Summary**: Completed comprehensive consistency pass to align all documentation with RFC-022 terminology change from "Plugin SDK" to "Pattern SDK":
+- **RFC-019**: Updated title, module paths (`github.com/prism/plugin-sdk` → `github.com/prism/pattern-sdk`), directory references (`plugins/` → `patterns/`), and all references throughout
+- **RFC-021**: Updated all "Plugin SDK" references to "Pattern SDK" and "plugins" to "patterns" in technology stack, work streams, and deliverables
+- **MEMO-008**: Updated module path in code examples and directory references in Vault token exchange flow documentation
+- **MEMO-009**: Updated cross-reference link to RFC-019 with correct short-form path
+
+**Key Facts**: All 4 documents now use consistent "Pattern SDK" terminology. Cross-references updated to use short-form paths (`/rfc/rfc-019` instead of `/rfc/rfc-019-plugin-sdk-authorization-layer`). Validation passed with no errors. Revision history entries added to all updated documents.
+
+**Impact**: Eliminates terminology confusion between the Go-based Pattern SDK (for backend patterns) and Rust-based plugin SDK (for proxy plugins). Ensures developers reading documentation see consistent terminology across all RFCs and memos. All documentation now accurately reflects the architectural sophistication of the pattern layer.
+
+---
+
 ### 2025-10-09
 
 #### RFC-022: Core Pattern SDK - Build System and Tooling Added (MAJOR UPDATE)
