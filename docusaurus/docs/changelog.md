@@ -12,6 +12,53 @@ Quick access to recently updated documentation. Changes listed in reverse chrono
 
 ### 2025-10-12
 
+#### Documentation Consolidation and Canonical Changelog Migration (MAJOR UPDATE)
+**Links**: [Key Documents Index](/key-documents), [MEMO-015](/memos/memo-015), [MEMO-016](/memos/memo-016), [PRD](/prd)
+
+**Summary**: Major documentation consolidation establishing canonical changelog location and migrating temporary root directory documentation to docs-cms:
+
+**Canonical Changelog Established**:
+- Migrated docs-cms/CHANGELOG.md to `docusaurus/docs/changelog.md` (this file)
+- Updated CLAUDE.md to document `docusaurus/docs/changelog.md` as **canonical changelog location**
+- Updated monorepo structure diagram showing docusaurus/docs/ as home for changelog
+- All future documentation changes MUST be logged here
+
+**Root Directory Documentation Migration**:
+- **MEMO-015**: Cross-Backend Acceptance Test Framework (from CROSS_BACKEND_ACCEPTANCE_TESTS.md)
+  - Table-driven, property-based testing with random data
+  - 10 comprehensive scenarios × 3 backends (Redis, MemStore, PostgreSQL)
+  - 100% passing tests with backend isolation via testcontainers
+  - Interface compliance verification for KeyValueBasicInterface
+- **MEMO-016**: Observability & Lifecycle Implementation (from IMPLEMENTATION_SUMMARY.md)
+  - OpenTelemetry tracing with configurable exporters
+  - Prometheus metrics endpoints (/health, /ready, /metrics)
+  - Graceful shutdown handling and signal management
+  - 62% reduction in backend driver boilerplate (65 → 25 lines)
+- **PRD**: Product Requirements Document migrated to docs-cms/prd.md
+  - Core foundational document defining vision, success metrics, and roadmap
+  - Now accessible via Docusaurus navigation
+
+**Key Documents Index Created**:
+- New `docusaurus/docs/key.md` referencing philosophy-driving documents
+- Organized by category: Vision & Requirements, Architectural Foundations, Implementation Philosophy, Development Practices, Testing & Quality
+- Includes PRD, ADR-001 through ADR-004, MEMO-004, MEMO-006, RFC-018, CLAUDE.md, MEMO-015, MEMO-016
+- Document hierarchy diagram showing WHY (PRD) → WHAT (ADRs) → HOW (MEMOs/RFCs) → WORKFLOWS (CLAUDE.md)
+
+**Temporary Files Removed**:
+- Removed obsolete files: MAKEFILE_UPDATES.md, SESSION_COMPLETE.md, conversation.txt
+- Root directory now clean with only essential files (README.md, CLAUDE.md, BUILDING.md)
+
+**CLAUDE.md Updates**:
+- Added critical requirement: "When making documentation changes, ALWAYS update `docusaurus/docs/changelog.md`"
+- Updated documentation authority section to reflect both `docs-cms/` and `docusaurus/docs/` locations
+- Clarified that docusaurus/docs/changelog.md is the canonical changelog (not docs-cms/CHANGELOG.md)
+
+**Key Innovation**: Establishes clear documentation home for each type of content. ADRs/RFCs/MEMOs live in docs-cms/ (versioned, plugin-based), while Docusaurus-specific content (changelog, key index) lives in docusaurus/docs/. Key documents index provides curated entry point for new contributors.
+
+**Impact**: Eliminates confusion about changelog location (single source of truth). Root directory cleanup removes stale documentation. Key documents index accelerates onboarding by highlighting philosophy-driving documents. All temporary documentation now properly categorized and accessible via Docusaurus navigation.
+
+---
+
 #### Test and Build Fixes (UPDATED)
 **Commits**: 39f4992, 57f819d
 
