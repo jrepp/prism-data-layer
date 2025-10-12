@@ -11,11 +11,33 @@
 secrets/
 credentials
 
-# === Rust ===
+# === Build Directory (Hygienic out-of-source builds) ===
+# All build artifacts go here
+build/
+
+# === Legacy build artifacts (deprecated, use ./build instead) ===
+# Rust
 proxy/target/
 proxy/**/*.rs.bk
 proxy/**/*.pdb
 proxy/Cargo.lock  # Uncomment if library
+
+# Go binaries
+patterns/*/memstore
+patterns/*/redis
+patterns/*/nats
+patterns/*/coverage.out
+patterns/*/coverage.html
+tests/**/coverage.out
+tests/**/coverage.html
+
+# Test logs (deprecated, use ./build/test-logs)
+test-logs/
+
+# Docusaurus (deprecated, use ./build/docs)
+docs/
+docusaurus/.docusaurus/
+docusaurus/build/
 
 # === Python ===
 __pycache__/
@@ -23,7 +45,6 @@ __pycache__/
 *$py.class
 *.so
 .Python
-build/
 develop-eggs/
 dist/
 downloads/
@@ -78,7 +99,6 @@ admin/yarn.lock
 htmlcov/
 *.log
 test-results/
-test-logs/
 
 # === Docker ===
 *.dockerignore
@@ -99,9 +119,5 @@ temp/
 *.tmp
 *.bak
 
-# === Docusaurus Build Output ===
-# GitHub Pages builds this automatically
-docs/
-docusaurus/.docusaurus/
-docusaurus/build/
+# === Node modules ===
 docusaurus/node_modules/

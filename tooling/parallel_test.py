@@ -222,6 +222,11 @@ class ParallelTestRunner:
         self.parallel_groups: Dict[str, asyncio.Lock] = {}
         self.failed = False
         self.results: Dict[str, TestSuite] = {}
+        self.completion_events: Dict[str, asyncio.Event] = {}
+
+        # Create completion events for all suites (for dependency waiting)
+        for suite in suites:
+            self.completion_events[suite.name] = asyncio.Event()
 
         # Create log directory
         self.log_dir.mkdir(parents=True, exist_ok=True)
@@ -267,31 +272,40 @@ class ParallelTestRunner:
 
     async def run_suite(self, suite: TestSuite):
         """Run a single test suite"""
-        # Check dependencies
-        for dep in suite.depends_on:
-            dep_suite = next((s for s in self.suites if s.name == dep), None)
-            if dep_suite and dep_suite.status != TestStatus.PASSED:
+        try:
+            # Wait for dependencies to complete
+            for dep in suite.depends_on:
+                if dep in self.completion_events:
+                    # Wait for dependency to complete
+                    await self.completion_events[dep].wait()
+
+                    # Check if dependency passed
+                    dep_suite = next((s for s in self.suites if s.name == dep), None)
+                    if dep_suite and dep_suite.status != TestStatus.PASSED:
+                        suite.status = TestStatus.SKIPPED
+                        suite.error_message = f"Dependency {dep} did not pass"
+                        return
+
+            # Check fail-fast
+            if self.fail_fast and self.failed:
                 suite.status = TestStatus.SKIPPED
-                suite.error_message = f"Dependency {dep} did not pass"
+                suite.error_message = "Skipped due to fail-fast"
                 return
 
-        # Check fail-fast
-        if self.fail_fast and self.failed:
-            suite.status = TestStatus.SKIPPED
-            suite.error_message = "Skipped due to fail-fast"
-            return
-
-        # Acquire semaphore for parallel execution limit
-        async with self.semaphore:
-            # If suite is in a parallel group, serialize within that group
-            if suite.parallel_group:
-                if suite.parallel_group not in self.parallel_groups:
-                    self.parallel_groups[suite.parallel_group] = asyncio.Lock()
-                lock = self.parallel_groups[suite.parallel_group]
-                async with lock:
+            # Acquire semaphore for parallel execution limit
+            async with self.semaphore:
+                # If suite is in a parallel group, serialize within that group
+                if suite.parallel_group:
+                    if suite.parallel_group not in self.parallel_groups:
+                        self.parallel_groups[suite.parallel_group] = asyncio.Lock()
+                    lock = self.parallel_groups[suite.parallel_group]
+                    async with lock:
+                        await self._execute_suite(suite)
+                else:
                     await self._execute_suite(suite)
-            else:
-                await self._execute_suite(suite)
+        finally:
+            # Signal completion (whether passed, failed, or skipped)
+            self.completion_events[suite.name].set()
 
     async def _execute_suite(self, suite: TestSuite):
         """Execute a test suite command"""
