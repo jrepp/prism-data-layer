@@ -4,12 +4,12 @@ import (
 	"context"
 	"log/slog"
 
-	pb "github.com/jrepp/prism-data-layer/patterns/core/gen/prism/pattern"
+	pb "github.com/jrepp/prism-data-layer/patterns/core/gen/prism/interfaces"
 )
 
-// LifecycleService implements the PatternLifecycle gRPC service
+// LifecycleService implements the LifecycleInterface gRPC service
 type LifecycleService struct {
-	pb.UnimplementedPatternLifecycleServer
+	pb.UnimplementedLifecycleInterfaceServer
 	plugin Plugin
 	config *Config
 }
@@ -60,9 +60,9 @@ func (s *LifecycleService) Initialize(ctx context.Context, req *pb.InitializeReq
 		Success: true,
 		Error:   "",
 		Metadata: &pb.PatternMetadata{
-			Name:         s.plugin.Name(),
-			Version:      s.plugin.Version(),
-			Capabilities: []string{"keyvalue"}, // TODO: Make this configurable
+			Name:       s.plugin.Name(),
+			Version:    s.plugin.Version(),
+			Interfaces: []string{"keyvalue"}, // TODO: Make this configurable
 		},
 	}, nil
 }

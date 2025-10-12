@@ -216,14 +216,7 @@ proto: proto-go proto-rust ## Generate protobuf code for all languages
 proto-go: ## Generate Go protobuf code
 	$(call print_blue,Generating Go protobuf code...)
 	@mkdir -p patterns/core/gen
-	@PATH="$$PATH:$$(go env GOPATH)/bin" protoc \
-		--go_out=patterns/core/gen \
-		--go_opt=paths=source_relative \
-		--go-grpc_out=patterns/core/gen \
-		--go-grpc_opt=paths=source_relative \
-		--proto_path=proto \
-		proto/prism/interfaces/lifecycle.proto \
-		proto/prism/common/types.proto
+	@cd proto && buf generate --template buf.gen.go.yaml
 	$(call print_green,Go protobuf code generated)
 
 proto-rust: ## Generate Rust protobuf code (via build.rs)
