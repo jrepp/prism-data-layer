@@ -1,10 +1,15 @@
 ---
-id: adr-004
-title: "ADR-004: Local-First Testing Strategy"
-status: Accepted
 date: 2025-10-05
 deciders: Core Team
-tags: ['testing', 'dx', 'reliability']
+doc_uuid: fd47488b-2780-4211-8e94-f2131102eb01
+id: adr-004
+project_id: prism-data-layer
+status: Accepted
+tags:
+- testing
+- dx
+- reliability
+title: 'ADR-004: Local-First Testing Strategy'
 ---
 
 ## Context

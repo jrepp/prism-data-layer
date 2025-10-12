@@ -1,10 +1,16 @@
 ---
-title: "MEMO-014: Pattern SDK Shared Complexity Analysis"
 author: Platform Team
 created: 2025-10-11
-updated: 2025-10-12
-tags: [pattern-sdk, refactoring, code-reuse, poc1]
+doc_uuid: a643bb33-4294-4cd6-a688-57d8ba4b108d
 id: memo-014
+project_id: prism-data-layer
+tags:
+- pattern-sdk
+- refactoring
+- code-reuse
+- poc1
+title: 'MEMO-014: Pattern SDK Shared Complexity Analysis'
+updated: 2025-10-12
 ---
 
 # MEMO-014: Pattern SDK Shared Complexity Analysis

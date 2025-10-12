@@ -1,10 +1,17 @@
 ---
-id: adr-037
-title: "ADR-037: Kubernetes Operator with Custom Resource Definitions"
-status: Proposed
 date: 2025-10-08
 deciders: System
-tags: ['operations', 'deployment', 'kubernetes', 'automation', 'dx']
+doc_uuid: a59c9c6c-a815-4a64-90a2-de2ce7e9362d
+id: adr-037
+project_id: prism-data-layer
+status: Proposed
+tags:
+- operations
+- deployment
+- kubernetes
+- automation
+- dx
+title: 'ADR-037: Kubernetes Operator with Custom Resource Definitions'
 ---
 
 ## Context

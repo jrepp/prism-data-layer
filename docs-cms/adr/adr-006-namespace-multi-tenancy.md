@@ -1,10 +1,15 @@
 ---
-id: adr-006
-title: "ADR-006: Namespace and Multi-Tenancy"
-status: Accepted
 date: 2025-10-05
 deciders: Core Team
-tags: ['architecture', 'backend', 'operations']
+doc_uuid: 1a520aa8-c32e-4e5b-bcc7-f27ef454d1d4
+id: adr-006
+project_id: prism-data-layer
+status: Accepted
+tags:
+- architecture
+- backend
+- operations
+title: 'ADR-006: Namespace and Multi-Tenancy'
 ---
 
 ## Context

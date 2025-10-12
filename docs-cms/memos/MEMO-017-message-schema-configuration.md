@@ -1,13 +1,19 @@
 ---
-title: "MEMO-008: Message Schema Configuration for Publish Slots"
 author: Claude
 created: 2025-10-11
+doc_uuid: 15828b58-345b-4995-bec7-f73476cde62e
+id: memo-017
+project_id: prism-data-layer
+tags:
+- messaging
+- schema
+- validation
+- multicast-registry
+title: 'MEMO-017: Message Schema Configuration for Publish Slots'
 updated: 2025-10-11
-tags: [messaging, schema, validation, multicast-registry]
-id: memo-008
 ---
 
-# MEMO-008: Message Schema Configuration for Publish Slots
+# MEMO-017: Message Schema Configuration for Publish Slots
 
 ## Context
 

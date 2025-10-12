@@ -1,11 +1,18 @@
 ---
-id: rfc-027
-title: "RFC-027: Namespace Configuration and Client Request Flow"
-status: Proposed
 author: Platform Team
 created: 2025-10-10
+doc_uuid: 8506cf18-39db-4f79-868d-a6e823f2ab3e
+id: rfc-027
+project_id: prism-data-layer
+status: Proposed
+tags:
+- namespace
+- configuration
+- client-api
+- patterns
+- self-service
+title: 'RFC-027: Namespace Configuration and Client Request Flow'
 updated: 2025-10-10
-tags: [namespace, configuration, client-api, patterns, self-service]
 ---
 
 ## Abstract

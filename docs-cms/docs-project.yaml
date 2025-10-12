@@ -1,0 +1,139 @@
+# Prism Data Access Layer Documentation Project Configuration
+#
+# This file defines project-level metadata and validation rules for all
+# documentation in this directory tree.
+
+project:
+  id: "prism-data-layer"
+  name: "Prism Data Access Layer"
+  description: "High-performance data access layer gateway providing unified, type-safe access to heterogeneous data backends"
+  github_url: "https://github.com/jrepp/prism-data-layer"
+  website_url: "https://jrepp.github.io/prism-data-layer"
+  version: "0.1.0"
+  status: "active"  # active, archived, deprecated
+
+documentation:
+  root: "docs-cms"
+  types:
+    - id: "adr"
+      name: "Architecture Decision Records"
+      path: "adr"
+      filename_pattern: "^(adr|ADR)-(\\d{3})-(.+)\\.md$"
+      id_format: "adr-{number:03d}"  # e.g., adr-001
+      title_format: "ADR-{number:03d}: {title}"  # e.g., ADR-001: Title Here
+      required_frontmatter:
+        - title
+        - status
+        - date
+        - deciders
+        - tags
+        - id
+        - project_id
+
+    - id: "rfc"
+      name: "Request for Comments"
+      path: "rfcs"
+      filename_pattern: "^(rfc|RFC)-(\\d{3})-(.+)\\.md$"
+      id_format: "rfc-{number:03d}"
+      title_format: "RFC-{number:03d}: {title}"
+      required_frontmatter:
+        - title
+        - status
+        - author
+        - created
+        - tags
+        - id
+        - project_id
+
+    - id: "memo"
+      name: "Technical Memos"
+      path: "memos"
+      filename_pattern: "^(memo|MEMO)-(\\d{3})-(.+)\\.md$"
+      id_format: "memo-{number:03d}"
+      title_format: "MEMO-{number:03d}: {title}"
+      required_frontmatter:
+        - title
+        - author
+        - created
+        - updated
+        - tags
+        - id
+        - project_id
+
+    - id: "doc"
+      name: "General Documentation"
+      path: "."
+      filename_pattern: "^[^/]+\\.md$"
+      required_frontmatter:
+        - title
+        - project_id  # Required for project association
+
+validation:
+  # ID validation rules
+  id_uniqueness: true  # All IDs must be unique across the project
+  id_filename_match: true  # ID must match filename number
+  id_title_match: true  # ID must match title number
+
+  # Frontmatter validation
+  require_project_id: true  # All docs must have project_id field
+  enforce_lowercase_ids: true  # IDs must be lowercase
+  enforce_lowercase_tags: true  # Tags must be lowercase with hyphens
+
+  # Link validation
+  check_internal_links: true
+  check_external_links: false  # Don't check external URLs (slow)
+  check_anchors: false  # Don't validate anchor existence (complex)
+
+  # Content validation
+  check_mdx_compatibility: true
+  check_code_block_labels: true
+  check_frontmatter_schema: true
+
+  # Build validation
+  run_docusaurus_build: true  # Can be skipped with --skip-build
+
+# Tag taxonomy (suggestions, not enforced)
+tags:
+  categories:
+    - name: "Architecture"
+      tags: [architecture, design, patterns, structure]
+
+    - name: "Technology"
+      tags: [go, rust, python, protobuf, grpc, docker]
+
+    - name: "Backend"
+      tags: [backend, postgres, redis, kafka, nats, sqlite, memstore]
+
+    - name: "Operations"
+      tags: [observability, monitoring, deployment, operations, dx]
+
+    - name: "Quality"
+      tags: [testing, reliability, performance, security]
+
+    - name: "Process"
+      tags: [workflow, tooling, cli, developer-experience]
+
+# Status values
+status_values:
+  adr:
+    - Proposed
+    - Accepted
+    - Implemented
+    - Deprecated
+    - Superseded
+
+  rfc:
+    - Draft
+    - Proposed
+    - Accepted
+    - Implemented
+    - Deprecated
+    - Superseded
+
+# Metadata
+metadata:
+  created: "2025-10-05"
+  updated: "2025-10-12"
+  maintainers:
+    - "Jacob Repp"
+  license: "MIT"

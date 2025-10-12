@@ -1,12 +1,14 @@
 ---
-id: rfc-002
-title: "RFC-002: Data Layer Interface Specification"
-status: Draft
 author: Core Team
 created: 2025-10-07
-updated: 2025-10-07
-supersedes: N/A
+doc_uuid: 839837b0-a37f-41a5-91e3-2667535311c8
+id: rfc-002
+project_id: prism-data-layer
 related: RFC-001, ADR-024
+status: Draft
+supersedes: N/A
+title: 'RFC-002: Data Layer Interface Specification'
+updated: 2025-10-07
 ---
 
 ## Abstract

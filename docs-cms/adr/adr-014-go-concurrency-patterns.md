@@ -1,10 +1,16 @@
 ---
-id: adr-014
-title: "ADR-014: Go Concurrency Patterns"
-status: Accepted
 date: 2025-10-07
 deciders: Core Team
-tags: ['go', 'concurrency', 'performance', 'patterns']
+doc_uuid: 5486ee9e-ca5a-4420-914e-f22db2976e28
+id: adr-014
+project_id: prism-data-layer
+status: Accepted
+tags:
+- go
+- concurrency
+- performance
+- patterns
+title: 'ADR-014: Go Concurrency Patterns'
 ---
 
 ## Context

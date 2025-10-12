@@ -1,11 +1,18 @@
 ---
-id: adr-032
-title: "ADR-032: Object Storage Pattern with MinIO"
-sidebar_label: ADR-032 Object Storage
-status: Accepted
 date: 2025-10-08
 deciders: System Architecture Team
-tags: [object-storage, minio, s3, blobs, local-testing]
+doc_uuid: c39bb86d-e628-4d94-b8a1-b27910833b8d
+id: adr-032
+project_id: prism-data-layer
+sidebar_label: ADR-032 Object Storage
+status: Accepted
+tags:
+- object-storage
+- minio
+- s3
+- blobs
+- local-testing
+title: 'ADR-032: Object Storage Pattern with MinIO'
 ---
 
 # ADR-032: Object Storage Pattern with MinIO

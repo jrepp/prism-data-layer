@@ -1,11 +1,7 @@
 package backends
 
 import (
-	"io"
-	"log"
 	"os"
-
-	"github.com/testcontainers/testcontainers-go"
 )
 
 // QuietMode controls whether testcontainers logs are suppressed
@@ -17,18 +13,13 @@ func init() {
 		QuietMode = true
 	}
 
-	// Suppress testcontainers logs if quiet mode is enabled
-	if QuietMode {
-		testcontainers.Logger = log.New(io.Discard, "", log.LstdFlags)
-	}
+	// Note: testcontainers logger configuration removed as API changed
+	// Use TESTCONTAINERS_RYUK_DISABLED=true or other env vars for quieter operation
 }
 
 // SetQuietMode enables or disables quiet mode for testcontainers
 func SetQuietMode(enabled bool) {
 	QuietMode = enabled
-	if enabled {
-		testcontainers.Logger = log.New(io.Discard, "", log.LstdFlags)
-	} else {
-		testcontainers.Logger = log.New(os.Stderr, "", log.LstdFlags)
-	}
+	// Note: testcontainers logger configuration removed as API changed
+	// Logging behavior can be controlled via testcontainers environment variables
 }

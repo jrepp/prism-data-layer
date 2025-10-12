@@ -1,10 +1,17 @@
 ---
-id: adr-048
-title: "ADR-048: Local Signoz Instance for Observability Testing"
-status: Accepted
 date: 2025-10-09
 deciders: Platform Team
-tags: [observability, testing, local-development, opentelemetry, signoz]
+doc_uuid: 117474f6-d253-4b91-a96f-298f750e9fd3
+id: adr-048
+project_id: prism-data-layer
+status: Accepted
+tags:
+- observability
+- testing
+- local-development
+- opentelemetry
+- signoz
+title: 'ADR-048: Local Signoz Instance for Observability Testing'
 ---
 
 # ADR-048: Local Signoz Instance for Observability Testing

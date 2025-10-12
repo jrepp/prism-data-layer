@@ -1,7 +1,9 @@
 ---
 author: Platform Team
 created: 2025-10-09
-id: memo-topaz-authorizer
+doc_uuid: da815ecf-06ce-440f-9cfc-435f20747dca
+id: memo-009
+project_id: prism-data-layer
 status: Active
 tags:
 - topaz

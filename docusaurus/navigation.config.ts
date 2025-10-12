@@ -18,19 +18,27 @@ export const navItems = [
     position: 'left' as const,
   },
   {
-    to: '/adr',
-    label: 'ADRs',
+    type: 'dropdown' as const,
+    label: 'Documentation',
     position: 'left' as const,
-  },
-  {
-    to: '/rfc',
-    label: 'RFCs',
-    position: 'left' as const,
-  },
-  {
-    to: '/memos',
-    label: 'Memos',
-    position: 'left' as const,
+    items: [
+      {
+        to: '/adr',
+        label: 'ADRs (Architecture Decision Records)',
+      },
+      {
+        to: '/rfc',
+        label: 'RFCs (Request for Comments)',
+      },
+      {
+        to: '/memos',
+        label: 'Memos (Technical Analysis)',
+      },
+      {
+        to: '/prds',
+        label: 'PRDs (Product Requirements)',
+      },
+    ],
   },
   {
     type: 'custom-buildInfo' as any,
@@ -74,6 +82,10 @@ export const footerLinks = [
       {
         label: 'Memos',
         to: '/memos',
+      },
+      {
+        label: 'PRDs',
+        to: '/prds',
       },
     ],
   },

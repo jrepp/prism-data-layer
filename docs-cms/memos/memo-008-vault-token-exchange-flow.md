@@ -1,7 +1,9 @@
 ---
 author: Platform Team
 created: 2025-10-09
-id: memo-vault-token-exchange
+doc_uuid: 4cdc89a6-7121-493e-9a80-0348af5851d9
+id: memo-008
+project_id: prism-data-layer
 status: Active
 tags:
 - vault

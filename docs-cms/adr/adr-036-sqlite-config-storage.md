@@ -1,10 +1,16 @@
 ---
-id: adr-036
-title: "ADR-036: Local SQLite Storage for Namespace Configuration"
-status: Proposed
 date: 2025-10-08
 deciders: System
-tags: ['configuration', 'deployment', 'reliability', 'operations']
+doc_uuid: 60fbdbbd-7374-4b88-abe0-815093ff15f8
+id: adr-036
+project_id: prism-data-layer
+status: Proposed
+tags:
+- configuration
+- deployment
+- reliability
+- operations
+title: 'ADR-036: Local SQLite Storage for Namespace Configuration'
 ---
 
 ## Context

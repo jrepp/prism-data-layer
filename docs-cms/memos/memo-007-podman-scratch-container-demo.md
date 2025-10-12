@@ -1,10 +1,19 @@
 ---
-id: memo-007
-title: "MEMO-007: Podman Demo for Scratch-Based Containers with Native Runtime"
 author: Platform Team
 created: 2025-10-09
+doc_uuid: 9c42fe80-9b2c-4720-a21d-831743c2e47b
+id: memo-007
+project_id: prism-data-layer
+tags:
+- containers
+- podman
+- scratch
+- demo
+- runtime
+- optimization
+- patterns
+title: 'MEMO-007: Podman Demo for Scratch-Based Containers with Native Runtime'
 updated: 2025-10-10
-tags: [containers, podman, scratch, demo, runtime, optimization, patterns]
 ---
 
 # MEMO-007: Podman Demo for Scratch-Based Containers with Native Runtime
@@ -627,4 +636,3 @@ RUN apk add --no-cache curl busybox
 
 - 2025-10-10: Updated terminology - Redis is a backend, not a pattern. Changed example from Postgres to Redis KeyValue implementation. Clarified that patterns (like multicast-registry) coordinate multiple backends to provide higher-level solutions.
 - 2025-10-09: Initial draft covering Podman + scratch containers with native runtime demo
-

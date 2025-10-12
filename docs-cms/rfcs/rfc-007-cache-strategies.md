@@ -1,12 +1,13 @@
 ---
-id: rfc-007
-title: "RFC-007: Cache Strategies for Data Layer"
-sidebar_label: RFC-007 Cache Strategies
-status: Draft
 author: System
 created: 2025-10-08
+doc_uuid: ecc97cc2-2ed4-4709-9f6f-07ce9fba5fe9
+id: rfc-007
+project_id: prism-data-layer
+sidebar_label: RFC-007 Cache Strategies
+status: Draft
+title: 'RFC-007: Cache Strategies for Data Layer'
 ---
-
 
 # RFC-007: Cache Strategies for Data Layer
 

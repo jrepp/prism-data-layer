@@ -1,10 +1,16 @@
 ---
-id: adr-016
-title: "ADR-016: Go CLI and Configuration Management"
-status: Accepted
 date: 2025-10-07
 deciders: Core Team
-tags: ['go', 'cli', 'configuration', 'developer-experience']
+doc_uuid: 8ed62180-e611-4bd2-ae58-e1df2464dccc
+id: adr-016
+project_id: prism-data-layer
+status: Accepted
+tags:
+- go
+- cli
+- configuration
+- developer-experience
+title: 'ADR-016: Go CLI and Configuration Management'
 ---
 
 ## Context

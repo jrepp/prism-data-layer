@@ -1,11 +1,19 @@
 ---
-id: rfc-017
-title: "RFC-017: Multicast Registry Pattern"
-status: Draft
 author: Platform Team
 created: 2025-10-09
+doc_uuid: c606fc3f-2267-4182-9e99-9a666dc258f3
+id: rfc-017
+project_id: prism-data-layer
+status: Draft
+tags:
+- patterns
+- client-api
+- registry
+- pubsub
+- service-discovery
+- composition
+title: 'RFC-017: Multicast Registry Pattern'
 updated: 2025-10-09
-tags: [patterns, client-api, registry, pubsub, service-discovery, composition]
 ---
 
 # RFC-017: Multicast Registry Pattern
@@ -1183,4 +1191,3 @@ filter_operators:
 ## Revision History
 
 - 2025-10-09: Initial draft covering pattern definition, backend slots, implementation plan
-

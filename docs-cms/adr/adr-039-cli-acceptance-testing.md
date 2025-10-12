@@ -1,10 +1,17 @@
 ---
-id: adr-039
-title: "ADR-039: CLI Acceptance Testing with testscript"
-status: Accepted
 date: 2025-10-09
 deciders: System
-tags: [testing, cli, go, acceptance-testing, developer-experience]
+doc_uuid: d3a12d0e-b92f-4771-bd6b-c276ee9b5501
+id: adr-039
+project_id: prism-data-layer
+status: Accepted
+tags:
+- testing
+- cli
+- go
+- acceptance-testing
+- developer-experience
+title: 'ADR-039: CLI Acceptance Testing with testscript'
 ---
 
 ## Context

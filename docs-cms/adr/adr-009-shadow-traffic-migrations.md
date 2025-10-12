@@ -1,10 +1,15 @@
 ---
-id: adr-009
-title: "ADR-009: Shadow Traffic for Migrations"
-status: Accepted
 date: 2025-10-05
 deciders: Core Team
-tags: ['operations', 'reliability', 'backend']
+doc_uuid: fefcdbcd-6c7e-4e3c-8ef0-4652fb513085
+id: adr-009
+project_id: prism-data-layer
+status: Accepted
+tags:
+- operations
+- reliability
+- backend
+title: 'ADR-009: Shadow Traffic for Migrations'
 ---
 
 ## Context

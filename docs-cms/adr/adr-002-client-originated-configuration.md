@@ -1,10 +1,15 @@
 ---
-id: adr-002
-title: "ADR-002: Client-Originated Configuration"
-status: Accepted
 date: 2025-10-05
 deciders: Core Team
-tags: ['architecture', 'configuration', 'dx']
+doc_uuid: b4c74aef-30c2-47a0-b998-04a139f1e716
+id: adr-002
+project_id: prism-data-layer
+status: Accepted
+tags:
+- architecture
+- configuration
+- dx
+title: 'ADR-002: Client-Originated Configuration'
 ---
 
 ## Context

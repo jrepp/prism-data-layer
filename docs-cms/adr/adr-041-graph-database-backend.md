@@ -1,10 +1,17 @@
 ---
-id: adr-041
-title: "ADR-041: Graph Database Backend Support"
-status: Accepted
 date: 2025-10-09
 deciders: Platform Team
-tags: [backend, graph, database, plugin, architecture]
+doc_uuid: 34c07a4a-b58d-4d75-bc88-3133f8cef634
+id: adr-041
+project_id: prism-data-layer
+status: Accepted
+tags:
+- backend
+- graph
+- database
+- plugin
+- architecture
+title: 'ADR-041: Graph Database Backend Support'
 ---
 
 ## Context

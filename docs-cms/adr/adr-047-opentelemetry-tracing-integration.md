@@ -1,10 +1,18 @@
 ---
-id: adr-047
-title: "ADR-047: OpenTelemetry Tracing Integration"
-status: Accepted
 date: 2025-10-09
 deciders: Core Team
-tags: [observability, tracing, opentelemetry, go, rust, plugin]
+doc_uuid: 2cbe9b6e-ecf7-4c00-9c7c-dae8aebaa5cf
+id: adr-047
+project_id: prism-data-layer
+status: Accepted
+tags:
+- observability
+- tracing
+- opentelemetry
+- go
+- rust
+- plugin
+title: 'ADR-047: OpenTelemetry Tracing Integration'
 ---
 
 ## Context

@@ -1,9 +1,18 @@
 ---
-title: "ADR-XXX: [Short Title]"
-status: [Proposed | Accepted | Deprecated | Superseded by ADR-YYY]
 date: YYYY-MM-DD
-deciders: [Names/Roles]
-tags: [backend, proxy, security, performance, testing]
+deciders:
+- Names/Roles
+doc_uuid: 7bd8659a-a8e7-4fb1-854d-daf5741c19d3
+project_id: prism-data-layer
+status:
+- Proposed | Accepted | Deprecated | Superseded by ADR-YYY
+tags:
+- backend
+- proxy
+- security
+- performance
+- testing
+title: 'ADR-XXX: [Short Title]'
 ---
 
 ## Context

@@ -1,11 +1,17 @@
 ---
-title: "RFC-029: Load Testing Framework Evaluation and Strategy"
-status: Proposed
 author: Platform Team
 created: 2025-10-11
-updated: 2025-10-12
-tags: [load-testing, performance, tooling, evaluation]
+doc_uuid: 50cf9cc5-7e1f-44ba-a8b0-e52c01c54957
 id: rfc-029
+project_id: prism-data-layer
+status: Proposed
+tags:
+- load-testing
+- performance
+- tooling
+- evaluation
+title: 'RFC-029: Load Testing Framework Evaluation and Strategy'
+updated: 2025-10-12
 ---
 
 # RFC-029: Load Testing Framework Evaluation and Strategy

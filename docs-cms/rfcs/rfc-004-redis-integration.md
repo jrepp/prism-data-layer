@@ -1,11 +1,13 @@
 ---
-id: rfc-004
-title: "RFC-004: Redis Integration for Cache, PubSub, and Vector Search"
-status: Proposed
 author: Core Team
 created: 2025-10-08
-updated: 2025-10-08
+doc_uuid: aeaa67c0-49a7-4ea8-b9fa-53675732b3ab
+id: rfc-004
+project_id: prism-data-layer
 related: RFC-001, RFC-002, ADR-003
+status: Proposed
+title: 'RFC-004: Redis Integration for Cache, PubSub, and Vector Search'
+updated: 2025-10-08
 ---
 
 ## Abstract

@@ -1,11 +1,18 @@
 ---
-id: rfc-012
-title: "RFC-012: Prism Network Gateway (prism-netgw) - Multi-Region Control Plane"
-status: Draft
 author: Platform Team
 created: 2025-10-09
+doc_uuid: 23612b06-566e-4e46-b8fd-148caacc4136
+id: rfc-012
+project_id: prism-data-layer
+status: Draft
+tags:
+- control-plane
+- multi-region
+- networking
+- orchestration
+- high-availability
+title: 'RFC-012: Prism Network Gateway (prism-netgw) - Multi-Region Control Plane'
 updated: 2025-10-09
-tags: [control-plane, multi-region, networking, orchestration, high-availability]
 ---
 
 # RFC-012: Prism Network Gateway (prism-netgw) - Multi-Region Control Plane

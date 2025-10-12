@@ -1,11 +1,20 @@
 ---
-id: rfc-026
-title: "RFC-026: POC 1 - KeyValue with MemStore Implementation Plan (Original)"
-status: Superseded
 author: Platform Team
 created: 2025-10-09
+doc_uuid: a9c5b30d-fe19-40dc-aebc-866125dbb6d1
+id: rfc-026
+project_id: prism-data-layer
+status: Superseded
+tags:
+- poc
+- implementation
+- keyvalue
+- memstore
+- walking-skeleton
+- workstreams
+- superseded
+title: 'RFC-026: POC 1 - KeyValue with MemStore Implementation Plan (Original)'
 updated: 2025-10-09
-tags: [poc, implementation, keyvalue, memstore, walking-skeleton, workstreams, superseded]
 ---
 
 # RFC-026: POC 1 - KeyValue with MemStore Implementation Plan (Original)
@@ -1680,4 +1689,3 @@ WS4     ████████                                   Python Client
 ## Revision History
 
 - 2025-10-09: Initial RFC with detailed work streams for POC 1
-

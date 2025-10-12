@@ -1,10 +1,17 @@
 ---
-id: adr-019
-title: "ADR-019: Rust Async Concurrency Patterns"
-status: Accepted
 date: 2025-10-07
 deciders: Core Team
-tags: ['rust', 'concurrency', 'async', 'performance', 'tokio']
+doc_uuid: c36cea37-01e5-45d7-b8bf-5aaa25395be4
+id: adr-019
+project_id: prism-data-layer
+status: Accepted
+tags:
+- rust
+- concurrency
+- async
+- performance
+- tokio
+title: 'ADR-019: Rust Async Concurrency Patterns'
 ---
 
 ## Context

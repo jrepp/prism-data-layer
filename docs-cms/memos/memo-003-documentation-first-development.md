@@ -1,10 +1,16 @@
 ---
-id: memo-003
-title: "MEMO-003: Documentation-First Development Approach"
 author: Platform Team
 created: 2025-10-09
+doc_uuid: 09a1b9de-cb64-4df3-826f-938e3735eeab
+id: memo-003
+project_id: prism-data-layer
+tags:
+- process
+- documentation
+- workflow
+- best-practices
+title: 'MEMO-003: Documentation-First Development Approach'
 updated: 2025-10-09
-tags: [process, documentation, workflow, best-practices]
 ---
 
 ## Overview

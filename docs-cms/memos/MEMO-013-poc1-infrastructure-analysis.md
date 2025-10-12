@@ -1,9 +1,17 @@
 ---
-title: "MEMO-013: POC 1 Infrastructure Analysis - SDK and Load Testing"
 author: Platform Team
 created: 2025-10-11
+doc_uuid: 1cdb6074-00e4-4203-ae16-636b93e3f995
+id: memo-013
+project_id: prism-data-layer
+tags:
+- poc1
+- pattern-sdk
+- load-testing
+- infrastructure
+- developer-experience
+title: 'MEMO-013: POC 1 Infrastructure Analysis - SDK and Load Testing'
 updated: 2025-10-11
-tags: [poc1, pattern-sdk, load-testing, infrastructure, developer-experience]
 ---
 
 # MEMO-013: POC 1 Infrastructure Analysis - SDK and Load Testing

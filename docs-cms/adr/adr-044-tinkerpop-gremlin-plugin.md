@@ -1,10 +1,17 @@
 ---
-id: adr-044
-title: "ADR-044: TinkerPop/Gremlin Generic Plugin"
-status: Accepted
 date: 2025-10-09
 deciders: Platform Team
-tags: [backend, graph, plugin, gremlin, tinkerpop]
+doc_uuid: a8087fcc-a065-4bae-abe3-daf98be8c29b
+id: adr-044
+project_id: prism-data-layer
+status: Accepted
+tags:
+- backend
+- graph
+- plugin
+- gremlin
+- tinkerpop
+title: 'ADR-044: TinkerPop/Gremlin Generic Plugin'
 ---
 
 ## Context
@@ -485,4 +492,3 @@ prism-plugins/
 ## Revision History
 
 - 2025-10-09: Initial ADR for generic TinkerPop/Gremlin plugin
-

@@ -1,11 +1,18 @@
 ---
-id: rfc-011
-title: "RFC-011: Data Proxy Authentication (Input/Output)"
-status: Proposed
 author: Platform Team
 created: 2025-10-09
+doc_uuid: 7c8693e5-6401-4934-afb9-617b3c5c7e9b
+id: rfc-011
+project_id: prism-data-layer
+status: Proposed
+tags:
+- authentication
+- mtls
+- proxy
+- backends
+- security
+title: 'RFC-011: Data Proxy Authentication (Input/Output)'
 updated: 2025-10-09
-tags: [authentication, mtls, proxy, backends, security]
 ---
 
 ## Abstract

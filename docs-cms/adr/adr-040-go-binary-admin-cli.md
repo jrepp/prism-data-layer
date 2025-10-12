@@ -1,10 +1,16 @@
 ---
-id: adr-040
-title: "ADR-040: Go Binary for Admin CLI (prismctl)"
-status: Accepted
 date: 2025-10-09
 deciders: Core Team
-tags: [go, cli, tooling, dx]
+doc_uuid: e9a89036-3214-4516-b580-bf805e2122fc
+id: adr-040
+project_id: prism-data-layer
+status: Accepted
+tags:
+- go
+- cli
+- tooling
+- dx
+title: 'ADR-040: Go Binary for Admin CLI (prismctl)'
 ---
 
 ## Context

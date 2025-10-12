@@ -1,11 +1,20 @@
 ---
-id: rfc-023
-title: "RFC-023: Publish Snapshotter Plugin - Write-Only Event Buffering with Pagination"
-status: Proposed
 author: Platform Team
 created: 2025-10-09
+doc_uuid: 6b98adc6-65e5-4d25-ae1d-dbc54473da2d
+id: rfc-023
+project_id: prism-data-layer
+status: Proposed
+tags:
+- plugin
+- snapshotter
+- streaming
+- pagination
+- object-storage
+- write-only
+- buffering
+title: 'RFC-023: Publish Snapshotter Plugin - Write-Only Event Buffering with Pagination'
 updated: 2025-10-09
-tags: [plugin, snapshotter, streaming, pagination, object-storage, write-only, buffering]
 ---
 
 # RFC-023: Publish Snapshotter Plugin - Write-Only Event Buffering with Pagination

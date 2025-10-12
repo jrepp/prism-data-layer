@@ -37,9 +37,12 @@ func NewPatternHarness(t *testing.T, plugin core.Plugin, config *core.Config) *P
 	err := plugin.Initialize(ctx, config)
 	require.NoError(t, err, "Failed to initialize plugin")
 
-	// Start plugin
-	err = plugin.Start(ctx)
-	require.NoError(t, err, "Failed to start plugin")
+	// Start plugin in goroutine (Start() blocks until context is cancelled)
+	go func() {
+		if err := plugin.Start(ctx); err != nil {
+			t.Logf("Plugin Start() returned: %v", err)
+		}
+	}()
 
 	// Register cleanup
 	h.AddCleanup(func() {

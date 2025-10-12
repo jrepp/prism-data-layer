@@ -1,10 +1,16 @@
 ---
-id: adr-029
-title: "ADR-029: Protocol Recording with Protobuf Tagging"
-status: Accepted
 date: 2025-10-07
 deciders: Core Team
-tags: ['protobuf', 'protocols', 'observability', 'debugging']
+doc_uuid: 3efefb72-d17b-4a34-984e-22e523efba65
+id: adr-029
+project_id: prism-data-layer
+status: Accepted
+tags:
+- protobuf
+- protocols
+- observability
+- debugging
+title: 'ADR-029: Protocol Recording with Protobuf Tagging'
 ---
 
 ## Context

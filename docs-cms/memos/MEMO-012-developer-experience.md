@@ -1,10 +1,17 @@
 ---
-title: "MEMO-012: Developer Experience and Common Workflows"
 author: Platform Team
 created: 2025-10-11
+doc_uuid: b9a8d03d-a0b3-4b42-ba16-b8077c02844d
+id: memo-012
+project_id: prism-data-layer
+tags:
+- dx
+- developer-experience
+- testing
+- tooling
+- workflows
+title: 'MEMO-012: Developer Experience and Common Workflows'
 updated: 2025-10-11
-tags: [dx, developer-experience, testing, tooling, workflows]
-id: memo-012-developer-experience
 ---
 
 # MEMO-012: Developer Experience and Common Workflows

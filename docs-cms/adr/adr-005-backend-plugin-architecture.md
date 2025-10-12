@@ -1,10 +1,15 @@
 ---
-id: adr-005
-title: "ADR-005: Backend Plugin Architecture"
-status: Accepted
 date: 2025-10-05
 deciders: Core Team
-tags: ['backend', 'architecture', 'dx']
+doc_uuid: bf12f7ac-e807-47e2-9940-f325b7283b1f
+id: adr-005
+project_id: prism-data-layer
+status: Accepted
+tags:
+- backend
+- architecture
+- dx
+title: 'ADR-005: Backend Plugin Architecture'
 ---
 
 ## Context

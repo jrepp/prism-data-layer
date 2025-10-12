@@ -1,10 +1,16 @@
 ---
-id: memo-001
-title: "MEMO-001: WAL Full Transaction Flow with Authorization and Session Management"
 author: Platform Team
 created: 2025-10-08
+doc_uuid: 18d55bf4-c458-4725-9213-aed7d2064e14
+id: memo-001
+project_id: prism-data-layer
+tags:
+- architecture
+- wal
+- security
+- session-management
+title: 'MEMO-001: WAL Full Transaction Flow with Authorization and Session Management'
 updated: 2025-10-08
-tags: [architecture, wal, security, session-management]
 ---
 
 # WAL Full Transaction Flow

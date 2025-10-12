@@ -1,10 +1,16 @@
 ---
-id: adr-018
-title: "ADR-018: Rust Error Handling Strategy"
-status: Accepted
 date: 2025-10-07
 deciders: Core Team
-tags: ['rust', 'error-handling', 'reliability', 'observability']
+doc_uuid: 29154172-3d41-4c9e-aef8-11a5dc56f602
+id: adr-018
+project_id: prism-data-layer
+status: Accepted
+tags:
+- rust
+- error-handling
+- reliability
+- observability
+title: 'ADR-018: Rust Error Handling Strategy'
 ---
 
 ## Context

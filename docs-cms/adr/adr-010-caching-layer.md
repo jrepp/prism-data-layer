@@ -1,10 +1,14 @@
 ---
-id: adr-010
-title: "ADR-010: Caching Layer Design"
-status: Accepted
 date: 2025-10-05
 deciders: Core Team
-tags: ['performance', 'architecture']
+doc_uuid: 5da63362-c053-45d3-a554-b1699120e310
+id: adr-010
+project_id: prism-data-layer
+status: Accepted
+tags:
+- performance
+- architecture
+title: 'ADR-010: Caching Layer Design'
 ---
 
 ## Context

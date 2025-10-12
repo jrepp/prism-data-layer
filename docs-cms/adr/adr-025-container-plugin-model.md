@@ -1,10 +1,17 @@
 ---
-id: adr-025
-title: "ADR-025: Container Plugin Model"
-status: Accepted
 date: 2025-10-07
 deciders: Core Team
-tags: ['architecture', 'deployment', 'containers', 'plugins', 'backends']
+doc_uuid: 7985b95a-b734-4919-9ba5-9ed44d852e61
+id: adr-025
+project_id: prism-data-layer
+status: Accepted
+tags:
+- architecture
+- deployment
+- containers
+- plugins
+- backends
+title: 'ADR-025: Container Plugin Model'
 ---
 
 ## Context

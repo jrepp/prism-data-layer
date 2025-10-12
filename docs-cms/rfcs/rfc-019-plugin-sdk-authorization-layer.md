@@ -1,11 +1,22 @@
 ---
-id: rfc-019
-title: "RFC-019: Pattern SDK Authorization Layer - Token Validation and Policy Enforcement"
-status: Proposed
 author: Platform Team
 created: 2025-10-09
+doc_uuid: 8db689ab-37a4-42b5-8c47-8a9703e52f83
+id: rfc-019
+project_id: prism-data-layer
+status: Proposed
+tags:
+- authorization
+- pattern
+- sdk
+- security
+- tokens
+- policy
+- go
+- vault
+- credentials
+title: 'RFC-019: Pattern SDK Authorization Layer - Token Validation and Policy Enforcement'
 updated: 2025-10-11
-tags: [authorization, pattern, sdk, security, tokens, policy, go, vault, credentials]
 ---
 
 # RFC-019: Pattern SDK Authorization Layer

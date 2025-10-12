@@ -125,6 +125,16 @@ const config: Config = {
         editUrl: 'https://github.com/jrepp/prism-data-layer/tree/main/docs-cms/',
       },
     ],
+    [
+      '@docusaurus/plugin-content-docs',
+      {
+        id: 'prds',
+        path: '../docs-cms/prds',
+        routeBasePath: 'prds',
+        sidebarPath: './sidebars-prds.ts',
+        editUrl: 'https://github.com/jrepp/prism-data-layer/tree/main/docs-cms/',
+      },
+    ],
   ],
 
   themes: [

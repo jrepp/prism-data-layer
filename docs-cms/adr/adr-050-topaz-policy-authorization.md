@@ -1,10 +1,19 @@
 ---
-id: adr-050
-title: "ADR-050: Topaz for Policy-Based Authorization"
-status: Accepted
 date: 2025-10-09
 deciders: Core Team
-tags: [authorization, security, policy, topaz, openpolicyagent, rbac, abac]
+doc_uuid: 5077b7fe-3350-4dc8-837b-17fa706c0798
+id: adr-050
+project_id: prism-data-layer
+status: Accepted
+tags:
+- authorization
+- security
+- policy
+- topaz
+- openpolicyagent
+- rbac
+- abac
+title: 'ADR-050: Topaz for Policy-Based Authorization'
 ---
 
 # ADR-050: Topaz for Policy-Based Authorization

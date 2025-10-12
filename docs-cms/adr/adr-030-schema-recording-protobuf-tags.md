@@ -1,10 +1,17 @@
 ---
-id: adr-030
-title: "ADR-030: Schema Recording with Protobuf Tagging"
-status: Accepted
 date: 2025-10-08
 deciders: Core Team
-tags: ['protobuf', 'schema', 'versioning', 'evolution', 'registry']
+doc_uuid: 544db4ef-3d6f-4ca3-b651-97241748b9fd
+id: adr-030
+project_id: prism-data-layer
+status: Accepted
+tags:
+- protobuf
+- schema
+- versioning
+- evolution
+- registry
+title: 'ADR-030: Schema Recording with Protobuf Tagging'
 ---
 
 ## Context

@@ -1,10 +1,16 @@
 ---
-id: adr-023
-title: "ADR-023: gRPC-First Interface Design"
-status: Accepted
 date: 2025-10-07
 deciders: Core Team
-tags: ['architecture', 'grpc', 'performance', 'api-design']
+doc_uuid: c58a9d5a-4fee-45d4-9825-51207d3de59b
+id: adr-023
+project_id: prism-data-layer
+status: Accepted
+tags:
+- architecture
+- grpc
+- performance
+- api-design
+title: 'ADR-023: gRPC-First Interface Design'
 ---
 
 ## Context

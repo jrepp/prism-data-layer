@@ -1,11 +1,18 @@
 ---
-title: "Product Requirements Document - Prism Data Access Layer"
 author: Core Team
 created: 2025-10-05
-updated: 2025-10-12
-tags: [prd, requirements, vision, architecture, roadmap]
+doc_uuid: 2e464d4c-1dd1-4149-9655-bca0f2d9b7e6
 id: prd
+project_id: prism-data-layer
 sidebar_position: 1
+tags:
+- prd
+- requirements
+- vision
+- architecture
+- roadmap
+title: Product Requirements Document - Prism Data Access Layer
+updated: 2025-10-12
 ---
 
 # Prism Product Requirements Document

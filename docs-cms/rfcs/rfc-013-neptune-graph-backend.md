@@ -1,11 +1,19 @@
 ---
-id: rfc-013
-title: "RFC-013: Neptune Graph Backend Implementation"
-status: Draft
 author: Platform Team
 created: 2025-10-09
+doc_uuid: 8faa29ea-cf12-4b91-91f8-a586c79bd642
+id: rfc-013
+project_id: prism-data-layer
+status: Draft
+tags:
+- backend
+- graph
+- neptune
+- aws
+- plugin
+- implementation
+title: 'RFC-013: Neptune Graph Backend Implementation'
 updated: 2025-10-09
-tags: [backend, graph, neptune, aws, plugin, implementation]
 ---
 
 # RFC-013: Neptune Graph Backend Implementation

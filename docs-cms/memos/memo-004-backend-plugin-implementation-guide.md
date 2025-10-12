@@ -1,10 +1,17 @@
 ---
-id: memo-004
-title: "MEMO-004: Backend Plugin Implementation Guide"
 author: Platform Team
 created: 2025-10-09
+doc_uuid: 3496c8e2-219b-4db2-9a9a-bdee851e4c3c
+id: memo-004
+project_id: prism-data-layer
+tags:
+- backends
+- plugins
+- implementation
+- testing
+- go
+title: 'MEMO-004: Backend Plugin Implementation Guide'
 updated: 2025-10-09
-tags: [backends, plugins, implementation, testing, go]
 ---
 
 # MEMO-004: Backend Plugin Implementation Guide

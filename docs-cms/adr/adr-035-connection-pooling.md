@@ -1,10 +1,16 @@
 ---
-id: adr-035
-title: "ADR-035: Database Connection Pooling vs Direct Connections"
-status: Proposed
 date: 2025-10-08
 deciders: System
-tags: ['performance', 'backend', 'reliability', 'architecture']
+doc_uuid: 0c2760b2-c974-4714-bf7f-07bc0e66c8fe
+id: adr-035
+project_id: prism-data-layer
+status: Proposed
+tags:
+- performance
+- backend
+- reliability
+- architecture
+title: 'ADR-035: Database Connection Pooling vs Direct Connections'
 ---
 
 ## Context

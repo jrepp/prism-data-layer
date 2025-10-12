@@ -1,10 +1,16 @@
 ---
-id: adr-015
-title: "ADR-015: Go Testing Strategy"
-status: Accepted
 date: 2025-10-07
 deciders: Core Team
-tags: ['go', 'testing', 'quality', 'ci-cd']
+doc_uuid: 28964324-a4ad-42df-af2d-b9d6e808fde5
+id: adr-015
+project_id: prism-data-layer
+status: Accepted
+tags:
+- go
+- testing
+- quality
+- ci-cd
+title: 'ADR-015: Go Testing Strategy'
 ---
 
 ## Context

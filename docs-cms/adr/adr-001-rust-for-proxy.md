@@ -1,10 +1,15 @@
 ---
-id: adr-001
-title: "ADR-001: Rust for the Proxy Implementation"
-status: Accepted
 date: 2025-10-05
 deciders: Core Team
-tags: ['proxy', 'performance', 'languages']
+doc_uuid: 4850994b-cddf-4e7e-a04e-3187d9e72e0c
+id: adr-001
+project_id: prism-data-layer
+status: Accepted
+tags:
+- proxy
+- performance
+- languages
+title: 'ADR-001: Rust for the Proxy Implementation'
 ---
 
 ## Context

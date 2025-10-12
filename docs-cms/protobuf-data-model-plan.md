@@ -1,7 +1,12 @@
 ---
-title: Prism Protobuf Data Model Plan
 date: 2025-10-05
-tags: [protobuf, planning, data-model]
+doc_uuid: 95c2ff27-df34-40f6-ad97-e653782fd2c2
+project_id: prism-data-layer
+tags:
+- protobuf
+- planning
+- data-model
+title: Prism Protobuf Data Model Plan
 ---
 
 This document outlines the complete protobuf structure for Prism, organized by module and abstraction.

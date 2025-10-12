@@ -1,0 +1,226 @@
+# PostgreSQL Backend Interface Implementation Registry
+# Based on MEMO-006: Backend Interface Decomposition and Schema Registry
+# This file declares which Prism interfaces the PostgreSQL backend implements
+
+name: postgres
+version: 0.1.0
+description: PostgreSQL backend plugin providing relational data storage with ACID guarantees
+
+# Metadata
+metadata:
+  author: Prism Data Access Team
+  created: 2025-10-12
+  updated: 2025-10-12
+  maturity: alpha
+  test_coverage: 100%
+
+# Connection requirements
+connection:
+  type: connection_string
+  required_fields:
+    - connection_string  # PostgreSQL connection string (postgresql://user:pass@host:port/db)
+  optional_fields:
+    - pool_size          # Connection pool size (default: 10)
+    - vault_enabled      # Enable Vault-managed credentials (default: false)
+    - vault_path         # Vault path for credentials
+    - default_timeout_seconds  # Query timeout (default: 30)
+
+# Interface implementations (MEMO-006)
+interfaces:
+  # KeyValue pattern (rank: 4/8 interfaces, score: 90/100)
+  keyvalue:
+    - interface: keyvalue_basic
+      version: 1.0.0
+      status: implemented
+      test_coverage: 100%
+      operations:
+        - Set(key, value, ttl)
+        - Get(key) -> (value, found, error)
+        - Delete(key) -> error
+        - Exists(key) -> (bool, error)
+      notes: |
+        - TTL parameter is accepted but not enforced (PostgreSQL has no native TTL)
+        - All operations use 'default' namespace
+        - Uses UPSERT (INSERT...ON CONFLICT) for Set operations
+        - ACID guarantees provided by PostgreSQL transactions
+
+    - interface: keyvalue_scan
+      version: 1.0.0
+      status: implemented
+      test_coverage: 100%
+      operations:
+        - Scan(prefix, limit) -> ([]keys, error)
+        - ScanWithValues(prefix, limit) -> (map[key]value, error)
+      notes: |
+        - Uses PostgreSQL LIKE with text_pattern_ops index for efficient prefix matching
+        - Returns results ordered by key
+        - Limit parameter is optional (0 = no limit)
+
+    - interface: keyvalue_transactional
+      version: 1.0.0
+      status: planned
+      notes: |
+        - PostgreSQL provides full ACID transaction support
+        - Implementation pending
+
+    - interface: keyvalue_batch
+      version: 1.0.0
+      status: planned
+      notes: |
+        - Can leverage PostgreSQL COPY or multi-row INSERT for batch operations
+        - Implementation pending
+
+  # Queue pattern (rank: 4/5 interfaces, score: 85/100)
+  queue:
+    - interface: queue_basic
+      version: 1.0.0
+      status: planned
+      notes: |
+        - Will use SELECT FOR UPDATE SKIP LOCKED for atomic dequeue
+        - Implementation pending
+
+    - interface: queue_visibility
+      version: 1.0.0
+      status: planned
+      notes: |
+        - visible_at timestamp field for visibility timeout
+        - Implementation pending
+
+    - interface: queue_dead_letter
+      version: 1.0.0
+      status: planned
+      notes: |
+        - Separate dead_letter_queue table for failed messages
+        - Implementation pending
+
+    - interface: queue_delayed
+      version: 1.0.0
+      status: planned
+      notes: |
+        - visible_at timestamp supports delayed message delivery
+        - Implementation pending
+
+  # Document pattern (rank: 3/3 interfaces, score: 85/100 - requires JSONB)
+  document:
+    - interface: document_basic
+      version: 1.0.0
+      status: planned
+      notes: |
+        - Uses PostgreSQL JSONB for document storage
+        - Full JSON query support
+        - Implementation pending
+
+    - interface: document_query
+      version: 1.0.0
+      status: planned
+      notes: |
+        - Leverages PostgreSQL JSONB operators (@>, ?, ?|, ?&)
+        - GIN index for efficient queries
+        - Implementation pending
+
+    - interface: document_indexing
+      version: 1.0.0
+      status: planned
+      notes: |
+        - GIN and GiST indexes on JSONB columns
+        - Expression indexes for nested fields
+        - Implementation pending
+
+  # TimeSeries pattern (rank: 3/4 interfaces, score: 70/100 - TimescaleDB recommended)
+  timeseries:
+    - interface: timeseries_basic
+      version: 1.0.0
+      status: planned
+      notes: |
+        - Native PostgreSQL supports basic timeseries
+        - TimescaleDB extension strongly recommended for production
+        - Implementation pending
+
+    - interface: timeseries_aggregation
+      version: 1.0.0
+      status: planned
+      notes: |
+        - PostgreSQL window functions for aggregation
+        - TimescaleDB continuous aggregates recommended
+        - Implementation pending
+
+    - interface: timeseries_retention
+      version: 1.0.0
+      status: planned
+      notes: |
+        - Partition-based retention policies
+        - TimescaleDB retention policies recommended
+        - Implementation pending
+
+  # Graph pattern (rank: 2/4 interfaces, score: 55/100 - recursive CTEs)
+  graph:
+    - interface: graph_basic
+      version: 1.0.0
+      status: planned
+      notes: |
+        - Nodes and edges stored in separate tables
+        - JSONB for properties
+        - Implementation pending
+
+    - interface: graph_traversal
+      version: 1.0.0
+      status: planned
+      notes: |
+        - PostgreSQL recursive CTEs for graph traversal
+        - Limited to tree-like structures (no cycle detection)
+        - Neptune recommended for complex graph workloads
+        - Implementation pending
+
+# Performance characteristics
+performance:
+  latency:
+    p50: <5ms
+    p99: <20ms
+    p999: <50ms
+  throughput:
+    reads: ~10000 ops/sec (connection pool of 10)
+    writes: ~5000 ops/sec (ACID overhead)
+  scalability:
+    vertical: excellent (add CPU/RAM)
+    horizontal: limited (read replicas only, no automatic sharding)
+
+# Deployment
+deployment:
+  container_image: postgres:16-alpine
+  binary: patterns/postgres/cmd/postgres/main
+  config_template: patterns/postgres/config.yaml
+  health_check: /health
+  readiness_check: database ping
+  resource_requirements:
+    cpu: 1 core minimum
+    memory: 512MB minimum
+    storage: depends on workload
+
+# Testing
+testing:
+  acceptance_tests: tests/acceptance/interfaces/keyvalue_basic_test.go
+  test_framework: testcontainers-go
+  test_image: postgres:16-alpine
+  test_coverage_command: |
+    cd patterns/postgres && go test -coverprofile=coverage.out ./...
+    go tool cover -func=coverage.out | grep total
+
+# Recommendations
+recommendations:
+  best_for:
+    - Relational data with strong consistency requirements
+    - ACID transaction support needed
+    - Structured data with SQL queries
+    - Small to medium datasets (<100GB per table)
+  not_recommended_for:
+    - High-throughput writes (>50k writes/sec)
+    - Horizontal scaling requirements
+    - Graph traversal (use Neptune instead)
+    - Time-series workloads >100M points (use TimescaleDB or ClickHouse)
+
+# References
+references:
+  - MEMO-006: Backend Interface Decomposition and Schema Registry
+  - RFC-015: Plugin Acceptance Test Framework
+  - ADR-005: KeyValue Backend Interface
+  - Implementation: patterns/postgres/postgres.go

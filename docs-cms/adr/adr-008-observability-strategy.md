@@ -1,10 +1,15 @@
 ---
-id: adr-008
-title: "ADR-008: Observability Strategy"
-status: Accepted
 date: 2025-10-05
 deciders: Core Team
-tags: ['operations', 'performance', 'reliability']
+doc_uuid: 7bb15ce7-f0c5-4fef-ac53-a5d253411068
+id: adr-008
+project_id: prism-data-layer
+status: Accepted
+tags:
+- operations
+- performance
+- reliability
+title: 'ADR-008: Observability Strategy'
 ---
 
 ## Context

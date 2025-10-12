@@ -1,10 +1,18 @@
 ---
-id: memo-006
-title: "MEMO-006: Backend Interface Decomposition and Schema Registry"
 author: Platform Team
 created: 2025-10-09
+doc_uuid: 588391f4-c72e-48d1-a1fb-14be1fa824ae
+id: memo-006
+project_id: prism-data-layer
+tags:
+- architecture
+- backend
+- patterns
+- schemas
+- registry
+- capabilities
+title: 'MEMO-006: Backend Interface Decomposition and Schema Registry'
 updated: 2025-10-09
-tags: [architecture, backend, patterns, schemas, registry, capabilities]
 ---
 
 # MEMO-006: Backend Interface Decomposition and Schema Registry

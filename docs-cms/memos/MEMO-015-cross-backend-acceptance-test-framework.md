@@ -1,10 +1,19 @@
 ---
-title: "MEMO-015: Cross-Backend Acceptance Test Framework"
 author: System
 created: 2025-10-12
-updated: 2025-10-12
-tags: [testing, acceptance-tests, table-driven, backends, postgres, redis, memstore]
+doc_uuid: 629ebb92-fbaa-49e2-911e-6b94d5a67bc5
 id: memo-015
+project_id: prism-data-layer
+tags:
+- testing
+- acceptance-tests
+- table-driven
+- backends
+- postgres
+- redis
+- memstore
+title: 'MEMO-015: Cross-Backend Acceptance Test Framework'
+updated: 2025-10-12
 ---
 
 # Cross-Backend Acceptance Test Framework

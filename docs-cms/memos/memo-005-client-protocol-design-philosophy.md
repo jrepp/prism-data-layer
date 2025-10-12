@@ -1,10 +1,17 @@
 ---
-id: memo-005
-title: "MEMO-005: Client Protocol Design Philosophy - Composition vs Use-Case Specificity"
 author: Platform Team
 created: 2025-10-09
+doc_uuid: 30d6950c-8e74-4fcb-a4a5-873a1951b771
+id: memo-005
+project_id: prism-data-layer
+tags:
+- api-design
+- patterns
+- developer-experience
+- architecture
+- evolution
+title: 'MEMO-005: Client Protocol Design Philosophy - Composition vs Use-Case Specificity'
 updated: 2025-10-09
-tags: [api-design, patterns, developer-experience, architecture, evolution]
 ---
 
 # MEMO-005: Client Protocol Design Philosophy

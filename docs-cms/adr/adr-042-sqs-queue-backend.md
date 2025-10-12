@@ -1,10 +1,18 @@
 ---
-id: adr-042
-title: "ADR-042: AWS SQS Queue Backend Plugin"
-status: Proposed
 date: 2025-10-09
 deciders: Platform Team
-tags: [backend, queue, sqs, aws, plugin, messaging]
+doc_uuid: 4b6223b5-4cb2-4523-8d66-afbdc2ed0b04
+id: adr-042
+project_id: prism-data-layer
+status: Proposed
+tags:
+- backend
+- queue
+- sqs
+- aws
+- plugin
+- messaging
+title: 'ADR-042: AWS SQS Queue Backend Plugin'
 ---
 
 ## Context

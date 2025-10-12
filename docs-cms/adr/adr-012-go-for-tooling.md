@@ -1,10 +1,16 @@
 ---
-id: adr-012
-title: "ADR-012: Go for Tooling and CLI Utilities"
-status: Accepted
 date: 2025-10-07
 deciders: Core Team
-tags: ['language', 'tooling', 'cli', 'developer-experience']
+doc_uuid: 4dab61b4-9416-44f9-ab93-36ebc2256e12
+id: adr-012
+project_id: prism-data-layer
+status: Accepted
+tags:
+- language
+- tooling
+- cli
+- developer-experience
+title: 'ADR-012: Go for Tooling and CLI Utilities'
 ---
 
 ## Context

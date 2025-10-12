@@ -1,10 +1,18 @@
 ---
-id: adr-049
-title: "ADR-049: Podman and Container Optimization for Instant Testing"
-status: Accepted
 date: 2025-10-09
 deciders: Platform Team
-tags: [containers, podman, testing, performance, dx, macos]
+doc_uuid: 96198d1b-0f98-49f9-8487-e22667179e24
+id: adr-049
+project_id: prism-data-layer
+status: Accepted
+tags:
+- containers
+- podman
+- testing
+- performance
+- dx
+- macos
+title: 'ADR-049: Podman and Container Optimization for Instant Testing'
 ---
 
 # ADR-049: Podman and Container Optimization for Instant Testing

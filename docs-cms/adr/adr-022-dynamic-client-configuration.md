@@ -1,10 +1,16 @@
 ---
-id: adr-022
-title: "ADR-022: Dynamic Client Configuration System"
-status: Accepted
 date: 2025-10-07
 deciders: Core Team
-tags: ['architecture', 'configuration', 'client-server', 'protobuf']
+doc_uuid: 82889da2-9353-465d-89a0-a98af285402b
+id: adr-022
+project_id: prism-data-layer
+status: Accepted
+tags:
+- architecture
+- configuration
+- client-server
+- protobuf
+title: 'ADR-022: Dynamic Client Configuration System'
 ---
 
 ## Context

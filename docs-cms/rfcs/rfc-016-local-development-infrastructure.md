@@ -1,11 +1,20 @@
 ---
-id: rfc-016
-title: "RFC-016: Local Development Infrastructure"
-status: Draft
 author: Platform Team
 created: 2025-10-09
+doc_uuid: a632404a-79cb-4bc9-9874-db98c64bbdc3
+id: rfc-016
+project_id: prism-data-layer
+status: Draft
+tags:
+- local-development
+- observability
+- authentication
+- tooling
+- dex
+- signoz
+- developer-experience
+title: 'RFC-016: Local Development Infrastructure'
 updated: 2025-10-09
-tags: [local-development, observability, authentication, tooling, dex, signoz, developer-experience]
 ---
 
 # RFC-016: Local Development Infrastructure

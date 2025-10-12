@@ -1,0 +1,3 @@
+# github.com/jrepp/prism-data-layer/tests/acceptance/interfaces
+found packages interfaces (concurrency_test.go) and interfaces_test (test_report.go) in /Users/jrepp/dev/data-access/tests/acceptance/interfaces
+FAIL	github.com/jrepp/prism-data-layer/tests/acceptance/interfaces [setup failed]

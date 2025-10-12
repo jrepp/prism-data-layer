@@ -1,10 +1,17 @@
 ---
-id: adr-021
-title: "ADR-021: Rust Structured Logging with Tracing"
-status: Accepted
 date: 2025-10-07
 deciders: Core Team
-tags: ['rust', 'logging', 'observability', 'tracing', 'debugging']
+doc_uuid: 4cc3d02b-4023-431c-9dea-84d2d1c3e7c0
+id: adr-021
+project_id: prism-data-layer
+status: Accepted
+tags:
+- rust
+- logging
+- observability
+- tracing
+- debugging
+title: 'ADR-021: Rust Structured Logging with Tracing'
 ---
 
 ## Context

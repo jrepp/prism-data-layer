@@ -1,10 +1,17 @@
 ---
-id: memo-011
-title: "MEMO-011: Distributed Error Handling Best Practices"
 author: Platform Team
 created: 2025-10-10
+doc_uuid: dc5657bb-d97b-43c6-a424-0bc2ce52f5ac
+id: memo-011
+project_id: prism-data-layer
+tags:
+- errors
+- observability
+- distributed-systems
+- reliability
+- best-practices
+title: 'MEMO-011: Distributed Error Handling Best Practices'
 updated: 2025-10-10
-tags: [errors, observability, distributed-systems, reliability, best-practices]
 ---
 
 # MEMO-011: Distributed Error Handling Best Practices
@@ -680,4 +687,3 @@ func recordError(err *Error) {
 ## Revision History
 
 - 2025-10-10: Initial draft with comprehensive error proto design
-

@@ -1,10 +1,17 @@
 ---
-id: adr-043
-title: "ADR-043: Plugin Capability Discovery System"
-status: Accepted
 date: 2025-10-09
 deciders: Platform Team
-tags: [architecture, backend, plugin, protobuf, api-design]
+doc_uuid: 62421fcd-75b9-413a-ba59-a53387f52666
+id: adr-043
+project_id: prism-data-layer
+status: Accepted
+tags:
+- architecture
+- backend
+- plugin
+- protobuf
+- api-design
+title: 'ADR-043: Plugin Capability Discovery System'
 ---
 
 ## Context
@@ -456,4 +463,3 @@ prismctl plugin capabilities postgres neptune redis
 ## Revision History
 
 - 2025-10-09: Initial ADR for plugin capability discovery
-

@@ -1,10 +1,17 @@
 ---
-id: adr-034
-title: "ADR-034: Product/Feature Sharding Strategy"
-status: Proposed
 date: 2025-10-08
 deciders: System
-tags: ['architecture', 'deployment', 'reliability', 'operations', 'performance']
+doc_uuid: 9a33cd32-237a-421f-9646-977f95d91c82
+id: adr-034
+project_id: prism-data-layer
+status: Proposed
+tags:
+- architecture
+- deployment
+- reliability
+- operations
+- performance
+title: 'ADR-034: Product/Feature Sharding Strategy'
 ---
 
 ## Context

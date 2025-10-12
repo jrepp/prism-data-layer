@@ -1,11 +1,17 @@
 ---
-title: "RFC-028: prism-probe - CLI Client for Testing and Debugging"
-status: Proposed
 author: Claude
 created: 2025-10-11
-updated: 2025-10-11
-tags: [cli, testing, debugging, client]
+doc_uuid: b3ce4713-fb50-4820-bd57-519b44551bc2
 id: rfc-028
+project_id: prism-data-layer
+status: Proposed
+tags:
+- cli
+- testing
+- debugging
+- client
+title: 'RFC-028: prism-probe - CLI Client for Testing and Debugging'
+updated: 2025-10-11
 ---
 
 # RFC-028: prism-probe - CLI Client for Testing and Debugging

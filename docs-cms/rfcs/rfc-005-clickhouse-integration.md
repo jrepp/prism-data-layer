@@ -1,11 +1,13 @@
 ---
-id: rfc-005
-title: "RFC-005: ClickHouse Integration for Time Series Analytics"
-status: Proposed
 author: Core Team
 created: 2025-10-08
-updated: 2025-10-08
+doc_uuid: a54be3cc-e916-4748-8a8b-20fdabf89a94
+id: rfc-005
+project_id: prism-data-layer
 related: RFC-001, RFC-002, RFC-004
+status: Proposed
+title: 'RFC-005: ClickHouse Integration for Time Series Analytics'
+updated: 2025-10-08
 ---
 
 ## Abstract

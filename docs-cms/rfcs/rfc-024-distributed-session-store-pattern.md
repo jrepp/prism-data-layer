@@ -1,11 +1,19 @@
 ---
-id: rfc-024
-title: "RFC-024: Distributed Session Store Pattern - Cross-Region Session Management"
-status: Proposed
 author: Platform Team
 created: 2025-10-09
+doc_uuid: 67abcf27-6bc9-4c63-abdf-3c30b996fba6
+id: rfc-024
+project_id: prism-data-layer
+status: Proposed
+tags:
+- session
+- distributed
+- cross-region
+- replication
+- patterns
+- architecture
+title: 'RFC-024: Distributed Session Store Pattern - Cross-Region Session Management'
 updated: 2025-10-09
-tags: [session, distributed, cross-region, replication, patterns, architecture]
 ---
 
 # RFC-024: Distributed Session Store Pattern

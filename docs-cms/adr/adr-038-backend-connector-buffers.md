@@ -1,10 +1,17 @@
 ---
-id: adr-038
-title: "ADR-038: Backend Connector Buffer Architecture"
-status: Proposed
 date: 2025-10-08
 deciders: System
-tags: ['architecture', 'performance', 'backend', 'isolation', 'scalability']
+doc_uuid: 43c93d9f-02f6-4391-873e-148c1d775fcd
+id: adr-038
+project_id: prism-data-layer
+status: Proposed
+tags:
+- architecture
+- performance
+- backend
+- isolation
+- scalability
+title: 'ADR-038: Backend Connector Buffer Architecture'
 ---
 
 ## Context

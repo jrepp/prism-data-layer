@@ -1,11 +1,19 @@
 ---
-id: rfc-025
-title: "RFC-025: Pattern SDK Architecture - Backend Drivers and Concurrency Primitives"
-status: Proposed
 author: Platform Team
 created: 2025-10-09
+doc_uuid: 7c2e9e58-5e31-4245-a18e-d3858ee571cb
+id: rfc-025
+project_id: prism-data-layer
+status: Proposed
+tags:
+- patterns
+- sdk
+- architecture
+- concurrency
+- drivers
+- go
+title: 'RFC-025: Pattern SDK Architecture - Backend Drivers and Concurrency Primitives'
 updated: 2025-10-09
-tags: [patterns, sdk, architecture, concurrency, drivers, go]
 ---
 
 # RFC-025: Pattern SDK Architecture

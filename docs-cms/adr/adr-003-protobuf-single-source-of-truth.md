@@ -1,10 +1,16 @@
 ---
-id: adr-003
-title: "ADR-003: Protobuf as Single Source of Truth"
-status: Accepted
 date: 2025-10-05
 deciders: Core Team
-tags: ['architecture', 'codegen', 'dx', 'dry']
+doc_uuid: 24c6dbaf-8d7a-4029-a38f-f7f2522de45b
+id: adr-003
+project_id: prism-data-layer
+status: Accepted
+tags:
+- architecture
+- codegen
+- dx
+- dry
+title: 'ADR-003: Protobuf as Single Source of Truth'
 ---
 
 ## Context

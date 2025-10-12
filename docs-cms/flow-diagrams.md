@@ -1,6 +1,11 @@
 ---
+doc_uuid: b2dcd366-f05b-4d6d-b42d-65215a30c909
+project_id: prism-data-layer
+tags:
+- diagrams
+- architecture
+- workflows
 title: Prism Data Access Layer - Flow Diagrams
-tags: [diagrams, architecture, workflows]
 ---
 
 This document contains sequence and architecture diagrams for Prism's key workflows.

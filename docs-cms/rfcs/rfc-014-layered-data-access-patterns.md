@@ -1,11 +1,18 @@
 ---
-id: rfc-014
-title: "RFC-014: Layered Data Access Patterns"
-status: Proposed
 author: Platform Team
 created: 2025-10-09
+doc_uuid: b1c3f1d6-8a94-4f78-a954-67b7da3058c3
+id: rfc-014
+project_id: prism-data-layer
+status: Proposed
+tags:
+- architecture
+- patterns
+- composition
+- data-access
+- layering
+title: 'RFC-014: Layered Data Access Patterns'
 updated: 2025-10-09
-tags: [architecture, patterns, composition, data-access, layering]
 ---
 
 ## Abstract

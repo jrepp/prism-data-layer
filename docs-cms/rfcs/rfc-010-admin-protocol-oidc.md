@@ -1,11 +1,18 @@
 ---
-id: rfc-010
-title: "RFC-010: Admin Protocol with OIDC Authentication"
-status: Proposed
 author: Platform Team
 created: 2025-10-09
+doc_uuid: 24c10e4b-e663-47a9-9f4b-c8afff40f8ef
+id: rfc-010
+project_id: prism-data-layer
+status: Proposed
+tags:
+- admin
+- oidc
+- authentication
+- grpc
+- protocol
+title: 'RFC-010: Admin Protocol with OIDC Authentication'
 updated: 2025-10-09
-tags: [admin, oidc, authentication, grpc, protocol]
 ---
 
 ## Abstract

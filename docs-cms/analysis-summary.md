@@ -1,7 +1,12 @@
 ---
-title: Prism Analysis Summary
 date: 2025-10-05
-tags: [analysis, netflix, comparison]
+doc_uuid: fb6ec2f9-7b8f-483d-bcf7-15b2b7f496e2
+project_id: prism-data-layer
+tags:
+- analysis
+- netflix
+- comparison
+title: Prism Analysis Summary
 ---
 
 ## What is Prism?

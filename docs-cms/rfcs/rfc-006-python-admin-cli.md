@@ -1,12 +1,13 @@
 ---
-id: rfc-006
-title: "RFC-006: Admin CLI (prismctl)"
-sidebar_label: RFC-006 Admin CLI
-status: Superseded
 author: System
 created: 2025-10-08
+doc_uuid: 51c75a8b-c635-49f2-9c4c-a078ef110d48
+id: rfc-006
+project_id: prism-data-layer
+sidebar_label: RFC-006 Admin CLI
+status: Superseded
+title: 'RFC-006: Admin CLI (prismctl)'
 ---
-
 
 # RFC-006: Admin CLI (prismctl)
 **Author**: System

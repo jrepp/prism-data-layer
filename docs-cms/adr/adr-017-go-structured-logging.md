@@ -1,10 +1,16 @@
 ---
-id: adr-017
-title: "ADR-017: Go Structured Logging with slog"
-status: Accepted
 date: 2025-10-07
 deciders: Core Team
-tags: ['go', 'logging', 'observability', 'debugging']
+doc_uuid: b2630de5-e8f1-47d7-a639-53edaa255cb7
+id: adr-017
+project_id: prism-data-layer
+status: Accepted
+tags:
+- go
+- logging
+- observability
+- debugging
+title: 'ADR-017: Go Structured Logging with slog'
 ---
 
 ## Context

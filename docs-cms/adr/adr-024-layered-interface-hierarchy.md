@@ -1,10 +1,16 @@
 ---
-id: adr-024
-title: "ADR-024: Layered Interface Hierarchy"
-status: Accepted
 date: 2025-10-07
 deciders: Core Team
-tags: ['architecture', 'api-design', 'interfaces', 'use-cases']
+doc_uuid: c6f2e76e-9f85-4ce5-b34c-26d4e030a2b8
+id: adr-024
+project_id: prism-data-layer
+status: Accepted
+tags:
+- architecture
+- api-design
+- interfaces
+- use-cases
+title: 'ADR-024: Layered Interface Hierarchy'
 ---
 
 ## Context

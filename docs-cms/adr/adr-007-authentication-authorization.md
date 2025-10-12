@@ -1,10 +1,14 @@
 ---
-id: adr-007
-title: "ADR-007: Authentication and Authorization"
-status: Accepted
 date: 2025-10-05
 deciders: Core Team
-tags: ['security', 'architecture']
+doc_uuid: d2613736-858c-4729-b57e-8d5c672bbb01
+id: adr-007
+project_id: prism-data-layer
+status: Accepted
+tags:
+- security
+- architecture
+title: 'ADR-007: Authentication and Authorization'
 ---
 
 ## Context

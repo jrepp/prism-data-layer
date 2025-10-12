@@ -1,11 +1,19 @@
 ---
-id: rfc-021
-title: "RFC-021: POC 1 - Three Minimal Plugins Implementation Plan"
-status: Proposed
 author: Platform Team
 created: 2025-10-09
+doc_uuid: 3492f803-68ea-4631-bcd9-7198d3294bff
+id: rfc-021
+project_id: prism-data-layer
+status: Proposed
+tags:
+- poc
+- implementation
+- plugins
+- walking-skeleton
+- tdd
+- code-coverage
+title: 'RFC-021: POC 1 - Three Minimal Plugins Implementation Plan'
 updated: 2025-10-09
-tags: [poc, implementation, plugins, walking-skeleton, tdd, code-coverage]
 ---
 
 # RFC-021: POC 1 - Three Minimal Plugins Implementation Plan

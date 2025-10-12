@@ -1,11 +1,17 @@
 ---
-id: adr-031
-title: "ADR-031: TTL Defaults for Client-Configured Data"
-sidebar_label: ADR-031 TTL Defaults
-status: Accepted
 date: 2025-10-08
 deciders: System Architecture Team
-tags: [data-lifecycle, cache, cleanup, operations]
+doc_uuid: d7f3ac9f-862f-4093-ace3-6dfdbe8a4157
+id: adr-031
+project_id: prism-data-layer
+sidebar_label: ADR-031 TTL Defaults
+status: Accepted
+tags:
+- data-lifecycle
+- cache
+- cleanup
+- operations
+title: 'ADR-031: TTL Defaults for Client-Configured Data'
 ---
 
 # ADR-031: TTL Defaults for Client-Configured Dynamic Data

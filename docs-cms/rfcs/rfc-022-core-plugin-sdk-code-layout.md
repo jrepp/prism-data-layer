@@ -1,11 +1,21 @@
 ---
-id: rfc-022
-title: "RFC-022: Core Pattern SDK - Build System and Physical Code Layout"
-status: Proposed
 author: Platform Team
 created: 2025-10-09
+doc_uuid: 9b178843-abee-469b-89b8-220119336c92
+id: rfc-022
+project_id: prism-data-layer
+status: Proposed
+tags:
+- pattern
+- sdk
+- go
+- library
+- architecture
+- code-layout
+- build-system
+- tooling
+title: 'RFC-022: Core Pattern SDK - Build System and Physical Code Layout'
 updated: 2025-10-09
-tags: [pattern, sdk, go, library, architecture, code-layout, build-system, tooling]
 ---
 
 # RFC-022: Core Pattern SDK - Build System and Physical Code Layout

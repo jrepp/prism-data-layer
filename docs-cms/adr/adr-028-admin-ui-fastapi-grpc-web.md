@@ -1,10 +1,17 @@
 ---
-id: adr-028
-title: "ADR-028: Admin UI with FastAPI and gRPC-Web"
-status: Accepted
 date: 2025-10-07
 deciders: Core Team
-tags: ['admin', 'ui', 'fastapi', 'grpc-web', 'frontend']
+doc_uuid: 182d6dc0-adca-47d8-a023-a1dd6c56ec0b
+id: adr-028
+project_id: prism-data-layer
+status: Accepted
+tags:
+- admin
+- ui
+- fastapi
+- grpc-web
+- frontend
+title: 'ADR-028: Admin UI with FastAPI and gRPC-Web'
 ---
 
 ## Context

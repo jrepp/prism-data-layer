@@ -1,10 +1,17 @@
 ---
-id: adr-046
-title: "ADR-046: Dex IDP for Local Identity Testing"
-status: Accepted
 date: 2025-10-09
 deciders: Platform Team
-tags: [authentication, oidc, testing, local-development, dex]
+doc_uuid: d9984f7d-1227-4a10-8675-f80c71e3adc2
+id: adr-046
+project_id: prism-data-layer
+status: Accepted
+tags:
+- authentication
+- oidc
+- testing
+- local-development
+- dex
+title: 'ADR-046: Dex IDP for Local Identity Testing'
 ---
 
 ## Context

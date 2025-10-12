@@ -41,6 +41,7 @@ from enum import Enum
 
 try:
     import frontmatter
+    import yaml
     from pydantic import ValidationError
     from tooling.doc_schemas import (
         ADRFrontmatter, RFCFrontmatter, MemoFrontmatter, GenericDocFrontmatter
@@ -73,11 +74,12 @@ class LinkType(Enum):
 class Document:
     """Represents a Prism documentation file"""
     file_path: Path
-    doc_type: str  # "adr", "rfc", or "doc"
+    doc_type: str  # "adr", "rfc", "memo", or "doc"
     title: str
     status: str = ""
     date: str = ""
     tags: List[str] = field(default_factory=list)
+    doc_id: str = ""  # Frontmatter id field (e.g., "adr-001", "rfc-015")
     links: List['Link'] = field(default_factory=list)
     errors: List[str] = field(default_factory=list)
 
@@ -111,6 +113,25 @@ class PrismDocValidator:
         self.file_to_doc: Dict[Path, Document] = {}
         self.all_links: List[Link] = []
         self.errors: List[str] = []
+
+        # Load project configuration
+        self.project_config = self._load_project_config()
+
+    def _load_project_config(self) -> dict:
+        """Load docs-project.yaml configuration"""
+        config_path = self.repo_root / "docs-cms" / "docs-project.yaml"
+        if config_path.exists():
+            try:
+                with open(config_path, 'r') as f:
+                    config = yaml.safe_load(f)
+                    self.log(f"✓ Loaded project config: {config['project']['id']}")
+                    return config
+            except Exception as e:
+                self.log(f"⚠️  Warning: Could not load project config: {e}")
+                return {}
+        else:
+            self.log(f"⚠️  Warning: Project config not found at {config_path}")
+            return {}
 
     def log(self, message: str, force: bool = False):
         """Log if verbose or forced"""
@@ -252,7 +273,8 @@ class PrismDocValidator:
                     title=post.metadata.get('title', 'Unknown'),
                     status=post.metadata.get('status', ''),
                     date=str(post.metadata.get('date', post.metadata.get('created', ''))),
-                    tags=post.metadata.get('tags', [])
+                    tags=post.metadata.get('tags', []),
+                    doc_id=post.metadata.get('id', '')
                 )
 
                 for error in e.errors():
@@ -278,7 +300,8 @@ class PrismDocValidator:
                 title=post.metadata.get('title', 'Unknown'),
                 status=post.metadata.get('status', ''),
                 date=str(post.metadata.get('date', post.metadata.get('created', ''))),
-                tags=post.metadata.get('tags', [])
+                tags=post.metadata.get('tags', []),
+                doc_id=post.metadata.get('id', '')
             )
 
             self.log(f"   ✓ {file_path.name}: {doc.title}")
@@ -838,6 +861,81 @@ class PrismDocValidator:
             except Exception as e:
                 doc.errors.append(f"Error checking formatting: {e}")
 
+    def check_ids(self):
+        """Validate document IDs for consistency and uniqueness"""
+        self.log("\n🆔 Checking document IDs...")
+
+        # Track IDs for uniqueness check
+        seen_ids: Dict[str, Path] = {}
+        id_errors = 0
+        id_warnings = 0
+
+        for doc in self.documents:
+            # Skip docs without doc_type (generic docs)
+            if doc.doc_type not in ["adr", "rfc", "memo"]:
+                continue
+
+            # Check if ID exists
+            if not doc.doc_id:
+                error = f"Missing 'id' field in frontmatter"
+                doc.errors.append(error)
+                self.log(f"   ✗ {doc.file_path.name}: {error}")
+                id_errors += 1
+                continue
+
+            # Extract expected ID from filename
+            filename = doc.file_path.name
+            # Match adr-XXX, rfc-XXX, or memo-XXX pattern (case insensitive)
+            filename_pattern = re.compile(r'^(adr|rfc|memo)-(\d{3})-', re.IGNORECASE)
+            match = filename_pattern.match(filename)
+
+            if not match:
+                # This shouldn't happen (caught in scan_documents), but check anyway
+                error = f"Filename doesn't match expected pattern ({doc.doc_type}-NNN-title.md)"
+                doc.errors.append(error)
+                self.log(f"   ✗ {filename}: {error}")
+                id_errors += 1
+                continue
+
+            prefix, num = match.groups()
+            expected_id = f"{doc.doc_type}-{num}"
+
+            # Check ID matches filename
+            if doc.doc_id != expected_id:
+                error = f"ID mismatch: frontmatter has '{doc.doc_id}' but filename suggests '{expected_id}'"
+                doc.errors.append(error)
+                self.log(f"   ✗ {filename}: {error}")
+                id_errors += 1
+
+            # Check ID matches title number
+            title_pattern = re.compile(r'^(ADR|RFC|MEMO)-(\d{3}):', re.IGNORECASE)
+            title_match = title_pattern.match(doc.title)
+            if title_match:
+                title_prefix, title_num = title_match.groups()
+                expected_title_id = f"{doc.doc_type}-{title_num}"
+
+                if doc.doc_id != expected_title_id:
+                    error = f"ID mismatch with title: frontmatter has '{doc.doc_id}' but title has '{title_prefix}-{title_num}'"
+                    doc.errors.append(error)
+                    self.log(f"   ✗ {filename}: {error}")
+                    id_errors += 1
+
+            # Check for duplicate IDs
+            if doc.doc_id in seen_ids:
+                other_doc = seen_ids[doc.doc_id]
+                error = f"Duplicate ID '{doc.doc_id}' - also used by {other_doc.name}"
+                doc.errors.append(error)
+                self.log(f"   ✗ {filename}: {error}")
+                id_errors += 1
+            else:
+                seen_ids[doc.doc_id] = doc.file_path
+                self.log(f"   ✓ {filename}: id='{doc.doc_id}'")
+
+        if id_errors == 0:
+            self.log(f"   ✓ All document IDs are valid and unique ({len(seen_ids)} IDs checked)")
+        else:
+            self.log(f"   ✗ Found {id_errors} ID validation error(s)")
+
     def generate_report(self) -> Tuple[bool, str]:
         """Generate validation report"""
         lines = []
@@ -940,8 +1038,9 @@ class PrismDocValidator:
         self.scan_documents()
         self.extract_links()
         self.validate_links()
-        self.check_code_blocks()  # NEW: Check code block balance and labeling
-        self.check_mdx_compilation()  # NEW: Check MDX compilation with @mdx-js/mdx
+        self.check_ids()  # NEW: Validate document IDs
+        self.check_code_blocks()  # Check code block balance and labeling
+        self.check_mdx_compilation()  # Check MDX compilation with @mdx-js/mdx
         self.check_mdx_compatibility()
         self.check_cross_plugin_links()
         self.check_formatting()

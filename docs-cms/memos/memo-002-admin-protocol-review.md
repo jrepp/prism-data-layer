@@ -1,10 +1,17 @@
 ---
-id: memo-002
-title: "MEMO-002: Admin Protocol Security Review and Improvements"
 author: Platform Team
 created: 2025-10-09
+doc_uuid: b10ecd0b-e765-4bd5-aa76-c063193e75f9
+id: memo-002
+project_id: prism-data-layer
+tags:
+- security
+- admin
+- protocol
+- grpc
+- improvements
+title: 'MEMO-002: Admin Protocol Security Review and Improvements'
 updated: 2025-10-09
-tags: [security, admin, protocol, grpc, improvements]
 ---
 
 # MEMO-002: Admin Protocol Security Review and Improvements

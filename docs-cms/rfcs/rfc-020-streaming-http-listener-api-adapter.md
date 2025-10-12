@@ -1,11 +1,21 @@
 ---
-id: rfc-020
-title: "RFC-020: Streaming HTTP Listener - API-Specific Adapter Pattern"
-status: Proposed
 author: Platform Team
 created: 2025-10-09
+doc_uuid: 8235a63b-dca0-4136-b4cf-fa426a391256
+id: rfc-020
+project_id: prism-data-layer
+status: Proposed
+tags:
+- http
+- adapter
+- mcp
+- a2a
+- streaming
+- sse
+- grpc
+- bridge
+title: 'RFC-020: Streaming HTTP Listener - API-Specific Adapter Pattern'
 updated: 2025-10-09
-tags: [http, adapter, mcp, a2a, streaming, sse, grpc, bridge]
 ---
 
 # RFC-020: Streaming HTTP Listener - API-Specific Adapter Pattern
@@ -1194,4 +1204,3 @@ namespaces:
 ## Revision History
 
 - 2025-10-09: Initial RFC proposing streaming HTTP listener architecture and MCP as decomposed backend
-

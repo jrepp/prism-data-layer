@@ -1,12 +1,19 @@
 ---
-id: rfc-015
-title: "RFC-015: Plugin Acceptance Test Framework (Interface-Based Testing)"
-status: Proposed
-date: 2025-10-09
 author: Platform Team
 created: 2025-10-09
+date: 2025-10-09
+doc_uuid: 33768d6a-c62f-41b1-ba6c-dd94831cba81
+id: rfc-015
+project_id: prism-data-layer
+status: Proposed
+tags:
+- testing
+- plugins
+- interfaces
+- acceptance
+- quality-assurance
+title: 'RFC-015: Plugin Acceptance Test Framework (Interface-Based Testing)'
 updated: 2025-10-09
-tags: [testing, plugins, interfaces, acceptance, quality-assurance]
 ---
 
 # RFC-015: Plugin Acceptance Test Framework (Interface-Based Testing)

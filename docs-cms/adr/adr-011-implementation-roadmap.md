@@ -1,10 +1,14 @@
 ---
-id: adr-011
-title: "ADR-011: Implementation Roadmap and Next Steps"
-status: Accepted
 date: 2025-10-05
 deciders: Core Team
-tags: ['architecture', 'planning']
+doc_uuid: dbf661b2-ebfc-493a-97d6-071f027c9f6e
+id: adr-011
+project_id: prism-data-layer
+status: Accepted
+tags:
+- architecture
+- planning
+title: 'ADR-011: Implementation Roadmap and Next Steps'
 ---
 
 ## Context

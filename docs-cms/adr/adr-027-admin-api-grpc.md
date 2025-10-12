@@ -1,10 +1,16 @@
 ---
-id: adr-027
-title: "ADR-027: Admin API via gRPC"
-status: Accepted
 date: 2025-10-07
 deciders: Core Team
-tags: ['admin', 'grpc', 'api-design', 'operations']
+doc_uuid: aabde021-46ad-4744-831d-062aa28fdaec
+id: adr-027
+project_id: prism-data-layer
+status: Accepted
+tags:
+- admin
+- grpc
+- api-design
+- operations
+title: 'ADR-027: Admin API via gRPC'
 ---
 
 ## Context

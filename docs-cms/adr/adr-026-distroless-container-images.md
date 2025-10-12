@@ -1,10 +1,16 @@
 ---
-id: adr-026
-title: "ADR-026: Distroless Base Images for Container Components"
-status: Accepted
 date: 2025-10-07
 deciders: Core Team
-tags: ['containers', 'security', 'deployment', 'docker']
+doc_uuid: 346814c8-5c1c-4e66-9882-2b3b235c1c53
+id: adr-026
+project_id: prism-data-layer
+status: Accepted
+tags:
+- containers
+- security
+- deployment
+- docker
+title: 'ADR-026: Distroless Base Images for Container Components'
 ---
 
 ## Context

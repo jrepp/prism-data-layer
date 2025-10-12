@@ -1,10 +1,16 @@
 ---
-id: adr-033
-title: "ADR-033: Capability API for Prism Instance Queries"
-status: Proposed
 date: 2025-10-08
 deciders: System
-tags: ['api-design', 'client-server', 'versioning', 'operations']
+doc_uuid: 6554cf2a-5da2-47a9-9e97-183305216b6c
+id: adr-033
+project_id: prism-data-layer
+status: Proposed
+tags:
+- api-design
+- client-server
+- versioning
+- operations
+title: 'ADR-033: Capability API for Prism Instance Queries'
 ---
 
 ## Context

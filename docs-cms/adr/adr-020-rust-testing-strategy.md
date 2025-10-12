@@ -1,10 +1,16 @@
 ---
-id: adr-020
-title: "ADR-020: Rust Testing Strategy"
-status: Accepted
 date: 2025-10-07
 deciders: Core Team
-tags: ['rust', 'testing', 'quality', 'ci-cd']
+doc_uuid: a77440da-dd53-41c8-a1bf-e6895e3bc8eb
+id: adr-020
+project_id: prism-data-layer
+status: Accepted
+tags:
+- rust
+- testing
+- quality
+- ci-cd
+title: 'ADR-020: Rust Testing Strategy'
 ---
 
 ## Context

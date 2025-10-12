@@ -1,10 +1,16 @@
 ---
-id: adr-013
-title: "ADR-013: Go Error Handling Strategy"
-status: Accepted
 date: 2025-10-07
 deciders: Core Team
-tags: ['go', 'error-handling', 'reliability', 'observability']
+doc_uuid: e8589e41-7426-4a36-9666-2588e2376738
+id: adr-013
+project_id: prism-data-layer
+status: Accepted
+tags:
+- go
+- error-handling
+- reliability
+- observability
+title: 'ADR-013: Go Error Handling Strategy'
 ---
 
 ## Context

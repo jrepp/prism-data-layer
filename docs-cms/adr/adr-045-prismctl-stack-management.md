@@ -1,10 +1,18 @@
 ---
-id: adr-045
-title: "ADR-045: prismctl Stack Management Subcommand"
-status: Accepted
 date: 2025-10-09
 deciders: Core Team
-tags: [go, cli, tooling, dx, infrastructure, hashicorp]
+doc_uuid: 82d9d857-fa36-4765-8632-519ed07dcc59
+id: adr-045
+project_id: prism-data-layer
+status: Accepted
+tags:
+- go
+- cli
+- tooling
+- dx
+- infrastructure
+- hashicorp
+title: 'ADR-045: prismctl Stack Management Subcommand'
 ---
 
 ## Context

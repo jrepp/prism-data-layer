@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/jrepp/prism-data-layer/patterns/core"
+	"github.com/jrepp/prism-data-layer/patterns/postgres"
 	"github.com/jrepp/prism-data-layer/patterns/redis"
 	"github.com/jrepp/prism-data-layer/tests/acceptance/common"
 	"github.com/jrepp/prism-data-layer/tests/testing/backends"
@@ -16,22 +17,27 @@ import (
 )
 
 var (
-	sharedRedisBackend *backends.RedisBackend
-	testCtx            context.Context
+	sharedRedisBackend    *backends.RedisBackend
+	sharedPostgresBackend *backends.PostgresBackend
+	testCtx               context.Context
 )
 
-// TestMain sets up shared Redis container once for all interface tests
+// TestMain sets up shared backend containers once for all interface tests
 func TestMain(m *testing.M) {
 	testCtx = context.Background()
 
 	// Start Redis container once for all tests
 	sharedRedisBackend = backends.SetupRedis(&testing.T{}, testCtx)
 
+	// Start PostgreSQL container once for all tests
+	sharedPostgresBackend = backends.SetupPostgres(&testing.T{}, testCtx)
+
 	// Run all tests
 	code := m.Run()
 
 	// Cleanup after all tests
 	sharedRedisBackend.Cleanup()
+	sharedPostgresBackend.Cleanup()
 
 	os.Exit(code)
 }
@@ -95,6 +101,40 @@ func setupMemStoreDriver(t *testing.T, ctx context.Context) (KeyValueBasicDriver
 
 	// Driver is already initialized and started by SetupMemStore
 	return backend.Driver, backend.Cleanup
+}
+
+// setupPostgresDriver creates a PostgreSQL backend driver for testing using shared container
+func setupPostgresDriver(t *testing.T, ctx context.Context) (KeyValueBasicDriver, func()) {
+	t.Helper()
+
+	// Create Postgres driver
+	driver := postgres.New()
+
+	// Configure with shared testcontainer
+	config := &core.Config{
+		Plugin: core.PluginConfig{
+			Name:    "postgres-test",
+			Version: "0.1.0",
+		},
+		Backend: map[string]any{
+			"connection_string": sharedPostgresBackend.ConnectionString,
+			"pool_size":         5,
+		},
+	}
+
+	// Create test harness
+	harness := common.NewPatternHarness(t, driver, config)
+
+	// Wait for driver to be healthy
+	err := harness.WaitForHealthy(10 * time.Second) // PostgreSQL takes longer to be ready
+	require.NoError(t, err, "Driver did not become healthy")
+
+	cleanup := func() {
+		harness.Cleanup()
+		// Don't cleanup backend - it's shared across tests
+	}
+
+	return driver, cleanup
 }
 
 // TestKeyValueBasicInterface_SetGet tests Set and Get operations across all backends
