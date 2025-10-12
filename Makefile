@@ -351,6 +351,9 @@ install-tools: ## Install development tools
 
 ##@ CI/CD
 
+ci-full: clean-proto proto-go lint test-all test-acceptance docs-validate docs-build ## Run complete CI pipeline (clean, proto, lint, all tests, docs validate+build)
+	$(call print_green,Complete CI pipeline passed - codebase validated)
+
 ci: lint test-all test-acceptance docs-validate ## Run full CI pipeline (lint, test, acceptance, validate docs)
 	$(call print_green,CI pipeline passed)
 

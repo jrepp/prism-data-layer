@@ -1,11 +1,11 @@
 ---
-title: "Prism Technical Architecture Guide"
+title: "Architecture"
 sidebar_position: 2
 description: "Comprehensive technical architecture overview with system diagrams, component responsibilities, and backend interface mapping"
 tags: [architecture, technical-overview, system-design, backend-interfaces, patterns]
 ---
 
-# Prism Technical Architecture Guide
+# Architecture
 
 **Target Audience**: Technical users, platform engineers, backend developers
 

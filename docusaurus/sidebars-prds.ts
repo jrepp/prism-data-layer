@@ -1,8 +1,5 @@
-import type { SidebarsConfig } from '@docusaurus/plugin-content-docs';
+import type {SidebarsConfig} from '@docusaurus/plugin-content-docs';
 
-/**
- * Sidebar configuration for PRDs (Product Requirements Documents)
- */
 const sidebars: SidebarsConfig = {
   prdsSidebar: [
     {

@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/jrepp/prism-data-layer/patterns/core"
-	pb "github.com/jrepp/prism-data-layer/patterns/core/gen/prism/pattern"
+	pb "github.com/jrepp/prism-data-layer/patterns/core/gen/prism/interfaces"
 	"github.com/jrepp/prism-data-layer/patterns/memstore"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -63,7 +63,7 @@ func TestProxyPatternLifecycle(t *testing.T) {
 	require.NoError(t, err)
 	defer conn.Close()
 
-	client := pb.NewPatternLifecycleClient(conn)
+	client := pb.NewLifecycleInterfaceClient(conn)
 
 	// Step 3: Proxy sends Initialize event
 	t.Log("Step 3: Proxy sending Initialize event")
@@ -82,10 +82,10 @@ func TestProxyPatternLifecycle(t *testing.T) {
 	assert.Equal(t, "memstore", initResp.Metadata.Name)
 	assert.Equal(t, "0.1.0", initResp.Metadata.Version)
 
-	t.Logf("Initialize succeeded: name=%s, version=%s, capabilities=%v",
+	t.Logf("Initialize succeeded: name=%s, version=%s, interfaces=%v",
 		initResp.Metadata.Name,
 		initResp.Metadata.Version,
-		initResp.Metadata.Capabilities)
+		initResp.Metadata.Interfaces)
 
 	// Step 4: Proxy sends Start event
 	t.Log("Step 4: Proxy sending Start event")
@@ -202,7 +202,7 @@ func TestProxyPatternDebugInfo(t *testing.T) {
 	require.NoError(t, err)
 	defer conn.Close()
 
-	client := pb.NewPatternLifecycleClient(conn)
+	client := pb.NewLifecycleInterfaceClient(conn)
 
 	// Initialize
 	initResp, err := client.Initialize(ctx, &pb.InitializeRequest{
@@ -274,7 +274,7 @@ func TestProxyPatternConcurrentClients(t *testing.T) {
 			grpc.WithTransportCredentials(insecure.NewCredentials()),
 		)
 		if err == nil {
-			client := pb.NewPatternLifecycleClient(conn)
+			client := pb.NewLifecycleInterfaceClient(conn)
 			_, err := client.HealthCheck(testCtx, &pb.HealthCheckRequest{})
 			if err == nil {
 				ready = true
@@ -306,7 +306,7 @@ func TestProxyPatternConcurrentClients(t *testing.T) {
 			require.NoError(t, err)
 			defer conn.Close()
 
-			client := pb.NewPatternLifecycleClient(conn)
+			client := pb.NewLifecycleInterfaceClient(conn)
 
 			// Each client performs health checks
 			for j := 0; j < 3; j++ {

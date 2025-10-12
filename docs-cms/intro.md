@@ -2,10 +2,10 @@
 doc_uuid: d3cb2a44-9472-4aa9-80f5-ee02d58c3208
 project_id: prism-data-layer
 sidebar_position: 1
-title: Documentation Overview
+title: Overview
 ---
 
-# Prism Documentation
+# Overview
 
 **Unify your data access. One API, any backend. Blazing fast.**
 
