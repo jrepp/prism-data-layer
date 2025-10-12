@@ -12,30 +12,19 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  # Job 1: Lint all code
-  lint:
-    name: Lint
+  # Job 0: Generate protobuf code once (new)
+  generate-proto:
+    name: Generate Protobuf Code
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Rust
-        uses: dtolnay/rust-toolchain@stable
-        with:
-          components: rustfmt, clippy
-
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
           go-version: '1.21'
-          cache-dependency-path: |
-            patterns/go.sum
-            tests/acceptance/interfaces/go.sum
-            tests/acceptance/redis/go.sum
-            tests/acceptance/nats/go.sum
-            tests/integration/go.sum
 
       - name: Setup protoc
         uses: arduino/setup-protoc@v3
@@ -55,6 +44,49 @@ jobs:
 
       - name: Generate protobuf code
         run: make proto-go
+
+      - name: Upload generated proto code
+        uses: actions/upload-artifact@v4
+        with:
+          name: proto-generated
+          path: patterns/core/gen/
+          retention-days: 1
+
+  # Job 1: Lint all code
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    needs: generate-proto
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+          cache-dependency-path: |
+            patterns/go.sum
+            tests/acceptance/go.sum
+            tests/integration/go.sum
+
+      - name: Setup protoc
+        uses: arduino/setup-protoc@v3
+        with:
+          version: '25.x'
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Download generated proto code
+        uses: actions/download-artifact@v4
+        with:
+          name: proto-generated
+          path: patterns/core/gen/
 
       - name: Cache Rust dependencies
         uses: actions/cache@v4
@@ -125,6 +157,7 @@ jobs:
   test-patterns:
     name: Test Go Patterns
     runs-on: ubuntu-latest
+    needs: generate-proto
 
     strategy:
       matrix:
@@ -139,24 +172,11 @@ jobs:
         with:
           go-version: '1.21'
 
-      - name: Setup protoc
-        uses: arduino/setup-protoc@v3
+      - name: Download generated proto code
+        uses: actions/download-artifact@v4
         with:
-          version: '25.x'
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Install protoc-gen-go
-        run: |
-          go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
-          go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
-
-      - name: Install buf
-        uses: bufbuild/buf-setup-action@v1
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Generate protobuf code
-        run: make proto-go
+          name: proto-generated
+          path: patterns/core/gen/
 
       - name: Run tests for ${{ matrix.pattern }}
         run: cd patterns/${{ matrix.pattern }} && go test -v -cover -race ./...
@@ -178,6 +198,7 @@ jobs:
   test-integration:
     name: Integration Tests
     runs-on: ubuntu-latest
+    needs: generate-proto
 
     steps:
       - name: Checkout
@@ -188,24 +209,11 @@ jobs:
         with:
           go-version: '1.21'
 
-      - name: Setup protoc
-        uses: arduino/setup-protoc@v3
+      - name: Download generated proto code
+        uses: actions/download-artifact@v4
         with:
-          version: '25.x'
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Install protoc-gen-go
-        run: |
-          go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
-          go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
-
-      - name: Install buf
-        uses: bufbuild/buf-setup-action@v1
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Generate protobuf code
-        run: make proto-go
+          name: proto-generated
+          path: patterns/core/gen/
 
       - name: Run integration tests
         run: cd tests/integration && go test -v -timeout 5m -race ./...
@@ -227,6 +235,7 @@ jobs:
   test-acceptance:
     name: Acceptance Tests
     runs-on: ubuntu-latest
+    needs: generate-proto
 
     strategy:
       matrix:
@@ -241,24 +250,11 @@ jobs:
         with:
           go-version: '1.21'
 
-      - name: Setup protoc
-        uses: arduino/setup-protoc@v3
+      - name: Download generated proto code
+        uses: actions/download-artifact@v4
         with:
-          version: '25.x'
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Install protoc-gen-go
-        run: |
-          go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
-          go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
-
-      - name: Install buf
-        uses: bufbuild/buf-setup-action@v1
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Generate protobuf code
-        run: make proto-go
+          name: proto-generated
+          path: patterns/core/gen/
 
       - name: Run ${{ matrix.suite }} acceptance tests
         run: cd tests/acceptance/${{ matrix.suite }} && go test -v -timeout 10m ./...
@@ -314,7 +310,7 @@ jobs:
   build:
     name: Build All Components
     runs-on: ubuntu-latest
-    needs: [lint, test-proxy, test-patterns, test-integration]
+    needs: [generate-proto, lint, test-proxy, test-patterns, test-integration]
 
     steps:
       - name: Checkout
@@ -334,15 +330,11 @@ jobs:
           version: '25.x'
           repo-token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Install protoc-gen-go
-        run: |
-          go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
-          go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
-
-      - name: Install buf
-        uses: bufbuild/buf-setup-action@v1
+      - name: Download generated proto code
+        uses: actions/download-artifact@v4
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          name: proto-generated
+          path: patterns/core/gen/
 
       - name: Cache Rust dependencies
         uses: actions/cache@v4
@@ -357,9 +349,6 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-cargo-build-
             ${{ runner.os }}-cargo-
-
-      - name: Generate protobuf code
-        run: make proto-go
 
       - name: Build Rust proxy
         run: cd proxy && cargo build --release
