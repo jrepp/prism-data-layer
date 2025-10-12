@@ -78,6 +78,7 @@ admin/yarn.lock
 htmlcov/
 *.log
 test-results/
+test-logs/
 
 # === Docker ===
 *.dockerignore

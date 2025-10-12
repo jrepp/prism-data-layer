@@ -77,6 +77,21 @@ build-dev: ## Build all components in debug mode (faster)
 test: test-proxy test-patterns test-acceptance test-integration-go ## Run all tests (unit, acceptance, integration)
 	$(call print_green,All tests passed)
 
+test-parallel: ## Run all tests in parallel (fast!)
+	$(call print_blue,Running tests in parallel...)
+	@uv run tooling/parallel_test.py
+	$(call print_green,Parallel tests complete)
+
+test-parallel-fast: ## Run fast tests only in parallel (skip acceptance)
+	$(call print_blue,Running fast tests in parallel...)
+	@uv run tooling/parallel_test.py --fast
+	$(call print_green,Fast parallel tests complete)
+
+test-parallel-fail-fast: ## Run tests in parallel with fail-fast
+	$(call print_blue,Running tests in parallel with fail-fast...)
+	@uv run tooling/parallel_test.py --fail-fast
+	$(call print_green,Parallel tests complete)
+
 test-proxy: ## Run Rust proxy unit tests
 	$(call print_blue,Running Rust proxy tests...)
 	@cd proxy && cargo test --lib
