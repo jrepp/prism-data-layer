@@ -84,7 +84,7 @@ id: memo-009
 **Key Insights**:
 - Filter evaluation has **zero allocations** - extremely efficient
 - Multicast scales **sub-linearly** due to goroutine fan-out parallelism
-- All operations have minimal memory overhead (<1KB for most)
+- All operations have minimal memory overhead (&lt;1KB for most)
 
 ### Integration Tests (Real Backends: Redis + NATS)
 
@@ -319,7 +319,7 @@ id: memo-009
 
 ### Files Created
 
-```
+```text
 patterns/multicast_registry/
 ├── coordinator.go              # 300 lines - Main coordinator logic
 ├── coordinator_test.go         # 538 lines - 20 unit tests
@@ -366,10 +366,10 @@ patterns/multicast_registry/
 
 - **[RFC-017: Multicast Registry Pattern](/rfc/rfc-017)** - Original pattern specification
 - **[RFC-018: POC Implementation Strategy](/rfc/rfc-018)** - POC roadmap (POC 4 section)
-- **[POC-004-MULTICAST-REGISTRY.md](/pocs/poc-004-multicast-registry)** - Implementation tracking
+- **[POC 4 Summary (this document)](/memos/memo-009)** - Implementation summary
 - **[MEMO-008: Message Schema Configuration](/memos/memo-008)** - Schema management design
 - **[RFC-022: prism-probe CLI Client](/rfc/rfc-022)** - Testing tool design
-- **[patterns/multicast_registry/README.md](/patterns/multicast_registry/README.md)** - Developer guide
+- **[patterns/multicast_registry/README.md](https://github.com/jrepp/prism-data-layer/blob/main/patterns/multicast_registry/README.md)** - Developer guide
 
 ## Conclusion
 

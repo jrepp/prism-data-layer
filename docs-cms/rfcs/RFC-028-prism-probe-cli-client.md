@@ -1,14 +1,14 @@
 ---
-title: "RFC-022: prism-probe - CLI Client for Testing and Debugging"
+title: "RFC-028: prism-probe - CLI Client for Testing and Debugging"
 status: Proposed
 author: Claude
 created: 2025-10-11
 updated: 2025-10-11
 tags: [cli, testing, debugging, client]
-id: rfc-022
+id: rfc-028
 ---
 
-# RFC-022: prism-probe - CLI Client for Testing and Debugging
+# RFC-028: prism-probe - CLI Client for Testing and Debugging
 
 ## Summary
 
@@ -269,7 +269,7 @@ prism-probe validate load-profile --file load-profile.yaml
 
 ### Directory Structure
 
-```
+```text
 cli/prism-probe/
 ├── cmd/
 │   ├── root.go              # Root command, global flags

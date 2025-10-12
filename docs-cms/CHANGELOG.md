@@ -33,6 +33,20 @@ Quick access to recently updated documentation. Changes listed in reverse chrono
 
 ---
 
+#### CI Validation Fixes - MDX Syntax and Broken Links (UPDATED)
+**Links**: [MEMO-009](/memos/memo-009), [MEMO-010](/memos/memo-010), [RFC-028](/rfc/rfc-028)
+
+**Summary**: Fixed MDX compilation errors and broken links identified by CI validation:
+- **MEMO-009**: Escaped `<` character in line 87 (`<1KB` → `&lt;1KB`), added `text` language identifier to code fence on line 322, fixed broken link from `/pocs/poc-004-multicast-registry` to `/memos/memo-009` on line 369, updated relative path to absolute GitHub URL on line 372
+- **MEMO-010**: Escaped all unescaped `<` characters in performance comparison tables (lines 22, 75, 97, 124, 135, 275, 322, 323) to `&lt;`
+- **RFC-028**: Renamed from RFC-022 to RFC-028 (proper RFC numbering sequence)
+
+**Key Facts**: All validation errors resolved. Code fences now have proper language identifiers (prevents "Unexpected FunctionDeclaration" MDX errors). HTML entities properly escaped (`<` → `&lt;`, `>` → `&gt;`). Links updated to use `/memos/` paths instead of deprecated `/pocs/` paths. Full validation passes with GitHub Pages build successful.
+
+**Impact**: CI builds now pass successfully. MDX compilation errors eliminated. Documentation correctly renders in Docusaurus with proper code syntax highlighting. Users can navigate to correct memo pages without 404 errors.
+
+---
+
 #### Documentation Consistency Pass - Pattern SDK Terminology (UPDATED)
 **Links**: [RFC-019](/rfc/rfc-019), [RFC-021](/rfc/rfc-021), [MEMO-008](/memos/memo-008), [MEMO-009](/memos/memo-009)
 

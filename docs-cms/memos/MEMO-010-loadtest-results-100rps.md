@@ -19,7 +19,7 @@ id: memo-010
 
 **Key Findings**:
 - ✅ Rate limiting working correctly (achieved 101.81 req/sec vs 100 target)
-- ✅ Register and Enumerate operations perform excellently (<5ms P95)
+- ✅ Register and Enumerate operations perform excellently (&lt;5ms P95)
 - ⚠️  Multicast performance degrades with large registered identity count (~3000 identities)
 - ⚠️  Multicast delivery rate 91.79% (8.21% failures due to timeouts/blocking)
 
@@ -72,7 +72,7 @@ id: memo-010
 
 **Analysis**:
 - Register performance is **excellent**
-- P95 latency of 5ms meets production target (<10ms)
+- P95 latency of 5ms meets production target (&lt;10ms)
 - Average latency 1.411ms indicates Redis backend is fast
 - Max latency 96ms indicates occasional contention but acceptable
 - **Verdict**: ✅ Production-ready performance
@@ -94,7 +94,7 @@ id: memo-010
 
 **Analysis**:
 - Enumerate performance is **exceptional**
-- P95 latency of 500µs significantly beats production target (<20ms, achieved 40x faster!)
+- P95 latency of 500µs significantly beats production target (&lt;20ms, achieved 40x faster!)
 - Average latency 393µs shows efficient client-side filtering
 - Enumerate scales well even with ~3000 registered identities
 - **Verdict**: ✅ Exceeds production requirements by 40x
@@ -121,7 +121,7 @@ id: memo-010
 
 **Analysis**:
 - Multicast shows **performance degradation** under high load
-- P95 latency of 100ms meets production target (<100ms for 100 targets)
+- P95 latency of 100ms meets production target (&lt;100ms for 100 targets)
 - **However**: Average fan-out was ~1,463 targets (14x higher than target)
 - Max latency of 56 seconds indicates timeouts/blocking with large fan-outs
 - Delivery failures (8.21%) likely due to:
@@ -132,7 +132,7 @@ id: memo-010
 
 **Root Cause Analysis**:
 The multicast pattern accumulates registered identities over time. As the test ran:
-- First multicast: ~300 targets (fast, <50ms)
+- First multicast: ~300 targets (fast, &lt;50ms)
 - Middle multicasts: ~1,000 targets (moderate, ~500ms)
 - Final multicasts: ~3,000 targets (slow, up to 56s)
 
@@ -272,12 +272,12 @@ Goroutine fan-out with 1,463 targets creates:
 
 1. **Fix Multicast Fan-Out Bottleneck** (High Priority)
    - Implement batch delivery or semaphore-based concurrency limit
-   - Target: <100ms P95 for 1000 targets (currently 2.4s avg)
+   - Target: &lt;100ms P95 for 1000 targets (currently 2.4s avg)
 
 2. **Investigate Delivery Failures** (High Priority)
    - Add structured logging to multicast delivery
    - Classify failures (timeout vs connection vs logic)
-   - Target: >99% delivery rate
+   - Target: &gt;99% delivery rate
 
 3. **Add NATS Connection Pooling** (Medium Priority)
    - Current: single connection
@@ -319,8 +319,8 @@ From RFC-018 POC Implementation Strategy:
 
 | Criteria | Target | Actual | Status |
 |----------|--------|--------|--------|
-| **Enumerate 1000 identities** | <20ms | 393µs | ✅ 50x faster |
-| **Multicast to 100 identities** | <100ms | ~50ms (P50) | ✅ 2x faster |
+| **Enumerate 1000 identities** | &lt;20ms | 393µs | ✅ 50x faster |
+| **Multicast to 100 identities** | &lt;100ms | ~50ms (P50) | ✅ 2x faster |
 | **Rate limiting** | 100 req/sec | 101.81 req/sec | ✅ 1.81% error |
 | **Mixed workload** | All operations | All working | ✅ Complete |
 | **Success rate** | >95% | 100% | ✅ Perfect |
@@ -415,8 +415,8 @@ Multicast Operations:
 - **[MEMO-009: POC 4 Complete Summary](/memos/memo-009)** - Benchmark results
 - **[RFC-017: Multicast Registry Pattern](/rfc/rfc-017)** - Pattern specification
 - **[RFC-018: POC Implementation Strategy](/rfc/rfc-018)** - Success criteria
-- **[POC 4 Tracking](/pocs/poc-004-multicast-registry)** - Implementation tracking
-- **[Deployment README](/deployments/poc4-multicast-registry/README.md)** - Load test setup
+- **[POC 4 Summary](/memos/memo-009)** - Implementation summary
+- **[Deployment README](https://github.com/jrepp/prism-data-layer/blob/main/deployments/poc4-multicast-registry/README.md)** - Load test setup
 
 ## Conclusion
 
@@ -424,7 +424,7 @@ The load test **validates** that the Multicast Registry pattern:
 - ✅ **Meets performance targets** for Register and Enumerate (exceeds by 2-50x)
 - ✅ **Achieves target throughput** (100 req/sec with 1.81% accuracy)
 - ✅ **Handles mixed workloads** (50% register, 30% enumerate, 20% multicast)
-- ⚠️  **Requires optimization** for Multicast with large fan-outs (>100 targets)
+- ⚠️  **Requires optimization** for Multicast with large fan-outs (&gt;100 targets)
 
 **Next Steps**:
 1. Implement batch delivery or concurrency limiting for Multicast
