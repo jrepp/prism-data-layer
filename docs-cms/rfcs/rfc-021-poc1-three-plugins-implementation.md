@@ -17,8 +17,8 @@ Detailed implementation plan for POC 1: **Three Minimal Plugins (Walking Skeleto
 **Key Changes from Previous Scope**:
 - ❌ **No Admin API**: Use `prismctl` CLI instead
 - ❌ **No Python client library**: Focus on backend infrastructure
-- ✅ **Core Plugin SDK skeleton**: Reusable Go library from RFC-022
-- ✅ **3 minimal plugins**: MemStore, Redis, Kafka (each focused on specific interfaces)
+- ✅ **Core Pattern SDK skeleton**: Reusable Go library from RFC-022
+- ✅ **3 minimal patterns**: MemStore, Redis, Kafka (each focused on specific interfaces)
 - ✅ **Load testing tool**: Go CLI for parallel load generation
 - ✅ **Optimized builds**: Static linking, minimal Docker images (&lt;10MB)
 - ✅ **TDD workflow**: Code coverage tracked from day one (target: 80%+)
@@ -32,8 +32,8 @@ Detailed implementation plan for POC 1: **Three Minimal Plugins (Walking Skeleto
 ### Problem
 
 RFC-018 provides a high-level POC strategy, but POC 1 needs:
-- **Minimal plugins**: Original plan had complex MemStore plugin; need 3 focused plugins
-- **Plugin SDK foundation**: Reusable library for plugin authors
+- **Minimal patterns**: Original plan had complex MemStore pattern; need 3 focused patterns
+- **Pattern SDK foundation**: Reusable library for pattern authors
 - **Build optimization**: Small Docker images for fast iteration
 - **Load testing**: Validate performance claims early
 - **TDD discipline**: Code coverage metrics from day one
@@ -51,8 +51,8 @@ RFC-018 provides a high-level POC strategy, but POC 1 needs:
 
 Build the **thinnest possible end-to-end slice** demonstrating:
 - ✅ Rust proxy receiving gRPC client requests
-- ✅ 3 Go plugins: MemStore (in-memory), Redis (external), Kafka (streaming)
-- ✅ Core Plugin SDK skeleton (auth, observability stubs, lifecycle)
+- ✅ 3 Go patterns: MemStore (in-memory), Redis (external), Kafka (streaming)
+- ✅ Core Pattern SDK skeleton (auth, observability stubs, lifecycle)
 - ✅ Load testing tool (Go CLI) generating parallel requests
 - ✅ Optimized builds (static linking, &lt;10MB Docker images)
 - ✅ **TDD workflow**: Write tests first, achieve 80%+ coverage
@@ -102,7 +102,7 @@ Build the **thinnest possible end-to-end slice** demonstrating:
 │  │   Plugin   │   │   Plugin   │   │    Plugin     │            │
 │  │            │   │            │   │               │            │
 │  │ Built with │   │ Built with │   │  Built with   │            │
-│  │ Plugin SDK │   │ Plugin SDK │   │  Plugin SDK   │            │
+│  │ Pattern SDK│   │ Pattern SDK│   │  Pattern SDK  │            │
 │  │            │   │            │   │               │            │
 │  │ Implements:│   │ Implements:│   │  Implements:  │            │
 │  │ - keyvalue │   │ - keyvalue │   │  - pubsub     │            │
@@ -126,10 +126,10 @@ Build the **thinnest possible end-to-end slice** demonstrating:
 | Component | Language | Framework/Library | Protocol | Image Size Target |
 |-----------|----------|-------------------|----------|-------------------|
 | Proxy | Rust | tokio, tonic (gRPC) | gRPC | &lt;5MB (static) |
-| Plugin SDK | Go | google.golang.org/grpc | Library | N/A (library) |
-| MemStore Plugin | Go | Plugin SDK | gRPC | &lt;3MB (static) |
-| Redis Plugin | Go | Plugin SDK, go-redis | gRPC | &lt;5MB (static) |
-| Kafka Plugin | Go | Plugin SDK, sarama | gRPC | &lt;8MB (static) |
+| Pattern SDK | Go | google.golang.org/grpc | Library | N/A (library) |
+| MemStore Pattern | Go | Pattern SDK | gRPC | &lt;3MB (static) |
+| Redis Pattern | Go | Pattern SDK, go-redis | gRPC | &lt;5MB (static) |
+| Kafka Pattern | Go | Pattern SDK, sarama | gRPC | &lt;8MB (static) |
 | Load Tester | Go | google.golang.org/grpc | gRPC | &lt;3MB (static) |
 
 ## Three Plugin Division
@@ -387,7 +387,7 @@ go-build: cache-dirs proto-go
 
 **TDD Checkpoint**: N/A (protobuf generation, no tests needed)
 
-### Work Stream 2: Core Plugin SDK Skeleton
+### Work Stream 2: Core Pattern SDK Skeleton
 
 **Owner**: 1 engineer (Go expert)
 **Duration**: 2 days
@@ -1298,13 +1298,13 @@ WS8     │               │         │████             Build Optimiza
 ### Deliverables Checklist
 
 - [ ] Protobuf interfaces defined and code generated
-- [ ] Core Plugin SDK skeleton with 85%+ coverage
-- [ ] MemStore plugin with 85%+ coverage
-- [ ] Redis plugin with 80%+ coverage
-- [ ] Kafka plugin with 80%+ coverage
+- [ ] Core Pattern SDK skeleton with 85%+ coverage
+- [ ] MemStore pattern with 85%+ coverage
+- [ ] Redis pattern with 80%+ coverage
+- [ ] Kafka pattern with 80%+ coverage
 - [ ] Rust proxy with basic integration tests
 - [ ] Load testing tool (prism-load)
-- [ ] Optimized Docker builds (&lt;10MB per plugin)
+- [ ] Optimized Docker builds (&lt;10MB per pattern)
 - [ ] Makefile with proto, build, test, coverage targets
 - [ ] CI/CD with coverage enforcement
 - [ ] Performance benchmark results documented
@@ -1355,10 +1355,11 @@ All components meet target coverage (80%+).
 ## Related Documents
 
 - [RFC-018: POC Implementation Strategy](/rfc/rfc-018-poc-implementation-strategy) - Overall POC roadmap
-- [RFC-022: Core Plugin SDK Code Layout](/rfc/rfc-022-core-plugin-sdk-code-layout) - SDK structure
-- [RFC-015: Plugin Acceptance Test Framework](/rfc/rfc-015-plugin-acceptance-test-framework) - Interface-based testing
-- [MEMO-006: Backend Interface Decomposition](/memos/memo-006-backend-interface-decomposition-schema-registry) - Interface design
+- [RFC-022: Core Pattern SDK Code Layout](/rfc/rfc-022) - SDK structure and build system
+- [RFC-015: Plugin Acceptance Test Framework](/rfc/rfc-015) - Interface-based testing
+- [MEMO-006: Backend Interface Decomposition](/memos/memo-006) - Interface design
 
 ## Revision History
 
-- 2025-10-09: Complete rewrite based on user feedback - 3 minimal plugins, SDK skeleton, load tester, optimized builds, TDD workflow
+- 2025-10-11: Updated terminology from "Plugin SDK" to "Pattern SDK" for consistency with RFC-022
+- 2025-10-09: Complete rewrite based on user feedback - 3 minimal patterns, SDK skeleton, load tester, optimized builds, TDD workflow

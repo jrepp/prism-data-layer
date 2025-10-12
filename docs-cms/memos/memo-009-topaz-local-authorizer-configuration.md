@@ -1,7 +1,7 @@
 ---
 author: Platform Team
 created: 2025-10-09
-id: memo-009
+id: memo-topaz-authorizer
 status: Active
 tags:
 - topaz
@@ -11,7 +11,7 @@ tags:
 - local-infrastructure
 title: 'MEMO-009: Topaz Local Authorizer Configuration for Development and Integration
   Testing'
-updated: 2025-10-09
+updated: 2025-10-11
 ---
 
 # MEMO-009: Topaz Local Authorizer Configuration
@@ -933,11 +933,12 @@ func main() {
 ## Related Documents
 
 - [ADR-050: Topaz for Policy Authorization](/adr/adr-050-topaz-policy-authorization) - Why Topaz was selected
-- [RFC-019: Plugin SDK Authorization Layer](/rfc/rfc-019-plugin-sdk-authorization-layer) - Pattern SDK integration
+- [RFC-019: Pattern SDK Authorization Layer](/rfc/rfc-019) - Pattern SDK integration
 - [RFC-016: Local Development Infrastructure](/rfc/rfc-016-local-development-infrastructure) - Complete local stack
 - [ADR-046: Dex IDP for Local Testing](/adr/adr-046-dex-idp-local-testing) - OIDC authentication
 - [MEMO-008: Vault Token Exchange Flow](/memos/memo-008-vault-token-exchange-flow) - Credential management
 
 ## Revision History
 
+- 2025-10-11: Updated terminology from "Plugin SDK" to "Pattern SDK" for consistency with RFC-022
 - 2025-10-09: Initial memo documenting Topaz as local authorizer for development and integration testing

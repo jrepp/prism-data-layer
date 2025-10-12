@@ -1,24 +1,24 @@
 ---
 id: rfc-019
-title: "RFC-019: Plugin SDK Authorization Layer - Token Validation and Policy Enforcement"
+title: "RFC-019: Pattern SDK Authorization Layer - Token Validation and Policy Enforcement"
 status: Proposed
 author: Platform Team
 created: 2025-10-09
-updated: 2025-10-09
-tags: [authorization, plugin, sdk, security, tokens, policy, go, vault, credentials]
+updated: 2025-10-11
+tags: [authorization, pattern, sdk, security, tokens, policy, go, vault, credentials]
 ---
 
-# RFC-019: Plugin SDK Authorization Layer
+# RFC-019: Pattern SDK Authorization Layer
 
 ## Summary
 
-Define a standardized authorization layer in the Prism core plugin SDK that enables backend plugins to:
+Define a standardized authorization layer in the Prism core pattern SDK that enables backend patterns to:
 1. Validate bearer tokens passed from the proxy
 2. Enforce namespace-scoped access control
 3. Query Topaz for fine-grained authorization decisions
 4. Emit authorization audit events
 
-This ensures plugins respect the same authorization policies as the proxy, creating defense-in-depth security.
+This ensures patterns respect the same authorization policies as the proxy, creating defense-in-depth security.
 
 ## Motivation
 
@@ -128,14 +128,14 @@ func (s *RedisPlugin) Get(ctx context.Context, req *GetRequest) (*GetResponse, e
 - Audit logger (structured logs)
 - Authorization middleware (gRPC interceptors)
 
-**Plugins just call SDK**:
+**Patterns just call SDK**:
 
 ```go
-import "github.com/prism/plugin-sdk-go/authz"
+import "github.com/prism/pattern-sdk/authz"
 
-// Plugin uses SDK authorization
-func NewRedisPlugin(config *Config) *RedisPlugin {
-    return &RedisPlugin{
+// Pattern uses SDK authorization
+func NewRedisPattern(config *Config) *RedisPattern {
+    return &RedisPattern{
         redis: connectRedis(config),
         authz: authz.NewAuthorizer(config.Topaz),  // SDK handles complexity
     }
@@ -312,7 +312,7 @@ redisClient := redis.NewClient(&redis.Options{
    Redis: LIMIT USER v-jwt-alice-abc123 TO 1000 ops/second
    ```
 
-#### Implementation in Plugin SDK
+#### Implementation in Pattern SDK
 
 ```go
 // pkg/authz/vault_client.go
@@ -500,7 +500,7 @@ sequenceDiagram
 
 ```text
 ┌───────────────────────────────────────────────────────────────┐
-│                       Plugin SDK (Go)                         │
+│                       Pattern SDK (Go)                        │
 │                                                               │
 │  ┌─────────────────────────────────────────────────────────┐ │
 │  │           authz Package (New)                           │ │
@@ -572,7 +572,7 @@ package authz
 
 import (
     "context"
-    "github.com/prism/plugin-sdk-go/core"
+    "github.com/prism/pattern-sdk/core"
 )
 
 // Authorizer validates tokens and enforces policies
@@ -1144,13 +1144,13 @@ func (a *authorizer) auditDenial(ctx context.Context, user, permission, resource
 **Automatically enforce authorization on all gRPC methods**:
 
 ```go
-// plugins/redis/main.go
+// patterns/redis/main.go
 package main
 
 import (
     "context"
-    "github.com/prism/plugin-sdk-go/authz"
-    "github.com/prism/plugin-sdk-go/core"
+    "github.com/prism/pattern-sdk/authz"
+    "github.com/prism/pattern-sdk/core"
     "google.golang.org/grpc"
 )
 
@@ -1287,12 +1287,12 @@ func extractResourceAndPermission(req interface{}, method string) (string, strin
 **For methods requiring custom authorization logic**:
 
 ```go
-// plugins/redis/service.go
+// patterns/redis/service.go
 package main
 
 import (
     "context"
-    "github.com/prism/plugin-sdk-go/authz"
+    "github.com/prism/pattern-sdk/authz"
     pb "github.com/prism/proto/keyvalue"
 )
 
@@ -1602,8 +1602,10 @@ authz:
 - [RFC-010: Admin Protocol with OIDC](/rfc/rfc-010-admin-protocol-oidc) - OIDC authentication
 - [RFC-011: Data Proxy Authentication](/rfc/rfc-011-data-proxy-authentication) - Secrets provider abstraction
 - [RFC-008: Proxy Plugin Architecture](/rfc/rfc-008-proxy-plugin-architecture) - Plugin system
+- [RFC-022: Core Pattern SDK Code Layout](/rfc/rfc-022) - Pattern SDK structure
 
 ## Revision History
 
-- 2025-10-09: Updated to reflect architectural decision: token validation and exchange pushed to plugins (not proxy) with Vault integration for per-session credentials
-- 2025-10-09: Initial RFC proposing authorization layer in plugin SDK
+- 2025-10-11: Updated terminology from "Plugin SDK" to "Pattern SDK" for consistency with RFC-022
+- 2025-10-09: Updated to reflect architectural decision: token validation and exchange pushed to patterns (not proxy) with Vault integration for per-session credentials
+- 2025-10-09: Initial RFC proposing authorization layer in pattern SDK

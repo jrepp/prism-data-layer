@@ -1,7 +1,7 @@
 ---
 author: Platform Team
 created: 2025-10-09
-id: memo-008
+id: memo-vault-token-exchange
 status: Active
 tags:
 - vault
@@ -981,7 +981,7 @@ func (v *VaultClient) RevokeCredentials(ctx context.Context, leaseID string) err
 ### Step 6: Complete Plugin Integration
 
 ```go
-// plugins/redis/session.go
+// patterns/redis/session.go
 package main
 
 import (
@@ -990,7 +990,7 @@ import (
     "sync"
 
     "github.com/go-redis/redis/v8"
-    "github.com/prism/plugin-sdk-go/authz"
+    "github.com/prism/pattern-sdk/authz"
 )
 
 // PluginSession represents a single client session with credentials
@@ -1351,11 +1351,12 @@ func (scp *SessionConnectionPool) GetConnection(sessionID string) (*redis.Client
 
 ## Related Documents
 
-- [RFC-019: Plugin SDK Authorization Layer](/rfc/rfc-019-plugin-sdk-authorization-layer) - Authorization architecture
+- [RFC-019: Pattern SDK Authorization Layer](/rfc/rfc-019) - Authorization architecture
 - [RFC-011: Data Proxy Authentication](/rfc/rfc-011-data-proxy-authentication) - Secrets provider abstraction
 - [ADR-050: Topaz for Policy Authorization](/adr/adr-050-topaz-policy-authorization) - Policy enforcement
 
 ## Revision History
 
+- 2025-10-11: Updated terminology from "Plugin SDK" to "Pattern SDK" for consistency with RFC-022
 - 2025-10-10: Added service-originated request flow (K8s SA, AWS IAM, Azure MI, GCP SA authentication)
 - 2025-10-09: Initial memo documenting Vault token exchange flow for human-originated requests
