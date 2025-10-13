@@ -46,6 +46,21 @@ Runs:
 - Go pattern tests (MemStore, Core SDK)
 - Shows coverage percentages
 
+### Run Tests in Parallel (⚡ 40%+ Faster)
+
+```bash
+# Run all tests in parallel
+make test-parallel
+
+# Run only fast tests (skip acceptance)
+make test-parallel-fast
+
+# Run with fail-fast (stop on first failure)
+make test-parallel-fail-fast
+```
+
+Parallel testing reduces total test time from 17 minutes to 10 minutes by running independent test suites concurrently. See [tooling/PARALLEL_TESTING.md](tooling/PARALLEL_TESTING.md) for details.
+
 ### Run Integration Tests
 
 ```bash
@@ -79,12 +94,28 @@ make watch-test
 # Format all code
 make fmt
 
-# Lint all code
+# Lint all code (parallel - fastest!)
+make lint-parallel
+
+# Lint critical linters only (fast feedback)
+make lint-parallel-critical
+
+# Lint all code (traditional sequential)
 make lint
+
+# Auto-fix linting issues
+make lint-fix
 
 # Run pre-commit checks (format + lint + test)
 make pre-commit
 ```
+
+**Linting Performance:**
+- `make lint-parallel`: 3-4 seconds (45+ linters in 10 categories, all 15+ Go modules)
+- `make lint-parallel-critical`: 1-2 seconds (critical + security only)
+- `make lint`: 45+ minutes (sequential, legacy)
+
+See [MEMO-021](https://jrepp.github.io/prism-data-layer/memos/memo-021) for comprehensive parallel linting documentation.
 
 ### Documentation
 
