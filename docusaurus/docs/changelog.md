@@ -12,7 +12,70 @@ Quick access to recently updated documentation. Changes listed in reverse chrono
 
 ### 2025-10-13
 
-#### RFC-030: Schema Evolution and Validation for Decoupled Pub/Sub (NEW)
+#### GitHub Actions Acceptance Test Summary Reporter (NEW)
+**Links**: [tooling/acceptance_summary.py](https://github.com/jrepp/prism-data-layer/blob/main/tooling/acceptance_summary.py), [.github/workflows/acceptance-tests.yml](https://github.com/jrepp/prism-data-layer/blob/main/.github/workflows/acceptance-tests.yml)
+
+**Summary**: Implemented comprehensive acceptance test summary reporting for GitHub Actions workflow summaries using parallel matrix job aggregation:
+
+**Test Result Collection**:
+- JSON result files generated per matrix job (memstore, redis, nats)
+- Test output captured with pattern matching for PASS/FAIL counts
+- Go coverage reports generated and uploaded as artifacts
+- All results aggregated in final summary job
+
+**Summary Script** (`tooling/acceptance_summary.py`):
+- Collects test results from JSON files across all matrix jobs
+- Parses Go coverage files using `go tool cover -func`
+- Generates GitHub-flavored Markdown for $GITHUB_STEP_SUMMARY
+- Creates comprehensive report with:
+  - Overall status banner (✅ passed / ❌ failed)
+  - Summary statistics (patterns tested, pass/fail counts, duration, average coverage)
+  - Pattern results table (status, duration, coverage, test counts)
+  - Failed test details in collapsible sections
+  - Coverage visualization with progress bars
+
+**Workflow Changes** (`.github/workflows/acceptance-tests.yml`):
+- Matrix jobs now capture test output to `test-output.txt`
+- Exit code and test counts extracted via grep patterns
+- JSON results written to `build/acceptance-results/acceptance-{pattern}.json`
+- Results and coverage uploaded as artifacts per pattern
+- New `acceptance-summary` job downloads all artifacts and generates report
+- Artifact directory flattening handles GitHub Actions nested structure
+
+**Key Features**:
+- ✅ **Parallel execution**: Matrix jobs run independently (memstore, redis, nats)
+- ✅ **Comprehensive aggregation**: Collects results from all patterns into single view
+- ✅ **Coverage tracking**: Parses Go coverage reports and displays percentage per pattern
+- ✅ **Visual reporting**: Progress bars, emojis, and collapsible sections for readability
+- ✅ **Failed test debugging**: Last 50 lines of output shown for failed patterns
+- ✅ **Reuses primitives**: Leverages existing patterns from `parallel_acceptance_test.py`
+
+**Output Example**:
+```markdown
+## ✅ Acceptance Tests Passed
+
+### 📊 Summary
+- **Total Patterns:** 3
+- **Passed:** 3 ✅
+- **Failed:** 0 ❌
+- **Duration:** 45.2s
+- **Average Coverage:** 84.5%
+
+### 🎯 Pattern Results
+| Pattern | Status | Duration | Coverage | Tests |
+|---------|--------|----------|----------|-------|
+| memstore | ✅ Passed | 12.5s | 85.3% | 10 passed |
+| redis | ✅ Passed | 18.7s | 83.1% | 12 passed |
+| nats | ✅ Passed | 14.0s | 85.1% | 11 passed |
+```
+
+**Key Innovation**: Aggregates parallel matrix job results into unified GitHub Actions summary using JSON intermediates and artifact downloads. Reuses Go coverage parsing and result collection patterns from existing parallel test infrastructure. Provides single-pane-of-glass view of all acceptance test results with visual coverage tracking.
+
+**Impact**: Eliminates need to click through individual matrix jobs to understand acceptance test status. Summary appears immediately in GitHub Actions UI with all key metrics. Failed tests show relevant output for quick debugging. Coverage tracking ensures test quality is maintained across patterns. Foundation for adding more patterns to matrix (postgres, kafka) with automatic summary integration.
+
+---
+
+#### RFC-030: Schema Evolution and Validation for Decoupled Pub/Sub (UPDATED - v2)
 **Link**: [RFC-030](/rfc/rfc-030)
 
 **Summary**: Comprehensive RFC addressing schema evolution and validation for publisher/consumer patterns where producers and consumers are decoupled across async teams with different workflows and GitHub repositories:
