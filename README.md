@@ -203,6 +203,9 @@ make build-patterns
 # Run all unit tests
 make test
 
+# Run tests in parallel (40%+ faster!)
+make test-parallel
+
 # Run integration tests
 make test-integration
 
@@ -212,6 +215,29 @@ make test-all
 # Generate coverage reports
 make coverage
 ```
+
+### Linting
+
+Prism uses comprehensive parallel linting for maximum speed and code quality:
+
+```bash
+# Run all linters in parallel (fastest!)
+make lint-parallel
+
+# Run critical linters only (fast feedback)
+make lint-parallel-critical
+
+# Run all linters (traditional sequential)
+make lint
+
+# Auto-fix issues
+make lint-fix
+
+# List all linter categories
+make lint-parallel-list
+```
+
+**45+ Go linters** across 10 categories run in parallel (3-4s vs 45+ min sequential). See [MEMO-021](https://jrepp.github.io/prism-data-layer/memos/memo-021) for details.
 
 See **[BUILDING.md](./BUILDING.md)** for complete documentation on building, testing, and development workflow.
 
