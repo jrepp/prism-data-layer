@@ -52,7 +52,26 @@ Use the sidebar to browse all ADRs by category, or explore some key decisions:
 ### Development Process
 - [ADR-012: Go for Backend Plugins](/adr/adr-012) - Why Go for plugins vs Rust
 - [ADR-015: Go Testing Strategy](/adr/adr-015) - Test-driven development approach
-- [ADR-049: Podman Container Optimization](/adr/adr-049-podman-container-optimization) - Scratch containers and MicroVMs
+- [ADR-040: UV-Only Python Tooling](/adr/adr-040) - No system Python packages, uv for everything
+- [ADR-041: Pattern Acceptance Test Framework](/adr/adr-041) - Cross-backend test automation
+- [ADR-043: Hygienic Build System](/adr/adr-043) - Out-of-source builds in `build/` directory
+- [ADR-049: Podman Container Optimization](/adr/adr-049) - Scratch containers and MicroVMs
+
+### Local Development
+- [ADR-036: SQLite Config Storage](/adr/adr-036) - Local-first configuration
+- [ADR-044: Prismctl CLI with Typer](/adr/adr-044) - Python CLI design
+- [ADR-048: Local Signoz Observability](/adr/adr-048) - OpenTelemetry + Signoz for local testing
+- [ADR-016: Local Development Infrastructure](/adr/adr-016) - Dex, Signoz, service lifecycle
+
+### Performance & Reliability
+- [ADR-011: Implementation Roadmap](/adr/adr-011) - Phased delivery strategy
+- [ADR-013: Error Handling Strategy](/adr/adr-013) - Structured errors with retryability
+- [ADR-020: Parallel Testing Infrastructure](/adr/adr-020) - Fork-join test execution
+- [ADR-021: Parallel Linting System](/adr/adr-021) - 54-90x faster linting
+
+### Documentation & Governance
+- [ADR-042: MDX Docusaurus Migration](/adr/adr-042) - Documentation platform choice
+- [ADR-050: Documentation Validation Pipeline](/adr/adr-050) - Automated link checking, frontmatter validation
 
 ## ADR Status
 
