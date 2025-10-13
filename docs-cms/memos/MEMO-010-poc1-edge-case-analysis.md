@@ -11,7 +11,7 @@ tags:
 - poc1
 - memstore
 - redis
-title: 'MEMO-010: POC 1 Edge Case Analysis and Foundation Hardening'
+title: POC 1 Edge Case Analysis and Foundation Hardening
 updated: 2025-10-10
 ---
 

@@ -13,7 +13,7 @@ tags:
 - walking-skeleton
 - workstreams
 - superseded
-title: 'RFC-026: POC 1 - KeyValue with MemStore Implementation Plan (Original)'
+title: POC 1 - KeyValue with MemStore Implementation Plan (Original)
 updated: 2025-10-09
 ---
 

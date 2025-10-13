@@ -9,7 +9,7 @@ tags:
 - schema
 - validation
 - multicast-registry
-title: 'MEMO-017: Message Schema Configuration for Publish Slots'
+title: Message Schema Configuration for Publish Slots
 updated: 2025-10-11
 ---
 

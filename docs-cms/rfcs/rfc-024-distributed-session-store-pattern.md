@@ -12,7 +12,7 @@ tags:
 - replication
 - patterns
 - architecture
-title: 'RFC-024: Distributed Session Store Pattern - Cross-Region Session Management'
+title: Distributed Session Store Pattern - Cross-Region Session Management
 updated: 2025-10-09
 ---
 

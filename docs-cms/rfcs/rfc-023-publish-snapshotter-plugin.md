@@ -13,7 +13,7 @@ tags:
 - object-storage
 - write-only
 - buffering
-title: 'RFC-023: Publish Snapshotter Plugin - Write-Only Event Buffering with Pagination'
+title: Publish Snapshotter Plugin - Write-Only Event Buffering with Pagination
 updated: 2025-10-09
 ---
 

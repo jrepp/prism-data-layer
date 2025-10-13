@@ -10,7 +10,7 @@ tags:
 - backend
 - reliability
 - architecture
-title: 'ADR-035: Database Connection Pooling vs Direct Connections'
+title: Database Connection Pooling vs Direct Connections
 ---
 
 ## Context

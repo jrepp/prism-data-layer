@@ -10,7 +10,7 @@ tags:
 - implementation
 - testing
 - go
-title: 'MEMO-004: Backend Plugin Implementation Guide'
+title: Backend Plugin Implementation Guide
 updated: 2025-10-09
 ---
 

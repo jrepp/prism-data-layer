@@ -12,7 +12,7 @@ tags:
 - dx
 - infrastructure
 - hashicorp
-title: 'ADR-045: prismctl Stack Management Subcommand'
+title: prismctl Stack Management Subcommand
 ---
 
 ## Context

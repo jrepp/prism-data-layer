@@ -11,7 +11,7 @@ tags:
 - kubernetes
 - automation
 - dx
-title: 'ADR-037: Kubernetes Operator with Custom Resource Definitions'
+title: Kubernetes Operator with Custom Resource Definitions
 ---
 
 ## Context

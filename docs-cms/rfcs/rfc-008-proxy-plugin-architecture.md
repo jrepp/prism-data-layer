@@ -6,7 +6,7 @@ id: rfc-008
 project_id: prism-data-layer
 sidebar_label: RFC-008 Plugin Architecture
 status: Draft
-title: 'RFC-008: Proxy Plugin Architecture'
+title: Proxy Plugin Architecture
 ---
 
 # RFC-008: Proxy Plugin Architecture and Responsibility Separation

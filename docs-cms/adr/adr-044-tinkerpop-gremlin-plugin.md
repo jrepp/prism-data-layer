@@ -11,7 +11,7 @@ tags:
 - plugin
 - gremlin
 - tinkerpop
-title: 'ADR-044: TinkerPop/Gremlin Generic Plugin'
+title: TinkerPop/Gremlin Generic Plugin
 ---
 
 ## Context

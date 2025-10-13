@@ -10,7 +10,7 @@ tags:
 - grpc
 - api-design
 - operations
-title: 'ADR-027: Admin API via gRPC'
+title: Admin API via gRPC
 ---
 
 ## Context

@@ -11,7 +11,7 @@ tags:
 - reliability
 - operations
 - performance
-title: 'ADR-034: Product/Feature Sharding Strategy'
+title: Product/Feature Sharding Strategy
 ---
 
 ## Context

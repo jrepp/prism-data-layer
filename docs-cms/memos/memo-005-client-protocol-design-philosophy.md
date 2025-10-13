@@ -10,7 +10,7 @@ tags:
 - developer-experience
 - architecture
 - evolution
-title: 'MEMO-005: Client Protocol Design Philosophy - Composition vs Use-Case Specificity'
+title: Client Protocol Design Philosophy - Composition vs Use-Case Specificity
 updated: 2025-10-09
 ---
 

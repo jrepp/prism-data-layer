@@ -14,7 +14,7 @@ tags:
 - code-layout
 - build-system
 - tooling
-title: 'RFC-022: Core Pattern SDK - Build System and Physical Code Layout'
+title: Core Pattern SDK - Build System and Physical Code Layout
 updated: 2025-10-09
 ---
 

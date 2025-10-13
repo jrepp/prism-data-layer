@@ -15,7 +15,7 @@ tags:
 - go
 - vault
 - credentials
-title: 'RFC-019: Pattern SDK Authorization Layer - Token Validation and Policy Enforcement'
+title: Pattern SDK Authorization Layer - Token Validation and Policy Enforcement
 updated: 2025-10-11
 ---
 

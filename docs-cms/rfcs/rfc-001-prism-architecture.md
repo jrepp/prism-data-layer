@@ -5,7 +5,7 @@ doc_uuid: f81acbd4-5650-408a-904d-64a33e0742ef
 id: rfc-001
 project_id: prism-data-layer
 status: Draft
-title: 'RFC-001: Prism Data Access Layer Architecture'
+title: Prism Data Access Layer Architecture
 updated: 2025-10-07
 ---
 

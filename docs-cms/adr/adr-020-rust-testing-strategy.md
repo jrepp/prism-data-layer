@@ -10,7 +10,7 @@ tags:
 - testing
 - quality
 - ci-cd
-title: 'ADR-020: Rust Testing Strategy'
+title: Rust Testing Strategy
 ---
 
 ## Context

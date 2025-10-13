@@ -6,7 +6,7 @@ id: rfc-007
 project_id: prism-data-layer
 sidebar_label: RFC-007 Cache Strategies
 status: Draft
-title: 'RFC-007: Cache Strategies for Data Layer'
+title: Cache Strategies for Data Layer
 ---
 
 # RFC-007: Cache Strategies for Data Layer

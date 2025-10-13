@@ -11,7 +11,7 @@ tags:
 - testing
 - opentelemetry
 - prometheus
-title: 'MEMO-016: Observability and Lifecycle Implementation Summary'
+title: Observability and Lifecycle Implementation Summary
 updated: 2025-10-12
 ---
 

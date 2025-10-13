@@ -7,7 +7,7 @@ project_id: prism-data-layer
 related: RFC-001, ADR-024
 status: Draft
 supersedes: N/A
-title: 'RFC-002: Data Layer Interface Specification'
+title: Data Layer Interface Specification
 updated: 2025-10-07
 ---
 

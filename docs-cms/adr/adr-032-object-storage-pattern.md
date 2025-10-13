@@ -12,7 +12,7 @@ tags:
 - s3
 - blobs
 - local-testing
-title: 'ADR-032: Object Storage Pattern with MinIO'
+title: Object Storage Pattern with MinIO
 ---
 
 # ADR-032: Object Storage Pattern with MinIO

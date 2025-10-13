@@ -21,10 +21,10 @@ export interface DocItem {
 }
 
 /**
- * Extract document number from filename (e.g., "memo-010" → 10)
+ * Extract document number from ID (e.g., "memo-010" → 10)
  */
-function extractNumber(fileName: string): number {
-  const match = fileName.match(/-(0*\d+)/);
+function extractNumber(id: string): number {
+  const match = id.match(/-(0*\d+)/);
   return match ? parseInt(match[1], 10) : 999999;
 }
 
@@ -69,10 +69,13 @@ export function generateSidebar(docsDir: string, prefix: string) {
     // Determine if this is the index/category page
     const isIndex = fileName === 'index.md' || data.sidebar_position === 1;
 
+    const docId = data.id || fileName.replace('.md', '');
+    const docTitle = data.title || fileName;
+
     docs.push({
-      id: data.id || fileName.replace('.md', ''),
-      title: data.title || fileName,
-      number: isIndex ? 0 : extractNumber(fileName),
+      id: docId,
+      title: docTitle,
+      number: isIndex ? 0 : extractNumber(docId),  // Extract from ID, not filename
       fileName,
       isIndex,
     });
@@ -90,23 +93,33 @@ export function generateSidebar(docsDir: string, prefix: string) {
     if (doc.isIndex) {
       // Category summary page - use plain title
       return {
-        type: 'doc',
+        type: 'doc' as const,
         id: doc.id,
         label: doc.title,
       };
     }
 
     // Regular document - format with de-emphasized number
-    // Extract the main title without the prefix
+    // Strip the prefix from title if present (e.g., "MEMO-010: Title" → "Title")
     const titleMatch = doc.title.match(/^[A-Z]+-\d+:\s*(.+)$/);
-    const mainTitle = titleMatch ? titleMatch[1] : doc.title;
+    const mainTitle = titleMatch ? titleMatch[1].trim() : doc.title;
 
-    // Format: "Main Title • PREFIX-NNN"
-    const upperPrefix = prefix.toUpperCase();
-    const numberPart = String(doc.number).padStart(3, '0');
+    // Extract prefix and number from document ID (e.g., "memo-010" → "MEMO", "010")
+    const idMatch = doc.id.match(/^([a-z]+)-(\d+)$/);
+    if (!idMatch) {
+      // Fallback for documents without standard ID format
+      return {
+        type: 'doc' as const,
+        id: doc.id,
+        label: doc.title,
+      };
+    }
+
+    const upperPrefix = idMatch[1].toUpperCase();
+    const numberPart = idMatch[2].padStart(3, '0');
 
     return {
-      type: 'doc',
+      type: 'doc' as const,
       id: doc.id,
       label: `${mainTitle} • ${upperPrefix}-${numberPart}`,
       customProps: {

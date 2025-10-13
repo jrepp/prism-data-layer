@@ -13,7 +13,7 @@ tags:
 - openpolicyagent
 - rbac
 - abac
-title: 'ADR-050: Topaz for Policy-Based Authorization'
+title: Topaz for Policy-Based Authorization
 ---
 
 # ADR-050: Topaz for Policy-Based Authorization

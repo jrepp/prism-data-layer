@@ -10,7 +10,7 @@ tags:
 - summary
 - performance
 - lessons-learned
-title: 'MEMO-018: POC 4 Multicast Registry - Complete Summary'
+title: POC 4 Multicast Registry - Complete Summary
 updated: 2025-10-11
 ---
 

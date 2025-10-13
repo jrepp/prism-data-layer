@@ -11,8 +11,7 @@ tags:
 - development
 - testing
 - local-infrastructure
-title: 'MEMO-009: Topaz Local Authorizer Configuration for Development and Integration
-  Testing'
+title: Topaz Local Authorizer Configuration for Development and Integration Testing
 updated: 2025-10-11
 ---
 

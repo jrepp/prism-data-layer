@@ -9,7 +9,7 @@ tags:
 - documentation
 - workflow
 - best-practices
-title: 'MEMO-003: Documentation-First Development Approach'
+title: Documentation-First Development Approach
 updated: 2025-10-09
 ---
 

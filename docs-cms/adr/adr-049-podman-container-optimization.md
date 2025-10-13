@@ -12,7 +12,7 @@ tags:
 - performance
 - dx
 - macos
-title: 'ADR-049: Podman and Container Optimization for Instant Testing'
+title: Podman and Container Optimization for Instant Testing
 ---
 
 # ADR-049: Podman and Container Optimization for Instant Testing

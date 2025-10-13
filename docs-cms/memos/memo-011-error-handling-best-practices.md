@@ -10,7 +10,7 @@ tags:
 - distributed-systems
 - reliability
 - best-practices
-title: 'MEMO-011: Distributed Error Handling Best Practices'
+title: Distributed Error Handling Best Practices
 updated: 2025-10-10
 ---
 

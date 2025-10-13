@@ -11,7 +11,7 @@ tags:
 - containers
 - plugins
 - backends
-title: 'ADR-025: Container Plugin Model'
+title: Container Plugin Model
 ---
 
 ## Context

@@ -10,7 +10,7 @@ tags:
 - testing
 - debugging
 - client
-title: 'RFC-028: prism-probe - CLI Client for Testing and Debugging'
+title: prism-probe - CLI Client for Testing and Debugging
 updated: 2025-10-11
 ---
 

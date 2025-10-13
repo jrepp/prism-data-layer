@@ -10,7 +10,7 @@ tags:
 - cli
 - configuration
 - developer-experience
-title: 'ADR-016: Go CLI and Configuration Management'
+title: Go CLI and Configuration Management
 ---
 
 ## Context

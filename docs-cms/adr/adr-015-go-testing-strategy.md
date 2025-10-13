@@ -10,7 +10,7 @@ tags:
 - testing
 - quality
 - ci-cd
-title: 'ADR-015: Go Testing Strategy'
+title: Go Testing Strategy
 ---
 
 ## Context

@@ -9,7 +9,7 @@ tags:
 - backend
 - architecture
 - dx
-title: 'ADR-005: Backend Plugin Architecture'
+title: Backend Plugin Architecture
 ---
 
 ## Context

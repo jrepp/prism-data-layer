@@ -10,7 +10,7 @@ tags:
 - security
 - deployment
 - docker
-title: 'ADR-026: Distroless Base Images for Container Components'
+title: Distroless Base Images for Container Components
 ---
 
 ## Context

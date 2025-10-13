@@ -11,7 +11,7 @@ tags:
 - backend
 - isolation
 - scalability
-title: 'ADR-038: Backend Connector Buffer Architecture'
+title: Backend Connector Buffer Architecture
 ---
 
 ## Context

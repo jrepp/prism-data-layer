@@ -11,7 +11,7 @@ tags:
 - testing
 - local-development
 - dex
-title: 'ADR-046: Dex IDP for Local Identity Testing'
+title: Dex IDP for Local Identity Testing
 ---
 
 ## Context

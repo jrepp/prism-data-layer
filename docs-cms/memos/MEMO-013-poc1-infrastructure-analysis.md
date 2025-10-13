@@ -10,7 +10,7 @@ tags:
 - load-testing
 - infrastructure
 - developer-experience
-title: 'MEMO-013: POC 1 Infrastructure Analysis - SDK and Load Testing'
+title: POC 1 Infrastructure Analysis - SDK and Load Testing
 updated: 2025-10-11
 ---
 

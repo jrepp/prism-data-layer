@@ -9,7 +9,7 @@ tags:
 - testing
 - dx
 - reliability
-title: 'ADR-004: Local-First Testing Strategy'
+title: Local-First Testing Strategy
 ---
 
 ## Context

@@ -9,7 +9,7 @@ tags:
 - performance
 - multicast-registry
 - poc4
-title: 'MEMO-019: Load Test Results - 100 req/sec Mixed Workload'
+title: Load Test Results - 100 req/sec Mixed Workload
 updated: 2025-10-11
 ---
 

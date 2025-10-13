@@ -13,7 +13,7 @@ tags:
 - dex
 - signoz
 - developer-experience
-title: 'RFC-016: Local Development Infrastructure'
+title: Local Development Infrastructure
 updated: 2025-10-09
 ---
 

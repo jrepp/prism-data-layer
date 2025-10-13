@@ -9,7 +9,7 @@ tags:
 - refactoring
 - code-reuse
 - poc1
-title: 'MEMO-014: Pattern SDK Shared Complexity Analysis'
+title: Pattern SDK Shared Complexity Analysis
 updated: 2025-10-12
 ---
 

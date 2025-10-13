@@ -10,7 +10,7 @@ tags:
 - testing
 - tooling
 - workflows
-title: 'MEMO-012: Developer Experience and Common Workflows'
+title: Developer Experience and Common Workflows
 updated: 2025-10-11
 ---
 

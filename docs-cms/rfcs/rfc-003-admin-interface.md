@@ -5,7 +5,7 @@ doc_uuid: c6dbb179-7bd3-4d60-9262-8ca117270771
 id: rfc-003
 project_id: prism-data-layer
 status: Proposed
-title: 'RFC-003: Admin Interface for Prism'
+title: Admin Interface for Prism
 updated: 2025-10-08
 ---
 

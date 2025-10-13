@@ -9,7 +9,7 @@ tags:
 - architecture
 - backend
 - operations
-title: 'ADR-006: Namespace and Multi-Tenancy'
+title: Namespace and Multi-Tenancy
 ---
 
 ## Context

@@ -12,7 +12,7 @@ tags:
 - aws
 - plugin
 - messaging
-title: 'ADR-042: AWS SQS Queue Backend Plugin'
+title: AWS SQS Queue Backend Plugin
 ---
 
 ## Context

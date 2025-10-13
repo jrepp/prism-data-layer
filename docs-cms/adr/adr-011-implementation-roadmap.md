@@ -8,7 +8,7 @@ status: Accepted
 tags:
 - architecture
 - planning
-title: 'ADR-011: Implementation Roadmap and Next Steps'
+title: Implementation Roadmap and Next Steps
 ---
 
 ## Context

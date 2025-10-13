@@ -11,7 +11,7 @@ tags:
 - proxy
 - backends
 - security
-title: 'RFC-011: Data Proxy Authentication (Input/Output)'
+title: Data Proxy Authentication (Input/Output)
 updated: 2025-10-09
 ---
 

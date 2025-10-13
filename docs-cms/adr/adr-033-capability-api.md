@@ -10,7 +10,7 @@ tags:
 - client-server
 - versioning
 - operations
-title: 'ADR-033: Capability API for Prism Instance Queries'
+title: Capability API for Prism Instance Queries
 ---
 
 ## Context

@@ -14,7 +14,7 @@ tags:
 - sse
 - grpc
 - bridge
-title: 'RFC-020: Streaming HTTP Listener - API-Specific Adapter Pattern'
+title: Streaming HTTP Listener - API-Specific Adapter Pattern
 updated: 2025-10-09
 ---
 

@@ -10,7 +10,7 @@ tags:
 - performance
 - tooling
 - evaluation
-title: 'RFC-029: Load Testing Framework Evaluation and Strategy'
+title: Load Testing Framework Evaluation and Strategy
 updated: 2025-10-12
 ---
 

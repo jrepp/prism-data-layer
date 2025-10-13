@@ -11,7 +11,7 @@ tags:
 - cache
 - cleanup
 - operations
-title: 'ADR-031: TTL Defaults for Client-Configured Data'
+title: TTL Defaults for Client-Configured Data
 ---
 
 # ADR-031: TTL Defaults for Client-Configured Dynamic Data

@@ -10,7 +10,7 @@ tags:
 - error-handling
 - reliability
 - observability
-title: 'ADR-013: Go Error Handling Strategy'
+title: Go Error Handling Strategy
 ---
 
 ## Context

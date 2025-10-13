@@ -11,7 +11,7 @@ tags:
 - plugin
 - protobuf
 - api-design
-title: 'ADR-043: Plugin Capability Discovery System'
+title: Plugin Capability Discovery System
 ---
 
 ## Context

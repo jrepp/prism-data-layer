@@ -1,0 +1,813 @@
+<!doctype html>
+<html lang="en" dir="ltr" class="docs-wrapper plugin-docs plugin-id-default docs-version-current docs-doc-page docs-doc-id-changelog" data-has-hydrated="false">
+<head>
+<meta charset="UTF-8">
+<meta name="generator" content="Docusaurus v3.9.1">
+<title data-rh="true">Changelog | Prism</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:image" content="https://jrepp.github.io/prism-data-layer/img/docusaurus-social-card.jpg"><meta data-rh="true" name="twitter:image" content="https://jrepp.github.io/prism-data-layer/img/docusaurus-social-card.jpg"><meta data-rh="true" property="og:url" content="https://jrepp.github.io/prism-data-layer/docs/changelog"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Changelog | Prism"><meta data-rh="true" name="description" content="Recent changes to Prism documentation with quick links"><meta data-rh="true" property="og:description" content="Recent changes to Prism documentation with quick links"><link data-rh="true" rel="icon" href="/prism-data-layer/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://jrepp.github.io/prism-data-layer/docs/changelog"><link data-rh="true" rel="alternate" href="https://jrepp.github.io/prism-data-layer/docs/changelog" hreflang="en"><link data-rh="true" rel="alternate" href="https://jrepp.github.io/prism-data-layer/docs/changelog" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Changelog","item":"https://jrepp.github.io/prism-data-layer/docs/changelog"}]}</script><link rel="stylesheet" href="/prism-data-layer/assets/css/styles.3b9928e7.css">
+<script src="/prism-data-layer/assets/js/runtime~main.9b513438.js" defer="defer"></script>
+<script src="/prism-data-layer/assets/js/main.77fbf61e.js" defer="defer"></script>
+</head>
+<body class="navigation-with-keyboard">
+<svg style="display: none;"><defs>
+<symbol id="theme-svg-external-link" viewBox="0 0 24 24"><path fill="currentColor" d="M21 13v10h-21v-19h12v2h-10v15h17v-8h2zm3-12h-10.988l4.035 4-6.977 7.07 2.828 2.828 6.977-7.07 4.125 4.172v-11z"/></symbol>
+</defs></svg>
+<script>!function(){var t=function(){try{return new URLSearchParams(window.location.search).get("docusaurus-theme")}catch(t){}}()||function(){try{return window.localStorage.getItem("theme")}catch(t){}}();document.documentElement.setAttribute("data-theme",t||(window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light")),document.documentElement.setAttribute("data-theme-choice",t||"system")}(),function(){try{const c=new URLSearchParams(window.location.search).entries();for(var[t,e]of c)if(t.startsWith("docusaurus-data-")){var a=t.replace("docusaurus-data-","data-");document.documentElement.setAttribute(a,e)}}catch(t){}}()</script><div id="__docusaurus"><div role="region" aria-label="Skip to main content"><a class="skipToContent_fXgn" href="#__docusaurus_skipToContent_fallback">Skip to main content</a></div><nav aria-label="Main" class="theme-layout-navbar navbar navbar--fixed-top"><div class="navbar__inner"><div class="navbar__items"><button aria-label="Toggle navigation bar" aria-expanded="false" class="navbar__toggle clean-btn" type="button"><svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><path stroke="currentColor" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2" d="M4 7h22M4 15h22M4 23h22"></path></svg></button><a class="navbar__brand" href="/prism-data-layer/"><div class="navbar__logo"><img src="/prism-data-layer/img/prism-logo-transparent-background.png" alt="Prism Data Gateway Logo" class="themedComponent_mlkZ themedComponent--light_NVdE" height="32" width="32"><img src="/prism-data-layer/img/prism-logo-transparent-background.png" alt="Prism Data Gateway Logo" class="themedComponent_mlkZ themedComponent--dark_xIcU" height="32" width="32"></div><b class="navbar__title text--truncate">Prism</b></a><a class="navbar__item navbar__link" href="/prism-data-layer/docs/intro">Overview</a><a aria-current="page" class="navbar__item navbar__link navbar__link--active" href="/prism-data-layer/docs/changelog">Change Log</a><div class="navbar__item dropdown dropdown--hoverable"><a href="#" aria-haspopup="true" aria-expanded="false" role="button" class="navbar__link">Documentation</a><ul class="dropdown__menu"><li><a class="dropdown__link" href="/prism-data-layer/adr">ADRs (Architecture Decision Records)</a></li><li><a class="dropdown__link" href="/prism-data-layer/rfc">RFCs (Request for Comments)</a></li><li><a class="dropdown__link" href="/prism-data-layer/memos">Memos (Technical Analysis)</a></li><li><a class="dropdown__link" href="/prism-data-layer/prds">PRDs (Product Requirements)</a></li></ul></div></div><div class="navbar__items navbar__items--right"><div class="buildInfo_asc2"><span class="version_ADrX" title="Build: f3c4668">f3c4668</span><span class="separator_VfCt">•</span><span class="buildTime_n1Nn" title="Last updated: Oct 13">Oct 13</span></div><div class="navbar__item"><a href="https://github.com/jrepp/prism-data-layer/actions/workflows/docs.yml" target="_blank" rel="noopener noreferrer" title="GitHub Pages" style="display: flex; align-items: center; padding: 0 0.5rem;"><img src="https://github.com/jrepp/prism-data-layer/actions/workflows/docs.yml/badge.svg" alt="Build" style="margin: 0;"></a></div><a href="https://github.com/jrepp/prism-data-layer" target="_blank" rel="noopener noreferrer" class="navbar__item navbar__link">GitHub<svg width="13.5" height="13.5" aria-label="(opens in new tab)" class="iconExternalLink_nPIU"><use href="#theme-svg-external-link"></use></svg></a><div class="toggle_vylO colorModeToggle_x44X"><button class="clean-btn toggleButton_gllP toggleButtonDisabled_aARS" type="button" disabled="" title="system mode" aria-label="Switch between dark and light mode (currently system mode)"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_g3eP lightToggleIcon_pyhR"><path fill="currentColor" d="M12,9c1.65,0,3,1.35,3,3s-1.35,3-3,3s-3-1.35-3-3S10.35,9,12,9 M12,7c-2.76,0-5,2.24-5,5s2.24,5,5,5s5-2.24,5-5 S14.76,7,12,7L12,7z M2,13l2,0c0.55,0,1-0.45,1-1s-0.45-1-1-1l-2,0c-0.55,0-1,0.45-1,1S1.45,13,2,13z M20,13l2,0c0.55,0,1-0.45,1-1 s-0.45-1-1-1l-2,0c-0.55,0-1,0.45-1,1S19.45,13,20,13z M11,2v2c0,0.55,0.45,1,1,1s1-0.45,1-1V2c0-0.55-0.45-1-1-1S11,1.45,11,2z M11,20v2c0,0.55,0.45,1,1,1s1-0.45,1-1v-2c0-0.55-0.45-1-1-1C11.45,19,11,19.45,11,20z M5.99,4.58c-0.39-0.39-1.03-0.39-1.41,0 c-0.39,0.39-0.39,1.03,0,1.41l1.06,1.06c0.39,0.39,1.03,0.39,1.41,0s0.39-1.03,0-1.41L5.99,4.58z M18.36,16.95 c-0.39-0.39-1.03-0.39-1.41,0c-0.39,0.39-0.39,1.03,0,1.41l1.06,1.06c0.39,0.39,1.03,0.39,1.41,0c0.39-0.39,0.39-1.03,0-1.41 L18.36,16.95z M19.42,5.99c0.39-0.39,0.39-1.03,0-1.41c-0.39-0.39-1.03-0.39-1.41,0l-1.06,1.06c-0.39,0.39-0.39,1.03,0,1.41 s1.03,0.39,1.41,0L19.42,5.99z M7.05,18.36c0.39-0.39,0.39-1.03,0-1.41c-0.39-0.39-1.03-0.39-1.41,0l-1.06,1.06 c-0.39,0.39-0.39,1.03,0,1.41s1.03,0.39,1.41,0L7.05,18.36z"></path></svg><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_g3eP darkToggleIcon_wfgR"><path fill="currentColor" d="M9.37,5.51C9.19,6.15,9.1,6.82,9.1,7.5c0,4.08,3.32,7.4,7.4,7.4c0.68,0,1.35-0.09,1.99-0.27C17.45,17.19,14.93,19,12,19 c-3.86,0-7-3.14-7-7C5,9.07,6.81,6.55,9.37,5.51z M12,3c-4.97,0-9,4.03-9,9s4.03,9,9,9s9-4.03,9-9c0-0.46-0.04-0.92-0.1-1.36 c-0.98,1.37-2.58,2.26-4.4,2.26c-2.98,0-5.4-2.42-5.4-5.4c0-1.81,0.89-3.42,2.26-4.4C12.92,3.04,12.46,3,12,3L12,3z"></path></svg><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_g3eP systemToggleIcon_QzmC"><path fill="currentColor" d="m12 21c4.971 0 9-4.029 9-9s-4.029-9-9-9-9 4.029-9 9 4.029 9 9 9zm4.95-13.95c1.313 1.313 2.05 3.093 2.05 4.95s-0.738 3.637-2.05 4.95c-1.313 1.313-3.093 2.05-4.95 2.05v-14c1.857 0 3.637 0.737 4.95 2.05z"></path></svg></button></div><div class="navbarSearchContainer_Bca1"><div class="navbar__search searchBarContainer_NW3z" dir="ltr"><input placeholder="Search" aria-label="Search" class="navbar__search-input searchInput_YFbd" value=""><div class="loadingRing_RJI3 searchBarLoadingRing_YnHq"><div></div><div></div><div></div><div></div></div></div></div></div></div><div role="presentation" class="navbar-sidebar__backdrop"></div></nav><div id="__docusaurus_skipToContent_fallback" class="theme-layout-main main-wrapper mainWrapper_z2l0"><div class="docsWrapper_hBAB"><button aria-label="Scroll back to top" class="clean-btn theme-back-to-top-button backToTopButton_sjWU" type="button"></button><div class="docRoot_UBD9"><aside class="theme-doc-sidebar-container docSidebarContainer_YfHR"><div class="sidebarViewport_aRkj"><div class="sidebar_njMd"><nav aria-label="Docs sidebar" class="menu thin-scrollbar menu_SIkG"><ul class="theme-doc-sidebar-menu menu__list"><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link menu__link--active" aria-current="page" href="/prism-data-layer/docs/changelog"><span title="Changelog" class="linkLabel_WmDU">Changelog</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/prism-data-layer/docs/intro"><span title="Overview" class="linkLabel_WmDU">Overview</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/prism-data-layer/docs/key-documents"><span title="Foundations" class="linkLabel_WmDU">Foundations</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/prism-data-layer/docs/architecture"><span title="Architecture" class="linkLabel_WmDU">Architecture</span></a></li></ul></nav></div></div></aside><main class="docMainContainer_TBSr"><div class="container padding-top--md padding-bottom--lg"><div class="row"><div class="col docItemCol_z5aJ"><div class="docItemContainer_c0TR"><article><nav class="theme-doc-breadcrumbs breadcrumbsContainer_Z_bl" aria-label="Breadcrumbs"><ul class="breadcrumbs"><li class="breadcrumbs__item"><a aria-label="Home page" class="breadcrumbs__link" href="/prism-data-layer/"><svg viewBox="0 0 24 24" class="breadcrumbHomeIcon_YNFT"><path d="M10 19v-5h4v5c0 .55.45 1 1 1h3c.55 0 1-.45 1-1v-7h1.7c.46 0 .68-.57.33-.87L12.67 3.6c-.38-.34-.96-.34-1.34 0l-8.36 7.53c-.34.3-.13.87.33.87H5v7c0 .55.45 1 1 1h3c.55 0 1-.45 1-1z" fill="currentColor"></path></svg></a></li><li class="breadcrumbs__item breadcrumbs__item--active"><span class="breadcrumbs__link">Changelog</span></li></ul></nav><div class="tocCollapsible_ETCw theme-doc-toc-mobile tocMobile_ITEo"><button type="button" class="clean-btn tocCollapsibleButton_TO0P">On this page</button></div><div class="theme-doc-markdown markdown"><header><h1>Documentation Change Log</h1></header>
+<p>Quick access to recently updated documentation. Changes listed in reverse chronological order (newest first).</p>
+<h2 class="anchor anchorWithStickyNavbar_LWe7" id="recent-changes">Recent Changes<a href="#recent-changes" class="hash-link" aria-label="Direct link to Recent Changes" title="Direct link to Recent Changes" translate="no">​</a></h2>
+<h3 class="anchor anchorWithStickyNavbar_LWe7" id="2025-10-13">2025-10-13<a href="#2025-10-13" class="hash-link" aria-label="Direct link to 2025-10-13" title="Direct link to 2025-10-13" translate="no">​</a></h3>
+<h4 class="anchor anchorWithStickyNavbar_LWe7" id="prismctl-oidc-integration-test-infrastructure-new---phases-1-3-complete">Prismctl OIDC Integration Test Infrastructure (NEW - Phases 1-3 Complete)<a href="#prismctl-oidc-integration-test-infrastructure-new---phases-1-3-complete" class="hash-link" aria-label="Direct link to Prismctl OIDC Integration Test Infrastructure (NEW - Phases 1-3 Complete)" title="Direct link to Prismctl OIDC Integration Test Infrastructure (NEW - Phases 1-3 Complete)" translate="no">​</a></h4>
+<p><strong>Links</strong>: <a href="/prism-data-layer/memos/memo-022">MEMO-022</a>, <a href="https://github.com/jrepp/prism-data-layer/blob/main/cli/tests/integration/README.md" target="_blank" rel="noopener noreferrer">Integration Tests README</a></p>
+<p><strong>Summary</strong>: Implemented Phases 1-3 of prismctl OIDC integration testing infrastructure to address the 60% coverage gap in authentication flows:</p>
+<p><strong>Test Infrastructure Created</strong>:</p>
+<ul>
+<li><code>cli/tests/integration/</code> directory with complete test suite (24 tests)</li>
+<li><code>docker-compose.dex.yml</code>: Local Dex OIDC server for testing</li>
+<li><code>dex-config.yaml</code>: Test configuration with static test users (<a href="mailto:test@prism.local" target="_blank" rel="noopener noreferrer">test@prism.local</a>, <a href="mailto:admin@prism.local" target="_blank" rel="noopener noreferrer">admin@prism.local</a>)</li>
+<li><code>dex_server.py</code>: DexTestServer context manager for test lifecycle</li>
+<li><code>conftest.py</code>: Pytest configuration with custom markers</li>
+<li><code>README.md</code>: Comprehensive testing guide with troubleshooting</li>
+</ul>
+<p><strong>Test Coverage</strong> (24 tests total):</p>
+<ul>
+<li><code>test_password_flow.py</code>: 5 tests (success, invalid username/password, empty credentials, multiple users)</li>
+<li><code>test_token_refresh.py</code>: 6 tests (success, missing refresh token, invalid token, expiry extension, identity preservation, multiple refreshes)</li>
+<li><code>test_userinfo.py</code>: 8 tests (success, expected claims, different users, expired token, invalid token, after refresh, empty token)</li>
+<li><code>test_cli_endtoend.py</code>: 5 tests (login/logout cycle, whoami without login, invalid credentials, multiple cycles, different users)</li>
+</ul>
+<p><strong>Makefile Integration</strong>:</p>
+<ul>
+<li><code>test-prismctl-integration</code>: Automated test runner with Dex lifecycle management</li>
+<li>Podman machine startup, Dex container management, cleanup on failure</li>
+<li>Coverage reporting with <code>pytest --cov=prismctl.auth</code></li>
+</ul>
+<p><strong>Key Features</strong>:</p>
+<ul>
+<li>Local Dex server starts automatically via Podman Compose</li>
+<li>Health check waits for Dex readiness (5-second timeout)</li>
+<li>Temporary config generation per test (isolated test environments)</li>
+<li>Two static test users with password authentication</li>
+<li>Integration tests achieve <strong>60% coverage</strong> of OIDC flows (password, refresh, userinfo)</li>
+<li>Combined with unit tests: <strong>85%+ coverage</strong> for <code>prismctl/auth.py</code></li>
+</ul>
+<p><strong>Implementation Status</strong> (Phases 1-3 Complete):</p>
+<ul>
+<li>✅ Test infrastructure (Dex compose, config)</li>
+<li>✅ DexTestServer utility class</li>
+<li>✅ Makefile target</li>
+<li>✅ Password flow tests (5 scenarios)</li>
+<li>✅ Token refresh tests (6 scenarios)</li>
+<li>✅ Userinfo endpoint tests (8 scenarios)</li>
+<li>✅ CLI end-to-end tests (5 scenarios)</li>
+<li>⏳ Device code flow tests (Phase 2 - requires browser mock)</li>
+<li>⏳ Error handling tests (Phase 3 - network failures, timeouts)</li>
+<li>⏳ CI/CD integration (Phase 4 - GitHub Actions)</li>
+</ul>
+<p><strong>Key Innovation</strong>: Local Dex server enables realistic OIDC flow testing without external dependencies or cloud services. DexTestServer context manager handles full lifecycle (start → wait → test → cleanup). CLI end-to-end tests verify complete workflows via subprocess calls (realistic usage patterns). Password flow tests serve as foundation for remaining OIDC flows (device code, authorization code).</p>
+<p><strong>Impact</strong>: Addresses MEMO-022 Phases 1-3 requirements. Prismctl authentication testing now has comprehensive integration coverage for password flow, token refresh, userinfo endpoints, and complete CLI workflows. CLI end-to-end tests verify login → whoami → logout cycles with error handling. Foundation established for Phase 4 (CI/CD integration). Combined unit + integration testing achieves 85%+ coverage goal with 24 total integration tests.</p>
+<hr>
+<h4 class="anchor anchorWithStickyNavbar_LWe7" id="podman-machine-setup-documentation-new">Podman Machine Setup Documentation (NEW)<a href="#podman-machine-setup-documentation-new" class="hash-link" aria-label="Direct link to Podman Machine Setup Documentation (NEW)" title="Direct link to Podman Machine Setup Documentation (NEW)" translate="no">​</a></h4>
+<p><strong>Links</strong>: <a href="https://github.com/jrepp/prism-data-layer/blob/main/BUILDING.md" target="_blank" rel="noopener noreferrer">BUILDING.md</a>, <a href="https://github.com/jrepp/prism-data-layer/blob/main/CLAUDE.md" target="_blank" rel="noopener noreferrer">CLAUDE.md</a></p>
+<p><strong>Summary</strong>: Added comprehensive Podman machine setup instructions to fix &quot;rootless Docker not found&quot; error from testcontainers-go:</p>
+<p><strong>BUILDING.md Troubleshooting Section</strong>:</p>
+<ul>
+<li>New &quot;Podman machine not running&quot; troubleshooting entry</li>
+<li>Step-by-step instructions: <code>podman machine start</code> + <code>export DOCKER_HOST</code></li>
+<li>Explanation linking to ADR-049 (why Podman over Docker Desktop)</li>
+<li>Alternative fast test approach: <code>go test -short ./...</code> (skips containers)</li>
+<li>Dynamic DOCKER_HOST setup using <code>podman machine inspect</code> command</li>
+</ul>
+<p><strong>CLAUDE.md Development Workflow</strong>:</p>
+<ul>
+<li>Added Podman machine startup to Setup section</li>
+<li>Included DOCKER_HOST environment variable configuration</li>
+<li>Documents that Podman machine is required for testcontainers</li>
+</ul>
+<p><strong>Key Facts</strong>: Per ADR-049, project uses Podman instead of Docker Desktop for container management. testcontainers-go library requires DOCKER_HOST environment variable to find Podman socket. Without this, integration tests fail with &quot;panic: rootless Docker not found&quot;. Alternative is to run <code>go test -short</code> which skips integration tests and provides instant feedback (&lt;1ms) using in-process backends (MemStore, SQLite).</p>
+<p><strong>Impact</strong>: Eliminates common setup error for new developers. Documents why Podman is used (ADR-049 decision). Provides both container-based and instant testing workflows. Developers can now run full acceptance tests with real backends or skip to instant feedback mode. Foundation for local development environment matches CI/CD infrastructure.</p>
+<hr>
+<h3 class="anchor anchorWithStickyNavbar_LWe7" id="2025-10-12">2025-10-12<a href="#2025-10-12" class="hash-link" aria-label="Direct link to 2025-10-12" title="Direct link to 2025-10-12" translate="no">​</a></h3>
+<h4 class="anchor anchorWithStickyNavbar_LWe7" id="parallel-linting-system-with-comprehensive-python-tooling-configuration-new">Parallel Linting System with Comprehensive Python Tooling Configuration (NEW)<a href="#parallel-linting-system-with-comprehensive-python-tooling-configuration-new" class="hash-link" aria-label="Direct link to Parallel Linting System with Comprehensive Python Tooling Configuration (NEW)" title="Direct link to Parallel Linting System with Comprehensive Python Tooling Configuration (NEW)" translate="no">​</a></h4>
+<p><strong>Links</strong>: <a href="/prism-data-layer/memos/memo-021">MEMO-021</a>, <a href="https://github.com/jrepp/prism-data-layer/blob/main/README.md" target="_blank" rel="noopener noreferrer">README.md</a>, <a href="https://github.com/jrepp/prism-data-layer/blob/main/.golangci.yml" target="_blank" rel="noopener noreferrer">.golangci.yml</a>, <a href="https://github.com/jrepp/prism-data-layer/blob/main/ruff.toml" target="_blank" rel="noopener noreferrer">ruff.toml</a></p>
+<p><strong>Summary</strong>: Implemented comprehensive parallel linting infrastructure achieving 54-90x speedup over sequential linting with complete Python tooling configuration:</p>
+<p><strong>Parallel Linting System</strong> (<a href="/prism-data-layer/memos/memo-021">MEMO-021</a>):</p>
+<ul>
+<li>10 linter categories running in parallel: critical, security, style, quality, errors, performance, bugs, testing, maintainability, misc</li>
+<li>45+ Go linters (errcheck, govet, staticcheck, gofmt, gofumpt, goimports, gocritic, gosec, prealloc, and 36 more)</li>
+<li>AsyncIO-based Python runner with multi-module support for 15+ Go modules in monorepo</li>
+<li>Category-specific timeouts (critical: 10min, security: 5min, style: 3min)</li>
+<li>JSON output parsing for structured issue reporting</li>
+<li>Progress tracking with real-time status updates</li>
+<li>Complete migration guide from golangci-lint v1 to v2.5.0</li>
+</ul>
+<p><strong>golangci-lint v2 Compatibility</strong> (.golangci.yml):</p>
+<ul>
+<li>Updated to golangci-lint v2.5.0 with breaking changes handled</li>
+<li>Removed deprecated linters: gosimple (merged into staticcheck), typecheck (no longer a linter)</li>
+<li>Renamed linters: goerr113→err113, exportloopref→copyloopvar, tparallel→paralleltest, thelper→testifylint</li>
+<li>Changed output format: --out-format json → --output.json.path stdout</li>
+<li>Removed incompatible severity section from v1 configuration</li>
+</ul>
+<p><strong>Python Linting Configuration</strong> (ruff.toml):</p>
+<ul>
+<li>Comprehensive linting with 30+ rule sets: pycodestyle, Pyflakes, isort, pep8-naming, pydocstyle, pyupgrade, flake8-annotations, security (bandit), bugbear, comprehensions, and 20 more</li>
+<li>Per-file ignores for tooling scripts (allow print(), complexity, magic values, etc.)</li>
+<li>Auto-formatting with <code>ruff format</code> and auto-fixing with <code>ruff check --fix</code></li>
+<li>Reduced from 1,317 violations to 0 violations across 30 tooling files</li>
+<li>Cleaned deprecated rules (ANN101, ANN102)</li>
+</ul>
+<p><strong>Makefile Integration</strong>:</p>
+<ul>
+<li><code>make lint-parallel</code>: Run all 10 categories in parallel (fastest!)</li>
+<li><code>make lint-parallel-critical</code>: Run critical + security only (fast feedback)</li>
+<li><code>make lint-parallel-list</code>: List all available categories</li>
+<li><code>make lint-fix</code>: Auto-fix issues across all languages (Go, Rust, Python)</li>
+<li><code>make fmt-python</code>: Format Python code with ruff</li>
+</ul>
+<p><strong>Multi-Module Monorepo Support</strong>:</p>
+<ul>
+<li>Automatic discovery of all <code>go.mod</code> files in monorepo (15+ modules)</li>
+<li>Each module linted independently with full linter battery</li>
+<li>Single command lints entire codebase: <code>uv run tooling/parallel_lint.py</code></li>
+</ul>
+<p><strong>Performance Metrics</strong>:</p>
+<ul>
+<li><strong>Sequential linting</strong>: 45-75 minutes (15 modules × 3-5 min each)</li>
+<li><strong>Parallel linting</strong>: 3.7 seconds for all 10 categories (0 issues found)</li>
+<li><strong>Speedup</strong>: 54-90x faster</li>
+<li><strong>CI optimization</strong>: Matrix strategy runs 4 categories in parallel for even faster feedback</li>
+</ul>
+<p><strong>README Updates</strong>:</p>
+<ul>
+<li>Added Linting section with parallel linting commands</li>
+<li>Documented 45+ Go linters across 10 categories</li>
+<li>Added link to MEMO-021 for comprehensive documentation</li>
+<li>Highlighted 3-4s linting time vs 45+ min sequential</li>
+</ul>
+<p><strong>Bug Fixes</strong>:</p>
+<ul>
+<li>Fixed Makefile binary naming issue: <code>proxy</code> → <code>prism-proxy</code> (matches Cargo.toml)</li>
+<li>Fixed both <code>build-proxy</code> and <code>build-dev</code> targets</li>
+<li>All builds now complete successfully</li>
+</ul>
+<p><strong>Key Innovation</strong>: Category-based parallel execution enables running comprehensive linter battery (45+ linters) in under 4 seconds by parallelizing independent categories. Multi-module discovery automatically handles monorepo structure. Python linting configuration with extensive per-file ignores makes ruff practical for utility scripts while maintaining code quality.</p>
+<p><strong>Impact</strong>: Dramatically reduces developer friction with fast linting feedback. CI builds complete faster with parallel matrix strategy. Python tooling now has consistent, automated formatting and linting. Multi-module monorepo structure fully supported without manual configuration. Foundation for pre-commit hooks with sub-second feedback for critical linters.</p>
+<hr>
+<h4 class="anchor anchorWithStickyNavbar_LWe7" id="documentation-structure-consistency-fixes-updated">Documentation Structure Consistency Fixes (UPDATED)<a href="#documentation-structure-consistency-fixes-updated" class="hash-link" aria-label="Direct link to Documentation Structure Consistency Fixes (UPDATED)" title="Direct link to Documentation Structure Consistency Fixes (UPDATED)" translate="no">​</a></h4>
+<p><strong>Commits</strong>: 0209b7c, 936d405
+<strong>Links</strong>: <a href="https://github.com/jrepp/prism-data-layer/blob/main/README.md" target="_blank" rel="noopener noreferrer">README.md</a>, <a href="/prism-data-layer/adr/adr-042">ADR-042</a></p>
+<p><strong>Summary</strong>: Fixed documentation inconsistencies to reflect actual project structure using <code>patterns/</code> directory instead of legacy <code>backends/</code> references:</p>
+<p><strong>README.md Project Structure Fix</strong> (0209b7c):</p>
+<ul>
+<li>Corrected &quot;Pluggable Backends&quot; section directory structure from <code>backends/</code> to <code>patterns/</code></li>
+<li>Updated subdirectory listing to match actual implementation: core/, memstore/, redis/, nats/, kafka/, postgres/</li>
+<li>Ensures new contributors see accurate project structure</li>
+</ul>
+<p><strong>ADR-042 File Path Correction</strong> (936d405):</p>
+<ul>
+<li>Fixed implementation code comment from <code>plugins/backends/sqs/plugin.go</code> to <code>patterns/sqs/plugin.go</code></li>
+<li>Aligns with project&#x27;s pattern-based architecture where backend implementations live in patterns/ directory</li>
+</ul>
+<p><strong>Key Facts</strong>: Polish pass identified two instances where documentation still referenced old directory structure. Both README.md and ADR-042 now accurately reflect that backend implementations live in the <code>patterns/</code> directory, not <code>backends/</code> or <code>plugins/backends/</code>. All validation and linting passed cleanly after fixes.</p>
+<p><strong>Impact</strong>: Eliminates confusion for new contributors who would have followed documentation pointing to non-existent directories. Documentation now matches actual project structure. Future backend implementations will reference correct paths based on these fixes.</p>
+<hr>
+<h4 class="anchor anchorWithStickyNavbar_LWe7" id="documentation-consolidation-and-canonical-changelog-migration-major-update">Documentation Consolidation and Canonical Changelog Migration (MAJOR UPDATE)<a href="#documentation-consolidation-and-canonical-changelog-migration-major-update" class="hash-link" aria-label="Direct link to Documentation Consolidation and Canonical Changelog Migration (MAJOR UPDATE)" title="Direct link to Documentation Consolidation and Canonical Changelog Migration (MAJOR UPDATE)" translate="no">​</a></h4>
+<p><strong>Links</strong>: <a href="/prism-data-layer/key-documents">Key Documents Index</a>, <a href="/prism-data-layer/memos/memo-015">MEMO-015</a>, <a href="/prism-data-layer/memos/memo-016">MEMO-016</a>, <a href="/prism-data-layer/prd">PRD</a></p>
+<p><strong>Summary</strong>: Major documentation consolidation establishing canonical changelog location and migrating temporary root directory documentation to docs-cms:</p>
+<p><strong>Canonical Changelog Established</strong>:</p>
+<ul>
+<li>Migrated docs-cms/CHANGELOG.md to <code>docusaurus/docs/changelog.md</code> (this file)</li>
+<li>Updated CLAUDE.md to document <code>docusaurus/docs/changelog.md</code> as <strong>canonical changelog location</strong></li>
+<li>Updated monorepo structure diagram showing docusaurus/docs/ as home for changelog</li>
+<li>All future documentation changes MUST be logged here</li>
+</ul>
+<p><strong>Root Directory Documentation Migration</strong>:</p>
+<ul>
+<li><strong>MEMO-015</strong>: Cross-Backend Acceptance Test Framework (from CROSS_BACKEND_ACCEPTANCE_TESTS.md)
+<ul>
+<li>Table-driven, property-based testing with random data</li>
+<li>10 comprehensive scenarios × 3 backends (Redis, MemStore, PostgreSQL)</li>
+<li>100% passing tests with backend isolation via testcontainers</li>
+<li>Interface compliance verification for KeyValueBasicInterface</li>
+</ul>
+</li>
+<li><strong>MEMO-016</strong>: Observability &amp; Lifecycle Implementation (from IMPLEMENTATION_SUMMARY.md)
+<ul>
+<li>OpenTelemetry tracing with configurable exporters</li>
+<li>Prometheus metrics endpoints (/health, /ready, /metrics)</li>
+<li>Graceful shutdown handling and signal management</li>
+<li>62% reduction in backend driver boilerplate (65 → 25 lines)</li>
+</ul>
+</li>
+<li><strong>PRD</strong>: Product Requirements Document migrated to docs-cms/prd.md
+<ul>
+<li>Core foundational document defining vision, success metrics, and roadmap</li>
+<li>Now accessible via Docusaurus navigation</li>
+</ul>
+</li>
+</ul>
+<p><strong>Key Documents Index Created</strong>:</p>
+<ul>
+<li>New <code>docusaurus/docs/key.md</code> referencing philosophy-driving documents</li>
+<li>Organized by category: Vision &amp; Requirements, Architectural Foundations, Implementation Philosophy, Development Practices, Testing &amp; Quality</li>
+<li>Includes PRD, ADR-001 through ADR-004, MEMO-004, MEMO-006, RFC-018, CLAUDE.md, MEMO-015, MEMO-016</li>
+<li>Document hierarchy diagram showing WHY (PRD) → WHAT (ADRs) → HOW (MEMOs/RFCs) → WORKFLOWS (CLAUDE.md)</li>
+</ul>
+<p><strong>Temporary Files Removed</strong>:</p>
+<ul>
+<li>Removed obsolete files: MAKEFILE_UPDATES.md, SESSION_COMPLETE.md, conversation.txt</li>
+<li>Root directory now clean with only essential files (README.md, CLAUDE.md, BUILDING.md)</li>
+</ul>
+<p><strong>CLAUDE.md Updates</strong>:</p>
+<ul>
+<li>Added critical requirement: &quot;When making documentation changes, ALWAYS update <code>docusaurus/docs/changelog.md</code>&quot;</li>
+<li>Updated documentation authority section to reflect both <code>docs-cms/</code> and <code>docusaurus/docs/</code> locations</li>
+<li>Clarified that docusaurus/docs/changelog.md is the canonical changelog (not docs-cms/CHANGELOG.md)</li>
+</ul>
+<p><strong>Key Innovation</strong>: Establishes clear documentation home for each type of content. ADRs/RFCs/MEMOs live in docs-cms/ (versioned, plugin-based), while Docusaurus-specific content (changelog, key index) lives in docusaurus/docs/. Key documents index provides curated entry point for new contributors.</p>
+<p><strong>Impact</strong>: Eliminates confusion about changelog location (single source of truth). Root directory cleanup removes stale documentation. Key documents index accelerates onboarding by highlighting philosophy-driving documents. All temporary documentation now properly categorized and accessible via Docusaurus navigation.</p>
+<hr>
+<h4 class="anchor anchorWithStickyNavbar_LWe7" id="test-and-build-fixes-updated">Test and Build Fixes (UPDATED)<a href="#test-and-build-fixes-updated" class="hash-link" aria-label="Direct link to Test and Build Fixes (UPDATED)" title="Direct link to Test and Build Fixes (UPDATED)" translate="no">​</a></h4>
+<p><strong>Commits</strong>: 39f4992, 57f819d</p>
+<p><strong>Summary</strong>: Fixed critical test failures and lint issues preventing clean builds:</p>
+<p><strong>Test Failure Fix</strong> (39f4992):</p>
+<ul>
+<li>Removed non-existent <code>ttl_seconds</code> field from KeyValueBasicInterface test</li>
+<li>Issue: Test code referenced field not in proto definition</li>
+<li>SetRequest only has: key, value, tags (no ttl_seconds in basic interface)</li>
+<li>All tests now pass: Rust proxy (18 tests), Go patterns (all passed), acceptance tests (100+ tests)</li>
+</ul>
+<p><strong>Protobuf Module Structure Fix</strong> (57f819d):</p>
+<ul>
+<li>Fixed proto file organization mismatch between Makefile and Rust code</li>
+<li>Updated Makefile to use correct paths (prism/interfaces/ instead of prism/pattern/)</li>
+<li>Updated proxy/src/proto.rs to include both interfaces and interfaces.keyvalue modules</li>
+<li>Fixed all Rust imports from proto::pattern to proto::interfaces/interfaces::keyvalue</li>
+<li>Changed service names to match proto definitions (LifecycleInterface, KeyValueBasicInterface)</li>
+<li>Removed batch operations not in KeyValueBasicInterface</li>
+<li>Fixed clippy warning (removed useless .into() conversion)</li>
+<li>All lint checks now pass (Rust clippy + Go vet)</li>
+</ul>
+<p><strong>Key Facts</strong>: Root cause was proto file reorganization to prism/interfaces/ structure but Makefile and Rust code still referenced old prism/pattern/ paths. Both issues discovered during <code>make test</code> and <code>make lint</code> runs. Fixes enable clean CI builds.</p>
+<p><strong>Impact</strong>: Development can proceed with passing tests and lint. Build pipeline unblocked. Foundation for POC 1 implementation is stable.</p>
+<hr>
+<h4 class="anchor anchorWithStickyNavbar_LWe7" id="poc-1-infrastructure-analysis-documentation-new">POC 1 Infrastructure Analysis Documentation (NEW)<a href="#poc-1-infrastructure-analysis-documentation-new" class="hash-link" aria-label="Direct link to POC 1 Infrastructure Analysis Documentation (NEW)" title="Direct link to POC 1 Infrastructure Analysis Documentation (NEW)" translate="no">​</a></h4>
+<p><strong>Commit</strong>: 48ee562
+<strong>Link</strong>: <a href="/prism-data-layer/memos/memo-013">MEMO-013</a></p>
+<p><strong>Summary</strong>: Comprehensive analysis of Pattern SDK shared complexity and load testing framework evaluation:</p>
+<p><strong>Documents Created</strong>:</p>
+<ul>
+<li><strong>MEMO-014</strong> (Pattern SDK): Pattern SDK Shared Complexity Analysis</li>
+<li><strong>RFC-029</strong> (Load Testing): Load Testing Framework Evaluation and Strategy</li>
+<li><strong>MEMO-013</strong>: POC 1 Infrastructure Analysis (synthesis document)</li>
+</ul>
+<p><strong>Note</strong>: Original numbering (MEMO-012, RFC-023) conflicted with existing documents. Renumbered to MEMO-014 and RFC-029 to maintain sequence integrity.</p>
+<p><strong>Key Findings</strong>:</p>
+<ul>
+<li>38% code reduction potential by extracting shared complexity to Pattern SDK</li>
+<li>Two-tier load testing strategy: custom tool (pattern-level) + ghz (integration-level)</li>
+<li>12 areas of duplication across POC 1 plugins (MemStore, Redis, Kafka)</li>
+<li>Recommended SDK enhancements: connection pool, TTL manager, health check framework</li>
+</ul>
+<p><strong>Pattern SDK Analysis</strong> (MEMO-014):</p>
+<ul>
+<li>Connection pool manager reduces Redis/Kafka code by ~270 lines</li>
+<li>TTL manager with heap-based expiration scales to 100K+ keys (vs per-key timers)</li>
+<li>Health check framework standardizes status reporting</li>
+<li>Implementation plan: 2-week sprint (5 days SDK + 2 days refactoring)</li>
+<li>Expected: 2100 LOC → 1300 LOC (38% reduction)</li>
+</ul>
+<p><strong>Load Testing Evaluation</strong> (RFC-029):</p>
+<ul>
+<li>Evaluated 5 frameworks: ghz (24/30), k6 (20/30), fortio (22/30), vegeta (disqualified), hey/bombardier (disqualified)</li>
+<li>Recommendation: Keep custom prism-loadtest + add ghz for integration testing</li>
+<li>Two-tier strategy: pattern-level (prism-loadtest) + integration-level (ghz)</li>
+<li>Custom tool validated by MEMO-010 (100 req/sec, precise rate limiting, thread-safe)</li>
+</ul>
+<p><strong>POC 1 Infrastructure Synthesis</strong> (MEMO-013):</p>
+<ul>
+<li>Combines SDK refactoring + load testing enhancements</li>
+<li>Timeline: 2-week sprint alongside POC 1 implementation</li>
+<li>Deliverables: Enhanced SDK packages, two-tier load testing, 38% code reduction</li>
+<li>Success metrics: coverage targets (85%+), performance baselines, reduced plugin LOC</li>
+</ul>
+<p><strong>Key Facts</strong>: Analysis based on RFC-021 POC 1 plugin designs. All three documents validated with <code>uv run tooling/validate_docs.py</code> (101 docs, 0 errors). Implementation can proceed in parallel with POC 1.</p>
+<p><strong>Impact</strong>: Provides clear roadmap for Pattern SDK enhancements. Establishes comprehensive load testing strategy. Sets foundation for maintainable, testable plugin implementations.</p>
+<hr>
+<h3 class="anchor anchorWithStickyNavbar_LWe7" id="2025-10-11">2025-10-11<a href="#2025-10-11" class="hash-link" aria-label="Direct link to 2025-10-11" title="Direct link to 2025-10-11" translate="no">​</a></h3>
+<h4 class="anchor anchorWithStickyNavbar_LWe7" id="memo-012-developer-experience-and-common-workflows-new">MEMO-012: Developer Experience and Common Workflows (NEW)<a href="#memo-012-developer-experience-and-common-workflows-new" class="hash-link" aria-label="Direct link to MEMO-012: Developer Experience and Common Workflows (NEW)" title="Direct link to MEMO-012: Developer Experience and Common Workflows (NEW)" translate="no">​</a></h4>
+<p><strong>Link</strong>: <a href="/prism-data-layer/memos/memo-012">MEMO-012</a></p>
+<p><strong>Summary</strong>: Practical guide documenting actual developer workflows, common commands, and testing patterns:</p>
+<ul>
+<li><strong>Core Commands</strong>: Documentation validation, pattern builds, proxy runs, load testing</li>
+<li><strong>Mental Models</strong>: Three-layer testing (unit → integration → load), TDD workflow (red → green → refactor)</li>
+<li><strong>Speed Optimization</strong>: Skip full validation during iteration, parallel testing, incremental builds, reuse running backends</li>
+<li><strong>Common Shortcuts</strong>: Bash aliases, Docker Compose profiles, Go test shortcuts</li>
+<li><strong>Integration Test Setup</strong>: Multicast Registry example with Redis + NATS backends</li>
+<li><strong>Documentation Workflow</strong>: Creating new docs with frontmatter templates, validation steps</li>
+<li><strong>Performance Testing</strong>: Benchmark comparison, load test profiles (quick/standard/stress)</li>
+<li><strong>Debugging</strong>: gRPC tracing, race detector, container logs</li>
+<li><strong>CI/CD</strong>: Pre-commit checklist (tests, race detector, coverage, docs validation, builds)</li>
+<li><strong>Fast Iteration Loop</strong>: Watch mode with auto-rebuild and continuous testing</li>
+</ul>
+<p><strong>Key Facts</strong>: Covers only what exists in the codebase - no invented workflows. Includes actual commands from Makefiles, CLAUDE.md, and tooling scripts. Documents three-layer testing approach (MemStore/SQLite → Docker backends → full load tests) for speed optimization.</p>
+<p><strong>Impact</strong>: Provides single reference for new developers to understand actual development practices. Shows how to speed up multi-tier testing by reusing backends and running partial validations. Establishes consistent mental models for TDD and testing layers.</p>
+<hr>
+<h4 class="anchor anchorWithStickyNavbar_LWe7" id="ci-validation-fixes---mdx-syntax-and-broken-links-updated">CI Validation Fixes - MDX Syntax and Broken Links (UPDATED)<a href="#ci-validation-fixes---mdx-syntax-and-broken-links-updated" class="hash-link" aria-label="Direct link to CI Validation Fixes - MDX Syntax and Broken Links (UPDATED)" title="Direct link to CI Validation Fixes - MDX Syntax and Broken Links (UPDATED)" translate="no">​</a></h4>
+<p><strong>Links</strong>: <a href="/prism-data-layer/memos/memo-009">MEMO-009</a>, <a href="/prism-data-layer/memos/memo-010">MEMO-010</a>, <a href="/prism-data-layer/rfc/rfc-029">RFC-029</a></p>
+<p><strong>Summary</strong>: Fixed MDX compilation errors and broken links identified by CI validation:</p>
+<ul>
+<li><strong>MEMO-009</strong>: Escaped <code>&lt;</code> character in line 87 (<code>&lt;1KB</code> → <code>&amp;lt;1KB</code>), added <code>text</code> language identifier to code fence on line 322, fixed broken link from <code>/pocs/poc-004-multicast-registry</code> to <code>/memos/memo-009</code> on line 369, updated relative path to absolute GitHub URL on line 372</li>
+<li><strong>MEMO-010</strong>: Escaped all unescaped <code>&lt;</code> characters in performance comparison tables (lines 22, 75, 97, 124, 135, 275, 322, 323) to <code>&amp;lt;</code></li>
+<li><strong>RFC-029</strong>: Renamed from RFC-022 to RFC-029 (proper RFC numbering sequence)</li>
+</ul>
+<p><strong>Key Facts</strong>: All validation errors resolved. Code fences now have proper language identifiers (prevents &quot;Unexpected FunctionDeclaration&quot; MDX errors). HTML entities properly escaped (<code>&lt;</code> → <code>&amp;lt;</code>, <code>&gt;</code> → <code>&amp;gt;</code>). Links updated to use <code>/memos/</code> paths instead of deprecated <code>/pocs/</code> paths. Full validation passes with GitHub Pages build successful.</p>
+<p><strong>Impact</strong>: CI builds now pass successfully. MDX compilation errors eliminated. Documentation correctly renders in Docusaurus with proper code syntax highlighting. Users can navigate to correct memo pages without 404 errors.</p>
+<hr>
+<h4 class="anchor anchorWithStickyNavbar_LWe7" id="documentation-consistency-pass---pattern-sdk-terminology-updated">Documentation Consistency Pass - Pattern SDK Terminology (UPDATED)<a href="#documentation-consistency-pass---pattern-sdk-terminology-updated" class="hash-link" aria-label="Direct link to Documentation Consistency Pass - Pattern SDK Terminology (UPDATED)" title="Direct link to Documentation Consistency Pass - Pattern SDK Terminology (UPDATED)" translate="no">​</a></h4>
+<p><strong>Links</strong>: <a href="/prism-data-layer/rfc/rfc-019">RFC-019</a>, <a href="/prism-data-layer/rfc/rfc-021">RFC-021</a>, <a href="/prism-data-layer/memos/memo-008">MEMO-008</a>, <a href="/prism-data-layer/memos/memo-009">MEMO-009</a></p>
+<p><strong>Summary</strong>: Completed comprehensive consistency pass to align all documentation with RFC-022 terminology change from &quot;Plugin SDK&quot; to &quot;Pattern SDK&quot;:</p>
+<ul>
+<li><strong>RFC-019</strong>: Updated title, module paths (<code>github.com/prism/plugin-sdk</code> → <code>github.com/prism/pattern-sdk</code>), directory references (<code>plugins/</code> → <code>patterns/</code>), and all references throughout</li>
+<li><strong>RFC-021</strong>: Updated all &quot;Plugin SDK&quot; references to &quot;Pattern SDK&quot; and &quot;plugins&quot; to &quot;patterns&quot; in technology stack, work streams, and deliverables</li>
+<li><strong>MEMO-008</strong>: Updated module path in code examples and directory references in Vault token exchange flow documentation</li>
+<li><strong>MEMO-009</strong>: Updated cross-reference link to RFC-019 with correct short-form path</li>
+</ul>
+<p><strong>Key Facts</strong>: All 4 documents now use consistent &quot;Pattern SDK&quot; terminology. Cross-references updated to use short-form paths (<code>/rfc/rfc-019</code> instead of <code>/rfc/rfc-019-plugin-sdk-authorization-layer</code>). Validation passed with no errors. Revision history entries added to all updated documents.</p>
+<p><strong>Impact</strong>: Eliminates terminology confusion between the Go-based Pattern SDK (for backend patterns) and Rust-based plugin SDK (for proxy plugins). Ensures developers reading documentation see consistent terminology across all RFCs and memos. All documentation now accurately reflects the architectural sophistication of the pattern layer.</p>
+<hr>
+<h3 class="anchor anchorWithStickyNavbar_LWe7" id="2025-10-09">2025-10-09<a href="#2025-10-09" class="hash-link" aria-label="Direct link to 2025-10-09" title="Direct link to 2025-10-09" translate="no">​</a></h3>
+<h4 class="anchor anchorWithStickyNavbar_LWe7" id="rfc-022-core-pattern-sdk---build-system-and-tooling-added-major-update">RFC-022: Core Pattern SDK - Build System and Tooling Added (MAJOR UPDATE)<a href="#rfc-022-core-pattern-sdk---build-system-and-tooling-added-major-update" class="hash-link" aria-label="Direct link to RFC-022: Core Pattern SDK - Build System and Tooling Added (MAJOR UPDATE)" title="Direct link to RFC-022: Core Pattern SDK - Build System and Tooling Added (MAJOR UPDATE)" translate="no">​</a></h4>
+<p><strong>Link</strong>: <a href="/prism-data-layer/rfc/rfc-022">RFC-022</a></p>
+<p><strong>Summary</strong>: Major update transforming RFC-022 from physical code layout to comprehensive build system and tooling guide:</p>
+<ul>
+<li><strong>Terminology Update</strong>: Renamed from &quot;Plugin SDK&quot; to &quot;Pattern SDK&quot; to reflect pattern layer sophistication</li>
+<li><strong>Module Path Change</strong>: <code>github.com/prism/plugin-sdk</code> → <code>github.com/prism/pattern-sdk</code></li>
+<li><strong>Directory Structure</strong>: <code>examples/</code> → <code>patterns/</code> to emphasize pattern implementations</li>
+<li><strong>Comprehensive Makefile System</strong>: Hierarchical Makefiles for SDK and individual patterns
+<ul>
+<li>Root Makefile: <code>all</code>, <code>build</code>, <code>test</code>, <code>test-unit</code>, <code>test-integration</code>, <code>lint</code>, <code>proto</code>, <code>clean</code>, <code>coverage</code>, <code>validate</code>, <code>fmt</code></li>
+<li>Pattern-specific Makefiles: Build, test, lint, run, docker, clean targets</li>
+<li>Build targets reference table with usage guidance</li>
+</ul>
+</li>
+<li><strong>Compile-Time Validation</strong>: Interface implementation checks, pattern interface validation, slot configuration validation
+<ul>
+<li><code>interfaces/assertions.go</code>: Compile-time type assertions for all interfaces</li>
+<li><code>tools/validate-interfaces.sh</code>: Validates all patterns compile successfully</li>
+<li><code>tools/validate-slots/main.go</code>: YAML-based slot configuration validator</li>
+</ul>
+</li>
+<li><strong>Linting Configuration</strong>: Complete <code>.golangci.yml</code> with 12+ enabled linters
+<ul>
+<li>errcheck, gosimple, govet, ineffassign, staticcheck, typecheck, unused, gofmt, goimports, misspell, goconst, gocyclo, lll, dupl, gosec, revive</li>
+<li>Test file exclusions, generated file exclusions</li>
+<li>Pre-commit hook: <code>.githooks/pre-commit</code> runs format, lint, validate, test-unit</li>
+</ul>
+</li>
+<li><strong>Testing Infrastructure</strong>: Comprehensive test organization and coverage gates
+<ul>
+<li>Unit tests vs integration tests (build tags)</li>
+<li>Testcontainers integration (<code>testing/containers.go</code>)</li>
+<li>80% coverage threshold enforcement</li>
+<li>Benchmark tests with pattern examples</li>
+<li>Extended CI/CD workflow with validation, lint, unit, integration, coverage gates</li>
+</ul>
+</li>
+</ul>
+<p><strong>Key Innovation</strong>: Build system treats patterns as first-class sophisticated implementations, not simple &quot;plugins&quot;. Comprehensive tooling ensures quality gates (lint, validate, test, coverage) are enforced at every stage. Makefile-based workflow enables fast iteration with incremental builds and caching. Compile-time validation catches configuration errors before runtime.</p>
+<p><strong>Impact</strong>: Establishes production-grade build infrastructure for Pattern SDK. Pattern authors get consistent Makefile targets, automated validation, and quality gates. Pre-commit hooks prevent broken code from being committed. Coverage gates ensure test quality. Testcontainers enable realistic integration testing. Complements RFC-025 (pattern architecture) by focusing on build system and tooling rather than concurrency primitives.</p>
+<hr>
+<h4 class="anchor anchorWithStickyNavbar_LWe7" id="memo-009-topaz-local-authorizer-configuration-for-development-and-integration-testing-new">MEMO-009: Topaz Local Authorizer Configuration for Development and Integration Testing (NEW)<a href="#memo-009-topaz-local-authorizer-configuration-for-development-and-integration-testing-new" class="hash-link" aria-label="Direct link to MEMO-009: Topaz Local Authorizer Configuration for Development and Integration Testing (NEW)" title="Direct link to MEMO-009: Topaz Local Authorizer Configuration for Development and Integration Testing (NEW)" translate="no">​</a></h4>
+<p><strong>Link</strong>: <a href="/prism-data-layer/memos/memo-009">MEMO-009</a></p>
+<p><strong>Summary</strong>: Comprehensive guide for configuring Topaz as local authorizer across two scenarios:</p>
+<ul>
+<li><strong>Development Iteration</strong>: Fast, lightweight authorization during local development with Docker Compose</li>
+<li><strong>Integration Testing</strong>: Realistic authorization testing in CI/CD with testcontainers</li>
+<li>Local infrastructure layer: Reusable components (Topaz, Dex, Vault, Signoz) running independently</li>
+<li>Seed data setup with bootstrap script creating test users (<a href="mailto:dev@local.prism" target="_blank" rel="noopener noreferrer">dev@local.prism</a>, <a href="mailto:admin@local.prism" target="_blank" rel="noopener noreferrer">admin@local.prism</a>) and groups</li>
+<li>Policy files for main authorization (prism.rego) and namespace isolation</li>
+<li>Developer workflow: Docker Compose startup, directory bootstrap, policy hot-reload</li>
+<li>Integration testing: Go testcontainers setup, GitHub Actions CI/CD configuration</li>
+<li>Troubleshooting guide: 4 common issues with diagnosis and solutions</li>
+<li>Pattern SDK integration: Configuration for local Topaz with enforcement modes</li>
+<li>Comparison table: Development vs Integration Testing vs Production configurations</li>
+</ul>
+<p><strong>Key Innovation</strong>: Topaz as local infrastructure layer component enables fast development iteration (&lt;3s startup) and realistic integration testing (&lt;5s per test suite) without external dependencies. Bootstrap script provides reproducible test data. Policy hot-reload eliminates restart cycles.</p>
+<p><strong>Impact</strong>: Completes local development stack for authorization testing. Patterns can develop against realistic authorization without cloud services. testcontainers integration ensures CI/CD tests match production behavior. Establishes reusable local infrastructure pattern for other services (Dex, Vault, Signoz).</p>
+<hr>
+<h4 class="anchor anchorWithStickyNavbar_LWe7" id="rfc-025-pattern-sdk-architecture---pattern-lifecycle-management-added-major-update">RFC-025: Pattern SDK Architecture - Pattern Lifecycle Management Added (MAJOR UPDATE)<a href="#rfc-025-pattern-sdk-architecture---pattern-lifecycle-management-added-major-update" class="hash-link" aria-label="Direct link to RFC-025: Pattern SDK Architecture - Pattern Lifecycle Management Added (MAJOR UPDATE)" title="Direct link to RFC-025: Pattern SDK Architecture - Pattern Lifecycle Management Added (MAJOR UPDATE)" translate="no">​</a></h4>
+<p><strong>Link</strong>: <a href="/prism-data-layer/rfc/rfc-025-pattern-sdk-architecture">RFC-025</a></p>
+<p><strong>Summary</strong>: Major expansion adding comprehensive pattern lifecycle management to Pattern SDK architecture:</p>
+<ul>
+<li><strong>Slot Matching via Config</strong>: Backends validated against union of required interfaces at pattern slots
+<ul>
+<li>SlotConfig defines interface requirements (keyvalue_basic + keyvalue_scan)</li>
+<li>SlotMatcher validates backends implement ALL required interfaces before assignment</li>
+<li>Fail-fast validation: Pattern won&#x27;t start if slots improperly configured</li>
+<li>Optional slots supported (e.g., durability slot for event replay)</li>
+</ul>
+</li>
+<li><strong>Lifecycle Isolation</strong>: Pattern main separated from program main
+<ul>
+<li>SDK handles: config loading, backend initialization, slot validation, signal handling</li>
+<li>Pattern implements: Initialize, Start, Shutdown, HealthCheck</li>
+<li>Simple cmd/main.go just calls lifecycle.Run(pattern)</li>
+</ul>
+</li>
+<li><strong>Graceful Shutdown with Bounded Timeout</strong>: Configurable cleanup timeouts
+<ul>
+<li>graceful_timeout: 30s (pattern drains in-flight requests)</li>
+<li>shutdown_timeout: 35s (hard deadline for forced exit)</li>
+<li>Pattern drains worker pools, closes connections, waits for background goroutines</li>
+<li>Exit codes: 0 (clean), 1 (errors), 2 (timeout forced)</li>
+</ul>
+</li>
+<li><strong>Signal Handling at SDK Level</strong>: OS signals intercepted by SDK
+<ul>
+<li>SIGTERM/SIGINT → SDK creates shutdown context → calls pattern.Shutdown(ctx)</li>
+<li>Pattern isolated from signal complexity</li>
+<li>Consistent signal handling across all patterns</li>
+</ul>
+</li>
+<li><strong>Complete Example</strong>: Multicast Registry pattern showing full lifecycle integration
+<ul>
+<li>Initialize: Extracts validated backends from slots, creates concurrency primitives</li>
+<li>Start: Launches worker pool, health check loop, blocks until stop signal</li>
+<li>Shutdown: Drains workers, closes backends, bounded by context timeout</li>
+<li>HealthCheck: Circuit breaker-protected backend health verification</li>
+</ul>
+</li>
+</ul>
+<p><strong>Key Innovation</strong>: Slot-based configuration with interface validation eliminates runtime errors from misconfigured backends. Lifecycle isolation keeps patterns focused on business logic while SDK handles cross-cutting concerns. Bounded graceful shutdown ensures clean deployments in Kubernetes (pod termination respects shutdown_timeout).</p>
+<p><strong>Impact</strong>: Patterns become significantly simpler to implement (no signal handling, config parsing, slot validation). Slot matcher prevents &quot;backend doesn&#x27;t support X interface&quot; runtime errors. Graceful shutdown with hard timeout prevents hung deployments. Foundation for production-grade pattern implementations in POC phases.</p>
+<hr>
+<h3 class="anchor anchorWithStickyNavbar_LWe7" id="2025-10-09-earlier">2025-10-09 (Earlier)<a href="#2025-10-09-earlier" class="hash-link" aria-label="Direct link to 2025-10-09 (Earlier)" title="Direct link to 2025-10-09 (Earlier)" translate="no">​</a></h3>
+<h4 class="anchor anchorWithStickyNavbar_LWe7" id="rfc-019-plugin-sdk-authorization-layer---token-validation-pushed-to-plugins-with-vault-integration-architectural-update">RFC-019: Plugin SDK Authorization Layer - Token Validation Pushed to Plugins with Vault Integration (ARCHITECTURAL UPDATE)<a href="#rfc-019-plugin-sdk-authorization-layer---token-validation-pushed-to-plugins-with-vault-integration-architectural-update" class="hash-link" aria-label="Direct link to RFC-019: Plugin SDK Authorization Layer - Token Validation Pushed to Plugins with Vault Integration (ARCHITECTURAL UPDATE)" title="Direct link to RFC-019: Plugin SDK Authorization Layer - Token Validation Pushed to Plugins with Vault Integration (ARCHITECTURAL UPDATE)" translate="no">​</a></h4>
+<p><strong>Link</strong>: <a href="/prism-data-layer/rfc/rfc-019-plugin-sdk-authorization-layer">RFC-019</a></p>
+<p><strong>Summary</strong>: Major architectural update reflecting critical design decision to push token validation and credential exchange to plugins (not proxy):</p>
+<ul>
+<li><strong>Architectural Rationale</strong>: Token validation is high-latency (~10-50ms) per-session operation, not per-request</li>
+<li><strong>Proxy Role Change</strong>: Proxy now passes tokens through without validation (stateless forwarding)</li>
+<li><strong>Plugin-Side Validation</strong>: Plugins validate tokens once per session, then cache validation result</li>
+<li><strong>Vault Integration</strong>: Complete implementation of token exchange for per-session backend credentials
+<ul>
+<li>Plugins exchange validated user JWT for Vault token</li>
+<li>Vault token used to fetch dynamic backend credentials (username/password)</li>
+<li>Per-session credentials enable user-specific audit trails in backend logs</li>
+<li>Automatic credential renewal every lease_duration/2 (background goroutine)</li>
+</ul>
+</li>
+<li><strong>VaultClient Implementation</strong>: Complete Go SDK code for JWT login, credential fetching, lease renewal</li>
+<li><strong>Credential Lifecycle</strong>: Mermaid diagram showing session setup → token exchange → credential renewal → session teardown</li>
+<li><strong>Configuration Examples</strong>: YAML showing Vault address, JWT auth path, secret path, renewal intervals</li>
+<li><strong>Vault Policy Examples</strong>: HCL policy for plugin access to database credentials and lease renewal</li>
+<li><strong>Benefits</strong>: Per-user audit trails, fine-grained ACLs, automatic rotation, rate limiting per user</li>
+</ul>
+<p><strong>Key Innovation</strong>: Token validation amortized over session lifetime (validate once, reuse claims). Vault provides dynamic, short-lived credentials (1h TTL) with user-specific ACLs generated on-demand. Backend logs show which user accessed what data (not just &quot;plugin user&quot;). Zero shared long-lived credentials - breach of one session doesn&#x27;t compromise others.</p>
+<p><strong>Impact</strong>: Enables true zero-trust architecture with per-session credential isolation. Backend databases can enforce row-level security using Vault-generated credentials. Plugin-side validation creates defense-in-depth even if proxy bypassed. Vault manages entire credential lifecycle (generation, renewal, revocation). Foundation for multi-tenant data access with user attribution.</p>
+<hr>
+<h4 class="anchor anchorWithStickyNavbar_LWe7" id="rfc-002-data-layer-interface-specification---code-fence-formatting-fixes-updated">RFC-002: Data Layer Interface Specification - Code Fence Formatting Fixes (UPDATED)<a href="#rfc-002-data-layer-interface-specification---code-fence-formatting-fixes-updated" class="hash-link" aria-label="Direct link to RFC-002: Data Layer Interface Specification - Code Fence Formatting Fixes (UPDATED)" title="Direct link to RFC-002: Data Layer Interface Specification - Code Fence Formatting Fixes (UPDATED)" translate="no">​</a></h4>
+<p><strong>Link</strong>: <a href="/prism-data-layer/rfc/rfc-002-data-layer-interface">RFC-002</a></p>
+<p><strong>Summary</strong>: Fixed 4 MDX code fence validation errors identified by documentation validation tooling:</p>
+<ul>
+<li>Line 1156: Fixed closing fence with <code>go → </code> (removed language identifier from closing fence)</li>
+<li>Line 1162: Fixed opening fence missing language → added ```text</li>
+<li>Line 1168: Fixed closing fence with <code>bash → </code> (removed language identifier from closing fence)</li>
+<li>Line 1177: Fixed opening fence missing language → added ```text</li>
+<li>Applied state machine-based Python script to distinguish opening fences (require language) from closing fences (must be plain)</li>
+<li>All 4 errors resolved, documentation now passes MDX compilation</li>
+</ul>
+<p><strong>Impact</strong>: RFC-002 now compiles correctly in Docusaurus build. Fixes broken GitHub Pages deployment. Ensures code examples display properly with correct syntax highlighting.</p>
+<hr>
+<h4 class="anchor anchorWithStickyNavbar_LWe7" id="rfc-023-publish-snapshotter-plugin---write-only-event-buffering-with-pagination-new">RFC-023: Publish Snapshotter Plugin - Write-Only Event Buffering with Pagination (NEW)<a href="#rfc-023-publish-snapshotter-plugin---write-only-event-buffering-with-pagination-new" class="hash-link" aria-label="Direct link to RFC-023: Publish Snapshotter Plugin - Write-Only Event Buffering with Pagination (NEW)" title="Direct link to RFC-023: Publish Snapshotter Plugin - Write-Only Event Buffering with Pagination (NEW)" translate="no">​</a></h4>
+<p><strong>Link</strong>: <a href="/prism-data-layer/rfc/rfc-023-publish-snapshotter-plugin">RFC-023</a></p>
+<p><strong>Summary</strong>: Comprehensive RFC defining publish snapshotter plugin architecture for write-only event capture with intelligent buffering:</p>
+<ul>
+<li><strong>Write-Only API</strong>: Satisfies PubSub publish interface only (no subscription)</li>
+<li>Intelligent buffering with configurable thresholds (event count, size, age)</li>
+<li>Page-based commits to object storage (S3, MinIO, local filesystem)</li>
+<li>Index publishing to KeyValue/TimeSeries/Document backends for discovery</li>
+<li>Session disconnect handling with guaranteed zero data loss</li>
+<li>Format flexibility: Protobuf or NDJSON serialization with optional compression (gzip/zstd)</li>
+<li>Two backend slots: storage_object (new interface) + index backend (KeyValue/TimeSeries/Document)</li>
+<li>Complete page lifecycle: buffer → serialize → compress → write → index → clear</li>
+<li>Query and replay capabilities using index metadata</li>
+<li>Performance characteristics: 10,000 events/page, 300s max age, &lt;1GB RAM per 1000 writers</li>
+<li>Configuration examples: development (MemStore + local filesystem), production (Redis + MinIO), large scale (ClickHouse + S3)</li>
+</ul>
+<p><strong>Key Innovation</strong>: Write-only event capture decouples data producers from consumers, enabling durable event archival without active subscribers. Two-slot architecture separates storage (object storage) from indexing (KeyValue/TimeSeries) for flexibility. Page-based commits provide efficient large-file writes while maintaining discoverability through side-channel index.</p>
+<p><strong>Impact</strong>: Enables audit logging, event archival, data lake ingestion, session recording, and metrics collection patterns without requiring active consumers. Zero data loss guarantee even on disconnects. Object storage economics (cheap, durable) combined with queryable index. Adds new storage_object interface to MEMO-006 catalog.</p>
+<hr>
+<h4 class="anchor anchorWithStickyNavbar_LWe7" id="rfc-022-core-plugin-sdk-physical-code-layout-new">RFC-022: Core Plugin SDK Physical Code Layout (NEW)<a href="#rfc-022-core-plugin-sdk-physical-code-layout-new" class="hash-link" aria-label="Direct link to RFC-022: Core Plugin SDK Physical Code Layout (NEW)" title="Direct link to RFC-022: Core Plugin SDK Physical Code Layout (NEW)" translate="no">​</a></h4>
+<p><strong>Link</strong>: <a href="/prism-data-layer/rfc/rfc-022-core-plugin-sdk-code-layout">RFC-022</a></p>
+<p><strong>Summary</strong>: Comprehensive RFC defining physical code layout for publishable Go SDK (<code>github.com/prism/plugin-sdk</code>) for building backend plugins:</p>
+<ul>
+<li><strong>Package Structure</strong>: 9 packages (auth, authz, audit, plugin, interfaces, storage, observability, testing, errors)</li>
+<li>Clean separation: Authentication (JWT/OIDC), authorization (Topaz), audit logging, lifecycle management</li>
+<li>Interface contracts matching protobuf service definitions (KeyValue, PubSub, Stream, Queue, etc.)</li>
+<li>Observability built-in: structured logging (Zap), Prometheus metrics, OpenTelemetry tracing</li>
+<li>Testing utilities: mock implementations for auth/authz/audit, test server helpers</li>
+<li>Minimal external dependencies: gRPC, protobuf, JWT libraries, Topaz SDK, Zap, Prometheus, OTel</li>
+<li>Semantic versioning strategy with Go modules (v0.x.x pre-1.0, v1.x.x stable, v2.x.x breaking)</li>
+<li>Complete example: MemStore plugin using SDK (150 lines vs 500+ without SDK)</li>
+<li>Automated releases with GitHub Actions</li>
+<li>godoc-friendly documentation with usage examples per package</li>
+</ul>
+<p><strong>Key Innovation</strong>: Batteries-included SDK enables plugin authors to focus on backend-specific logic while SDK handles cross-cutting concerns (auth, authz, audit, observability, lifecycle). Defense-in-depth authorization built into SDK following RFC-019 patterns. Reusable abstractions eliminate code duplication across plugins.</p>
+<p><strong>Impact</strong>: Accelerates plugin development with consistent patterns. Ensures all plugins enforce authorization, emit audit logs, and expose observability metrics. Reduces security vulnerabilities through centralized auth logic. Single SDK version bump propagates improvements to all plugins. Foundation for POC 1 implementation (RFC-021).</p>
+<hr>
+<h4 class="anchor anchorWithStickyNavbar_LWe7" id="rfc-021-poc-1---three-minimal-plugins-implementation-plan-complete-rewrite">RFC-021: POC 1 - Three Minimal Plugins Implementation Plan (COMPLETE REWRITE)<a href="#rfc-021-poc-1---three-minimal-plugins-implementation-plan-complete-rewrite" class="hash-link" aria-label="Direct link to RFC-021: POC 1 - Three Minimal Plugins Implementation Plan (COMPLETE REWRITE)" title="Direct link to RFC-021: POC 1 - Three Minimal Plugins Implementation Plan (COMPLETE REWRITE)" translate="no">​</a></h4>
+<p><strong>Link</strong>: <a href="/prism-data-layer/rfc/rfc-021-poc1-three-plugins-implementation">RFC-021</a></p>
+<p><strong>Summary</strong>: Complete rewrite of POC 1 implementation plan based on user feedback for focused, test-driven approach:</p>
+<ul>
+<li><strong>Scope Changes</strong>: Removed Admin API (use prismctl CLI), removed Python client library, split into 3 minimal plugins</li>
+<li>Three focused plugins: MemStore (in-memory, 6 interfaces), Redis (external, 8 interfaces), Kafka (streaming, 7 interfaces)</li>
+<li>Core Plugin SDK skeleton: Reusable Go library from RFC-022 with auth/authz/audit stubs</li>
+<li>Load testing tool: Go CLI (prism-load) for parallel request generation with configurable concurrency, duration, RPS</li>
+<li>Optimized builds: Static linking (<code>CGO_ENABLED=0</code>), scratch-based Docker images (&lt;10MB target)</li>
+<li>TDD workflow: Write tests FIRST, achieve 80%+ code coverage (SDK: 85%+, plugins: 80%+)</li>
+<li>Go module caching: Shared GOMODCACHE and GOCACHE across monorepo to avoid duplicate builds</li>
+<li>Plugin lifecycle diagram: 4 phases (startup, request handling, health checks, shutdown)</li>
+<li>8 work streams with dependencies: Protobuf (1 day), SDK (2 days), Proxy (3 days), 3 plugins (2 days each), Load tester (1 day), Build optimization (1 day)</li>
+<li>Timeline: 2 weeks (10 working days) with parallelizable work streams</li>
+<li>Success criteria: All tests pass, 80%+ coverage, &lt;5ms P99 latency, &lt;10MB Docker images</li>
+</ul>
+<p><strong>Key Innovation</strong>: Walking Skeleton approach proves architecture end-to-end with minimal scope. Three focused plugins demonstrate SDK reusability and different backend patterns (in-process, external cache, external streaming). TDD workflow with mandatory code coverage gates ensures quality from day one. Load testing validates performance claims early.</p>
+<p><strong>Impact</strong>: Clear, achievable POC scope replacing original overly-complex plan. SDK skeleton provides foundation for all future plugins. Static linking enables lightweight deployments. TDD discipline establishes engineering culture. Load tester enables continuous performance validation. Coverage thresholds prevent quality regressions.</p>
+<hr>
+<h4 class="anchor anchorWithStickyNavbar_LWe7" id="rfc-015-plugin-acceptance-test-framework---interface-based-testing-complete-rewrite">RFC-015: Plugin Acceptance Test Framework - Interface-Based Testing (COMPLETE REWRITE)<a href="#rfc-015-plugin-acceptance-test-framework---interface-based-testing-complete-rewrite" class="hash-link" aria-label="Direct link to RFC-015: Plugin Acceptance Test Framework - Interface-Based Testing (COMPLETE REWRITE)" title="Direct link to RFC-015: Plugin Acceptance Test Framework - Interface-Based Testing (COMPLETE REWRITE)" translate="no">​</a></h4>
+<p><strong>Link</strong>: <a href="/prism-data-layer/rfc/rfc-015-plugin-acceptance-test-framework">RFC-015</a></p>
+<p><strong>Summary</strong>: Complete rewrite aligning with MEMO-006 interface decomposition principles, shifting from backend-type testing to interface-based testing:</p>
+<ul>
+<li><strong>Interface Compliance</strong>: 45 interface test suites (one per interface from MEMO-006 catalog)</li>
+<li>Cross-backend test reuse: Same test suite validates multiple backends implementing same interface</li>
+<li>Registry-driven testing: Backends declare interfaces in <code>registry/backends/*.yaml</code>, tests verify claims</li>
+<li>Compliance matrix: Automated validation that backends implement all declared interfaces</li>
+<li>Test organization: <code>tests/acceptance/interfaces/{datamodel}/{interface}_test.go</code> structure</li>
+<li>testcontainers integration: Real backend instances (Redis, Postgres, Kafka) for integration testing</li>
+<li>Example test suites: KeyValueBasicTestSuite (10 tests), KeyValueScanTestSuite (6 tests)</li>
+<li>GitHub Actions CI: Matrix strategy runs interface × backend combinations (45 interfaces × 4 backends = 180 jobs)</li>
+<li>Backend registry loading: <code>LoadBackendRegistry()</code> reads YAML declarations, <code>FindBackendsImplementing()</code> filters by interface</li>
+<li>Makefile targets: <code>test-compliance</code>, <code>test-compliance-redis</code>, <code>test-interface INTERFACE=keyvalue_basic</code></li>
+</ul>
+<p><strong>Key Innovation</strong>: Interface-based testing enables test code reuse across backends. Single <code>KeyValueBasicTestSuite</code> validates Redis, PostgreSQL, DynamoDB, MemStore - reduces 1500 lines (duplicated) to 100 lines (shared). Registry-driven execution ensures only declared interfaces are tested (no false failures).</p>
+<p><strong>Impact</strong>: Dramatically reduces test maintenance burden. Establishes clear interface contracts through executable specifications. Backend registry becomes single source of truth for capabilities. Compliance matrix provides confidence that backends satisfy declared interfaces. Foundation for plugin acceptance testing in CI/CD pipeline.</p>
+<hr>
+<h4 class="anchor anchorWithStickyNavbar_LWe7" id="rfc-020-streaming-http-listener---api-specific-adapter-pattern-new">RFC-020: Streaming HTTP Listener - API-Specific Adapter Pattern (NEW)<a href="#rfc-020-streaming-http-listener---api-specific-adapter-pattern-new" class="hash-link" aria-label="Direct link to RFC-020: Streaming HTTP Listener - API-Specific Adapter Pattern (NEW)" title="Direct link to RFC-020: Streaming HTTP Listener - API-Specific Adapter Pattern (NEW)" translate="no">​</a></h4>
+<p><strong>Link</strong>: <a href="/prism-data-layer/rfc/rfc-020-streaming-http-listener-api-adapter">RFC-020</a></p>
+<p><strong>Summary</strong>: Comprehensive RFC defining streaming HTTP listener architecture that bridges external HTTP/JSON protocols to Prism&#x27;s internal gRPC/Protobuf layer:</p>
+<ul>
+<li><strong>API-Specific Adapters</strong>: Each adapter implements ONE external API contract (MCP, Agent-to-Agent, custom APIs)</li>
+<li>Thin translation layer with no business logic (pure protocol translation)</li>
+<li>Streaming support: SSE (Server-Sent Events), WebSocket, HTTP chunked encoding</li>
+<li>Three deployment options: sidecar, separate service, or serverless (AWS Lambda)</li>
+<li>MCP backend interface decomposition: 5 interfaces across 3 data models (KeyValue, Queue, Stream)</li>
+<li>New MCP interfaces: mcp_tool (tool calling), mcp_resource (resource access), mcp_prompt (prompt templates)</li>
+<li>AI tool orchestration pattern: Combines MCP backend + execution queue + result stream</li>
+<li>Performance: &lt;3ms P95 adapter overhead, 30,000 RPS with HTTP/JSON translation</li>
+<li>Complete Go implementation examples with protocol translation helpers</li>
+<li>Configuration examples for MCP tool server, SSE event streaming, and agent-to-agent coordination</li>
+</ul>
+<p><strong>Key Innovation</strong>: API-specific adapters satisfy external protocol contracts while transparently mapping to internal gRPC primitives. MCP treated as backend plugin with decomposed interfaces following MEMO-006 principles. Enables AI tool calling, resource access, and prompt management via HTTP/JSON while leveraging Prism&#x27;s backend flexibility.</p>
+<p><strong>Impact</strong>: Enables seamless integration of HTTP-based APIs (MCP, A2A) with Prism&#x27;s gRPC core without modifying proxy. Easy adapter authoring pattern for new protocols. MCP backend decomposition provides foundation for AI tool orchestration with queue-based execution and result streaming.</p>
+<hr>
+<h4 class="anchor anchorWithStickyNavbar_LWe7" id="adr-050-topaz-for-policy-based-authorization-new">ADR-050: Topaz for Policy-Based Authorization (NEW)<a href="#adr-050-topaz-for-policy-based-authorization-new" class="hash-link" aria-label="Direct link to ADR-050: Topaz for Policy-Based Authorization (NEW)" title="Direct link to ADR-050: Topaz for Policy-Based Authorization (NEW)" translate="no">​</a></h4>
+<p><strong>Link</strong>: <a href="/prism-data-layer/adr/adr-050-topaz-policy-authorization">ADR-050</a></p>
+<p><strong>Summary</strong>: Architecture decision to use Topaz by Aserto for fine-grained policy-based authorization:</p>
+<ul>
+<li><strong>Topaz Selection</strong>: Evaluated OPA alone, cloud IAM, Zanzibar systems (SpiceDB, Ory Keto) - Topaz chosen for best balance</li>
+<li>Relationship-Based Access Control (ReBAC) inspired by Google Zanzibar</li>
+<li>Sidecar deployment pattern for &lt;5ms P99 local authorization checks</li>
+<li>Complete integration examples: Rust proxy middleware, Python CLI, FastAPI admin UI</li>
+<li>Directory schema modeling users, groups, namespaces, backends with relationships</li>
+<li>Three example policies: namespace isolation, time-based maintenance windows, PII protection</li>
+<li>Performance: P50 &lt;0.5ms, P95 &lt;2ms, P99 &lt;5ms for local sidecar checks</li>
+<li>10,000+ authorization checks per second capacity</li>
+<li>Docker Compose for local dev, Kubernetes sidecar for production</li>
+<li>Fail-closed by default with opt-in fail-open per namespace</li>
+</ul>
+<p><strong>Key Innovation</strong>: Local sidecar authorization combines OPA&#x27;s policy expressiveness with Zanzibar-style relationship modeling. Real-time policy updates without proxy restarts. Centralized policy management (Git) with decentralized enforcement (local sidecars).</p>
+<p><strong>Impact</strong>: Enables multi-tenancy isolation, role-based access control, attribute-based policies, and resource-level permissions with production-ready performance. Foundation for defense-in-depth security across proxy and plugin layers.</p>
+<hr>
+<h4 class="anchor anchorWithStickyNavbar_LWe7" id="rfc-019-plugin-sdk-authorization-layer-new">RFC-019: Plugin SDK Authorization Layer (NEW)<a href="#rfc-019-plugin-sdk-authorization-layer-new" class="hash-link" aria-label="Direct link to RFC-019: Plugin SDK Authorization Layer (NEW)" title="Direct link to RFC-019: Plugin SDK Authorization Layer (NEW)" translate="no">​</a></h4>
+<p><strong>Link</strong>: <a href="/prism-data-layer/rfc/rfc-019-plugin-sdk-authorization-layer">RFC-019</a></p>
+<p><strong>Summary</strong>: Standardized authorization layer in Prism core plugin SDK enabling backend plugins to validate tokens and enforce policies:</p>
+<ul>
+<li><strong>Defense-in-Depth</strong>: Authorization enforced at proxy AND plugin layers</li>
+<li>Three core components: TokenValidator (JWT/OIDC), TopazClient (policy queries), AuditLogger (structured logging)</li>
+<li>Complete Go SDK implementation with Authorizer interface orchestrating all components</li>
+<li>gRPC interceptors for automatic authorization on all plugin methods</li>
+<li>Token validation with JWKS caching (&lt;1ms with caching)</li>
+<li>Topaz policy checks with 5s decision caching (&lt;1ms P99 cache hit)</li>
+<li>Async audit logging with buffered events (&lt;0.1ms overhead)</li>
+<li>Fail-closed by default with configurable fail-open for local testing</li>
+<li>Configuration examples: production (token + policy enabled) vs local dev (disabled with audit)</li>
+<li>Plugin integration patterns: automatic (gRPC interceptor) vs manual (fine-grained control)</li>
+</ul>
+<p><strong>Key Innovation</strong>: Backend plugins validate authorization independently of proxy, creating defense-in-depth security. SDK provides reusable authorization primitives so plugins just call SDK (no reimplementation). Authorization overhead &lt;3ms P99 with caching enabled.</p>
+<p><strong>Impact</strong>: Eliminates plugin-level security vulnerabilities. Prevents bypassing proxy authorization by connecting directly to plugins. Consistent policy enforcement across all backends. Complete audit trail of data access at plugin layer. Enables zero-trust architecture.</p>
+<hr>
+<h4 class="anchor anchorWithStickyNavbar_LWe7" id="memo-006-backend-interface-decomposition-and-schema-registry-new">MEMO-006: Backend Interface Decomposition and Schema Registry (NEW)<a href="#memo-006-backend-interface-decomposition-and-schema-registry-new" class="hash-link" aria-label="Direct link to MEMO-006: Backend Interface Decomposition and Schema Registry (NEW)" title="Direct link to MEMO-006: Backend Interface Decomposition and Schema Registry (NEW)" translate="no">​</a></h4>
+<p><strong>Link</strong>: <a href="/prism-data-layer/memos/memo-006-backend-interface-decomposition-schema-registry">MEMO-006</a></p>
+<p><strong>Summary</strong>: Comprehensive architectural guide for decomposing backends into thin, composable proto service interfaces and establishing schema registry for patterns and slots:</p>
+<ul>
+<li><strong>Design Decision</strong>: Use explicit interface flavors (not capability flags) for type safety</li>
+<li>45 thin interfaces across 10 data models (KeyValue, PubSub, Stream, Queue, List, Set, SortedSet, TimeSeries, Graph, Document)</li>
+<li>Each data model has multiple interfaces: Basic (required), Scan, TTL, Transactional, Batch, etc.</li>
+<li>Backend implementation matrix showing interface composition (Redis: 16 interfaces, Postgres: 16 different mix, MemStore: 2 minimal)</li>
+<li>Pattern schemas with slots requiring specific interface combinations</li>
+<li>Schema registry filesystem layout (registry/interfaces/, registry/backends/, registry/patterns/)</li>
+<li>Configuration generator workflow with validation</li>
+<li>Examples: Redis implements keyvalue_basic + keyvalue_scan + keyvalue_ttl + keyvalue_transactional + keyvalue_batch</li>
+<li>Capabilities expressed through interface presence (TTL support = implements keyvalue_ttl interface)</li>
+</ul>
+<p><strong>Key Innovation</strong>: Thin interfaces enable type-safe backend composition. Pattern slots specify required interfaces (e.g., Multicast Registry needs keyvalue_basic + keyvalue_scan for registry slot). No runtime capability checks - compiler enforces contracts.</p>
+<p><strong>Impact</strong>: Enables straightforward config generation, backend substitutability, and clear contracts for what each backend supports. Foundation for schema-driven pattern composition.</p>
+<hr>
+<h4 class="anchor anchorWithStickyNavbar_LWe7" id="memo-005-client-protocol-design-philosophy---composition-vs-use-case-specificity-new">MEMO-005: Client Protocol Design Philosophy - Composition vs Use-Case Specificity (NEW)<a href="#memo-005-client-protocol-design-philosophy---composition-vs-use-case-specificity-new" class="hash-link" aria-label="Direct link to MEMO-005: Client Protocol Design Philosophy - Composition vs Use-Case Specificity (NEW)" title="Direct link to MEMO-005: Client Protocol Design Philosophy - Composition vs Use-Case Specificity (NEW)" translate="no">​</a></h4>
+<p><strong>Link</strong>: <a href="/prism-data-layer/memos/memo-005-client-protocol-design-philosophy">MEMO-005</a></p>
+<p><strong>Summary</strong>: Comprehensive memo resolving the architectural tension between composable primitives (RFC-014) and use-case-specific protocols (RFC-017), covering:</p>
+<ul>
+<li>Context comparison: RFC-014 composable primitives vs RFC-017 use-case patterns</li>
+<li>Four design principles (push complexity down, developer comprehension, schema evolution, keep proxy small)</li>
+<li>Proposed layered API architecture: Layer 1 (generic primitives) + Layer 2 (use-case patterns)</li>
+<li>Pattern coordinators as plugins (not core proxy) for independent evolution</li>
+<li>Configuration examples showing per-namespace choice of primitives vs patterns</li>
+<li>Decision matrix comparing primitives-only, patterns-only, and layered approaches</li>
+<li>Implementation roadmap aligned with RFC-018 POCs</li>
+<li>Success metrics for developer experience, system complexity, and pattern adoption</li>
+</ul>
+<p><strong>Key Innovation</strong>: Applications choose per-namespace between Layer 1 (generic KeyValue, PubSub) for maximum control or Layer 2 (ergonomic Multicast Registry, Saga) for rapid development. Pattern coordinators are optional plugins that compose Layer 1 primitives, keeping core proxy small (~10k LOC) while providing self-documenting APIs for common use cases.</p>
+<p><strong>Impact</strong>: Resolves &quot;composition vs use-case&quot; design question with both layers, addressing developer simplicity (Layer 2), proxy size (plugins), and flexibility (Layer 1).</p>
+<hr>
+<h4 class="anchor anchorWithStickyNavbar_LWe7" id="memo-003-documentation-first-development-approach-new">MEMO-003: Documentation-First Development Approach (NEW)<a href="#memo-003-documentation-first-development-approach-new" class="hash-link" aria-label="Direct link to MEMO-003: Documentation-First Development Approach (NEW)" title="Direct link to MEMO-003: Documentation-First Development Approach (NEW)" translate="no">​</a></h4>
+<p><strong>Link</strong>: <a href="/prism-data-layer/memos/memo-003-documentation-first-development">MEMO-003</a></p>
+<p><strong>Summary</strong>: Comprehensive memo defining the documentation-first development approach used in Prism, covering:</p>
+<ul>
+<li>Definition and core principles (Design in Documentation → Review → Implement → Validate)</li>
+<li>Notable improvements over code-first workflows with concrete examples</li>
+<li>Expected outcomes (faster reviews, better designs, reduced rework)</li>
+<li>Strategies for success (blocking requirements, design tool, living documentation)</li>
+<li>Validation and quality assurance (tooling/validate_docs.py)</li>
+<li>Metrics and success criteria (documentation coverage, build success rate, review velocity)</li>
+<li>Proposed improvements (code example validation, decision graph visualization, RFC-driven task generation)</li>
+</ul>
+<p><strong>Impact</strong>: Establishes documentation-first as the core development methodology, with validation tooling as a blocking requirement before commits.</p>
+<hr>
+<h4 class="anchor anchorWithStickyNavbar_LWe7" id="rfc-011-data-proxy-authentication---secrets-provider-abstraction-expanded">RFC-011: Data Proxy Authentication - Secrets Provider Abstraction (EXPANDED)<a href="#rfc-011-data-proxy-authentication---secrets-provider-abstraction-expanded" class="hash-link" aria-label="Direct link to RFC-011: Data Proxy Authentication - Secrets Provider Abstraction (EXPANDED)" title="Direct link to RFC-011: Data Proxy Authentication - Secrets Provider Abstraction (EXPANDED)" translate="no">​</a></h4>
+<p><strong>Link</strong>: <a href="/prism-data-layer/rfc/rfc-011-data-proxy-authentication">RFC-011</a></p>
+<p><strong>Summary</strong>: Major expansion adding comprehensive secrets provider abstraction:</p>
+<ul>
+<li>Pluggable SecretsProvider trait supporting multiple secret management services</li>
+<li>Four provider implementations: HashiCorp Vault, AWS Secrets Manager, Google Secret Manager, Azure Key Vault</li>
+<li>Provider comparison matrix (dynamic credentials, auto-rotation, versioning, audit logging, cost)</li>
+<li>Multi-provider hybrid cloud deployment patterns</li>
+<li>Configuration examples for each provider</li>
+<li>Credential management with automatic caching and renewal</li>
+</ul>
+<p><strong>Impact</strong>: Enables secure credential management across cloud providers and on-premises deployments with consistent abstraction layer.</p>
+<hr>
+<h4 class="anchor anchorWithStickyNavbar_LWe7" id="rfc-006-admin-cli---oidc-authentication-expanded">RFC-006: Admin CLI - OIDC Authentication (EXPANDED)<a href="#rfc-006-admin-cli---oidc-authentication-expanded" class="hash-link" aria-label="Direct link to RFC-006: Admin CLI - OIDC Authentication (EXPANDED)" title="Direct link to RFC-006: Admin CLI - OIDC Authentication (EXPANDED)" translate="no">​</a></h4>
+<p><strong>Link</strong>: <a href="/prism-data-layer/rfc/rfc-006-python-admin-cli">RFC-006</a></p>
+<p><strong>Summary</strong>: Added comprehensive OIDC authentication section covering:</p>
+<ul>
+<li>Device code flow (OAuth 2.0) for command-line SSO authentication</li>
+<li>Mermaid sequence diagram showing complete authentication flow</li>
+<li>Login/logout commands with token caching (~/.prism/token)</li>
+<li>Token storage security (file permissions 0600, automatic refresh)</li>
+<li>Authentication modes (interactive, service account, local Dex, custom issuer)</li>
+<li>Go implementation examples for token management</li>
+<li>Local development with Dex (references ADR-046)</li>
+<li>Principal column added to session list output</li>
+<li>Shadow traffic example updated to Postgres version upgrade (14 → 16) use case</li>
+</ul>
+<p><strong>Impact</strong>: Complete CLI authentication specification enabling secure admin access with OIDC integration and local testing support.</p>
+<hr>
+<h4 class="anchor anchorWithStickyNavbar_LWe7" id="adr-046-dex-idp-for-local-identity-testing-new">ADR-046: Dex IDP for Local Identity Testing (NEW)<a href="#adr-046-dex-idp-for-local-identity-testing-new" class="hash-link" aria-label="Direct link to ADR-046: Dex IDP for Local Identity Testing (NEW)" title="Direct link to ADR-046: Dex IDP for Local Identity Testing (NEW)" translate="no">​</a></h4>
+<p><strong>Link</strong>: <a href="/prism-data-layer/adr/adr-046-dex-idp-local-testing">ADR-046</a></p>
+<p><strong>Summary</strong>: New ADR proposing Dex as the local OIDC provider for development and testing:</p>
+<ul>
+<li>Self-hosted OIDC provider for local development (no cloud dependencies)</li>
+<li>Docker Compose integration with test user configuration</li>
+<li>Full OIDC spec support including device code flow</li>
+<li>Integration with prismctl for local authentication</li>
+<li>Testing workflow with realistic OIDC flows</li>
+</ul>
+<p><strong>Impact</strong>: Enables local development and testing of authentication features without external OIDC provider dependencies.</p>
+<hr>
+<h4 class="anchor anchorWithStickyNavbar_LWe7" id="rfc-014-layered-data-access-patterns---client-pattern-catalog-expanded">RFC-014: Layered Data Access Patterns - Client Pattern Catalog (EXPANDED)<a href="#rfc-014-layered-data-access-patterns---client-pattern-catalog-expanded" class="hash-link" aria-label="Direct link to RFC-014: Layered Data Access Patterns - Client Pattern Catalog (EXPANDED)" title="Direct link to RFC-014: Layered Data Access Patterns - Client Pattern Catalog (EXPANDED)" translate="no">​</a></h4>
+<p><strong>Link</strong>: <a href="/prism-data-layer/rfc/rfc-014-layered-data-access-patterns">RFC-014</a></p>
+<p><strong>Summary</strong>: New RFC defining how Prism separates client API from backend implementation through pattern composition. Covers:</p>
+<ul>
+<li>Three-layer architecture (Client API, Pattern Composition, Backend Execution)</li>
+<li>Publisher with Claim Check pattern implementation</li>
+<li>Pattern layering and compatibility matrix</li>
+<li>Proxy internal structure with mermaid diagrams</li>
+<li>Authentication and authorization flow diagrams</li>
+<li>Pattern routing and execution strategies</li>
+</ul>
+<p><strong>Impact</strong>: Provides foundation for composable reliability patterns without client code changes.</p>
+<hr>
+<h4 class="anchor anchorWithStickyNavbar_LWe7" id="rfc-011-data-proxy-authentication---open-questions-expanded">RFC-011: Data Proxy Authentication - Open Questions Expanded<a href="#rfc-011-data-proxy-authentication---open-questions-expanded" class="hash-link" aria-label="Direct link to RFC-011: Data Proxy Authentication - Open Questions Expanded" title="Direct link to RFC-011: Data Proxy Authentication - Open Questions Expanded" translate="no">​</a></h4>
+<p><strong>Link</strong>: <a href="/prism-data-layer/rfc/rfc-011-data-proxy-authentication">RFC-011</a></p>
+<p><strong>Summary</strong>: Added comprehensive feedback to open questions:</p>
+<ul>
+<li>Certificate Authority: Use Vault for certificate management</li>
+<li>Credential Caching: 24-hour default, configurable with refresh tokens</li>
+<li>Connection Pooling: Per-credential pooling for multi-tenancy isolation</li>
+<li>Fallback Auth: Fail closed with configurable grace period</li>
+<li>Observability: Detailed metrics for credential events and session establishment</li>
+</ul>
+<p><strong>Impact</strong>: Clarifies authentication implementation decisions with practical recommendations.</p>
+<hr>
+<h4 class="anchor anchorWithStickyNavbar_LWe7" id="rfc-010-admin-protocol-with-oidc---multi-provider-support">RFC-010: Admin Protocol with OIDC - Multi-Provider Support<a href="#rfc-010-admin-protocol-with-oidc---multi-provider-support" class="hash-link" aria-label="Direct link to RFC-010: Admin Protocol with OIDC - Multi-Provider Support" title="Direct link to RFC-010: Admin Protocol with OIDC - Multi-Provider Support" translate="no">​</a></h4>
+<p><strong>Link</strong>: <a href="/prism-data-layer/rfc/rfc-010-admin-protocol-oidc">RFC-010</a></p>
+<p><strong>Summary</strong>: Expanded open questions with detailed answers:</p>
+<ul>
+<li>OIDC Provider Support: AWS Cognito, Azure AD, Google, Okta, Auth0, Dex</li>
+<li>Token Caching: 24-hour default with JWKS caching and refresh token support</li>
+<li>Offline Access: JWT validation with cached JWKS, security trade-offs</li>
+<li>Multi-Tenancy: Four mapping options (group-based, claim-based, OPA policy, tenant-scoped)</li>
+<li>Service Accounts: Four approaches with comparison table and best practices</li>
+</ul>
+<p><strong>Impact</strong>: Production-ready guidance for OIDC integration across multiple identity providers.</p>
+<hr>
+<h4 class="anchor anchorWithStickyNavbar_LWe7" id="rfc-009-distributed-reliability-patterns---change-notification-graph">RFC-009: Distributed Reliability Patterns - Change Notification Graph<a href="#rfc-009-distributed-reliability-patterns---change-notification-graph" class="hash-link" aria-label="Direct link to RFC-009: Distributed Reliability Patterns - Change Notification Graph" title="Direct link to RFC-009: Distributed Reliability Patterns - Change Notification Graph" translate="no">​</a></h4>
+<p><strong>Link</strong>: <a href="/prism-data-layer/rfc/rfc-009-distributed-reliability-patterns">RFC-009</a></p>
+<p><strong>Summary</strong>: Added change notification flow diagram to CDC pattern showing:</p>
+<ul>
+<li>Change type classification (INSERT, UPDATE, DELETE, SCHEMA)</li>
+<li>Notification consumers (Cache Invalidator, Search Indexer, Analytics Loader, Webhook Notifier, Audit Logger)</li>
+<li>Data flow from PostgreSQL WAL through Kafka to downstream systems</li>
+<li>Key notification patterns and use cases</li>
+</ul>
+<p><strong>Impact</strong>: Visual guide for implementing CDC-based change notification architectures.</p>
+<hr>
+<h2 class="anchor anchorWithStickyNavbar_LWe7" id="older-changes">Older Changes<a href="#older-changes" class="hash-link" aria-label="Direct link to Older Changes" title="Direct link to Older Changes" translate="no">​</a></h2>
+<h3 class="anchor anchorWithStickyNavbar_LWe7" id="2025-10-08">2025-10-08<a href="#2025-10-08" class="hash-link" aria-label="Direct link to 2025-10-08" title="Direct link to 2025-10-08" translate="no">​</a></h3>
+<h4 class="anchor anchorWithStickyNavbar_LWe7" id="rfc-009-distributed-reliability-patterns-initial">RFC-009: Distributed Reliability Patterns (INITIAL)<a href="#rfc-009-distributed-reliability-patterns-initial" class="hash-link" aria-label="Direct link to RFC-009: Distributed Reliability Patterns (INITIAL)" title="Direct link to RFC-009: Distributed Reliability Patterns (INITIAL)" translate="no">​</a></h4>
+<p><strong>Link</strong>: <a href="/prism-data-layer/rfc/rfc-009-distributed-reliability-patterns">RFC-009</a></p>
+<p><strong>Summary</strong>: Initial RFC documenting 7 distributed reliability patterns:</p>
+<ol>
+<li>Tiered Storage - Hot/warm/cold data lifecycle</li>
+<li>Write-Ahead Log - Durable, fast writes</li>
+<li>Claim Check - Large payload handling in messaging</li>
+<li>Event Sourcing - Immutable event log as source of truth</li>
+<li>Change Data Capture - Database replication without dual writes</li>
+<li>CQRS - Separate read/write models</li>
+<li>Outbox - Transactional messaging</li>
+</ol>
+<p><strong>Impact</strong>: Establishes pattern catalog for building reliable distributed systems.</p>
+<hr>
+<h3 class="anchor anchorWithStickyNavbar_LWe7" id="2025-10-07">2025-10-07<a href="#2025-10-07" class="hash-link" aria-label="Direct link to 2025-10-07" title="Direct link to 2025-10-07" translate="no">​</a></h3>
+<h4 class="anchor anchorWithStickyNavbar_LWe7" id="rfc-001-prism-architecture-initial">RFC-001: Prism Architecture (INITIAL)<a href="#rfc-001-prism-architecture-initial" class="hash-link" aria-label="Direct link to RFC-001: Prism Architecture (INITIAL)" title="Direct link to RFC-001: Prism Architecture (INITIAL)" translate="no">​</a></h4>
+<p><strong>Link</strong>: <a href="/prism-data-layer/rfc/rfc-001-prism-architecture">RFC-001</a></p>
+<p><strong>Summary</strong>: Foundational architecture RFC defining:</p>
+<ul>
+<li>System components and layered interface hierarchy</li>
+<li>Client configuration system (server vs client config)</li>
+<li>Session management lifecycle</li>
+<li>Five interface layers (Queue, PubSub, Reader, Transact, Config)</li>
+<li>Container plugin model for backend-specific logic</li>
+<li>Performance targets (P99 &lt;10ms, 10k+ RPS)</li>
+</ul>
+<p><strong>Impact</strong>: Core architectural vision for Prism data access gateway.</p>
+<hr>
+<h4 class="anchor anchorWithStickyNavbar_LWe7" id="rfc-002-data-layer-interface-specification-initial">RFC-002: Data Layer Interface Specification (INITIAL)<a href="#rfc-002-data-layer-interface-specification-initial" class="hash-link" aria-label="Direct link to RFC-002: Data Layer Interface Specification (INITIAL)" title="Direct link to RFC-002: Data Layer Interface Specification (INITIAL)" translate="no">​</a></h4>
+<p><strong>Link</strong>: <a href="/prism-data-layer/rfc/rfc-002-data-layer-interface">RFC-002</a></p>
+<p><strong>Summary</strong>: Complete gRPC interface specification covering:</p>
+<ul>
+<li>Session Service (authentication, heartbeat, lifecycle)</li>
+<li>Queue Service (Kafka-style operations)</li>
+<li>PubSub Service (NATS-style wildcards)</li>
+<li>Reader Service (database-style paged reading)</li>
+<li>Transact Service (two-table transactional writes)</li>
+<li>Error handling and backward compatibility</li>
+</ul>
+<p><strong>Impact</strong>: Stable, versioned API contracts for all client interactions.</p>
+<hr>
+<h2 class="anchor anchorWithStickyNavbar_LWe7" id="how-to-use-this-log">How to Use This Log<a href="#how-to-use-this-log" class="hash-link" aria-label="Direct link to How to Use This Log" title="Direct link to How to Use This Log" translate="no">​</a></h2>
+<ol>
+<li><strong>Quick Navigation</strong>: Click any link to jump directly to the updated document</li>
+<li><strong>Impact Assessment</strong>: Each entry includes an &quot;Impact&quot; section explaining significance</li>
+<li><strong>Reverse Chronological</strong>: Newest changes at the top for easy discovery</li>
+<li><strong>Detailed Summaries</strong>: Key changes summarized without needing to read full docs</li>
+</ol>
+<h2 class="anchor anchorWithStickyNavbar_LWe7" id="contributing-changes">Contributing Changes<a href="#contributing-changes" class="hash-link" aria-label="Direct link to Contributing Changes" title="Direct link to Contributing Changes" translate="no">​</a></h2>
+<p>When updating documentation:</p>
+<ol>
+<li>Add entry to &quot;Recent Changes&quot; section (top)</li>
+<li>Include: Date, Document title, Link, Summary, Impact</li>
+<li>Move entries older than 30 days to &quot;Older Changes&quot;</li>
+<li>Keep most recent 10-15 entries in &quot;Recent Changes&quot;</li>
+</ol>
+<h2 class="anchor anchorWithStickyNavbar_LWe7" id="change-categories">Change Categories<a href="#change-categories" class="hash-link" aria-label="Direct link to Change Categories" title="Direct link to Change Categories" translate="no">​</a></h2>
+<ul>
+<li><strong>NEW</strong>: Brand new documentation</li>
+<li><strong>EXPANDED</strong>: Significant additions to existing docs</li>
+<li><strong>UPDATED</strong>: Modifications or clarifications</li>
+<li><strong>DEPRECATED</strong>: Marked as outdated or superseded</li>
+<li><strong>REMOVED</strong>: Deleted or consolidated</li>
+</ul></div><footer class="theme-doc-footer docusaurus-mt-lg"><div class="row margin-top--sm theme-doc-footer-edit-meta-row"><div class="col"><a href="https://github.com/jrepp/prism-data-layer/tree/main/docusaurus/docs/changelog.md" target="_blank" rel="noopener noreferrer" class="theme-edit-this-page"><svg fill="currentColor" height="20" width="20" viewBox="0 0 40 40" class="iconEdit_Z9Sw" aria-hidden="true"><g><path d="m34.5 11.7l-3 3.1-6.3-6.3 3.1-3q0.5-0.5 1.2-0.5t1.1 0.5l3.9 3.9q0.5 0.4 0.5 1.1t-0.5 1.2z m-29.5 17.1l18.4-18.5 6.3 6.3-18.4 18.4h-6.3v-6.2z"></path></g></svg>Edit this page</a></div><div class="col lastUpdated_JAkA"></div></div></footer></article><nav class="docusaurus-mt-lg pagination-nav" aria-label="Docs pages"><a class="pagination-nav__link pagination-nav__link--next" href="/prism-data-layer/docs/intro"><div class="pagination-nav__sublabel">Next</div><div class="pagination-nav__label">Overview</div></a></nav></div></div><div class="col col--3"><div class="tableOfContents_bqdL thin-scrollbar theme-doc-toc-desktop"><ul class="table-of-contents table-of-contents__left-border"><li><a href="#recent-changes" class="table-of-contents__link toc-highlight">Recent Changes</a><ul><li><a href="#2025-10-13" class="table-of-contents__link toc-highlight">2025-10-13</a></li><li><a href="#2025-10-12" class="table-of-contents__link toc-highlight">2025-10-12</a></li><li><a href="#2025-10-11" class="table-of-contents__link toc-highlight">2025-10-11</a></li><li><a href="#2025-10-09" class="table-of-contents__link toc-highlight">2025-10-09</a></li><li><a href="#2025-10-09-earlier" class="table-of-contents__link toc-highlight">2025-10-09 (Earlier)</a></li></ul></li><li><a href="#older-changes" class="table-of-contents__link toc-highlight">Older Changes</a><ul><li><a href="#2025-10-08" class="table-of-contents__link toc-highlight">2025-10-08</a></li><li><a href="#2025-10-07" class="table-of-contents__link toc-highlight">2025-10-07</a></li></ul></li><li><a href="#how-to-use-this-log" class="table-of-contents__link toc-highlight">How to Use This Log</a></li><li><a href="#contributing-changes" class="table-of-contents__link toc-highlight">Contributing Changes</a></li><li><a href="#change-categories" class="table-of-contents__link toc-highlight">Change Categories</a></li></ul></div></div></div></div></main></div></div></div><footer class="theme-layout-footer footer footer--dark"><div class="container container-fluid"><div class="row footer__links"><div class="theme-layout-footer-column col footer__col"><div class="footer__title">Documentation</div><ul class="footer__items clean-list"><li class="footer__item"><a class="footer__link-item" href="/prism-data-layer/docs/intro">Overview</a></li><li class="footer__item"><a class="footer__link-item" href="/prism-data-layer/docs/changelog">Change Log</a></li><li class="footer__item"><a class="footer__link-item" href="/prism-data-layer/adr">ADRs</a></li><li class="footer__item"><a class="footer__link-item" href="/prism-data-layer/rfc">RFCs</a></li><li class="footer__item"><a class="footer__link-item" href="/prism-data-layer/memos">Memos</a></li><li class="footer__item"><a class="footer__link-item" href="/prism-data-layer/prds">PRDs</a></li></ul></div><div class="theme-layout-footer-column col footer__col"><div class="footer__title">Project</div><ul class="footer__items clean-list"><li class="footer__item"><a href="https://github.com/jrepp/prism-data-layer" target="_blank" rel="noopener noreferrer" class="footer__link-item">GitHub<svg width="13.5" height="13.5" aria-label="(opens in new tab)" class="iconExternalLink_nPIU"><use href="#theme-svg-external-link"></use></svg></a></li></ul></div></div><div class="footer__bottom text--center"><div class="footer__copyright"><div>Copyright © 2025 Prism. Built with Docusaurus.</div><div style="margin-top:0.5rem;font-size:0.875rem;opacity:0.8"><span>Version <!-- -->f3c4668</span><span> • </span><span>Built <!-- -->Oct 13, 2025, 10:32 AM PDT</span><span> • </span><span>Commit <!-- -->f3c4668</span></div></div></div></div></footer></div>
+</body>
+</html>

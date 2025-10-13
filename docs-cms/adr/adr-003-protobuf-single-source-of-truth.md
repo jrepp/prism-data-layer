@@ -10,7 +10,7 @@ tags:
 - codegen
 - dx
 - dry
-title: 'ADR-003: Protobuf as Single Source of Truth'
+title: Protobuf as Single Source of Truth
 ---
 
 ## Context

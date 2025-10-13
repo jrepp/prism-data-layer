@@ -1,12 +1,18 @@
 ---
-title: "MEMO-020: Parallel Testing Infrastructure and Build Hygiene Implementation"
 author: Claude Code
 created: 2025-10-12
-updated: 2025-10-12
-tags: [testing, performance, build-system, ci-cd, developer-experience, tooling]
+doc_uuid: c8f4d9a2-88e1-4c3b-9f6d-1a2b3c4d5e6f
 id: memo-020
 project_id: prism-data-layer
-doc_uuid: c8f4d9a2-88e1-4c3b-9f6d-1a2b3c4d5e6f
+tags:
+- testing
+- performance
+- build-system
+- ci-cd
+- developer-experience
+- tooling
+title: Parallel Testing Infrastructure and Build Hygiene Implementation
+updated: 2025-10-12
 ---
 
 # MEMO-020: Parallel Testing Infrastructure and Build Hygiene Implementation

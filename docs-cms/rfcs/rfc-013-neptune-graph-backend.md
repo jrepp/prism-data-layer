@@ -12,7 +12,7 @@ tags:
 - aws
 - plugin
 - implementation
-title: 'RFC-013: Neptune Graph Backend Implementation'
+title: Neptune Graph Backend Implementation
 updated: 2025-10-09
 ---
 

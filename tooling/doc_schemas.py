@@ -15,7 +15,7 @@ class ADRFrontmatter(BaseModel):
     """Schema for Architecture Decision Record frontmatter.
 
     REQUIRED FIELDS (all must be present):
-    - title: Full title with ADR number prefix (e.g., "ADR-001: Use Rust for Proxy")
+    - title: Title without ADR prefix (e.g., "Use Rust for Proxy"). ID displayed by sidebar.
     - status: Current state (Proposed/Accepted/Implemented/Deprecated/Superseded)
     - date: Decision date in ISO 8601 format (YYYY-MM-DD)
     - deciders: Person or team who made the decision (e.g., "Core Team", "Platform Team")
@@ -28,7 +28,7 @@ class ADRFrontmatter(BaseModel):
     title: str = Field(
         ...,
         min_length=10,
-        description="ADR title with prefix (e.g., 'ADR-001: Use Rust for Proxy'). Must start with 'ADR-XXX:'",
+        description="ADR title without prefix (e.g., 'Use Rust for Proxy'). The ID prefix is in the 'id' field and displayed by sidebar.",
     )
     status: Literal["Proposed", "Accepted", "Implemented", "Deprecated", "Superseded"] = Field(
         ...,
@@ -58,15 +58,8 @@ class ADRFrontmatter(BaseModel):
         description="Unique identifier for backend tracking. Must be valid UUID v4 format. Generated automatically by migration script",
     )
 
-    @field_validator("title")
-    @classmethod
-    def validate_title_format(cls, v: str) -> str:
-        """Ensure title starts with ADR-XXX"""
-        if not re.match(r"^ADR-\d{3}:", v):
-            raise ValueError(
-                f"ADR title must start with 'ADR-XXX:' format (e.g., 'ADR-001: Title Here'). Got: {v[:50]}"
-            )
-        return v
+    # Title validator removed - titles should NOT include prefix (e.g., "ADR-001:")
+    # The ID prefix is in the 'id' field and displayed by the sidebar presentation layer
 
     @field_validator("tags")
     @classmethod
@@ -108,7 +101,7 @@ class RFCFrontmatter(BaseModel):
     """Schema for Request for Comments frontmatter.
 
     REQUIRED FIELDS (all must be present):
-    - title: Full title with RFC number prefix (e.g., "RFC-015: Plugin Architecture")
+    - title: Title without RFC prefix (e.g., "Plugin Architecture"). ID displayed by sidebar.
     - status: Current state (Draft/Proposed/Accepted/Implemented/Rejected)
     - author: Document author (person or team who wrote the RFC)
     - created: Date RFC was first created in ISO 8601 format (YYYY-MM-DD)
@@ -122,7 +115,7 @@ class RFCFrontmatter(BaseModel):
     title: str = Field(
         ...,
         min_length=10,
-        description="RFC title with prefix (e.g., 'RFC-015: Plugin Architecture'). Must start with 'RFC-XXX:'",
+        description="RFC title without prefix (e.g., 'Plugin Architecture'). The ID prefix is in the 'id' field and displayed by sidebar.",
     )
     status: Literal["Draft", "Proposed", "Accepted", "Implemented", "Deprecated", "Superseded"] = Field(
         ..., description="RFC status. Use 'Draft' for work-in-progress, 'Proposed' for review, 'Accepted' for approved"
@@ -153,15 +146,8 @@ class RFCFrontmatter(BaseModel):
         description="Unique identifier for backend tracking. Must be valid UUID v4 format. Generated automatically by migration script",
     )
 
-    @field_validator("title")
-    @classmethod
-    def validate_title_format(cls, v: str) -> str:
-        """Ensure title starts with RFC-XXX"""
-        if not re.match(r"^RFC-\d{3}:", v):
-            raise ValueError(
-                f"RFC title must start with 'RFC-XXX:' format (e.g., 'RFC-001: Title Here'). Got: {v[:50]}"
-            )
-        return v
+    # Title validator removed - titles should NOT include prefix (e.g., "RFC-001:")
+    # The ID prefix is in the 'id' field and displayed by the sidebar presentation layer
 
     @field_validator("tags")
     @classmethod
@@ -203,7 +189,7 @@ class MemoFrontmatter(BaseModel):
     """Schema for technical memo frontmatter.
 
     REQUIRED FIELDS (all must be present):
-    - title: Full title with MEMO number prefix (e.g., "MEMO-010: Load Test Results")
+    - title: Title without MEMO prefix (e.g., "Load Test Results"). ID displayed by sidebar.
     - author: Document author (person or team who wrote the memo)
     - created: Date memo was first created in ISO 8601 format (YYYY-MM-DD)
     - updated: Date memo was last modified in ISO 8601 format (YYYY-MM-DD)
@@ -216,7 +202,7 @@ class MemoFrontmatter(BaseModel):
     title: str = Field(
         ...,
         min_length=10,
-        description="Memo title with prefix (e.g., 'MEMO-010: Load Test Results'). Must start with 'MEMO-XXX:'",
+        description="Memo title without prefix (e.g., 'Load Test Results'). The ID prefix is in the 'id' field and displayed by sidebar.",
     )
     author: str = Field(..., description="Memo author. Use person name or team name (e.g., 'Platform Team', 'Claude')")
     created: datetime.date = Field(
@@ -243,15 +229,8 @@ class MemoFrontmatter(BaseModel):
         description="Unique identifier for backend tracking. Must be valid UUID v4 format. Generated automatically by migration script",
     )
 
-    @field_validator("title")
-    @classmethod
-    def validate_title_format(cls, v: str) -> str:
-        """Ensure title starts with MEMO-XXX"""
-        if not re.match(r"^MEMO-\d{3}:", v):
-            raise ValueError(
-                f"Memo title must start with 'MEMO-XXX:' format (e.g., 'MEMO-001: Title Here'). Got: {v[:50]}"
-            )
-        return v
+    # Title validator removed - titles should NOT include prefix (e.g., "MEMO-001:")
+    # The ID prefix is in the 'id' field and displayed by the sidebar presentation layer
 
     @field_validator("tags")
     @classmethod

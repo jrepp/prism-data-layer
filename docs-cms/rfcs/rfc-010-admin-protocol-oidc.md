@@ -11,7 +11,7 @@ tags:
 - authentication
 - grpc
 - protocol
-title: 'RFC-010: Admin Protocol with OIDC Authentication'
+title: Admin Protocol with OIDC Authentication
 updated: 2025-10-09
 ---
 

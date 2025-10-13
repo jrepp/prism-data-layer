@@ -10,7 +10,7 @@ tags:
 - error-handling
 - reliability
 - observability
-title: 'ADR-018: Rust Error Handling Strategy'
+title: Rust Error Handling Strategy
 ---
 
 ## Context

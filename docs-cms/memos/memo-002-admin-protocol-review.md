@@ -10,7 +10,7 @@ tags:
 - protocol
 - grpc
 - improvements
-title: 'MEMO-002: Admin Protocol Security Review and Improvements'
+title: Admin Protocol Security Review and Improvements
 updated: 2025-10-09
 ---
 

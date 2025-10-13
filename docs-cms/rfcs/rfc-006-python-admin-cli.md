@@ -6,7 +6,7 @@ id: rfc-006
 project_id: prism-data-layer
 sidebar_label: RFC-006 Admin CLI
 status: Superseded
-title: 'RFC-006: Admin CLI (prismctl)'
+title: Admin CLI (prismctl)
 ---
 
 # RFC-006: Admin CLI (prismctl)

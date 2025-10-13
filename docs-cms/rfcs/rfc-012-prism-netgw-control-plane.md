@@ -11,7 +11,7 @@ tags:
 - networking
 - orchestration
 - high-availability
-title: 'RFC-012: Prism Network Gateway (prism-netgw) - Multi-Region Control Plane'
+title: Prism Network Gateway (prism-netgw) - Multi-Region Control Plane
 updated: 2025-10-09
 ---
 

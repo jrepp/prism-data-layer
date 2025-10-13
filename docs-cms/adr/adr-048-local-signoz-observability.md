@@ -11,7 +11,7 @@ tags:
 - local-development
 - opentelemetry
 - signoz
-title: 'ADR-048: Local Signoz Instance for Observability Testing'
+title: Local Signoz Instance for Observability Testing
 ---
 
 # ADR-048: Local Signoz Instance for Observability Testing

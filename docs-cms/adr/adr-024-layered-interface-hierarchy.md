@@ -10,7 +10,7 @@ tags:
 - api-design
 - interfaces
 - use-cases
-title: 'ADR-024: Layered Interface Hierarchy'
+title: Layered Interface Hierarchy
 ---
 
 ## Context

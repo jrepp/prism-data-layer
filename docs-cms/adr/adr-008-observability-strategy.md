@@ -9,7 +9,7 @@ tags:
 - operations
 - performance
 - reliability
-title: 'ADR-008: Observability Strategy'
+title: Observability Strategy
 ---
 
 ## Context

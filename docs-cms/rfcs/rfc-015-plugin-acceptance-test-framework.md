@@ -12,7 +12,7 @@ tags:
 - interfaces
 - acceptance
 - quality-assurance
-title: 'RFC-015: Plugin Acceptance Test Framework (Interface-Based Testing)'
+title: Plugin Acceptance Test Framework (Interface-Based Testing)
 updated: 2025-10-09
 ---
 

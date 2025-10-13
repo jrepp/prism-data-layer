@@ -11,7 +11,7 @@ tags:
 - go
 - acceptance-testing
 - developer-experience
-title: 'ADR-039: CLI Acceptance Testing with testscript'
+title: CLI Acceptance Testing with testscript
 ---
 
 ## Context

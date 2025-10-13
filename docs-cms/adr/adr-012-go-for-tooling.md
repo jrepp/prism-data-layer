@@ -10,7 +10,7 @@ tags:
 - tooling
 - cli
 - developer-experience
-title: 'ADR-012: Go for Tooling and CLI Utilities'
+title: Go for Tooling and CLI Utilities
 ---
 
 ## Context

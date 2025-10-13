@@ -6,7 +6,7 @@ id: rfc-004
 project_id: prism-data-layer
 related: RFC-001, RFC-002, ADR-003
 status: Proposed
-title: 'RFC-004: Redis Integration for Cache, PubSub, and Vector Search'
+title: Redis Integration for Cache, PubSub, and Vector Search
 updated: 2025-10-08
 ---
 

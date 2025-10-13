@@ -12,7 +12,7 @@ tags:
 - go
 - rust
 - plugin
-title: 'ADR-047: OpenTelemetry Tracing Integration'
+title: OpenTelemetry Tracing Integration
 ---
 
 ## Context

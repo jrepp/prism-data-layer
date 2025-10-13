@@ -9,7 +9,7 @@ tags:
 - proxy
 - performance
 - languages
-title: 'ADR-001: Rust for the Proxy Implementation'
+title: Rust for the Proxy Implementation
 ---
 
 ## Context

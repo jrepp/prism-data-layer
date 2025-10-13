@@ -10,7 +10,7 @@ tags:
 - cli
 - tooling
 - dx
-title: 'ADR-040: Go Binary for Admin CLI (prismctl)'
+title: Go Binary for Admin CLI (prismctl)
 ---
 
 ## Context

@@ -11,7 +11,7 @@ tags:
 - versioning
 - evolution
 - registry
-title: 'ADR-030: Schema Recording with Protobuf Tagging'
+title: Schema Recording with Protobuf Tagging
 ---
 
 ## Context

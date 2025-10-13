@@ -10,7 +10,7 @@ tags:
 - grpc
 - performance
 - api-design
-title: 'ADR-023: gRPC-First Interface Design'
+title: gRPC-First Interface Design
 ---
 
 ## Context

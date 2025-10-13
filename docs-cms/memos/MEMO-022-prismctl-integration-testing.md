@@ -1,12 +1,18 @@
 ---
-title: "MEMO-022: Prismctl OIDC Integration Testing Requirements"
 author: Claude Code
 created: 2025-10-13
-updated: 2025-10-13
-tags: [testing, cli, oidc, integration, dx, security]
+doc_uuid: e7a9c4f1-22b5-4d3e-8a1f-9b6c7d8e9f0a
 id: memo-022
 project_id: prism-data-layer
-doc_uuid: e7a9c4f1-22b5-4d3e-8a1f-9b6c7d8e9f0a
+tags:
+- testing
+- cli
+- oidc
+- integration
+- dx
+- security
+title: Prismctl OIDC Integration Testing Requirements
+updated: 2025-10-13
 ---
 
 # MEMO-022: Prismctl OIDC Integration Testing Requirements

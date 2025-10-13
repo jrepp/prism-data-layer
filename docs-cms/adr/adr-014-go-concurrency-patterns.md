@@ -10,7 +10,7 @@ tags:
 - concurrency
 - performance
 - patterns
-title: 'ADR-014: Go Concurrency Patterns'
+title: Go Concurrency Patterns
 ---
 
 ## Context

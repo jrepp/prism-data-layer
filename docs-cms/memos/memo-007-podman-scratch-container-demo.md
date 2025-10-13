@@ -12,7 +12,7 @@ tags:
 - runtime
 - optimization
 - patterns
-title: 'MEMO-007: Podman Demo for Scratch-Based Containers with Native Runtime'
+title: Podman Demo for Scratch-Based Containers with Native Runtime
 updated: 2025-10-10
 ---
 

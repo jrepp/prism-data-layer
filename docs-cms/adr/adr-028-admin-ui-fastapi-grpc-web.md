@@ -11,7 +11,7 @@ tags:
 - fastapi
 - grpc-web
 - frontend
-title: 'ADR-028: Admin UI with FastAPI and gRPC-Web'
+title: Admin UI with FastAPI and gRPC-Web
 ---
 
 ## Context

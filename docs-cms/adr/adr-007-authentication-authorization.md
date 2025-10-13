@@ -8,7 +8,7 @@ status: Accepted
 tags:
 - security
 - architecture
-title: 'ADR-007: Authentication and Authorization'
+title: Authentication and Authorization
 ---
 
 ## Context

@@ -11,7 +11,7 @@ tags:
 - composition
 - data-access
 - layering
-title: 'RFC-014: Layered Data Access Patterns'
+title: Layered Data Access Patterns
 updated: 2025-10-09
 ---
 

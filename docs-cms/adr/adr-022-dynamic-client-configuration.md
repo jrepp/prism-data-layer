@@ -10,7 +10,7 @@ tags:
 - configuration
 - client-server
 - protobuf
-title: 'ADR-022: Dynamic Client Configuration System'
+title: Dynamic Client Configuration System
 ---
 
 ## Context

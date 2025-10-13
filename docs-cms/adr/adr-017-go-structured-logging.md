@@ -10,7 +10,7 @@ tags:
 - logging
 - observability
 - debugging
-title: 'ADR-017: Go Structured Logging with slog'
+title: Go Structured Logging with slog
 ---
 
 ## Context

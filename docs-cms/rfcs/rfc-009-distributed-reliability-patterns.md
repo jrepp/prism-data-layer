@@ -5,7 +5,7 @@ doc_uuid: 1c79b78c-6364-4815-b76a-020ee13cdae7
 id: rfc-009
 project_id: prism-data-layer
 status: Proposed
-title: 'RFC-009: Distributed Reliability Data Patterns'
+title: Distributed Reliability Data Patterns
 ---
 
 # RFC-009: Distributed Reliability Data Patterns

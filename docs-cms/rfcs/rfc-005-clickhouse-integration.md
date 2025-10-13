@@ -6,7 +6,7 @@ id: rfc-005
 project_id: prism-data-layer
 related: RFC-001, RFC-002, RFC-004
 status: Proposed
-title: 'RFC-005: ClickHouse Integration for Time Series Analytics'
+title: ClickHouse Integration for Time Series Analytics
 updated: 2025-10-08
 ---
 

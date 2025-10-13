@@ -9,7 +9,7 @@ tags:
 - architecture
 - configuration
 - dx
-title: 'ADR-002: Client-Originated Configuration'
+title: Client-Originated Configuration
 ---
 
 ## Context

@@ -11,7 +11,7 @@ tags:
 - schemas
 - registry
 - capabilities
-title: 'MEMO-006: Backend Interface Decomposition and Schema Registry'
+title: Backend Interface Decomposition and Schema Registry
 updated: 2025-10-09
 ---
 

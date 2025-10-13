@@ -9,7 +9,7 @@ tags:
 - wal
 - security
 - session-management
-title: 'MEMO-001: WAL Full Transaction Flow with Authorization and Session Management'
+title: WAL Full Transaction Flow with Authorization and Session Management
 updated: 2025-10-08
 ---
 

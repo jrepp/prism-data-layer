@@ -12,7 +12,7 @@ tags:
 - postgres
 - redis
 - memstore
-title: 'MEMO-015: Cross-Backend Acceptance Test Framework'
+title: Cross-Backend Acceptance Test Framework
 updated: 2025-10-12
 ---
 

@@ -9,7 +9,7 @@ tags:
 - operations
 - reliability
 - backend
-title: 'ADR-009: Shadow Traffic for Migrations'
+title: Shadow Traffic for Migrations
 ---
 
 ## Context

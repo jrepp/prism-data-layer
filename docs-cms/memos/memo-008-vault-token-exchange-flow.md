@@ -14,7 +14,7 @@ tags:
 - service-identity
 - kubernetes
 - aws
-title: 'MEMO-008: Vault Token Exchange Flow for Plugin Authentication'
+title: Vault Token Exchange Flow for Plugin Authentication
 updated: 2025-10-10
 ---
 

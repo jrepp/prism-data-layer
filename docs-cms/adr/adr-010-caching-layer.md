@@ -8,7 +8,7 @@ status: Accepted
 tags:
 - performance
 - architecture
-title: 'ADR-010: Caching Layer Design'
+title: Caching Layer Design
 ---
 
 ## Context

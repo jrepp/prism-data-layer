@@ -11,7 +11,7 @@ tags:
 - observability
 - tracing
 - debugging
-title: 'ADR-021: Rust Structured Logging with Tracing'
+title: Rust Structured Logging with Tracing
 ---
 
 ## Context

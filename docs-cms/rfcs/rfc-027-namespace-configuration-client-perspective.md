@@ -11,7 +11,7 @@ tags:
 - client-api
 - patterns
 - self-service
-title: 'RFC-027: Namespace Configuration and Client Request Flow'
+title: Namespace Configuration and Client Request Flow
 updated: 2025-10-10
 ---
 

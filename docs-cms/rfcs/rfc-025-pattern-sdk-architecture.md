@@ -12,7 +12,7 @@ tags:
 - concurrency
 - drivers
 - go
-title: 'RFC-025: Pattern SDK Architecture - Backend Drivers and Concurrency Primitives'
+title: Pattern SDK Architecture - Backend Drivers and Concurrency Primitives
 updated: 2025-10-09
 ---
 

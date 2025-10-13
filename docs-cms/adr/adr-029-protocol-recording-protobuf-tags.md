@@ -10,7 +10,7 @@ tags:
 - protocols
 - observability
 - debugging
-title: 'ADR-029: Protocol Recording with Protobuf Tagging'
+title: Protocol Recording with Protobuf Tagging
 ---
 
 ## Context

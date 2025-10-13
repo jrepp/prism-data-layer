@@ -12,7 +12,7 @@ tags:
 - pubsub
 - service-discovery
 - composition
-title: 'RFC-017: Multicast Registry Pattern'
+title: Multicast Registry Pattern
 updated: 2025-10-09
 ---
 

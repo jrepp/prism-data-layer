@@ -11,7 +11,7 @@ tags:
 - implementation
 - roadmap
 - priorities
-title: 'RFC-018: POC Implementation Strategy'
+title: POC Implementation Strategy
 updated: 2025-10-10
 ---
 

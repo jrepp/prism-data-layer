@@ -12,7 +12,7 @@ tags:
 - walking-skeleton
 - tdd
 - code-coverage
-title: 'RFC-021: POC 1 - Three Minimal Plugins Implementation Plan'
+title: POC 1 - Three Minimal Plugins Implementation Plan
 updated: 2025-10-09
 ---
 

@@ -11,7 +11,7 @@ tags:
 - async
 - performance
 - tokio
-title: 'ADR-019: Rust Async Concurrency Patterns'
+title: Rust Async Concurrency Patterns
 ---
 
 ## Context

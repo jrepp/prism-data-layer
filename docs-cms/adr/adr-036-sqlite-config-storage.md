@@ -10,7 +10,7 @@ tags:
 - deployment
 - reliability
 - operations
-title: 'ADR-036: Local SQLite Storage for Namespace Configuration'
+title: Local SQLite Storage for Namespace Configuration
 ---
 
 ## Context

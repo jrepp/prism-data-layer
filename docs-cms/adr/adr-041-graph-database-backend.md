@@ -11,7 +11,7 @@ tags:
 - database
 - plugin
 - architecture
-title: 'ADR-041: Graph Database Backend Support'
+title: Graph Database Backend Support
 ---
 
 ## Context
