@@ -12,8 +12,8 @@ Quick access to recently updated documentation. Changes listed in reverse chrono
 
 ### 2025-10-13
 
-#### RFC-029: Schema Evolution and Validation for Decoupled Pub/Sub (NEW)
-**Link**: [RFC-029](/rfc/rfc-029)
+#### RFC-030: Schema Evolution and Validation for Decoupled Pub/Sub (NEW)
+**Link**: [RFC-030](/rfc/rfc-030)
 
 **Summary**: Comprehensive RFC addressing schema evolution and validation for publisher/consumer patterns where producers and consumers are decoupled across async teams with different workflows and GitHub repositories:
 
