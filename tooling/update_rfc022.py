@@ -14,7 +14,7 @@ from pathlib import Path
 
 def main():
     rfc_path = Path("/Users/jrepp/dev/data-access/docs-cms/rfcs/RFC-022-core-plugin-sdk-code-layout.md")
-    content = rfc_path.read_text()
+    content = rfc_path.read_text(encoding="utf-8")
 
     # Update module paths: plugin-sdk → pattern-sdk
     content = re.sub(r"github\.com/prism/plugin-sdk", "github.com/prism/pattern-sdk", content)
@@ -712,7 +712,7 @@ jobs:
     content = content[:insertion_point] + build_sections + "\n" + content[insertion_point:]
 
     # Write updated content
-    rfc_path.write_text(content)
+    rfc_path.write_text(content, encoding="utf-8")
     print(f"✅ Updated {rfc_path}")
     print("   - Changed plugin-sdk → pattern-sdk")
     print("   - Changed examples/ → patterns/")

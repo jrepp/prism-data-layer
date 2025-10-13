@@ -63,6 +63,7 @@ wheels/
 venv/
 ENV/
 env/
+.ruff_cache/
 
 # === Node/Ember ===
 admin/node_modules/

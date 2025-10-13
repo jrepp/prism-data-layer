@@ -123,7 +123,7 @@ class PrismDocValidator:
         config_path = self.repo_root / "docs-cms" / "docs-project.yaml"
         if config_path.exists():
             try:
-                with open(config_path) as f:
+                with open(config_path, encoding="utf-8") as f:
                     config = yaml.safe_load(f)
                     self.log(f"✓ Loaded project config: {config['project']['id']}")
                     return config
@@ -165,7 +165,7 @@ class PrismDocValidator:
                     self.log(f"   ✗ {md_file.name}: Invalid filename format")
                     continue
 
-                prefix, num, slug = match.groups()
+                _prefix, num, _slug = match.groups()
                 # Skip template files (000)
                 if num == "000":
                     self.log(f"   ⊘ {md_file.name}: Skipping template file")
@@ -192,7 +192,7 @@ class PrismDocValidator:
                     self.log(f"   ✗ {md_file.name}: Invalid filename format")
                     continue
 
-                prefix, num, slug = match.groups()
+                _prefix, num, _slug = match.groups()
                 # Skip template files (000)
                 if num == "000":
                     self.log(f"   ⊘ {md_file.name}: Skipping template file")
@@ -284,18 +284,18 @@ class PrismDocValidator:
                 )
 
                 for error in e.errors():
-                    field = ".".join(str(loc) for loc in error["loc"])
+                    field_name = ".".join(str(loc) for loc in error["loc"])
                     msg = error["msg"]
                     error_type = error["type"]
 
                     # Format user-friendly error message
                     if error_type == "literal_error":
                         # Extract allowed values from message
-                        doc.errors.append(f"Frontmatter field '{field}': {msg}")
+                        doc.errors.append(f"Frontmatter field '{field_name}': {msg}")
                     else:
-                        doc.errors.append(f"Frontmatter field '{field}': {msg}")
+                        doc.errors.append(f"Frontmatter field '{field_name}': {msg}")
 
-                    self.log(f"   ✗ {file_path.name}: {field} - {msg}")
+                    self.log(f"   ✗ {file_path.name}: {field_name} - {msg}")
 
                 return doc
 

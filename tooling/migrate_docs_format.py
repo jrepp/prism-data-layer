@@ -93,8 +93,8 @@ class DocMigrator:
             # "ADR-001: Rust for Proxy" -> "ADR-001: Rust for Proxy"
             # "Rust for Proxy" -> "ADR-001: Rust for Proxy"
             title_upper = title.upper()
-            prefix = expected_id.split("-")[0].upper()
-            number = expected_id.split("-")[1]
+            prefix = expected_id.split("-", maxsplit=1)[0].upper()
+            number = expected_id.split("-", maxsplit=1)[1]
             expected_prefix = f"{prefix}-{number}:"
 
             if not title.startswith(prefix):

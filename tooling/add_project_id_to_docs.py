@@ -39,7 +39,7 @@ def load_project_config(repo_root: Path) -> dict:
         print(f"❌ ERROR: Configuration file not found: {config_path}", file=sys.stderr)
         sys.exit(1)
 
-    with open(config_path) as f:
+    with open(config_path, encoding="utf-8") as f:
         return yaml.safe_load(f)
 
 

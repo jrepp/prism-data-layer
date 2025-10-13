@@ -346,10 +346,17 @@ lint-rust: ## Lint Rust code with clippy
 	@cd proxy && cargo clippy -- -D warnings
 	$(call print_green,Rust code linted)
 
-lint-python: ## Lint Python code with ruff
-	$(call print_blue,Linting Python code...)
+lint-python: lint-python-ruff lint-python-pylint ## Lint Python code with ruff and pylint
+
+lint-python-ruff: ## Lint Python code with ruff
+	$(call print_blue,Linting Python code with ruff...)
 	@uv run ruff check tooling/
-	$(call print_green,Python code linted)
+	$(call print_green,Ruff checks passed)
+
+lint-python-pylint: ## Lint Python code with pylint
+	$(call print_blue,Linting Python code with pylint...)
+	@uv run pylint tooling/*.py
+	$(call print_green,Pylint checks passed)
 
 lint-python-fix: ## Auto-fix Python linting issues with ruff
 	$(call print_blue,Auto-fixing Python linting issues...)

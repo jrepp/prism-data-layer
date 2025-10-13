@@ -1,0 +1,223 @@
+# Pylint configuration for Prism tooling scripts
+# Python utility scripts often need relaxed rules compared to production code
+
+[MAIN]
+# Python code to execute, usually for sys.path manipulation
+init-hook='import sys; sys.path.append(".")'
+
+# Use multiple processes to speed up Pylint
+jobs=4
+
+# Pickle collected data for later comparisons
+persistent=yes
+
+# Discover python modules and packages in the file system subtree
+recursive=yes
+
+# List of plugins (as comma separated values of python module names) to load
+load-plugins=
+
+[MESSAGES CONTROL]
+# Disable specific warnings that are too strict for utility scripts
+disable=
+    missing-module-docstring,
+    missing-function-docstring,
+    missing-class-docstring,
+    too-few-public-methods,
+    too-many-arguments,
+    too-many-locals,
+    too-many-branches,
+    too-many-statements,
+    too-many-instance-attributes,
+    too-many-positional-arguments,
+    too-many-return-statements,
+    too-many-lines,
+    line-too-long,
+    bad-indentation,
+    fixme,
+    broad-exception-caught,
+    unused-argument,
+    import-outside-toplevel,
+    duplicate-code,
+    import-error
+
+
+[REPORTS]
+# Set the output format
+output-format=colorized
+
+# Tells whether to display a full report
+reports=no
+
+# Python expression which should return a score less than 10
+score=yes
+
+[REFACTORING]
+# Maximum number of nested blocks for function / method body
+max-nested-blocks=5
+
+# Complete name of functions that never returns
+never-returning-functions=sys.exit,argparse.parse_error
+
+[BASIC]
+# Naming style matching correct argument names
+argument-naming-style=snake_case
+
+# Naming style matching correct attribute names
+attr-naming-style=snake_case
+
+# Naming style matching correct class attribute names
+class-attribute-naming-style=any
+
+# Naming style matching correct class constant names
+class-const-naming-style=UPPER_CASE
+
+# Naming style matching correct class names
+class-naming-style=PascalCase
+
+# Naming style matching correct constant names
+const-naming-style=UPPER_CASE
+
+# Naming style matching correct function names
+function-naming-style=snake_case
+
+# Naming style matching correct inline iteration names
+inlinevar-naming-style=any
+
+# Naming style matching correct method names
+method-naming-style=snake_case
+
+# Naming style matching correct module names
+module-naming-style=snake_case
+
+# Naming style matching correct variable names
+variable-naming-style=snake_case
+
+# Good variable names which should always be accepted
+good-names=i,j,k,ex,Run,_,f,e,fp,id
+
+# Include a hint for the correct naming format
+include-naming-hint=no
+
+[FORMAT]
+# Expected format of line ending
+expected-line-ending-format=LF
+
+# Maximum number of characters on a single line
+max-line-length=120
+
+# Maximum number of lines in a module
+max-module-lines=1000
+
+[LOGGING]
+# The type of string formatting that logging methods do
+logging-format-style=old
+
+[MISCELLANEOUS]
+# List of note tags to take in consideration
+notes=FIXME,XXX,TODO
+
+[SIMILARITIES]
+# Minimum lines number of a similarity
+min-similarity-lines=4
+
+# Ignore comments when computing similarities
+ignore-comments=yes
+
+# Ignore docstrings when computing similarities
+ignore-docstrings=yes
+
+# Ignore imports when computing similarities
+ignore-imports=yes
+
+[SPELLING]
+# Limits count of emitted suggestions for spelling mistakes
+max-spelling-suggestions=4
+
+[STRING]
+# This flag controls whether inconsistent-quotes generates a warning
+check-quote-consistency=no
+
+[TYPECHECK]
+# List of decorators that produce context managers
+contextmanager-decorators=contextlib.contextmanager
+
+# List of members which are set dynamically
+generated-members=
+
+# Tells whether to warn about missing members when owner of the attribute is inferred to be None
+ignore-none=yes
+
+# Show a hint with possible names when a member name was not found
+missing-member-hint=yes
+
+# The minimum edit distance a name should have in order to be considered a similar match
+missing-member-hint-distance=1
+
+[VARIABLES]
+# List of additional names supposed to be defined in builtins
+additional-builtins=
+
+# Tells whether unused global variables should be treated as a violation
+allow-global-unused-variables=yes
+
+# A regular expression matching the name of dummy variables
+dummy-variables-rgx=_+$|(_[a-zA-Z0-9_]*[a-zA-Z0-9]+?$)|dummy|^ignored_|^unused_
+
+# Argument names that match this expression will be ignored
+ignored-argument-names=_.*|^ignored_|^unused_
+
+[CLASSES]
+# List of method names used to declare instance attributes
+defining-attr-methods=__init__,__new__,setUp,__post_init__
+
+# List of member names which should be excluded from the protected access warning
+exclude-protected=_asdict,_fields,_replace,_source,_make
+
+# List of valid names for the first argument in a class method
+valid-classmethod-first-arg=cls
+
+# List of valid names for the first argument in a metaclass class method
+valid-metaclass-classmethod-first-arg=cls
+
+[DESIGN]
+# Maximum number of arguments for function / method
+max-args=10
+
+# Maximum number of attributes for a class
+max-attributes=15
+
+# Maximum number of boolean expressions in an if statement
+max-bool-expr=5
+
+# Maximum number of branch for function / method body
+max-branches=15
+
+# Maximum number of locals for function / method body
+max-locals=20
+
+# Maximum number of parents for a class
+max-parents=7
+
+# Maximum number of public methods for a class
+max-public-methods=20
+
+# Maximum number of return / yield for function / method body
+max-returns=6
+
+# Maximum number of statements in function / method body
+max-statements=50
+
+# Minimum number of public methods for a class
+min-public-methods=0
+
+[IMPORTS]
+# Allow wildcard imports from modules
+allow-wildcard-with-all=no
+
+# Force import order to recognize a module as part of a third party library
+known-third-party=
+
+[EXCEPTIONS]
+# Exceptions that will emit a warning when caught
+overgeneral-exceptions=builtins.BaseException,builtins.Exception
