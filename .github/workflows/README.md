@@ -89,29 +89,32 @@ Comprehensive CI pipeline that runs on main branch pushes and pull requests.
 
 **Total Duration**: ~5-7 minutes
 
-**Matrix Report Example**:
+**Matrix Report Example** (with code coverage):
 ```
 🎯 Pattern × Backend Compliance Matrix:
 
-  Pattern          │  MemStore   │   Redis     │   NATS      │ Score
-  ─────────────────┼─────────────┼─────────────┼─────────────┼───────
-  KeyValue         │  ✅ PASS    │  ✅ PASS    │  ───────    │ 100.0%
-  KeyValueTTL      │  ✅ PASS    │  ✅ PASS    │  ───────    │ 100.0%
-  KeyValueScan     │  ───────    │  ✅ PASS    │  ───────    │ 100.0%
-  PubSubBasic      │  ───────    │  ───────    │  ✅ PASS    │ 100.0%
+  Pattern          │  MemStore   │   Redis     │   NATS      │ Score   │ Avg Cov
+  ─────────────────┼─────────────┼─────────────┼─────────────┼─────────┼─────────
+  KeyValue         │  ✅  55.8%  │  ✅  79.7%  │  ───────    │ 100.0%  │  67.8%
+  KeyValueTTL      │  ✅  58.2%  │  ✅  81.3%  │  ───────    │ 100.0%  │  69.8%
+  KeyValueScan     │  ───────    │  ✅  75.4%  │  ───────    │ 100.0%  │  75.4%
+  PubSubBasic      │  ───────    │  ───────    │  ✅  80.7%  │ 100.0%  │  80.7%
+  ─────────────────┼─────────────┼─────────────┼─────────────┼─────────┼─────────
+  Score            │  100.0%     │  100.0%     │  100.0%     │ 100.0%  │  73.4%
 ```
 
 **Artifacts**:
 - Matrix report (Markdown) - 30 days retention
-- JSON results - 30 days retention
+- JSON results with coverage data - 30 days retention
 - Terminal output - 7 days retention
 
 **Key Features**:
 - ⚡ 40-60% faster than sequential execution
 - 📊 Visual Pattern × Backend compliance matrix
-- 💬 Automatic PR comments with test results
+- 📈 Code coverage percentage for each passing test
+- 💬 Automatic PR comments with test results + coverage
 - 📈 GitHub Actions job summary with matrix
-- 🎯 Green/red status for each combination
+- 🎯 Green/red status + coverage for each combination
 - 📝 Multiple output formats (Terminal, Markdown, JSON)
 
 ### 3. Deploy Docs (`docs.yml`)
