@@ -3,7 +3,6 @@
 import os
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional
 
 import yaml
 
@@ -14,10 +13,11 @@ class OIDCConfig:
 
     issuer: str
     client_id: str
-    client_secret: Optional[str] = None
-    scopes: list[str] = None
+    client_secret: str | None = None
+    scopes: list[str] | None = None
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
+        """Initialize default scopes if not provided."""
         if self.scopes is None:
             self.scopes = ["openid", "profile", "email", "offline_access"]
 

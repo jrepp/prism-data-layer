@@ -4,9 +4,8 @@ import json
 import time
 import webbrowser
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from typing import Optional
 
 import requests
 
@@ -18,18 +17,18 @@ class Token:
     """OIDC token with metadata."""
 
     access_token: str
-    refresh_token: Optional[str]
-    id_token: Optional[str]
+    refresh_token: str | None
+    id_token: str | None
     expires_at: datetime
     token_type: str = "Bearer"
 
     def is_expired(self) -> bool:
         """Check if access token is expired."""
-        return datetime.now() >= self.expires_at
+        return datetime.now(timezone.utc) >= self.expires_at
 
     def needs_refresh(self) -> bool:
         """Check if token should be refreshed (within 5 minutes of expiry)."""
-        return datetime.now() >= (self.expires_at - timedelta(minutes=5))
+        return datetime.now(timezone.utc) >= (self.expires_at - timedelta(minutes=5))
 
     def to_dict(self) -> dict:
         """Serialize to dictionary."""
@@ -56,14 +55,19 @@ class Token:
 class OIDCAuthenticator:
     """OIDC authentication using device code flow."""
 
-    def __init__(self, config: OIDCConfig):
+    def __init__(self, config: OIDCConfig) -> None:
+        """Initialize OIDC authenticator with configuration.
+
+        Args:
+            config: OIDC configuration including issuer and client details
+        """
         self.config = config
         self.issuer = config.issuer.rstrip("/")
 
         # Discover endpoints
         self._discover_endpoints()
 
-    def _discover_endpoints(self):
+    def _discover_endpoints(self) -> None:
         """Discover OIDC endpoints from issuer."""
         discovery_url = f"{self.issuer}/.well-known/openid-configuration"
         resp = requests.get(discovery_url, timeout=10)
@@ -71,15 +75,12 @@ class OIDCAuthenticator:
 
         discovery = resp.json()
         self.token_endpoint = discovery["token_endpoint"]
-        self.device_authorization_endpoint = discovery.get(
-            "device_authorization_endpoint"
-        )
+        self.device_authorization_endpoint = discovery.get("device_authorization_endpoint")
         self.authorization_endpoint = discovery["authorization_endpoint"]
         self.userinfo_endpoint = discovery.get("userinfo_endpoint")
 
     def login_device_code(self, open_browser: bool = True) -> Token:
-        """
-        Login using device code flow.
+        """Login using device code flow.
 
         This is the recommended flow for CLI applications. The user will be
         shown a verification URL and code to enter in their browser.
@@ -94,11 +95,12 @@ class OIDCAuthenticator:
             raise ValueError("Device code flow not supported by OIDC provider")
 
         # Step 1: Request device code
+        scopes = self.config.scopes or ["openid", "profile", "email"]
         device_resp = requests.post(
             self.device_authorization_endpoint,
             data={
                 "client_id": self.config.client_id,
-                "scope": " ".join(self.config.scopes),
+                "scope": " ".join(scopes),
             },
             timeout=10,
         )
@@ -113,11 +115,11 @@ class OIDCAuthenticator:
         interval = device_data.get("interval", 5)
 
         # Display instructions to user
-        print(f"\n🔐 Prism Authentication")
+        print("\n🔐 Prism Authentication")
         print(f"{'=' * 60}")
-        print(f"\n1. Open this URL in your browser:")
+        print("\n1. Open this URL in your browser:")
         print(f"   {verification_uri}")
-        print(f"\n2. Enter this code:")
+        print("\n2. Enter this code:")
         print(f"   {user_code}")
         print(f"\nWaiting for authentication (code expires in {expires_in}s)...\n")
 
@@ -154,22 +156,20 @@ class OIDCAuthenticator:
             if error == "authorization_pending":
                 # User hasn't completed auth yet, keep polling
                 continue
-            elif error == "slow_down":
+            if error == "slow_down":
                 # Increase polling interval
                 interval += 5
                 continue
-            elif error == "expired_token":
+            if error == "expired_token":
                 raise ValueError("Device code expired. Please try again.")
-            elif error == "access_denied":
+            if error == "access_denied":
                 raise ValueError("Authentication denied by user.")
-            else:
-                raise ValueError(f"Authentication error: {error}")
+            raise ValueError(f"Authentication error: {error}")
 
         raise TimeoutError("Authentication timed out. Please try again.")
 
     def login_password(self, username: str, password: str) -> Token:
-        """
-        Login using resource owner password credentials (for testing only).
+        """Login using resource owner password credentials (for testing only).
 
         WARNING: This flow is not recommended for production use. It's only
         included for local development and testing.
@@ -181,6 +181,7 @@ class OIDCAuthenticator:
         Returns:
             Token with access_token, refresh_token, and metadata
         """
+        scopes = self.config.scopes or ["openid", "profile", "email"]
         token_resp = requests.post(
             self.token_endpoint,
             data={
@@ -189,7 +190,7 @@ class OIDCAuthenticator:
                 "password": password,
                 "client_id": self.config.client_id,
                 "client_secret": self.config.client_secret,
-                "scope": " ".join(self.config.scopes),
+                "scope": " ".join(scopes),
             },
             timeout=10,
         )
@@ -199,8 +200,7 @@ class OIDCAuthenticator:
         return self._create_token(token_data)
 
     def refresh_token(self, token: Token) -> Token:
-        """
-        Refresh an expired access token using refresh token.
+        """Refresh an expired access token using refresh token.
 
         Args:
             token: Token with refresh_token
@@ -227,8 +227,7 @@ class OIDCAuthenticator:
         return self._create_token(token_data)
 
     def get_userinfo(self, token: Token) -> dict:
-        """
-        Get user information from OIDC provider.
+        """Get user information from OIDC provider.
 
         Args:
             token: Valid access token
@@ -245,12 +244,12 @@ class OIDCAuthenticator:
             timeout=10,
         )
         resp.raise_for_status()
-        return resp.json()
+        return resp.json()  # type: ignore[no-any-return]
 
     def _create_token(self, token_data: dict) -> Token:
         """Create Token object from OIDC response."""
         expires_in = token_data.get("expires_in", 3600)
-        expires_at = datetime.now() + timedelta(seconds=expires_in)
+        expires_at = datetime.now(timezone.utc) + timedelta(seconds=expires_in)
 
         return Token(
             access_token=token_data["access_token"],
@@ -264,10 +263,15 @@ class OIDCAuthenticator:
 class TokenManager:
     """Manage token storage and retrieval."""
 
-    def __init__(self, token_path: Path):
+    def __init__(self, token_path: Path) -> None:
+        """Initialize token manager.
+
+        Args:
+            token_path: Path to token file
+        """
         self.token_path = token_path
 
-    def save(self, token: Token):
+    def save(self, token: Token) -> None:
         """Save token to disk with secure permissions."""
         self.token_path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -277,7 +281,7 @@ class TokenManager:
         # Set secure permissions (owner read/write only)
         self.token_path.chmod(0o600)
 
-    def load(self) -> Optional[Token]:
+    def load(self) -> Token | None:
         """Load token from disk."""
         if not self.token_path.exists():
             return None
@@ -287,7 +291,7 @@ class TokenManager:
 
         return Token.from_dict(data)
 
-    def delete(self):
+    def delete(self) -> None:
         """Delete stored token."""
         if self.token_path.exists():
             self.token_path.unlink()

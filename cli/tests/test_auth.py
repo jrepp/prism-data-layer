@@ -1,16 +1,12 @@
 """Tests for prismctl authentication."""
 
-import json
-from datetime import datetime, timedelta
-from pathlib import Path
-
-import pytest
+from datetime import datetime, timedelta, timezone
 
 from prismctl.auth import Token, TokenManager
 from prismctl.config import OIDCConfig
 
 
-def test_token_serialization(tmp_path):
+def test_token_serialization():
     """Test token serialization and deserialization."""
     token = Token(
         access_token="test_access",
@@ -38,7 +34,7 @@ def test_token_expiry():
         access_token="test",
         refresh_token=None,
         id_token=None,
-        expires_at=datetime.now() - timedelta(hours=1),
+        expires_at=datetime.now(timezone.utc) - timedelta(hours=1),
     )
     assert expired.is_expired()
     assert expired.needs_refresh()
@@ -48,7 +44,7 @@ def test_token_expiry():
         access_token="test",
         refresh_token=None,
         id_token=None,
-        expires_at=datetime.now() + timedelta(hours=1),
+        expires_at=datetime.now(timezone.utc) + timedelta(hours=1),
     )
     assert not fresh.is_expired()
     assert not fresh.needs_refresh()
@@ -58,7 +54,7 @@ def test_token_expiry():
         access_token="test",
         refresh_token=None,
         id_token=None,
-        expires_at=datetime.now() + timedelta(minutes=3),
+        expires_at=datetime.now(timezone.utc) + timedelta(minutes=3),
     )
     assert not expiring.is_expired()
     assert expiring.needs_refresh()
@@ -108,7 +104,7 @@ def test_token_manager_delete(tmp_path):
         access_token="test",
         refresh_token=None,
         id_token=None,
-        expires_at=datetime.now() + timedelta(hours=1),
+        expires_at=datetime.now(timezone.utc) + timedelta(hours=1),
     )
     manager.save(token)
     assert token_path.exists()

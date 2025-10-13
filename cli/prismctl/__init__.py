@@ -1,5 +1,4 @@
-"""
-Prism CLI - Command-line interface for Prism data access gateway.
+"""Prism CLI - Command-line interface for Prism data access gateway.
 
 Provides OIDC-authenticated access to Prism admin APIs with support for
 local development using Dex identity provider.

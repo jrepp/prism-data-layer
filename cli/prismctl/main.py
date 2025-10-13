@@ -1,7 +1,6 @@
 """Main CLI entry point for prismctl."""
 
 import sys
-from pathlib import Path
 
 import click
 
@@ -13,7 +12,7 @@ from .config import Config, ensure_prism_dir
 @click.group()
 @click.version_option()
 @click.pass_context
-def cli(ctx):
+def cli(ctx: click.Context) -> None:
     """Prism CLI - Manage Prism data access gateway."""
     ctx.ensure_object(dict)
 
@@ -22,13 +21,16 @@ def cli(ctx):
 
 
 @cli.command()
-@click.option("--device-code/--no-device-code", default=True, help="Use device code flow (recommended)")
+@click.option(
+    "--device-code/--no-device-code", default=True, help="Use device code flow (recommended)",
+)
 @click.option("--username", help="Username for password flow (testing only)")
 @click.option("--password", help="Password for password flow (testing only)")
 @click.pass_context
-def login(ctx, device_code, username, password):
-    """
-    Authenticate with Prism using OIDC.
+def login(
+    ctx: click.Context, device_code: bool, username: str | None, password: str | None
+) -> None:
+    """Authenticate with Prism using OIDC.
 
     By default, uses device code flow which is secure for CLI applications.
     For local testing, you can use --username and --password.
@@ -47,7 +49,10 @@ def login(ctx, device_code, username, password):
             click.echo("⚠️  Using password flow (testing only)")
             token = authenticator.login_password(username, password)
         else:
-            click.echo("Error: Either use device code (default) or provide --username and --password", err=True)
+            click.echo(
+                "Error: Either use device code (default) or provide --username and --password",
+                err=True,
+            )
             sys.exit(1)
 
         # Save token
@@ -55,7 +60,7 @@ def login(ctx, device_code, username, password):
 
         # Get user info
         userinfo = authenticator.get_userinfo(token)
-        click.echo(f"\n✅ Authenticated successfully!")
+        click.echo("\n✅ Authenticated successfully!")
         click.echo(f"   User: {userinfo.get('name', userinfo.get('email', 'Unknown'))}")
         click.echo(f"   Token expires: {token.expires_at.strftime('%Y-%m-%d %H:%M:%S')}")
         click.echo(f"   Token saved to: {config.token_path}")
@@ -67,7 +72,7 @@ def login(ctx, device_code, username, password):
 
 @cli.command()
 @click.pass_context
-def logout(ctx):
+def logout(ctx: click.Context) -> None:
     """Remove stored authentication token."""
     config = ctx.obj["config"]
     token_manager = TokenManager(config.token_path)
@@ -76,12 +81,12 @@ def logout(ctx):
         token_manager.delete()
         click.echo(f"✅ Token removed from {config.token_path}")
     else:
-        click.echo("ℹ️  No token found (already logged out)")
+        click.echo("(i) No token found (already logged out)")
 
 
 @cli.command()
 @click.pass_context
-def whoami(ctx):
+def whoami(ctx: click.Context) -> None:
     """Show current authentication status."""
     config = ctx.obj["config"]
     token_manager = TokenManager(config.token_path)
@@ -112,14 +117,14 @@ def whoami(ctx):
 
 @cli.command()
 @click.pass_context
-def health(ctx):
+def health(ctx: click.Context) -> None:
     """Check Prism proxy health."""
     config = ctx.obj["config"]
     client = PrismClient(config.proxy)
 
     try:
         health_data = client.health()
-        click.echo(f"✅ Proxy is healthy")
+        click.echo("✅ Proxy is healthy")
         click.echo(f"   Status: {health_data.get('status', 'unknown')}")
     except Exception as e:
         click.echo(f"❌ Health check failed: {e}", err=True)
@@ -127,14 +132,13 @@ def health(ctx):
 
 
 @cli.group()
-def namespace():
+def namespace() -> None:
     """Manage namespaces."""
-    pass
 
 
 @namespace.command("list")
 @click.pass_context
-def namespace_list(ctx):
+def namespace_list(ctx: click.Context) -> None:
     """List all namespaces."""
     config = ctx.obj["config"]
     token_manager = TokenManager(config.token_path)
@@ -155,7 +159,7 @@ def namespace_list(ctx):
         click.echo(f"Found {len(namespaces)} namespace(s):\n")
         for ns in namespaces:
             click.echo(f"  • {ns['name']}")
-            if desc := ns.get('description'):
+            if desc := ns.get("description"):
                 click.echo(f"    {desc}")
 
     except Exception as e:
@@ -166,7 +170,7 @@ def namespace_list(ctx):
 @namespace.command("show")
 @click.argument("name")
 @click.pass_context
-def namespace_show(ctx, name):
+def namespace_show(ctx: click.Context, name: str) -> None:
     """Show namespace details."""
     config = ctx.obj["config"]
     token_manager = TokenManager(config.token_path)
@@ -191,15 +195,14 @@ def namespace_show(ctx, name):
 
 
 @cli.group()
-def session():
+def session() -> None:
     """Manage sessions."""
-    pass
 
 
 @session.command("list")
 @click.option("--namespace", help="Filter by namespace")
 @click.pass_context
-def session_list(ctx, namespace):
+def session_list(ctx: click.Context, namespace: str | None) -> None:
     """List active sessions."""
     config = ctx.obj["config"]
     token_manager = TokenManager(config.token_path)
@@ -222,10 +225,10 @@ def session_list(ctx, namespace):
         click.echo("-" * 100)
 
         for s in sessions:
-            session_id = s.get('id', 'N/A')[:35]
-            principal = s.get('principal', 'N/A')[:29]
-            ns = s.get('namespace', 'N/A')[:19]
-            started = s.get('started_at', 'N/A')[:19]
+            session_id = s.get("id", "N/A")[:35]
+            principal = s.get("principal", "N/A")[:29]
+            ns = s.get("namespace", "N/A")[:19]
+            started = s.get("started_at", "N/A")[:19]
             click.echo(f"{session_id} {principal} {ns} {started}")
 
     except Exception as e:
@@ -233,7 +236,7 @@ def session_list(ctx, namespace):
         sys.exit(1)
 
 
-def main():
+def main() -> None:
     """Entry point for prism command."""
     cli(obj={})
 
