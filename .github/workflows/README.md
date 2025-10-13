@@ -62,29 +62,57 @@ Comprehensive CI pipeline that runs on main branch pushes and pull requests.
 - Proxy binary (7 days retention)
 - Pattern binaries (7 days retention)
 
-### 2. Pre-Commit (`pre-commit.yml`)
+### 2. Acceptance Tests (`acceptance-tests.yml`) 🆕
 
-**Triggers**: Push to non-main branches, Pull Requests
+**Triggers**:
+- Push to `main` with changes to `patterns/**`, `tests/acceptance/**`, or test runner
+- Pull Requests with same path filters
+- Manual workflow dispatch
 
-Fast feedback loop for development branches. Runs lightweight checks only.
+**Parallel execution** of acceptance tests with comprehensive Pattern × Backend matrix report.
 
 **Jobs**:
 
-1. **Quick Checks** (~5 minutes)
-   - Format checking (no builds)
-   - Clippy linting
-   - Go vet
-   - Go format check
+1. **Generate Protobuf Code** - Creates proto artifacts
+   - Duration: ~2 minutes
 
-2. **Fast Unit Tests** (~10 minutes)
-   - Rust unit tests only
-   - Go core and memstore tests only
-   - Integration tests with `-short` flag
-   - Skips acceptance tests (Docker containers)
+2. **Acceptance Tests (Parallel)** - Runs all pattern/backend combinations
+   - Tests MemStore, Redis, NATS backends
+   - Tests KeyValue, PubSub patterns
+   - Generates matrix report in 3 formats (Terminal, Markdown, JSON)
+   - Posts report to PR comments
+   - Displays matrix in GitHub Actions summary
+   - Duration: ~3-5 minutes (40-60% faster than sequential)
 
-**Total Duration**: ~10-15 minutes
+3. **Acceptance Status Check** - Required for merge
+   - Gates PR merges on acceptance tests passing
 
-**Purpose**: Catch common issues quickly before full CI runs.
+**Total Duration**: ~5-7 minutes
+
+**Matrix Report Example**:
+```
+🎯 Pattern × Backend Compliance Matrix:
+
+  Pattern          │  MemStore   │   Redis     │   NATS      │ Score
+  ─────────────────┼─────────────┼─────────────┼─────────────┼───────
+  KeyValue         │  ✅ PASS    │  ✅ PASS    │  ───────    │ 100.0%
+  KeyValueTTL      │  ✅ PASS    │  ✅ PASS    │  ───────    │ 100.0%
+  KeyValueScan     │  ───────    │  ✅ PASS    │  ───────    │ 100.0%
+  PubSubBasic      │  ───────    │  ───────    │  ✅ PASS    │ 100.0%
+```
+
+**Artifacts**:
+- Matrix report (Markdown) - 30 days retention
+- JSON results - 30 days retention
+- Terminal output - 7 days retention
+
+**Key Features**:
+- ⚡ 40-60% faster than sequential execution
+- 📊 Visual Pattern × Backend compliance matrix
+- 💬 Automatic PR comments with test results
+- 📈 GitHub Actions job summary with matrix
+- 🎯 Green/red status for each combination
+- 📝 Multiple output formats (Terminal, Markdown, JSON)
 
 ### 3. Deploy Docs (`docs.yml`)
 
@@ -114,29 +142,31 @@ Deploys documentation to GitHub Pages.
 
   Feature Branch Push
          ↓
-  Pre-Commit Workflow (fast, 10-15 min)
-    ✓ Format checks
-    ✓ Lint
-    ✓ Unit tests only
-    ✓ Integration tests (short)
-         ↓
     Create PR
          ↓
-  Full CI Workflow (comprehensive, 30-40 min)
-    ✓ All lint checks
-    ✓ All unit tests + race detector
-    ✓ All integration tests
-    ✓ All acceptance tests (Docker)
-    ✓ Documentation validation
+  ┌──────────────────┴──────────────────┐
+  │                                     │
+  CI Workflow                 Acceptance Tests Workflow
+  (comprehensive)             (if patterns changed)
+    ✓ All lint checks           ✓ Parallel pattern tests
+    ✓ Unit tests + race         ✓ Matrix report
+    ✓ Integration tests         ✓ PR comment
+    ✓ Legacy acceptance         ✓ Visual grid
+    ✓ Documentation
     ✓ Full builds
     ✓ Coverage reports
-         ↓
-  Merge to Main
-         ↓
-  ┌─────────┴─────────┐
-  │                   │
-  CI Workflow    Docs Workflow
-  (validation)   (if docs changed)
+  (30-40 min)                 (5-7 min)
+         │                                     │
+         └──────────────────┬──────────────────┘
+                            ↓
+                    Both must pass
+                            ↓
+                     Merge to Main
+                            ↓
+         ┌──────────────────┴──────────────────┐
+         │                                     │
+    CI Workflow                          Docs Workflow
+    (validation)                         (if docs changed)
 ```
 
 ## Caching Strategy
@@ -160,6 +190,7 @@ Recommended branch protection for `main`:
 ```yaml
 Require status checks:
   - ci-status (from ci.yml)
+  - acceptance-status (from acceptance-tests.yml, if triggered)
   - build / Build All Components
   - validate-docs / Validate Documentation
 
@@ -172,9 +203,6 @@ Require signed commits: Yes (optional)
 Run the same checks locally before pushing:
 
 ```bash
-# Run quick pre-commit checks (matches pre-commit.yml)
-make pre-commit
-
 # Run full CI pipeline locally (matches ci.yml)
 make ci
 
@@ -183,6 +211,11 @@ make fmt        # Format all code
 make lint       # Lint all code
 make test       # Run unit tests
 make test-all   # Run all tests (unit + integration + acceptance)
+
+# Parallel acceptance tests (matches acceptance-tests.yml)
+make test-acceptance-parallel              # Run with matrix report
+make test-acceptance-parallel-report       # Save reports to files
+uv run tooling/parallel_acceptance_test.py # Direct invocation
 ```
 
 ## Debugging Failed Workflows

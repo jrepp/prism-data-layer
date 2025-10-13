@@ -37,7 +37,6 @@ import time
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
-from typing import Dict, List, Optional, Set
 
 
 class TestStatus(Enum):
@@ -73,7 +72,7 @@ class AcceptanceReport:
 
     timestamp: str
     duration: float
-    results: List[TestResult] = field(default_factory=list)
+    results: list[TestResult] = field(default_factory=list)
 
     @property
     def total_tests(self) -> int:
@@ -101,16 +100,16 @@ class AcceptanceReport:
         return len([r for r in self.results if r.status == TestStatus.ERROR])
 
     @property
-    def backends(self) -> List[str]:
+    def backends(self) -> list[str]:
         """List of all tested backends."""
         return sorted(set(r.backend for r in self.results))
 
     @property
-    def patterns(self) -> List[str]:
+    def patterns(self) -> list[str]:
         """List of all tested patterns."""
         return sorted(set(r.pattern for r in self.results))
 
-    def get_result(self, backend: str, pattern: str) -> Optional[TestResult]:
+    def get_result(self, backend: str, pattern: str) -> TestResult | None:
         """Get result for a specific backend/pattern combination."""
         for result in self.results:
             if result.backend == backend and result.pattern == pattern:
@@ -142,7 +141,7 @@ class ParallelAcceptanceRunner:
         self.max_concurrency = max_concurrency
         self.semaphore = asyncio.Semaphore(max_concurrency)
 
-    def discover_pattern_tests(self) -> List[Path]:
+    def discover_pattern_tests(self) -> list[Path]:
         """Discover all pattern test directories."""
         patterns_dir = self.repo_root / "tests" / "acceptance" / "patterns"
         if not patterns_dir.exists():
@@ -167,8 +166,8 @@ class ParallelAcceptanceRunner:
         return mapping.get(dir_name, dir_name.title())
 
     async def run_pattern_tests(
-        self, pattern_dir: Path, backend_filter: Optional[Set[str]] = None, fail_fast: bool = False
-    ) -> List[TestResult]:
+        self, pattern_dir: Path, backend_filter: set[str] | None = None, fail_fast: bool = False
+    ) -> list[TestResult]:
         """Run all tests for a specific pattern directory."""
         async with self.semaphore:
             pattern_name = self.get_pattern_name(pattern_dir)
@@ -233,7 +232,7 @@ class ParallelAcceptanceRunner:
                     )
                 ]
 
-    def _parse_go_test_output(self, output: str, pattern: str, total_duration: float) -> List[TestResult]:
+    def _parse_go_test_output(self, output: str, pattern: str, total_duration: float) -> list[TestResult]:
         """Parse Go test output to extract per-backend results.
 
         Go test output format:
@@ -246,7 +245,7 @@ class ParallelAcceptanceRunner:
             --- PASS: TestKeyValueBasicPattern/Redis (0.42s)
         """
         results = []
-        backend_tests: Dict[str, Dict[str, any]] = {}
+        backend_tests: dict[str, dict[str, any]] = {}
 
         lines = output.split("\n")
         for line in lines:
@@ -299,8 +298,8 @@ class ParallelAcceptanceRunner:
 
     async def run_all_tests(
         self,
-        pattern_filter: Optional[Set[str]] = None,
-        backend_filter: Optional[Set[str]] = None,
+        pattern_filter: set[str] | None = None,
+        backend_filter: set[str] | None = None,
         fail_fast: bool = False,
         sequential: bool = False,
     ) -> AcceptanceReport:
@@ -361,7 +360,9 @@ class ReportFormatter:
         # Summary
         lines.append("📊 Summary:")
         lines.append(f"  Total Tests:   {report.total_tests}")
-        lines.append(f"  ✅ Passed:     {report.passed_tests} ({report.passed_tests / max(report.total_tests, 1) * 100:.1f}%)")
+        lines.append(
+            f"  ✅ Passed:     {report.passed_tests} ({report.passed_tests / max(report.total_tests, 1) * 100:.1f}%)"
+        )
         lines.append(f"  ❌ Failed:     {report.failed_tests}")
         lines.append(f"  ⏭️  Skipped:    {report.skipped_tests}")
         if report.errored_tests > 0:
@@ -405,9 +406,7 @@ class ReportFormatter:
 
             for backend in backends:
                 result = report.get_result(backend, pattern)
-                if result is None:
-                    cell = "─" * col_width
-                elif result.status == TestStatus.NOT_SUPPORTED:
+                if result is None or result.status == TestStatus.NOT_SUPPORTED:
                     cell = "─" * col_width
                 elif result.status == TestStatus.PASS:
                     cell = f"{'✅ PASS':^{col_width}}"
@@ -491,7 +490,9 @@ class ReportFormatter:
         lines.append("## Summary")
         lines.append("")
         lines.append(f"- **Total Tests:** {report.total_tests}")
-        lines.append(f"- **Passed:** {report.passed_tests} ({report.passed_tests / max(report.total_tests, 1) * 100:.1f}%)")
+        lines.append(
+            f"- **Passed:** {report.passed_tests} ({report.passed_tests / max(report.total_tests, 1) * 100:.1f}%)"
+        )
         lines.append(f"- **Failed:** {report.failed_tests}")
         lines.append(f"- **Skipped:** {report.skipped_tests}")
         if report.errored_tests > 0:
