@@ -112,17 +112,60 @@ jobs:
 
       - name: Run acceptance tests for ${{ matrix.pattern }}
         id: acceptance_tests
+        continue-on-error: true
         run: |
           cd tests/acceptance/${{ matrix.pattern }}
-          go test -v -timeout 10m ./...
+
+          # Run tests and capture output
+          set +e
+          go test -v -timeout 10m ./... 2>&1 | tee test-output.txt
+          TEST_EXIT_CODE=$?
+          set -e
+
+          # Count passed/failed tests from output
+          TESTS_PASSED=$(grep -c "^--- PASS:" test-output.txt || echo "0")
+          TESTS_FAILED=$(grep -c "^--- FAIL:" test-output.txt || echo "0")
+
+          # Determine status
+          if [ $TEST_EXIT_CODE -eq 0 ]; then
+            STATUS="passed"
+          else
+            STATUS="failed"
+          fi
+
+          # Save results as JSON
+          mkdir -p ../../../build/acceptance-results
+          cat > ../../../build/acceptance-results/acceptance-${{ matrix.pattern }}.json <<EOF
+          {
+            "pattern": "${{ matrix.pattern }}",
+            "status": "$STATUS",
+            "exit_code": $TEST_EXIT_CODE,
+            "tests_passed": $TESTS_PASSED,
+            "tests_failed": $TESTS_FAILED,
+            "duration": 0,
+            "output": $(jq -Rs . < test-output.txt)
+          }
+          EOF
+
+          # Exit with test result
+          exit $TEST_EXIT_CODE
         env:
           PRISM_TEST_QUIET: "1"
 
       - name: Generate coverage report
+        if: always()
         run: |
           cd tests/acceptance/${{ matrix.pattern }}
           go test -coverprofile=coverage.out -timeout 10m ./...
           go tool cover -func=coverage.out | grep total | awk '{print "Coverage: " $3}'
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: results-acceptance-${{ matrix.pattern }}
+          path: build/acceptance-results/acceptance-${{ matrix.pattern }}.json
+          retention-days: 7
 
       - name: Upload coverage
         if: always()
@@ -132,6 +175,78 @@ jobs:
           path: tests/acceptance/${{ matrix.pattern }}/coverage.out
           retention-days: 7
 
+
+  # Generate comprehensive summary report
+  acceptance-summary:
+    name: Generate Acceptance Summary
+    runs-on: ubuntu-latest
+    needs: [acceptance-tests-matrix]
+    if: always()
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          version: "latest"
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+
+      - name: Download test results
+        uses: actions/download-artifact@v4
+        with:
+          pattern: results-acceptance-*
+          path: build/acceptance-results
+
+      - name: Download coverage reports
+        uses: actions/download-artifact@v4
+        with:
+          pattern: coverage-acceptance-*
+          path: build/coverage-reports
+
+      - name: Flatten artifact directories
+        run: |
+          # Flatten nested artifact directories (GitHub Actions creates subdirs)
+          cd build/acceptance-results
+          for dir in results-acceptance-*/; do
+            if [ -d "$dir" ]; then
+              mv "$dir"*.json . || true
+              rmdir "$dir" || true
+            fi
+          done
+
+          cd ../coverage-reports
+          for dir in coverage-acceptance-*/; do
+            if [ -d "$dir" ]; then
+              # Keep directory structure for coverage files
+              backend=$(echo "$dir" | sed 's/coverage-acceptance-//' | sed 's#/##')
+              mkdir -p "coverage-acceptance-$backend"
+              mv "$dir"coverage.out "coverage-acceptance-$backend/" || true
+              rmdir "$dir" || true
+            fi
+          done
+
+      - name: Generate summary report
+        run: |
+          uv run tooling/acceptance_summary.py \
+            --results-dir build/acceptance-results \
+            --coverage-dir build/coverage-reports \
+            --output-file $GITHUB_STEP_SUMMARY
+
+      - name: Display summary in logs
+        run: |
+          echo "📊 Acceptance Test Summary:"
+          cat $GITHUB_STEP_SUMMARY
 
   # Status check for acceptance tests (required for merge)
   acceptance-status:
