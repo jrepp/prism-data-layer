@@ -243,6 +243,34 @@ make lint-parallel-list
 
 See **[BUILDING.md](./BUILDING.md)** for complete documentation on building, testing, and development workflow.
 
+### CI/CD Notifications
+
+Prism CI/CD workflows can send status notifications to Telegram. To enable:
+
+1. **Create a Telegram bot** via [@BotFather](https://t.me/botfather):
+   ```
+   /newbot
+   # Follow prompts to get your bot token
+   ```
+
+2. **Get your chat ID**:
+   - Start a chat with your bot
+   - Send it a message
+   - Visit `https://api.telegram.org/bot<YourBOTToken>/getUpdates`
+   - Find your `chat_id` in the response
+
+3. **Add secrets to your GitHub repository**:
+   - Go to Settings → Secrets and variables → Actions
+   - Add two repository secrets:
+     - `TELEGRAM_BOT_TOKEN`: Your bot token from BotFather
+     - `TELEGRAM_CHAT_ID`: Your chat ID from the previous step
+
+The CI workflow will now send notifications for:
+- ✅ All pipeline status (pass/fail with job breakdown)
+- 📚 Documentation deployments
+
+**Note**: Notifications are optional. If secrets are not configured, workflows run normally without sending notifications.
+
 ## Roadmap
 
 ### Phase 1: Foundation (Current)

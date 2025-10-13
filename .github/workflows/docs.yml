@@ -75,3 +75,22 @@ jobs:
       - name: Deploy
         id: deployment
         uses: actions/deploy-pages@v4
+
+      - name: Send Telegram notification
+        if: always() && (secrets.TELEGRAM_BOT_TOKEN != '' && secrets.TELEGRAM_CHAT_ID != '')
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_CHAT_ID }}
+          token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          format: markdown
+          message: |
+            ${{ job.status == 'success' && '📚✅' || '📚❌' }} **Documentation Deployment ${{ job.status == 'success' && 'Succeeded' || 'Failed' }}**
+
+            **Repository:** ${{ github.repository }}
+            **Branch:** `${{ github.ref_name }}`
+            **Commit:** `${{ github.sha | slice(0,7) }}`
+            **Author:** ${{ github.actor }}
+
+            **Deployment URL:** ${{ steps.deployment.outputs.page_url }}
+
+            [View Workflow Run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
