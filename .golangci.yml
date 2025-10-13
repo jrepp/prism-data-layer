@@ -169,9 +169,7 @@ linters:
     - unused            # Unused code
 
     # === STYLE & FORMATTING (Fast) ===
-    # Note: gofmt and gofumpt are formatters, not linters - use 'make fmt' instead
-    - goimports         # Import organization
-    - gci               # Import order
+    # Note: gofmt, gofumpt, goimports, and gci are formatters, not linters - use 'make fmt' instead
     - whitespace        # Whitespace issues
     - wsl               # Whitespace/blank lines
 
@@ -183,7 +181,6 @@ linters:
     - cyclop            # Package-level cyclomatic complexity
     - dupl              # Code duplication
     - revive            # Fast, configurable linter
-    - stylecheck        # Style consistency
 
     # === ERROR HANDLING (Fast) ===
     - errorlint         # Error wrapping
