@@ -44,7 +44,7 @@ endef
 ##@ General
 
 help: ## Display this help message
-	@awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n  make \033[36m<target>\033[0m\n"} /^[a-zA-Z_-]+:.*?##/ { printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2 } /^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5) } ' $(MAKEFILE_LIST)
+	@awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n  make \033[36m<target>\033[0m\n"} /^[a-zA-Z0-9_-]+:.*##/ { printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2 } /^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5) } ' $(MAKEFILE_LIST)
 
 env: ## Show build environment variables
 	$(call print_blue,Build Environment:)
@@ -395,23 +395,92 @@ lint-fix: ## Auto-fix linting issues where possible
 	@uv run ruff format tooling/
 	$(call print_green,Auto-fix complete)
 
-##@ Docker
+##@ Podman & Compose
 
-docker-up: ## Start local development services (Redis, NATS)
-	$(call print_blue,Starting local development services...)
-	@docker-compose up -d
-	$(call print_green,Services started - Redis: localhost:6379, NATS: localhost:4222)
+# Compose command - uses Podman instead of Docker Desktop (ADR-049)
+COMPOSE := podman compose
 
-docker-down: ## Stop local development services
-	$(call print_blue,Stopping local development services...)
-	@docker-compose down
-	$(call print_green,Services stopped)
+podman-start: ## Start Podman machine if not running
+	@if ! podman machine inspect --format '{{.State}}' 2>/dev/null | grep -q running; then \
+		printf "$(BLUE)Starting Podman machine...$(NC)\n"; \
+		podman machine start; \
+		printf "$(GREEN)✓ Podman machine started$(NC)\n"; \
+	else \
+		printf "$(GREEN)✓ Podman machine already running$(NC)\n"; \
+	fi
 
-docker-logs: ## Show logs from local services
-	@docker-compose logs -f
+podman-stop: ## Stop Podman machine
+	$(call print_blue,Stopping Podman machine...)
+	@podman machine stop
+	$(call print_green,Podman machine stopped)
 
-docker-redis-cli: ## Open Redis CLI (requires docker-up)
-	@docker-compose run --rm redis-cli
+podman-status: ## Show Podman machine status
+	@podman machine list
+
+##@ Local Compose Deployments
+
+up-dev: podman-start ## Start dev services (Redis, NATS) from docker-compose.yml
+	$(call print_blue,Starting dev services...)
+	@$(COMPOSE) up -d
+	$(call print_green,Dev services started - Redis: localhost:6379, NATS: localhost:4222)
+
+down-dev: ## Stop dev services
+	$(call print_blue,Stopping dev services...)
+	@$(COMPOSE) down
+	$(call print_green,Dev services stopped)
+
+logs-dev: ## Show logs from dev services
+	@$(COMPOSE) logs -f
+
+up-test: podman-start ## Start test infrastructure (Postgres, Kafka, NATS, LocalStack)
+	$(call print_blue,Starting test infrastructure...)
+	@$(COMPOSE) -f docker-compose.test.yml up -d
+	$(call print_green,Test infrastructure started - Postgres: localhost:5432, Kafka: localhost:9092, NATS: localhost:4222, LocalStack: localhost:4566)
+
+down-test: ## Stop test infrastructure
+	$(call print_blue,Stopping test infrastructure...)
+	@$(COMPOSE) -f docker-compose.test.yml down
+	$(call print_green,Test infrastructure stopped)
+
+logs-test: ## Show logs from test infrastructure
+	@$(COMPOSE) -f docker-compose.test.yml logs -f
+
+up-dex: podman-start ## Start Dex IdP for local auth
+	$(call print_blue,Starting Dex IdP...)
+	@$(COMPOSE) -f local-dev/docker-compose.dex.yml up -d
+	$(call print_green,Dex IdP started - OIDC: http://localhost:5556)
+
+down-dex: ## Stop Dex IdP
+	$(call print_blue,Stopping Dex IdP...)
+	@$(COMPOSE) -f local-dev/docker-compose.dex.yml down
+	$(call print_green,Dex IdP stopped)
+
+logs-dex: ## Show logs from Dex IdP
+	@$(COMPOSE) -f local-dev/docker-compose.dex.yml logs -f
+
+up-poc4: podman-start ## Start POC4 multicast registry deployment
+	$(call print_blue,Starting POC4 deployment...)
+	@$(COMPOSE) -f deployments/poc4-multicast-registry/docker-compose.yml up -d
+	$(call print_green,POC4 deployment started - Redis: localhost:6379, NATS: localhost:4222)
+
+down-poc4: ## Stop POC4 multicast registry deployment
+	$(call print_blue,Stopping POC4 deployment...)
+	@$(COMPOSE) -f deployments/poc4-multicast-registry/docker-compose.yml down
+	$(call print_green,POC4 deployment stopped)
+
+logs-poc4: ## Show logs from POC4 deployment
+	@$(COMPOSE) -f deployments/poc4-multicast-registry/docker-compose.yml logs -f
+
+up-all: up-dev up-dex ## Start all local services (dev + dex)
+	$(call print_green,All local services started)
+
+down-all: down-poc4 down-dex down-test down-dev ## Stop all compose deployments
+	$(call print_green,All compose deployments stopped)
+
+# Legacy aliases (deprecated - use up-dev/down-dev)
+docker-up: up-dev ## [DEPRECATED] Use up-dev instead
+docker-down: down-dev ## [DEPRECATED] Use down-dev instead
+docker-logs: logs-dev ## [DEPRECATED] Use logs-dev instead
 
 ##@ Documentation
 
