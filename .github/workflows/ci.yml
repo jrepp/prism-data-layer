@@ -3,8 +3,22 @@ name: CI
 on:
   push:
     branches: [main]
+    paths-ignore:
+      - 'docs-cms/**'
+      - 'docusaurus/**'
+      - 'tooling/build_docs.py'
+      - 'tooling/validate_docs.py'
+      - '**/*.md'
+      - '.github/workflows/docs.yml'
   pull_request:
     branches: [main]
+    paths-ignore:
+      - 'docs-cms/**'
+      - 'docusaurus/**'
+      - 'tooling/build_docs.py'
+      - 'tooling/validate_docs.py'
+      - '**/*.md'
+      - '.github/workflows/docs.yml'
 
 # Cancel in-progress runs for the same PR/branch
 concurrency:
