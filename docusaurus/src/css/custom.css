@@ -192,3 +192,88 @@
 .mermaid text {
   fill: var(--mermaid-text-color) !important;
 }
+
+/**
+ * Document Number Styling (ADRs, RFCs, MEMOs)
+ *
+ * De-emphasize document numbers while keeping titles prominent.
+ * Format: "Main Title • PREFIX-NNN"
+ * The bullet and number get reduced opacity/size.
+ */
+
+/* Style the sidebar items for documents with numbers */
+.theme-doc-sidebar-item-link {
+  display: flex !important;
+  align-items: center !important;
+}
+
+/* De-emphasize the bullet separator and document number */
+.theme-doc-sidebar-item-link .theme-doc-sidebar-item-link-level-1,
+.theme-doc-sidebar-item-link .menu__link {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+/* Target document numbers after bullet */
+.theme-doc-sidebar-item-link .menu__link::after {
+  content: attr(data-doc-number);
+  font-size: 0.75rem;
+  opacity: 0.5;
+  margin-left: 0.5rem;
+  font-weight: 400;
+  flex-shrink: 0;
+}
+
+/* Style the bullet separator with reduced emphasis */
+.menu__link {
+  color: var(--ifm-font-color-base);
+}
+
+/* Make document numbers even more subtle in dark mode */
+[data-theme='dark'] .theme-doc-sidebar-item-link .menu__link::after {
+  opacity: 0.4;
+}
+
+/* Pill/badge style for document numbers (alternative approach) */
+.doc-number-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.125rem 0.5rem;
+  font-size: 0.7rem;
+  font-weight: 500;
+  line-height: 1.4;
+  border-radius: 0.75rem;
+  background-color: var(--ifm-color-emphasis-200);
+  color: var(--ifm-color-emphasis-700);
+  margin-left: auto;
+  flex-shrink: 0;
+  opacity: 0.7;
+  transition: opacity 0.2s ease;
+}
+
+.menu__link:hover .doc-number-pill {
+  opacity: 1;
+}
+
+[data-theme='dark'] .doc-number-pill {
+  background-color: var(--ifm-color-emphasis-300);
+  color: var(--ifm-color-emphasis-900);
+  opacity: 0.6;
+}
+
+[data-theme='dark'] .menu__link:hover .doc-number-pill {
+  opacity: 0.9;
+}
+
+/* Ensure category summary pages (index.md) remain prominent */
+.menu__link[data-is-index="true"] {
+  font-weight: 600;
+  color: var(--ifm-color-primary);
+}
+
+.menu__link[data-is-index="true"]::after {
+  display: none; /* No document number for index pages */
+}

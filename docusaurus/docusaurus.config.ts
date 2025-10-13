@@ -103,6 +103,7 @@ const config: Config = {
         routeBasePath: 'rfc',
         sidebarPath: './sidebars-rfc.ts',
         editUrl: 'https://github.com/jrepp/prism-data-layer/tree/main/docs-cms/',
+        exclude: ['**/README.md', '**/000-template.md'],
       },
     ],
     [
@@ -113,6 +114,7 @@ const config: Config = {
         routeBasePath: 'memos',
         sidebarPath: './sidebars-memos.ts',
         editUrl: 'https://github.com/jrepp/prism-data-layer/tree/main/docs-cms/',
+        exclude: ['**/README.md', '**/000-template.md'],
       },
     ],
     [
