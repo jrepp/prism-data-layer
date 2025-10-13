@@ -12,23 +12,24 @@ Quick access to recently updated documentation. Changes listed in reverse chrono
 
 ### 2025-10-13
 
-#### Prismctl OIDC Integration Test Infrastructure (NEW - Phase 1 Complete)
+#### Prismctl OIDC Integration Test Infrastructure (NEW - Phases 1-3 Complete)
 **Links**: [MEMO-022](/memos/memo-022), [Integration Tests README](https://github.com/jrepp/prism-data-layer/blob/main/cli/tests/integration/README.md)
 
-**Summary**: Implemented Phase 1 of prismctl OIDC integration testing infrastructure to address the 60% coverage gap in authentication flows:
+**Summary**: Implemented Phases 1-3 of prismctl OIDC integration testing infrastructure to address the 60% coverage gap in authentication flows:
 
 **Test Infrastructure Created**:
-- `cli/tests/integration/` directory with complete test suite (19 tests)
+- `cli/tests/integration/` directory with complete test suite (24 tests)
 - `docker-compose.dex.yml`: Local Dex OIDC server for testing
 - `dex-config.yaml`: Test configuration with static test users (test@prism.local, admin@prism.local)
 - `dex_server.py`: DexTestServer context manager for test lifecycle
 - `conftest.py`: Pytest configuration with custom markers
 - `README.md`: Comprehensive testing guide with troubleshooting
 
-**Test Coverage**:
+**Test Coverage** (24 tests total):
 - `test_password_flow.py`: 5 tests (success, invalid username/password, empty credentials, multiple users)
 - `test_token_refresh.py`: 6 tests (success, missing refresh token, invalid token, expiry extension, identity preservation, multiple refreshes)
 - `test_userinfo.py`: 8 tests (success, expected claims, different users, expired token, invalid token, after refresh, empty token)
+- `test_cli_endtoend.py`: 5 tests (login/logout cycle, whoami without login, invalid credentials, multiple cycles, different users)
 
 **Makefile Integration**:
 - `test-prismctl-integration`: Automated test runner with Dex lifecycle management
@@ -43,20 +44,21 @@ Quick access to recently updated documentation. Changes listed in reverse chrono
 - Integration tests achieve **60% coverage** of OIDC flows (password, refresh, userinfo)
 - Combined with unit tests: **85%+ coverage** for `prismctl/auth.py`
 
-**Implementation Status** (Phase 1 Complete):
+**Implementation Status** (Phases 1-3 Complete):
 - ✅ Test infrastructure (Dex compose, config)
 - ✅ DexTestServer utility class
 - ✅ Makefile target
 - ✅ Password flow tests (5 scenarios)
 - ✅ Token refresh tests (6 scenarios)
 - ✅ Userinfo endpoint tests (8 scenarios)
+- ✅ CLI end-to-end tests (5 scenarios)
 - ⏳ Device code flow tests (Phase 2 - requires browser mock)
-- ⏳ CLI end-to-end tests (Phase 2 - subprocess-based)
+- ⏳ Error handling tests (Phase 3 - network failures, timeouts)
 - ⏳ CI/CD integration (Phase 4 - GitHub Actions)
 
-**Key Innovation**: Local Dex server enables realistic OIDC flow testing without external dependencies or cloud services. DexTestServer context manager handles full lifecycle (start → wait → test → cleanup). Password flow tests serve as foundation for remaining OIDC flows (device code, authorization code).
+**Key Innovation**: Local Dex server enables realistic OIDC flow testing without external dependencies or cloud services. DexTestServer context manager handles full lifecycle (start → wait → test → cleanup). CLI end-to-end tests verify complete workflows via subprocess calls (realistic usage patterns). Password flow tests serve as foundation for remaining OIDC flows (device code, authorization code).
 
-**Impact**: Addresses MEMO-022 Phase 1 requirements. Prismctl authentication testing now has comprehensive integration coverage for password flow, token refresh, and userinfo endpoints. Foundation established for Phase 2 (device code flow) and Phase 4 (CI/CD integration). Combined unit + integration testing achieves 85%+ coverage goal.
+**Impact**: Addresses MEMO-022 Phases 1-3 requirements. Prismctl authentication testing now has comprehensive integration coverage for password flow, token refresh, userinfo endpoints, and complete CLI workflows. CLI end-to-end tests verify login → whoami → logout cycles with error handling. Foundation established for Phase 4 (CI/CD integration). Combined unit + integration testing achieves 85%+ coverage goal with 24 total integration tests.
 
 ---
 
