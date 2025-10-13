@@ -2,6 +2,11 @@
 
 > A high-performance data access layer gateway
 
+[![CI](https://github.com/jrepp/prism-data-layer/actions/workflows/ci.yml/badge.svg)](https://github.com/jrepp/prism-data-layer/actions/workflows/ci.yml)
+[![Linting](https://github.com/jrepp/prism-data-layer/actions/workflows/pre-commit.yml/badge.svg)](https://github.com/jrepp/prism-data-layer/actions/workflows/pre-commit.yml)
+[![Docs](https://github.com/jrepp/prism-data-layer/actions/workflows/docs.yml/badge.svg)](https://github.com/jrepp/prism-data-layer/actions/workflows/docs.yml)
+[![GitHub Pages](https://img.shields.io/badge/docs-GitHub%20Pages-blue)](https://jrepp.github.io/prism-data-layer/)
+
 **[📖 Documentation](https://jrepp.github.io/prism-data-layer/)** | [Architecture](https://jrepp.github.io/prism-data-layer/docs/intro) | [ADRs](https://jrepp.github.io/prism-data-layer/adr) | [RFCs](https://jrepp.github.io/prism-data-layer/rfc)
 
 Prism is a Rust-based data access gateway that provides unified, type-safe access to heterogeneous data backends. Inspired by Netflix's Data Gateway but built for extreme performance and developer experience.
