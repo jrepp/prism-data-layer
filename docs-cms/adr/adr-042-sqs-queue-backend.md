@@ -243,7 +243,7 @@ func processJobs(client pb.QueueServiceClient) {
 ### Plugin Architecture
 
 ```go
-// plugins/backends/sqs/plugin.go
+// patterns/sqs/plugin.go
 package sqs
 
 import (
