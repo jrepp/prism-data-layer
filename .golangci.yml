@@ -1,0 +1,295 @@
+# golangci-lint configuration for Prism Data Access Gateway
+# Comprehensive linter battery for maximum code quality
+#
+# Run locally: golangci-lint run ./...
+# Run specific linters: golangci-lint run --enable-only=gosec ./...
+# Run with autofix: golangci-lint run --fix ./...
+
+version: 2
+
+run:
+  timeout: 10m
+  tests: true
+  build-tags:
+    - integration
+  modules-download-mode: readonly
+  allow-parallel-runners: true
+
+  skip-dirs:
+    - vendor
+    - node_modules
+    - docs
+    - docusaurus
+    - build
+
+  skip-files:
+    - ".*\\.pb\\.go$"
+    - ".*\\.pb\\.gw\\.go$"
+    - ".*/gen/.*\\.go$"
+
+output:
+  format: colored-line-number
+  print-issued-lines: true
+  print-linter-name: true
+  uniq-by-line: true
+  sort-results: true
+
+linters-settings:
+  # Error checking
+  errcheck:
+    check-type-assertions: true
+    check-blank: true
+    exclude-functions:
+      - (io.Closer).Close
+      - (*database/sql.Rows).Close
+      - (*database/sql.Stmt).Close
+
+  # Code complexity
+  gocyclo:
+    min-complexity: 15
+
+  gocognit:
+    min-complexity: 20
+
+  cyclop:
+    max-complexity: 15
+    skip-tests: true
+
+  # Code style
+  gofmt:
+    simplify: true
+
+  goimports:
+    local-prefixes: github.com/jrepp/prism-data-layer
+
+  gofumpt:
+    extra-rules: true
+    module-path: github.com/jrepp/prism-data-layer
+
+  # Naming conventions
+  revive:
+    enable-all-rules: false
+    rules:
+      - name: exported
+        arguments:
+          - checkPrivateReceivers
+          - sayRepetitiveInsteadOfStutters
+      - name: package-comments
+      - name: var-naming
+      - name: indent-error-flow
+      - name: error-return
+      - name: error-strings
+      - name: receiver-naming
+      - name: increment-decrement
+      - name: error-naming
+
+  # Constants
+  goconst:
+    min-len: 3
+    min-occurrences: 3
+    ignore-tests: true
+
+  # Unused code
+  unused:
+    check-exported: false
+
+  unparam:
+    check-exported: false
+
+  # Line length
+  lll:
+    line-length: 120
+    tab-width: 4
+
+  # Spell checking
+  misspell:
+    locale: US
+    ignore-words:
+      - prism
+      - observability
+      - behaviour
+
+  # Security
+  gosec:
+    severity: medium
+    confidence: medium
+    excludes:
+      - G104  # Audit errors not checked (covered by errcheck)
+      - G107  # Url provided to HTTP request as taint input
+    exclude-generated: true
+
+  # Performance
+  prealloc:
+    simple: true
+    range-loops: true
+    for-loops: true
+
+  # Testing
+  testpackage:
+    skip-regexp: (export|internal)_test\.go
+
+  # Error handling
+  err113:
+    check-errors: true
+    check-type-assertions: true
+
+  # Code maintainability
+  maintidx:
+    under: 20
+
+  # Struct tags
+  tagliatelle:
+    case:
+      rules:
+        json: snake
+        yaml: snake
+        xml: camel
+        bson: camel
+        avro: snake
+        mapstructure: kebab
+
+  # Formatting
+  whitespace:
+    multi-if: false
+    multi-func: false
+
+  wsl:
+    allow-cuddle-declarations: false
+    allow-trailing-comment: false
+    force-err-cuddling: true
+
+linters:
+  disable-all: true
+  enable:
+    # === CRITICAL (Fast, Must-Have) ===
+    - errcheck          # Unchecked errors
+    - govet             # Go vet
+    - ineffassign       # Unused assignments
+    - staticcheck       # Advanced static analysis (includes gosimple)
+    - unused            # Unused code
+
+    # === STYLE & FORMATTING (Fast) ===
+    - gofmt             # Code formatting
+    - gofumpt           # Stricter gofmt
+    - goimports         # Import organization
+    - gci               # Import order
+    - whitespace        # Whitespace issues
+    - wsl               # Whitespace/blank lines
+
+    # === CODE QUALITY (Medium Speed) ===
+    - goconst           # Repeated strings -> constants
+    - gocritic          # Comprehensive checks
+    - gocyclo           # Cyclomatic complexity
+    - gocognit          # Cognitive complexity
+    - cyclop            # Package-level cyclomatic complexity
+    - dupl              # Code duplication
+    - revive            # Fast, configurable linter
+    - stylecheck        # Style consistency
+
+    # === ERROR HANDLING (Fast) ===
+    - errorlint         # Error wrapping
+    - err113            # Error definition (renamed from goerr113)
+    - wrapcheck         # Error wrapping
+
+    # === PERFORMANCE (Fast) ===
+    - prealloc          # Slice preallocation
+    - bodyclose         # HTTP body close
+    - noctx             # HTTP req without context
+
+    # === SECURITY (Medium Speed) ===
+    - gosec             # Security issues
+    - copyloopvar       # Loop variable capture (renamed from exportloopref)
+
+    # === BUGS (Fast) ===
+    - asciicheck        # Non-ASCII identifiers
+    - bidichk           # Dangerous unicode
+    - durationcheck     # Duration multiplication
+    - makezero          # Slice append issues
+    - nilerr            # Nil error returns
+    - nilnil            # Simultaneous nil return
+    - rowserrcheck      # SQL rows.Err check
+    - sqlclosecheck     # SQL Close check
+
+    # === TESTING (Fast) ===
+    - testpackage       # Test package naming
+    - paralleltest      # Parallel test issues (renamed from tparallel)
+    - testifylint       # Test helper detection
+
+    # === MAINTAINABILITY (Medium Speed) ===
+    - funlen            # Function length
+    - maintidx          # Maintainability index
+    - nestif            # Deeply nested if
+    - lll               # Line length
+
+    # === MISCELLANEOUS (Fast) ===
+    - misspell          # Spelling errors
+    - nakedret          # Naked returns
+    - predeclared       # Shadowing predeclared
+    - tagliatelle       # Struct tag format
+    - unconvert         # Unnecessary conversions
+    - unparam           # Unused function params
+    - wastedassign      # Wasted assignments
+
+issues:
+  # Maximum issues count per one linter
+  max-issues-per-linter: 0
+
+  # Maximum count of issues with the same text
+  max-same-issues: 0
+
+  # Show only new issues created after git revision
+  new: false
+
+  # Fix issues automatically when possible
+  fix: false
+
+  exclude-rules:
+    # Exclude some linters from running on tests
+    - path: _test\.go
+      linters:
+        - gocyclo
+        - gocognit
+        - cyclop
+        - funlen
+        - maintidx
+        - dupl
+        - gosec
+        - errcheck
+        - wrapcheck
+        - err113
+
+    # Exclude some linters from generated code
+    - path: ".*\\.pb\\.go$"
+      linters:
+        - all
+
+    # Exclude line length for long test names
+    - path: _test\.go
+      text: "line is \\d+ characters"
+      linters:
+        - lll
+
+    # Exclude gosec from test files (often use weak crypto for testing)
+    - path: _test\.go
+      text: "G[0-9]{3}:"
+      linters:
+        - gosec
+
+    # Allow main functions to have multiple statements
+    - path: cmd/.*/main\.go
+      linters:
+        - funlen
+        - gocognit
+        - gocyclo
+        - maintidx
+
+    # Exclude lll for long URLs in comments
+    - text: "https?://"
+      linters:
+        - lll
+
+  # Independently from option `exclude` we use default exclude patterns
+  exclude-use-default: true
+
+  # If set to true exclude and exclude-rules regular expressions become case sensitive
+  exclude-case-sensitive: false

@@ -296,7 +296,7 @@ watch-proxy: ## Watch and rebuild proxy on changes (requires cargo-watch)
 watch-test: ## Watch and rerun tests on changes (requires cargo-watch)
 	@cd proxy && cargo watch -x test
 
-fmt: fmt-rust fmt-go ## Format all code
+fmt: fmt-rust fmt-go fmt-python ## Format all code
 
 fmt-rust: ## Format Rust code
 	$(call print_blue,Formatting Rust code...)
@@ -315,24 +315,59 @@ fmt-go: ## Format Go code
 	@cd tests/integration && go fmt ./...
 	$(call print_green,Go code formatted)
 
-lint: lint-rust lint-go ## Lint all code
+fmt-python: ## Format Python code with ruff
+	$(call print_blue,Formatting Python code...)
+	@uv run ruff format tooling/
+	$(call print_green,Python code formatted)
+
+lint: lint-rust lint-go lint-python ## Lint all code (uses golangci-lint with full battery)
 
 lint-rust: ## Lint Rust code with clippy
 	$(call print_blue,Linting Rust code...)
 	@cd proxy && cargo clippy -- -D warnings
 	$(call print_green,Rust code linted)
 
-lint-go: ## Lint Go code
-	$(call print_blue,Linting Go code...)
-	@cd patterns/memstore && go vet ./...
-	@cd patterns/redis && go vet ./...
-	@cd patterns/nats && go vet ./...
-	@cd patterns/core && go vet ./...
-	@cd tests/acceptance/interfaces && go vet ./...
-	@cd tests/acceptance/redis && go vet ./...
-	@cd tests/acceptance/nats && go vet ./...
-	@cd tests/integration && go vet ./...
-	$(call print_green,Go code linted)
+lint-python: ## Lint Python code with ruff
+	$(call print_blue,Linting Python code...)
+	@uv run ruff check tooling/
+	$(call print_green,Python code linted)
+
+lint-python-fix: ## Auto-fix Python linting issues with ruff
+	$(call print_blue,Auto-fixing Python linting issues...)
+	@uv run ruff check --fix tooling/
+	$(call print_green,Python auto-fix complete)
+
+lint-go: ## Lint Go code with golangci-lint (comprehensive)
+	$(call print_blue,Linting Go code with golangci-lint...)
+	@golangci-lint run ./...
+	$(call print_green,Go code linted with golangci-lint)
+
+lint-go-fast: ## Lint Go code with golangci-lint (fast - critical linters only)
+	$(call print_blue,Running critical linters only...)
+	@golangci-lint run --enable-only=errcheck,gosimple,govet,ineffassign,staticcheck,typecheck,unused ./...
+	$(call print_green,Critical linters passed)
+
+lint-parallel: lint-rust lint-python ## Lint all code in parallel categories (fastest!)
+	$(call print_blue,Linting in parallel...)
+	@uv run tooling/parallel_lint.py
+	$(call print_green,Parallel linting complete)
+
+lint-parallel-critical: lint-rust lint-python ## Lint critical categories only in parallel
+	$(call print_blue,Running critical linters in parallel...)
+	@uv run tooling/parallel_lint.py --categories critical,security
+	$(call print_green,Critical parallel linting complete)
+
+lint-parallel-list: ## List all available linter categories
+	@uv run tooling/parallel_lint.py --list
+
+lint-fix: ## Auto-fix linting issues where possible
+	$(call print_blue,Auto-fixing linting issues...)
+	@golangci-lint run --fix ./...
+	@cd proxy && cargo fmt
+	@cd proxy && cargo clippy --fix --allow-dirty -- -D warnings
+	@uv run ruff check --fix tooling/
+	@uv run ruff format tooling/
+	$(call print_green,Auto-fix complete)
 
 ##@ Docker
 
