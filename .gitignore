@@ -34,10 +34,11 @@ tests/**/coverage.html
 # Test logs (deprecated, use ./build/test-logs)
 test-logs/
 
-# Docusaurus (deprecated, use ./build/docs)
-docs/
-docusaurus/.docusaurus/
-docusaurus/build/
+# Docusaurus build outputs
+/docs/                      # GitHub Pages output (root level only)
+docusaurus/.docusaurus/     # Docusaurus cache
+docusaurus/build/           # Docusaurus build output
+# NOTE: docusaurus/docs/ is SOURCE documentation and must be tracked!
 
 # === Python ===
 __pycache__/
