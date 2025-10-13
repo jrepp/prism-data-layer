@@ -42,7 +42,7 @@ from pathlib import Path
 class TestStatus(Enum):
     """Test execution status."""
 
-    PASS = "pass"
+    PASS = "pass"  # noqa: S105 - This is a test status, not a password
     FAIL = "fail"
     SKIP = "skip"
     ERROR = "error"
@@ -102,12 +102,12 @@ class AcceptanceReport:
     @property
     def backends(self) -> list[str]:
         """List of all tested backends."""
-        return sorted(set(r.backend for r in self.results))
+        return sorted({r.backend for r in self.results})
 
     @property
     def patterns(self) -> list[str]:
         """List of all tested patterns."""
-        return sorted(set(r.pattern for r in self.results))
+        return sorted({r.pattern for r in self.results})
 
     def get_result(self, backend: str, pattern: str) -> TestResult | None:
         """Get result for a specific backend/pattern combination."""
@@ -197,7 +197,7 @@ class ParallelAcceptanceRunner:
                 duration = time.time() - start_time
 
                 # Parse Go test output to extract backend-specific results
-                results = self._parse_go_test_output(output, pattern_name, duration)
+                results = self._parse_go_test_output(output, pattern_name)
 
                 # If no results parsed, add a summary result
                 if not results:
@@ -232,7 +232,7 @@ class ParallelAcceptanceRunner:
                     )
                 ]
 
-    def _parse_go_test_output(self, output: str, pattern: str, total_duration: float) -> list[TestResult]:
+    def _parse_go_test_output(self, output: str, pattern: str) -> list[TestResult]:
         """Parse Go test output to extract per-backend results.
 
         Go test output format:
