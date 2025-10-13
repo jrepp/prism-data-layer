@@ -12,6 +12,66 @@ Quick access to recently updated documentation. Changes listed in reverse chrono
 
 ### 2025-10-13
 
+#### RFC-029: Schema Evolution and Validation for Decoupled Pub/Sub (NEW)
+**Link**: [RFC-029](/rfc/rfc-029)
+
+**Summary**: Comprehensive RFC addressing schema evolution and validation for publisher/consumer patterns where producers and consumers are decoupled across async teams with different workflows and GitHub repositories:
+
+**Core Problems Addressed**:
+- Schema Discovery: Consumers can't find producer schemas without asking humans
+- Version Mismatches: Producer evolves schema, consumer breaks at runtime
+- Cross-Repo Workflows: Teams can't coordinate deploys across repositories
+- Testing Challenges: Consumers can't test against producer changes before deploy
+- Governance Vacuum: No platform control over PII tagging or compatibility
+
+**Proposed Solution - Three-Tier Schema Registry**:
+- **Tier 1: GitHub** (developer-friendly, Git-native) - Public schemas, PR reviews, version tags
+- **Tier 2: Prism Schema Registry** (platform-managed, high performance) - <10ms fetch, governance hooks
+- **Tier 3: Confluent Schema Registry** (Kafka-native) - Ecosystem integration for Kafka-heavy deployments
+
+**Key Features**:
+- Producer workflow: Define schema → Register → Publish with schema reference
+- Consumer workflow: Discover schema → Validate compatibility → Subscribe with assertion
+- Compatibility modes: Backward, Forward, Full, None (configurable per topic)
+- PII governance: Mandatory @prism.pii tags validated at schema registration
+- Breaking change detection: CI pipeline catches incompatible schemas before merge
+- Code generation: `prism schema codegen` generates typed client code (Go, Python, Rust)
+
+**Schema Validation Architecture**:
+- Publish-time validation: Proxy validates payload matches declared schema (<15ms overhead)
+- Consumer-side assertion: Opt-in schema version checking with on_mismatch policy
+- Message headers: Attaches schema URL, version, hash to every message
+- Cache-friendly: 1h TTL for GitHub schemas, aggressive caching for registry
+
+**Governance and Security**:
+- PII field tagging: Fields like email, phone require @prism.pii annotation
+- Approval workflows: Breaking changes require platform team approval
+- Audit logs: Who registered what schema, when
+- Schema tampering protection: SHA256 hash verification, immutable versions
+
+**Implementation Phases**:
+- Phase 1 (Weeks 1-3): GitHub-based registry with URL parsing and caching
+- Phase 2 (Weeks 4-6): Schema validation (protobuf parser, compatibility checker)
+- Phase 3 (Weeks 7-10): Prism Schema Registry gRPC service with SQLite/Postgres storage
+- Phase 4 (Weeks 11-13): PII governance enforcement and approval workflows
+- Phase 5 (Weeks 14-16): Code generation CLI for Go/Python/Rust
+
+**Developer Workflows**:
+- New producer: Create schema → Register → Generate client code → Publish
+- Existing consumer: Discover schemas → Check compatibility → Update code → Deploy
+- Platform governance: Audit PII tagging → Enforce compatibility → Approve breaking changes
+
+**Real-World Scenarios Enabled**:
+- E-commerce order events: Team A evolves order schema, Team B/C/D discover changes before deploy
+- IoT sensor data: Gateway changes temperature from int to float, consumers test compatibility in CI
+- User profile updates: PII leak prevention via mandatory field tagging
+
+**Key Innovation**: Layered schema registry approach provides flexibility (GitHub for open-source, Prism Registry for enterprise, Confluent for Kafka). Producer/consumer decoupling maintained while enabling schema discovery, compatibility validation, and governance enforcement. Async teams with different workflows can evolve schemas safely without coordinated deploys.
+
+**Impact**: Addresses PRD-001 goals (Accelerate Development, Enable Migrations, Reduce Operational Cost, Improve Reliability, Foster Innovation) by eliminating schema-related runtime failures and enabling safe schema evolution. Producers declare schemas via GitHub (familiar workflow) or Prism Registry (high performance). Consumers validate compatibility in CI/CD before breaking changes reach production. Platform enforces PII tagging and compatibility policies automatically. Foundation for multi-team pub/sub architectures where schema changes are frequent and coordination is expensive.
+
+---
+
 #### Prismctl OIDC Integration Test Infrastructure (NEW - Phases 1-3 Complete)
 **Links**: [MEMO-022](/memos/memo-022), [Integration Tests README](https://github.com/jrepp/prism-data-layer/blob/main/cli/tests/integration/README.md)
 
