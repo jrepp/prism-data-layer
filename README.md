@@ -5,9 +5,67 @@
 | CI/CD | Code Quality | Documentation |
 |-------|--------------|---------------|
 | [![CI](https://github.com/jrepp/prism-data-layer/actions/workflows/ci.yml/badge.svg)](https://github.com/jrepp/prism-data-layer/actions/workflows/ci.yml) | [![Go Report Card](https://goreportcard.com/badge/github.com/jrepp/prism-data-layer)](https://goreportcard.com/report/github.com/jrepp/prism-data-layer) | [![Docs](https://github.com/jrepp/prism-data-layer/actions/workflows/docs.yml/badge.svg)](https://github.com/jrepp/prism-data-layer/actions/workflows/docs.yml) |
-| [![Linting](https://github.com/jrepp/prism-data-layer/actions/workflows/ci.yml/badge.svg)](https://github.com/jrepp/prism-data-layer/actions/workflows/ci.yml) | [![Codecov](https://codecov.io/gh/jrepp/prism-data-layer/branch/main/graph/badge.svg)](https://codecov.io/gh/jrepp/prism-data-layer) | [![GitHub Pages](https://img.shields.io/badge/docs-GitHub%20Pages-blue)](https://jrepp.github.io/prism-data-layer/) |
+| [![Acceptance Tests](https://github.com/jrepp/prism-data-layer/actions/workflows/acceptance-tests.yml/badge.svg)](https://github.com/jrepp/prism-data-layer/actions/workflows/acceptance-tests.yml) | [![Codecov](https://codecov.io/gh/jrepp/prism-data-layer/branch/main/graph/badge.svg)](https://codecov.io/gh/jrepp/prism-data-layer) | [![GitHub Pages](https://img.shields.io/badge/docs-GitHub%20Pages-blue)](https://jrepp.github.io/prism-data-layer/) |
+
+| Language Quality | Acceptance Tests (Backends) |
+|------------------|----------------------------|
+| [![Rust Clippy](https://img.shields.io/badge/rust-clippy%20checked-green?logo=rust)](https://github.com/jrepp/prism-data-layer/tree/main/proxy) | [![Interfaces Tests](https://img.shields.io/badge/interfaces-passing-green)](https://github.com/jrepp/prism-data-layer/actions/workflows/acceptance-tests.yml) |
+| [![Go Lint](https://img.shields.io/badge/go-golangci--lint%20checked-green?logo=go)](https://github.com/jrepp/prism-data-layer/tree/main/patterns) | [![Redis Tests](https://img.shields.io/badge/redis-passing-green)](https://github.com/jrepp/prism-data-layer/actions/workflows/acceptance-tests.yml) |
+|  | [![NATS Tests](https://img.shields.io/badge/nats-passing-green)](https://github.com/jrepp/prism-data-layer/actions/workflows/acceptance-tests.yml) |
 
 **[📖 Documentation](https://jrepp.github.io/prism-data-layer/)** | [Architecture](https://jrepp.github.io/prism-data-layer/docs/intro) | [ADRs](https://jrepp.github.io/prism-data-layer/adr) | [RFCs](https://jrepp.github.io/prism-data-layer/rfc)
+
+## Architecture Overview
+
+```mermaid
+graph TB
+    subgraph "Client Applications"
+        APP1[App 1<br/>Python Client]
+        APP2[App 2<br/>Go Client]
+        APP3[App 3<br/>Rust Client]
+    end
+
+    subgraph "Prism Gateway (Rust)"
+        PROXY[Prism Proxy<br/>gRPC/HTTP Server]
+        AUTH[Authentication<br/>OIDC/mTLS]
+        ROUTER[Pattern Router<br/>Request Routing]
+        CACHE[Response Cache<br/>Optional]
+    end
+
+    subgraph "Pattern Plugins (Go)"
+        MEMSTORE[MemStore<br/>KeyValue]
+        REDIS[Redis<br/>KeyValue]
+        NATS[NATS<br/>PubSub]
+        KAFKA[Kafka<br/>Streaming]
+        POSTGRES[PostgreSQL<br/>Relational]
+    end
+
+    subgraph "Backend Infrastructure"
+        REDIS_BE[(Redis)]
+        NATS_BE[(NATS)]
+        KAFKA_BE[(Kafka)]
+        PG_BE[(PostgreSQL)]
+    end
+
+    APP1 & APP2 & APP3 --> PROXY
+    PROXY --> AUTH
+    AUTH --> ROUTER
+    ROUTER --> CACHE
+
+    CACHE --> MEMSTORE & REDIS & NATS & KAFKA & POSTGRES
+
+    REDIS --> REDIS_BE
+    NATS --> NATS_BE
+    KAFKA --> KAFKA_BE
+    POSTGRES --> PG_BE
+
+    style PROXY fill:#f96,stroke:#333,stroke-width:2px
+    style MEMSTORE fill:#9f6,stroke:#333,stroke-width:2px
+    style REDIS fill:#9f6,stroke:#333,stroke-width:2px
+    style NATS fill:#9f6,stroke:#333,stroke-width:2px
+    style KAFKA fill:#9f6,stroke:#333,stroke-width:2px
+    style POSTGRES fill:#9f6,stroke:#333,stroke-width:2px
+```
 
 Prism is a Rust-based data access gateway that provides unified, type-safe access to heterogeneous data backends. Inspired by Netflix's Data Gateway but built for extreme performance and developer experience.
 
