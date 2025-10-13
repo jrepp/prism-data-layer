@@ -372,7 +372,7 @@ fmt-python: ## Format Python code with ruff
 	@uv run ruff format tooling/
 	$(call print_green,Python code formatted)
 
-lint: lint-rust lint-go lint-python ## Lint all code (uses golangci-lint with full battery)
+lint: lint-rust lint-go lint-python lint-workflows ## Lint all code and workflows
 
 lint-rust: ## Lint Rust code with clippy
 	$(call print_blue,Linting Rust code...)
@@ -419,6 +419,12 @@ lint-parallel-critical: lint-rust lint-python ## Lint critical categories only i
 
 lint-parallel-list: ## List all available linter categories
 	@uv run tooling/parallel_lint.py --list
+
+lint-workflows: ## Lint GitHub Actions workflows with actionlint
+	$(call print_blue,Linting GitHub Actions workflows...)
+	@command -v actionlint >/dev/null 2>&1 || { echo "⚠️  actionlint not installed. Install with: brew install actionlint"; exit 1; }
+	@actionlint .github/workflows/*.yml
+	$(call print_green,Workflow linting complete)
 
 lint-fix: ## Auto-fix linting issues where possible
 	$(call print_blue,Auto-fixing linting issues...)

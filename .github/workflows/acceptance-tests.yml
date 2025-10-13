@@ -177,22 +177,24 @@ jobs:
             const emoji = '${{ steps.acceptance_tests.outputs.emoji }}';
             const status = '${{ steps.acceptance_tests.outputs.status }}';
 
-            const body = `## ${emoji} Acceptance Test Matrix Report
-
-${report}
-
----
-<details>
-<summary>📊 View detailed test logs</summary>
-
-[Download terminal output](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
-
-</details>
-
-**Status:** ${status === 'success' ? '✅ All tests passed' : '❌ Some tests failed'}
-**Commit:** ${{ github.sha }}
-**Workflow:** [View workflow run](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
-`;
+            // Build the PR comment body
+            const body = [
+              `## ${emoji} Acceptance Test Matrix Report`,
+              '',
+              report,
+              '',
+              '---',
+              '<details>',
+              '<summary>📊 View detailed test logs</summary>',
+              '',
+              '[Download terminal output](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})',
+              '',
+              '</details>',
+              '',
+              `**Status:** ${status === 'success' ? '✅ All tests passed' : '❌ Some tests failed'}`,
+              '**Commit:** ${{ github.sha }}',
+              '**Workflow:** [View workflow run](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})'
+            ].join('\n');
 
             // Find existing comment
             const { data: comments } = await github.rest.issues.listComments({
