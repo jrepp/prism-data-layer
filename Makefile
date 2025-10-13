@@ -184,6 +184,29 @@ test-acceptance-quiet: ## Run all acceptance tests in quiet mode (suppress conta
 	@PRISM_TEST_QUIET=1 $(MAKE) test-acceptance
 	$(call print_green,All acceptance tests passed (quiet mode))
 
+test-acceptance-parallel: ## Run acceptance tests in parallel with matrix report
+	$(call print_blue,Running acceptance tests in parallel...)
+	@mkdir -p $(BUILD_DIR)/reports
+	@uv run tooling/parallel_acceptance_test.py
+	$(call print_green,Parallel acceptance tests complete)
+
+test-acceptance-parallel-report: ## Run acceptance tests in parallel and save matrix report
+	$(call print_blue,Running acceptance tests and generating reports...)
+	@mkdir -p $(BUILD_DIR)/reports
+	@uv run tooling/parallel_acceptance_test.py --format markdown --output $(BUILD_DIR)/reports/acceptance-matrix.md
+	@uv run tooling/parallel_acceptance_test.py --format json --output $(BUILD_DIR)/reports/acceptance-results.json
+	$(call print_green,Reports saved: $(BUILD_DIR)/reports/acceptance-matrix.md, $(BUILD_DIR)/reports/acceptance-results.json)
+
+test-acceptance-parallel-backends: ## Run acceptance tests for specific backends (use BACKENDS=MemStore,Redis)
+	$(call print_blue,Running acceptance tests for backends: $(BACKENDS)...)
+	@uv run tooling/parallel_acceptance_test.py --backends $(BACKENDS)
+	$(call print_green,Backend acceptance tests complete)
+
+test-acceptance-parallel-patterns: ## Run acceptance tests for specific patterns (use PATTERNS=KeyValueBasic,KeyValueTTL)
+	$(call print_blue,Running acceptance tests for patterns: $(PATTERNS)...)
+	@uv run tooling/parallel_acceptance_test.py --patterns $(PATTERNS)
+	$(call print_green,Pattern acceptance tests complete)
+
 test-integration-go: ## Run Go integration tests (proxy-pattern lifecycle)
 	$(call print_blue,Running Go integration tests...)
 	@cd tests/integration && go test -v -timeout 5m ./...
