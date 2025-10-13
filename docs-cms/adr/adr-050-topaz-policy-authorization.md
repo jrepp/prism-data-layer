@@ -245,44 +245,83 @@ pub async fn authz_middleware(
 }
 ```
 
-#### 2. Admin CLI (Python)
+#### 2. Admin CLI (Go)
 
 **Authorization Check Before Commands**:
 
-```python
-# cli/prismctl/authz.py
-import asyncio
-from topaz_grpc import Topaz ClientStub
+```go
+// prismctl/internal/authz/topaz.go
+package authz
 
-class TopazClient:
-    def __init__(self, endpoint="localhost:8282"):
-        self.client = TopazClientStub(endpoint)
+import (
+    "context"
+    "fmt"
 
-    async def can_user(self, user: str, permission: str, resource: str) -> bool:
-        """Check if user has permission on resource."""
-        response = await self.client.is_request(
-            subject=user,
-            relation=permission,
-            object=resource
-        )
-        return response.is_allowed
+    topazpb "github.com/aserto-dev/go-grpc/aserto/authorizer/v2"
+    "google.golang.org/grpc"
+)
 
-# Usage in CLI commands
-@click.command()
-@click.argument('namespace')
-async def delete_namespace(namespace: str):
-    """Delete a namespace (requires admin permission)."""
-    user = get_current_user()
+type TopazClient struct {
+    client topazpb.AuthorizerClient
+}
 
-    # Check authorization before dangerous operation
-    authz = TopazClient()
-    if not await authz.can_user(user, "admin", f"namespace:{namespace}"):
-        click.echo(f"❌ Access denied: You don't have admin permission on {namespace}")
-        sys.exit(1)
+func NewTopazClient(endpoint string) (*TopazClient, error) {
+    conn, err := grpc.Dial(endpoint, grpc.WithInsecure())
+    if err != nil {
+        return nil, fmt.Errorf("connect to Topaz: %w", err)
+    }
 
-    # Proceed with deletion
-    click.echo(f"Deleting namespace {namespace}...")
-    # ... deletion logic
+    return &TopazClient{
+        client: topazpb.NewAuthorizerClient(conn),
+    }, nil
+}
+
+func (c *TopazClient) CanUser(ctx context.Context, user, permission, resource string) (bool, error) {
+    req := &topazpb.IsRequest{
+        Subject:  user,
+        Relation: permission,
+        Object:   resource,
+    }
+
+    resp, err := c.client.Is(ctx, req)
+    if err != nil {
+        return false, fmt.Errorf("authorization check: %w", err)
+    }
+
+    return resp.Is, nil
+}
+
+// Usage in CLI commands (prismctl/cmd/namespace.go)
+var namespaceDeleteCmd = &cobra.Command{
+    Use:   "delete NAME",
+    Short: "Delete a namespace (requires admin permission)",
+    Args:  cobra.ExactArgs(1),
+    RunE: func(cmd *cobra.Command, args []string) error {
+        namespace := args[0]
+        user := getCurrentUser()
+
+        // Check authorization before dangerous operation
+        authz, err := authz.NewTopazClient("localhost:8282")
+        if err != nil {
+            return fmt.Errorf("connect to authz: %w", err)
+        }
+
+        allowed, err := authz.CanUser(cmd.Context(), user, "admin", fmt.Sprintf("namespace:%s", namespace))
+        if err != nil {
+            return fmt.Errorf("authorization check: %w", err)
+        }
+
+        if !allowed {
+            uiInstance.Error(fmt.Sprintf("Access denied: You don't have admin permission on %s", namespace))
+            return fmt.Errorf("permission denied")
+        }
+
+        // Proceed with deletion
+        uiInstance.Info(fmt.Sprintf("Deleting namespace %s...", namespace))
+        // ... deletion logic
+        return nil
+    },
+}
 ```
 
 #### 3. Admin UI (FastAPI)

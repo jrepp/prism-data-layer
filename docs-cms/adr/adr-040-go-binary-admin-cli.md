@@ -435,5 +435,6 @@ func loadPluginManifest(name string) (*PluginManifest, error) {
 
 - 2025-10-09: Initial acceptance with Go binary approach
 - 2025-10-09: Updated to reference ADR-045 for stack management (bootstrap now via prismctl)
+- 2025-10-13: **Implemented** - prismctl now fully implemented in Go with Cobra/Viper, OIDC authentication, and comprehensive commands. Python CLI removed. Located at `prismctl/` in repository root.
 
 ```

@@ -61,7 +61,7 @@ all: proto build ## Build all components (default target)
 
 ##@ Build
 
-build: build-proxy build-patterns ## Build all components
+build: build-proxy build-patterns build-prismctl ## Build all components
 
 build-proxy: ## Build Rust proxy
 	$(call print_blue,Building Rust proxy...)
@@ -95,6 +95,12 @@ build-nats: ## Build NATS pattern
 	@mkdir -p $(BINARIES_DIR)
 	@cd patterns/nats && go build -o $(BINARIES_DIR)/nats cmd/nats/main.go
 	$(call print_green,NATS built: $(BINARIES_DIR)/nats)
+
+build-prismctl: ## Build prismctl CLI
+	$(call print_blue,Building prismctl CLI...)
+	@mkdir -p $(BINARIES_DIR)
+	@cd prismctl && go build -o $(BINARIES_DIR)/prismctl .
+	$(call print_green,prismctl built: $(BINARIES_DIR)/prismctl)
 
 build-dev: ## Build all components in debug mode (faster)
 	$(call print_blue,Building in debug mode...)
@@ -131,7 +137,7 @@ test-proxy: ## Run Rust proxy unit tests
 	@cd proxy && cargo test --lib
 	$(call print_green,Proxy unit tests passed)
 
-test-patterns: test-memstore test-redis test-nats test-core ## Run all Go pattern tests
+test-patterns: test-memstore test-redis test-nats test-core test-prismctl ## Run all Go pattern tests
 
 test-memstore: ## Run MemStore tests
 	$(call print_blue,Running MemStore tests...)
@@ -152,6 +158,11 @@ test-core: ## Run Core SDK tests
 	$(call print_blue,Running Core SDK tests...)
 	@cd patterns/core && go test -v -cover ./...
 	$(call print_green,Core SDK tests passed)
+
+test-prismctl: ## Run prismctl tests
+	$(call print_blue,Running prismctl tests...)
+	@cd prismctl && go test -v -cover ./...
+	$(call print_green,prismctl tests passed)
 
 test-integration: build-memstore ## Run integration tests (requires built MemStore binary)
 	$(call print_blue,Running integration tests...)
@@ -361,6 +372,7 @@ fmt-go: ## Format Go code
 	@cd patterns/redis && go fmt ./...
 	@cd patterns/nats && go fmt ./...
 	@cd patterns/core && go fmt ./...
+	@cd prismctl && go fmt ./...
 	@cd tests/acceptance/interfaces && go fmt ./...
 	@cd tests/acceptance/redis && go fmt ./...
 	@cd tests/acceptance/nats && go fmt ./...

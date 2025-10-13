@@ -169,8 +169,7 @@ linters:
     - unused            # Unused code
 
     # === STYLE & FORMATTING (Fast) ===
-    - gofmt             # Code formatting
-    - gofumpt           # Stricter gofmt
+    # Note: gofmt and gofumpt are formatters, not linters - use 'make fmt' instead
     - goimports         # Import organization
     - gci               # Import order
     - whitespace        # Whitespace issues

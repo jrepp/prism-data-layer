@@ -94,7 +94,7 @@ prism/
 │       └── changelog.md   # 📝 CANONICAL CHANGELOG
 ├── docs/                  # Built docs (GitHub Pages output)
 ├── admin/                 # FastAPI-based admin UI
-├── cli/                   # Python admin CLI (prismctl)
+├── prismctl/              # Go CLI for Prism (OIDC auth, namespace management)
 ├── proxy/                 # Rust high-performance gateway
 ├── patterns/               # Go backend plugins (containers)
 │   ├── core/              # Shared plugin package
@@ -292,12 +292,18 @@ cat test-logs/acceptance-redis.log
 ### Common Commands
 
 ```bash
-# Admin CLI (no installation required - ADR-040)
-uv run --with prismctl prism namespace list
-uv run --with prismctl prism health
+# Build prismctl CLI
+make build-prismctl
 
-# Or create an alias for convenience
-alias prism="uv run --with prismctl prism"
+# Use prismctl (after building)
+build/binaries/prismctl --help
+build/binaries/prismctl login
+build/binaries/prismctl namespace list
+build/binaries/prismctl health
+
+# Or install to $GOPATH/bin
+cd prismctl && make install
+prismctl --help
 
 # Build backend plugins
 cd patterns && make build

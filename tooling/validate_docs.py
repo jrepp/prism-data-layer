@@ -80,6 +80,7 @@ class Document:
     date: str = ""
     tags: list[str] = field(default_factory=list)
     doc_id: str = ""  # Frontmatter id field (e.g., "adr-001", "rfc-015")
+    doc_uuid: str = ""  # Frontmatter doc_uuid field (UUID v4)
     links: list["Link"] = field(default_factory=list)
     errors: list[str] = field(default_factory=list)
 
@@ -308,6 +309,7 @@ class PrismDocValidator:
                 date=str(post.metadata.get("date", post.metadata.get("created", ""))),
                 tags=post.metadata.get("tags", []),
                 doc_id=post.metadata.get("id", ""),
+                doc_uuid=post.metadata.get("doc_uuid", ""),
             )
 
             self.log(f"   ✓ {file_path.name}: {doc.title}")
@@ -929,6 +931,35 @@ class PrismDocValidator:
         else:
             self.log(f"   ✗ Found {id_errors} ID validation error(s)")
 
+    def check_uuids(self):
+        """Validate document UUIDs for uniqueness"""
+        self.log("\n🔑 Checking document UUIDs...")
+
+        # Track UUIDs for uniqueness check
+        seen_uuids: dict[str, Path] = {}
+        uuid_errors = 0
+
+        for doc in self.documents:
+            # Skip docs without doc_type (generic docs) or without UUID
+            if doc.doc_type not in ["adr", "rfc", "memo"] or not doc.doc_uuid:
+                continue
+
+            # Check for duplicate UUIDs
+            if doc.doc_uuid in seen_uuids:
+                other_doc = seen_uuids[doc.doc_uuid]
+                error = f"Duplicate UUID '{doc.doc_uuid}' - also used by {other_doc.name}"
+                doc.errors.append(error)
+                self.log(f"   ✗ {doc.file_path.name}: {error}")
+                uuid_errors += 1
+            else:
+                seen_uuids[doc.doc_uuid] = doc.file_path
+                self.log(f"   ✓ {doc.file_path.name}: doc_uuid='{doc.doc_uuid[:8]}...'")
+
+        if uuid_errors == 0:
+            self.log(f"   ✓ All document UUIDs are unique ({len(seen_uuids)} UUIDs checked)")
+        else:
+            self.log(f"   ✗ Found {uuid_errors} UUID uniqueness error(s)")
+
     def generate_report(self) -> tuple[bool, str]:
         """Generate validation report"""
         lines = []
@@ -1031,7 +1062,8 @@ class PrismDocValidator:
         self.scan_documents()
         self.extract_links()
         self.validate_links()
-        self.check_ids()  # NEW: Validate document IDs
+        self.check_ids()  # Validate document IDs
+        self.check_uuids()  # Validate document UUID uniqueness
         self.check_code_blocks()  # Check code block balance and labeling
         self.check_mdx_compilation()  # Check MDX compilation with @mdx-js/mdx
         self.check_mdx_compatibility()

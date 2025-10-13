@@ -277,3 +277,84 @@
 .menu__link[data-is-index="true"]::after {
   display: none; /* No document number for index pages */
 }
+
+/**
+ * Sidebar Typography and Visual Distinction
+ *
+ * Reduce font size for more compact sidebar
+ * Add spacing and visual distinction for wrapped text
+ */
+
+/* Reduce sidebar font size */
+.theme-doc-sidebar-container .menu__link {
+  font-size: 0.85rem;
+  line-height: 1.6;
+  padding: 0.5rem 0.75rem;
+  margin: 0.125rem 0;
+  border-radius: 0.375rem;
+  transition: all 0.2s ease;
+}
+
+/* Increase spacing for better visual distinction when text wraps */
+.theme-doc-sidebar-container .menu__list-item {
+  margin-bottom: 0.25rem;
+}
+
+/* Enhanced visual distinction on hover */
+.theme-doc-sidebar-container .menu__link:hover {
+  background-color: var(--ifm-color-emphasis-100);
+  transform: translateX(2px);
+}
+
+[data-theme='dark'] .theme-doc-sidebar-container .menu__link:hover {
+  background-color: var(--ifm-color-emphasis-200);
+}
+
+/* Active link styling with better distinction */
+.theme-doc-sidebar-container .menu__link--active {
+  background-color: var(--ifm-color-primary-lightest);
+  border-left: 3px solid var(--ifm-color-primary);
+  padding-left: calc(0.75rem - 3px);
+  font-weight: 600;
+}
+
+[data-theme='dark'] .theme-doc-sidebar-container .menu__link--active {
+  background-color: var(--ifm-color-emphasis-300);
+}
+
+/* Category labels - slightly larger and bolder */
+.theme-doc-sidebar-container .menu__list-item--collapsed .menu__link,
+.theme-doc-sidebar-container .menu__list-item .menu__link.menu__link--sublist {
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+  color: var(--ifm-color-emphasis-700);
+  margin-top: 0.75rem;
+  margin-bottom: 0.375rem;
+}
+
+/* Nested items get even smaller font */
+.theme-doc-sidebar-container .menu__list .menu__list .menu__link {
+  font-size: 0.8rem;
+  padding-left: 1.25rem;
+}
+
+/* Better text wrapping with consistent indentation */
+.theme-doc-sidebar-container .menu__link {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  hyphens: auto;
+  display: block;
+}
+
+/* Subtle separator between groups */
+.theme-doc-sidebar-container .menu__list-item + .menu__list-item--collapsed {
+  border-top: 1px solid var(--ifm-color-emphasis-200);
+  padding-top: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+[data-theme='dark'] .theme-doc-sidebar-container .menu__list-item + .menu__list-item--collapsed {
+  border-top-color: var(--ifm-color-emphasis-300);
+}

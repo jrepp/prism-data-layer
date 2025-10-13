@@ -12,6 +12,88 @@ Quick access to recently updated documentation. Changes listed in reverse chrono
 
 ### 2025-10-13
 
+#### RFC-032: Minimal Prism Schema Registry for Local Testing (NEW)
+**Link**: [RFC-032](/rfc/rfc-032)
+
+**Summary**: Lightweight schema registry implementation for local testing and acceptance tests without external dependencies:
+- Fast local testing: &lt;100ms startup, in-memory storage, &lt;10MB memory footprint
+- Confluent Schema Registry REST API compatibility (80% endpoint coverage)
+- Schema format support: Protobuf (primary), JSON Schema, Avro (basic)
+- Backward/forward/full compatibility checking
+- Acceptance test baseline: All plugin tests use same registry
+- Rust-based implementation for performance and small footprint
+- Complete test infrastructure examples (Go fixtures, parallel tests)
+- Interface coverage comparison: Confluent SR vs AWS Glue vs Apicurio vs Prism Minimal
+
+**Key Innovation**: Minimal stand-in registry enables fast, realistic testing without JVM overhead (vs 1GB+ Confluent) or external cloud services. Single binary, no persistence, no authentication - purpose-built for local development and CI/CD.
+
+**Impact**: Eliminates external dependencies in tests (no Confluent/Apicurio required). Reduces test startup from 30s to &lt;100ms. Enables parallel test execution with isolated registry instances per test. Foundation for plugin acceptance tests across all backends. Combined with testcontainers for realistic integration testing.
+
+---
+
+#### RFC-031: Message Envelope Protocol for Pub/Sub Systems (NEW)
+**Link**: [RFC-031](/rfc/rfc-031)
+
+**Summary**: Unified protobuf-based message envelope protocol for consistent, flexible, and secure pub/sub across all backends:
+- Single envelope format: Protobuf-based wrapper for all backends (Kafka, NATS, Redis, PostgreSQL, SQS)
+- Backend abstraction: Prism SDK hides backend-specific serialization
+- Core components: PrismMetadata (routing, TTL, priority), SecurityContext (auth, encryption, PII), ObservabilityContext (traces, metrics), SchemaContext (RFC-030 integration)
+- Extension map for future-proofing: `map<string, bytes> extensions` for evolution without version bumps
+- Envelope version field: Explicit versioning with backward/forward compatibility
+- Developer APIs: Ergonomic Python/Go/Rust wrappers hiding envelope complexity
+- Backend-specific serialization: Kafka (headers + value), NATS (headers + data), Redis (pub/sub message), PostgreSQL (JSONB column)
+- Performance overhead: &lt;5% latency increase (+150 bytes envelope, ~0.5ms serialization)
+
+**Key Innovation**: Protobuf envelope provides type-safe, evolvable metadata layer while remaining backend-agnostic. Security context enables auth token validation, message signing, PII awareness. Observability context integrates W3C Trace Context for distributed tracing. Schema context (RFC-030) carries schema metadata in every message.
+
+**Impact**: Eliminates inconsistent message formats across backends. Enables cross-backend migrations without rewriting envelope logic. Built-in security (auth tokens, signatures, encryption metadata) and observability (traces, metrics labels) by default. Foundation for sustainable pub/sub development with 10+ year evolution path. Developer APIs maintain simplicity while envelope handles complexity.
+
+---
+
+#### RFC-030: Schema Evolution and Validation for Decoupled Pub/Sub (MAJOR UPDATE - v3)
+**Link**: [RFC-030](/rfc/rfc-030)
+
+**Summary**: Comprehensive governance, performance, and feasibility enhancements based on user feedback:
+
+**Major Additions:**
+- **Governance Tags (MAJOR)**: Schema-level and consumer-level tags for distributed teams
+  - Schema tags: sensitivity, compliance, retention_days, owner_team, consumer_approval, audit_log, data_classification
+  - Consumer tags: team, purpose, data_usage, pii_access, compliance_frameworks, allowed_fields, rate_limit
+  - Field-level access control: Prism proxy auto-filters fields based on `allowed_fields`
+  - Deprecation warnings: `@prism.deprecated` tag with date, reason, and migration guidance
+  - Audit logging: Automatic compliance reporting for GDPR/HIPAA/SOC2 with field-level tracking
+  - Consumer approval workflow: Mermaid diagram showing Jira/PagerDuty integration
+- **Optional Field Enforcement**: Prism validates all fields are `optional` for backward compatibility
+  - Enforcement levels: warn, enforce with exceptions, strict
+  - Migration path for existing schemas with required fields
+  - Python/Go examples for handling optional fields
+- **Per-Message Validation Performance Trade-Offs**: Detailed analysis (+50% latency, -34% throughput)
+  - Config-time vs build-time vs publish-time validation comparison
+  - Pattern providers are schema-agnostic (binary passthrough)
+  - Schema-specific consumers optional (type-safe generated code)
+  - Sample rate validation for production debugging
+- **Backend Schema Propagation**: SchemaAwareBackend interface for pushing schemas downstream
+  - Kafka: POST to Confluent Schema Registry at config time
+  - NATS: Stream metadata + message headers
+  - PostgreSQL: Schema table with JSONB
+  - S3: Object metadata
+  - Config-time vs runtime propagation trade-offs
+- **Build vs Buy Analysis**: Comprehensive feasibility study for custom Prism Schema Registry
+  - Decision criteria table: multi-backend support, dev effort, performance, Git integration, PII governance
+  - Recommendation: Build lightweight custom registry (Phase 1) + support existing (Phase 2)
+  - Timeline: 8 weeks core registry, 4 weeks interoperability, 6 weeks federation
+  - When to use matrix: new deployments, multi-backend, PII compliance, air-gapped
+- **Schema Trust Verification**: `schema_name`, `sha256_hash`, `allowed_sources` for URL-based schemas
+- **HTTPS Schema Registry**: Any HTTPS endpoint can serve schemas (not just GitHub/Prism Registry)
+- **Inline Schema Removed**: Config now uses URL references only (no inline protobuf content)
+- **Mermaid Diagrams Fixed**: Changed from ```text to ```mermaid for proper rendering
+
+**Key Innovation**: Governance tags at Prism level enable platform teams to enforce policies (PII, compliance, retention) across distributed teams without manual coordination. Field-level access control (column security) prevents accidental PII exposure. Per-message validation analysis clarifies performance trade-offs (use config-time + build-time, not runtime). Backend schema propagation enables native tooling (Confluent clients, NATS CLI).
+
+**Impact**: Distributed organizations with 10+ teams can now enforce schema governance policies automatically. Consumer approval workflows integrate with existing ticketing systems (Jira, PagerDuty). Field filtering prevents PII leaks at proxy level. Deprecation warnings with date/reason enable graceful field migrations. Comprehensive audit trails for GDPR/HIPAA compliance built-in. Optional field enforcement eliminates class of breaking changes. Build vs buy analysis provides clear decision framework for schema registry deployment.
+
+---
+
 #### Docusaurus BuildInfo Component - Time and Timezone Display Enhanced (UPDATED)
 **Link**: [BuildInfo Component](https://github.com/jrepp/prism-data-layer/blob/main/docusaurus/src/components/BuildInfo/index.tsx)
 
