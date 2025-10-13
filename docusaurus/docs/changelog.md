@@ -12,6 +12,112 @@ Quick access to recently updated documentation. Changes listed in reverse chrono
 
 ### 2025-10-13
 
+#### Docusaurus BuildInfo Component - Time and Timezone Display Enhanced (UPDATED)
+**Link**: [BuildInfo Component](https://github.com/jrepp/prism-data-layer/blob/main/docusaurus/src/components/BuildInfo/index.tsx)
+
+**Summary**: Enhanced the BuildInfo component in the Docusaurus navbar to display full timestamp with time and timezone:
+
+**Display Format Updated**:
+- **Before**: `Oct 13` (date only)
+- **After**: `Oct 13, 2:10 PM PDT` (date, time, timezone)
+
+**Format Function Changes**:
+```typescript
+// Before: Only month and day
+return date.toLocaleString('en-US', {
+  month: 'short',
+  day: 'numeric',
+});
+
+// After: Full timestamp with timezone
+return date.toLocaleString('en-US', {
+  month: 'short',
+  day: 'numeric',
+  hour: 'numeric',
+  minute: '2-digit',
+  timeZoneName: 'short',
+});
+```
+
+**Current Display in Navbar**:
+- **Version/Commit**: `ebbc5f9` (7-character commit hash)
+- **Separator**: `•` (bullet)
+- **Timestamp**: `Oct 13, 2:10 PM PDT` (date + time + timezone)
+
+**Responsive Behavior**:
+- Desktop (>996px): Full display with all metadata
+- Mobile (<996px): Only version shown, timestamp hidden
+
+**Build Metadata Source**:
+- Version: `git describe --tags --always`
+- Build Time: `new Date().toISOString()`
+- Commit Hash: `git rev-parse HEAD`
+- All metadata auto-generated at build time
+
+**Key Facts**: The BuildInfo component was already implemented with build metadata infrastructure in `docusaurus.config.ts`. This enhancement adds detailed time and timezone information to help users understand when the documentation was last built. Format uses browser's locale settings with US English as fallback.
+
+**Impact**: Users can now see exactly when the documentation was last updated, including the specific time and timezone. Helps identify stale builds and provides confidence that they're viewing the latest version. Particularly useful for fast-moving projects where documentation changes frequently throughout the day.
+
+---
+
+#### Documentation Validation Fixes and Link Cleanup (MAJOR UPDATE)
+**Links**: [tooling/fix_broken_links.py](https://github.com/jrepp/prism-data-layer/blob/main/tooling/fix_broken_links.py), [Validation Script](https://github.com/jrepp/prism-data-layer/blob/main/tooling/validate_docs.py)
+
+**Summary**: Fixed all documentation validation errors and created automated link fixing infrastructure:
+
+**Validation Errors Fixed**:
+1. **RFC-030**: Fixed frontmatter date format (removed time component)
+2. **key.md**: Fixed 3 broken CLAUDE.md links (changed to GitHub URLs)
+3. **RFC-029**: Escaped HTML characters (`<` → `&lt;`, `>` → `&gt;`) and fixed broken link
+4. **Mass Link Fixes**: Created automated script that fixed 173 broken links across 36 files
+
+**Automated Link Fixing Script** (`tooling/fix_broken_links.py`):
+- Converts full RFC/ADR/MEMO filenames to short-form IDs
+  - `/rfc/rfc-021-three-plugins-implementation` → `/rfc/rfc-021`
+  - `/adr/adr-001-rust-for-proxy` → `/adr/adr-001`
+  - `/memos/memo-004-backend-implementation-guide` → `/memos/memo-004`
+- Removes unnecessary `/prism-data-layer` prefixes from internal links
+- Adds `netflix-` prefix to Netflix document links
+- Fixes special cases:
+  - `/prd` → `/prds/prd-001`
+  - `/key-documents` → `/docs/key-documents`
+  - `/netflix/netflix-index` → `/netflix/` (index.md becomes root)
+- Dry-run mode for previewing changes
+
+**Link Fixes by Category**:
+- RFCs: 68 links (full filenames → short IDs)
+- ADRs: 31 links (full filenames → short IDs)
+- MEMOs: 22 links (full filenames → short IDs)
+- Netflix: 14 links (added `netflix-` prefix)
+- PRD/Docs: 6 links (path corrections)
+- Prefix removal: 32 links (cleaned `/prism-data-layer`)
+
+**Final Validation Result**:
+```
+📊 PRISM DOCUMENTATION VALIDATION REPORT
+Documents scanned: 107
+Total links: 315
+Valid: 315 ✅
+Broken: 0 ✅
+
+✅ SUCCESS: All documents valid!
+```
+
+**Script Usage**:
+```bash
+# Dry-run mode (preview changes)
+uv run tooling/fix_broken_links.py --dry-run
+
+# Apply fixes
+uv run tooling/fix_broken_links.py
+```
+
+**Key Innovation**: Automated link fixing eliminates manual correction of documentation links. Script understands Docusaurus link resolution rules (short-form IDs, plugin boundaries, index.md handling) and systematically fixes broken links across the entire documentation corpus. Regex-based pattern matching handles all common link error types.
+
+**Impact**: Eliminates 173 broken links that would have caused 404 errors for users. Documentation now passes validation with 100% link integrity. Automated script can be re-run anytime links break (e.g., after file renames or restructuring). Foundation for pre-commit hooks to prevent broken links from being committed. All 107 documents now have valid cross-references.
+
+---
+
 #### GitHub Actions Acceptance Test Summary Reporter (NEW)
 **Links**: [tooling/acceptance_summary.py](https://github.com/jrepp/prism-data-layer/blob/main/tooling/acceptance_summary.py), [.github/workflows/acceptance-tests.yml](https://github.com/jrepp/prism-data-layer/blob/main/.github/workflows/acceptance-tests.yml)
 
@@ -295,7 +401,7 @@ Quick access to recently updated documentation. Changes listed in reverse chrono
 ---
 
 #### Documentation Consolidation and Canonical Changelog Migration (MAJOR UPDATE)
-**Links**: [Key Documents Index](/key-documents), [MEMO-015](/memos/memo-015), [MEMO-016](/memos/memo-016), [PRD](/prd)
+**Links**: [Key Documents Index](/docs/key-documents), [MEMO-015](/memos/memo-015), [MEMO-016](/memos/memo-016), [PRD](/prds/prd-001)
 
 **Summary**: Major documentation consolidation establishing canonical changelog location and migrating temporary root directory documentation to docs-cms:
 
@@ -458,7 +564,7 @@ Quick access to recently updated documentation. Changes listed in reverse chrono
 - **MEMO-008**: Updated module path in code examples and directory references in Vault token exchange flow documentation
 - **MEMO-009**: Updated cross-reference link to RFC-019 with correct short-form path
 
-**Key Facts**: All 4 documents now use consistent "Pattern SDK" terminology. Cross-references updated to use short-form paths (`/rfc/rfc-019` instead of `/rfc/rfc-019-plugin-sdk-authorization-layer`). Validation passed with no errors. Revision history entries added to all updated documents.
+**Key Facts**: All 4 documents now use consistent "Pattern SDK" terminology. Cross-references updated to use short-form paths (`/rfc/rfc-019` instead of `/rfc/rfc-019`). Validation passed with no errors. Revision history entries added to all updated documents.
 
 **Impact**: Eliminates terminology confusion between the Go-based Pattern SDK (for backend patterns) and Rust-based plugin SDK (for proxy plugins). Ensures developers reading documentation see consistent terminology across all RFCs and memos. All documentation now accurately reflects the architectural sophistication of the pattern layer.
 
@@ -520,7 +626,7 @@ Quick access to recently updated documentation. Changes listed in reverse chrono
 ---
 
 #### RFC-025: Pattern SDK Architecture - Pattern Lifecycle Management Added (MAJOR UPDATE)
-**Link**: [RFC-025](/rfc/rfc-025-pattern-sdk-architecture)
+**Link**: [RFC-025](/rfc/rfc-025)
 
 **Summary**: Major expansion adding comprehensive pattern lifecycle management to Pattern SDK architecture:
 - **Slot Matching via Config**: Backends validated against union of required interfaces at pattern slots
@@ -556,7 +662,7 @@ Quick access to recently updated documentation. Changes listed in reverse chrono
 ### 2025-10-09 (Earlier)
 
 #### RFC-019: Plugin SDK Authorization Layer - Token Validation Pushed to Plugins with Vault Integration (ARCHITECTURAL UPDATE)
-**Link**: [RFC-019](/rfc/rfc-019-plugin-sdk-authorization-layer)
+**Link**: [RFC-019](/rfc/rfc-019)
 
 **Summary**: Major architectural update reflecting critical design decision to push token validation and credential exchange to plugins (not proxy):
 - **Architectural Rationale**: Token validation is high-latency (~10-50ms) per-session operation, not per-request
@@ -580,7 +686,7 @@ Quick access to recently updated documentation. Changes listed in reverse chrono
 ---
 
 #### RFC-002: Data Layer Interface Specification - Code Fence Formatting Fixes (UPDATED)
-**Link**: [RFC-002](/rfc/rfc-002-data-layer-interface)
+**Link**: [RFC-002](/rfc/rfc-002)
 
 **Summary**: Fixed 4 MDX code fence validation errors identified by documentation validation tooling:
 - Line 1156: Fixed closing fence with ```go → ``` (removed language identifier from closing fence)
@@ -595,7 +701,7 @@ Quick access to recently updated documentation. Changes listed in reverse chrono
 ---
 
 #### RFC-023: Publish Snapshotter Plugin - Write-Only Event Buffering with Pagination (NEW)
-**Link**: [RFC-023](/rfc/rfc-023-publish-snapshotter-plugin)
+**Link**: [RFC-023](/rfc/rfc-023)
 
 **Summary**: Comprehensive RFC defining publish snapshotter plugin architecture for write-only event capture with intelligent buffering:
 - **Write-Only API**: Satisfies PubSub publish interface only (no subscription)
@@ -617,7 +723,7 @@ Quick access to recently updated documentation. Changes listed in reverse chrono
 ---
 
 #### RFC-022: Core Plugin SDK Physical Code Layout (NEW)
-**Link**: [RFC-022](/rfc/rfc-022-core-plugin-sdk-code-layout)
+**Link**: [RFC-022](/rfc/rfc-022)
 
 **Summary**: Comprehensive RFC defining physical code layout for publishable Go SDK (`github.com/prism/plugin-sdk`) for building backend plugins:
 - **Package Structure**: 9 packages (auth, authz, audit, plugin, interfaces, storage, observability, testing, errors)
@@ -638,7 +744,7 @@ Quick access to recently updated documentation. Changes listed in reverse chrono
 ---
 
 #### RFC-021: POC 1 - Three Minimal Plugins Implementation Plan (COMPLETE REWRITE)
-**Link**: [RFC-021](/rfc/rfc-021-poc1-three-plugins-implementation)
+**Link**: [RFC-021](/rfc/rfc-021)
 
 **Summary**: Complete rewrite of POC 1 implementation plan based on user feedback for focused, test-driven approach:
 - **Scope Changes**: Removed Admin API (use prismctl CLI), removed Python client library, split into 3 minimal plugins
@@ -660,7 +766,7 @@ Quick access to recently updated documentation. Changes listed in reverse chrono
 ---
 
 #### RFC-015: Plugin Acceptance Test Framework - Interface-Based Testing (COMPLETE REWRITE)
-**Link**: [RFC-015](/rfc/rfc-015-plugin-acceptance-test-framework)
+**Link**: [RFC-015](/rfc/rfc-015)
 
 **Summary**: Complete rewrite aligning with MEMO-006 interface decomposition principles, shifting from backend-type testing to interface-based testing:
 - **Interface Compliance**: 45 interface test suites (one per interface from MEMO-006 catalog)
@@ -681,7 +787,7 @@ Quick access to recently updated documentation. Changes listed in reverse chrono
 ---
 
 #### RFC-020: Streaming HTTP Listener - API-Specific Adapter Pattern (NEW)
-**Link**: [RFC-020](/rfc/rfc-020-streaming-http-listener-api-adapter)
+**Link**: [RFC-020](/rfc/rfc-020)
 
 **Summary**: Comprehensive RFC defining streaming HTTP listener architecture that bridges external HTTP/JSON protocols to Prism's internal gRPC/Protobuf layer:
 - **API-Specific Adapters**: Each adapter implements ONE external API contract (MCP, Agent-to-Agent, custom APIs)
@@ -702,7 +808,7 @@ Quick access to recently updated documentation. Changes listed in reverse chrono
 ---
 
 #### ADR-050: Topaz for Policy-Based Authorization (NEW)
-**Link**: [ADR-050](/adr/adr-050-topaz-policy-authorization)
+**Link**: [ADR-050](/adr/adr-050)
 
 **Summary**: Architecture decision to use Topaz by Aserto for fine-grained policy-based authorization:
 - **Topaz Selection**: Evaluated OPA alone, cloud IAM, Zanzibar systems (SpiceDB, Ory Keto) - Topaz chosen for best balance
@@ -723,7 +829,7 @@ Quick access to recently updated documentation. Changes listed in reverse chrono
 ---
 
 #### RFC-019: Plugin SDK Authorization Layer (NEW)
-**Link**: [RFC-019](/rfc/rfc-019-plugin-sdk-authorization-layer)
+**Link**: [RFC-019](/rfc/rfc-019)
 
 **Summary**: Standardized authorization layer in Prism core plugin SDK enabling backend plugins to validate tokens and enforce policies:
 - **Defense-in-Depth**: Authorization enforced at proxy AND plugin layers
@@ -744,7 +850,7 @@ Quick access to recently updated documentation. Changes listed in reverse chrono
 ---
 
 #### MEMO-006: Backend Interface Decomposition and Schema Registry (NEW)
-**Link**: [MEMO-006](/memos/memo-006-backend-interface-decomposition-schema-registry)
+**Link**: [MEMO-006](/memos/memo-006)
 
 **Summary**: Comprehensive architectural guide for decomposing backends into thin, composable proto service interfaces and establishing schema registry for patterns and slots:
 - **Design Decision**: Use explicit interface flavors (not capability flags) for type safety
@@ -764,7 +870,7 @@ Quick access to recently updated documentation. Changes listed in reverse chrono
 ---
 
 #### MEMO-005: Client Protocol Design Philosophy - Composition vs Use-Case Specificity (NEW)
-**Link**: [MEMO-005](/memos/memo-005-client-protocol-design-philosophy)
+**Link**: [MEMO-005](/memos/memo-005)
 
 **Summary**: Comprehensive memo resolving the architectural tension between composable primitives (RFC-014) and use-case-specific protocols (RFC-017), covering:
 - Context comparison: RFC-014 composable primitives vs RFC-017 use-case patterns
@@ -783,7 +889,7 @@ Quick access to recently updated documentation. Changes listed in reverse chrono
 ---
 
 #### MEMO-003: Documentation-First Development Approach (NEW)
-**Link**: [MEMO-003](/memos/memo-003-documentation-first-development)
+**Link**: [MEMO-003](/memos/memo-003)
 
 **Summary**: Comprehensive memo defining the documentation-first development approach used in Prism, covering:
 - Definition and core principles (Design in Documentation → Review → Implement → Validate)
@@ -799,7 +905,7 @@ Quick access to recently updated documentation. Changes listed in reverse chrono
 ---
 
 #### RFC-011: Data Proxy Authentication - Secrets Provider Abstraction (EXPANDED)
-**Link**: [RFC-011](/rfc/rfc-011-data-proxy-authentication)
+**Link**: [RFC-011](/rfc/rfc-011)
 
 **Summary**: Major expansion adding comprehensive secrets provider abstraction:
 - Pluggable SecretsProvider trait supporting multiple secret management services
@@ -814,7 +920,7 @@ Quick access to recently updated documentation. Changes listed in reverse chrono
 ---
 
 #### RFC-006: Admin CLI - OIDC Authentication (EXPANDED)
-**Link**: [RFC-006](/rfc/rfc-006-python-admin-cli)
+**Link**: [RFC-006](/rfc/rfc-006)
 
 **Summary**: Added comprehensive OIDC authentication section covering:
 - Device code flow (OAuth 2.0) for command-line SSO authentication
@@ -832,7 +938,7 @@ Quick access to recently updated documentation. Changes listed in reverse chrono
 ---
 
 #### ADR-046: Dex IDP for Local Identity Testing (NEW)
-**Link**: [ADR-046](/adr/adr-046-dex-idp-local-testing)
+**Link**: [ADR-046](/adr/adr-046)
 
 **Summary**: New ADR proposing Dex as the local OIDC provider for development and testing:
 - Self-hosted OIDC provider for local development (no cloud dependencies)
@@ -846,7 +952,7 @@ Quick access to recently updated documentation. Changes listed in reverse chrono
 ---
 
 #### RFC-014: Layered Data Access Patterns - Client Pattern Catalog (EXPANDED)
-**Link**: [RFC-014](/rfc/rfc-014-layered-data-access-patterns)
+**Link**: [RFC-014](/rfc/rfc-014)
 
 **Summary**: New RFC defining how Prism separates client API from backend implementation through pattern composition. Covers:
 - Three-layer architecture (Client API, Pattern Composition, Backend Execution)
@@ -861,7 +967,7 @@ Quick access to recently updated documentation. Changes listed in reverse chrono
 ---
 
 #### RFC-011: Data Proxy Authentication - Open Questions Expanded
-**Link**: [RFC-011](/rfc/rfc-011-data-proxy-authentication)
+**Link**: [RFC-011](/rfc/rfc-011)
 
 **Summary**: Added comprehensive feedback to open questions:
 - Certificate Authority: Use Vault for certificate management
@@ -875,7 +981,7 @@ Quick access to recently updated documentation. Changes listed in reverse chrono
 ---
 
 #### RFC-010: Admin Protocol with OIDC - Multi-Provider Support
-**Link**: [RFC-010](/rfc/rfc-010-admin-protocol-oidc)
+**Link**: [RFC-010](/rfc/rfc-010)
 
 **Summary**: Expanded open questions with detailed answers:
 - OIDC Provider Support: AWS Cognito, Azure AD, Google, Okta, Auth0, Dex
@@ -889,7 +995,7 @@ Quick access to recently updated documentation. Changes listed in reverse chrono
 ---
 
 #### RFC-009: Distributed Reliability Patterns - Change Notification Graph
-**Link**: [RFC-009](/rfc/rfc-009-distributed-reliability-patterns)
+**Link**: [RFC-009](/rfc/rfc-009)
 
 **Summary**: Added change notification flow diagram to CDC pattern showing:
 - Change type classification (INSERT, UPDATE, DELETE, SCHEMA)
@@ -906,7 +1012,7 @@ Quick access to recently updated documentation. Changes listed in reverse chrono
 ### 2025-10-08
 
 #### RFC-009: Distributed Reliability Patterns (INITIAL)
-**Link**: [RFC-009](/rfc/rfc-009-distributed-reliability-patterns)
+**Link**: [RFC-009](/rfc/rfc-009)
 
 **Summary**: Initial RFC documenting 7 distributed reliability patterns:
 1. Tiered Storage - Hot/warm/cold data lifecycle
@@ -924,7 +1030,7 @@ Quick access to recently updated documentation. Changes listed in reverse chrono
 ### 2025-10-07
 
 #### RFC-001: Prism Architecture (INITIAL)
-**Link**: [RFC-001](/rfc/rfc-001-prism-architecture)
+**Link**: [RFC-001](/rfc/rfc-001)
 
 **Summary**: Foundational architecture RFC defining:
 - System components and layered interface hierarchy
@@ -939,7 +1045,7 @@ Quick access to recently updated documentation. Changes listed in reverse chrono
 ---
 
 #### RFC-002: Data Layer Interface Specification (INITIAL)
-**Link**: [RFC-002](/rfc/rfc-002-data-layer-interface)
+**Link**: [RFC-002](/rfc/rfc-002)
 
 **Summary**: Complete gRPC interface specification covering:
 - Session Service (authentication, heartbeat, lifecycle)

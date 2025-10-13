@@ -2413,10 +2413,10 @@ spec:
 
 ## Related Documents
 
-- [MEMO-006: Backend Interface Decomposition](/memos/memo-006-backend-interface-decomposition-schema-registry) - Interface definitions
-- [RFC-017: Multicast Registry Pattern](/rfc/rfc-017-multicast-registry-pattern) - Example pattern
-- [RFC-024: Distributed Session Store Pattern](/rfc/rfc-024-distributed-session-store-pattern) - Example pattern
-- [RFC-022: Core Plugin SDK Code Layout](/rfc/rfc-022-core-plugin-sdk-code-layout) - SDK structure (now "Pattern SDK")
+- [MEMO-006: Backend Interface Decomposition](/memos/memo-006) - Interface definitions
+- [RFC-017: Multicast Registry Pattern](/rfc/rfc-017) - Example pattern
+- [RFC-024: Distributed Session Store Pattern](/rfc/rfc-024) - Example pattern
+- [RFC-022: Core Plugin SDK Code Layout](/rfc/rfc-022) - SDK structure (now "Pattern SDK")
 
 ## Revision History
 

@@ -333,7 +333,7 @@ export const options = {
   vus: 100, // 100 virtual users
   duration: '60s',
   thresholds: {
-    'grpc_req_duration': ['p(95)<10'], // P95 < 10ms
+    'grpc_req_duration': ['p(95)&lt;10'], // P95 &lt; 10ms
   },
 };
 ```
@@ -819,7 +819,7 @@ ghz --proto proto/interfaces/keyvalue_basic.proto \
 **Mitigation**:
 - Expected: gRPC adds ~3-5ms latency (acceptable)
 - Document baseline overhead
-- Alert if divergence > 10ms (indicates proxy issue)
+- Alert if divergence &gt; 10ms (indicates proxy issue)
 
 ### Risk 3: Tool Proliferation
 
@@ -916,7 +916,7 @@ ghz --proto proto/interfaces/keyvalue_basic.proto \
 - **[MEMO-010: Load Test Results](/memos/memo-010)** - Validation of custom tool
 - **[RFC-021: POC 1 Implementation](/rfc/rfc-021)** - Three plugins implementation
 - **[RFC-018: POC Strategy](/rfc/rfc-018)** - Overall POC roadmap
-- **[CLAUDE.md](/CLAUDE.md)** - Development workflow
+- **[CLAUDE.md](https://github.com/jrepp/prism-data-layer/blob/main/CLAUDE.md)** - Development workflow
 
 ## Conclusion
 

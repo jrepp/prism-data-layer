@@ -24,7 +24,7 @@ This memo documents how to configure Topaz as a local authorizer for two critica
 1. **Development Iteration**: Fast, lightweight authorization during local development
 2. **Integration Testing**: Realistic authorization testing in CI/CD pipelines
 
-Topaz is part of Prism's **local infrastructure layer** - reusable components that provide production-like services without external dependencies. This follows our [local-first testing philosophy](/adr/adr-004-local-testing-strategy).
+Topaz is part of Prism's **local infrastructure layer** - reusable components that provide production-like services without external dependencies. This follows our [local-first testing philosophy](/adr/adr-004).
 
 ## Overview
 
@@ -59,9 +59,9 @@ Topaz is one component of the **local infrastructure layer**:
 | Component | Purpose | Port | Status |
 |-----------|---------|------|--------|
 | **Topaz** | Authorization (policy engine) | 8282 | This memo |
-| **Dex** | Authentication (OIDC provider) | 5556 | [ADR-046](/adr/adr-046-dex-idp-local-testing) |
-| **Vault** | Secret management | 8200 | [RFC-016](/rfc/rfc-016-local-development-infrastructure) |
-| **Signoz** | Observability | 3301 | [ADR-048](/adr/adr-048-local-signoz-observability) |
+| **Dex** | Authentication (OIDC provider) | 5556 | [ADR-046](/adr/adr-046) |
+| **Vault** | Secret management | 8200 | [RFC-016](/rfc/rfc-016) |
+| **Signoz** | Observability | 3301 | [ADR-048](/adr/adr-048) |
 
 **Design principle**: Each component can run **independently** or as part of a composed stack.
 
@@ -933,11 +933,11 @@ func main() {
 
 ## Related Documents
 
-- [ADR-050: Topaz for Policy Authorization](/adr/adr-050-topaz-policy-authorization) - Why Topaz was selected
+- [ADR-050: Topaz for Policy Authorization](/adr/adr-050) - Why Topaz was selected
 - [RFC-019: Pattern SDK Authorization Layer](/rfc/rfc-019) - Pattern SDK integration
-- [RFC-016: Local Development Infrastructure](/rfc/rfc-016-local-development-infrastructure) - Complete local stack
-- [ADR-046: Dex IDP for Local Testing](/adr/adr-046-dex-idp-local-testing) - OIDC authentication
-- [MEMO-008: Vault Token Exchange Flow](/memos/memo-008-vault-token-exchange-flow) - Credential management
+- [RFC-016: Local Development Infrastructure](/rfc/rfc-016) - Complete local stack
+- [ADR-046: Dex IDP for Local Testing](/adr/adr-046) - OIDC authentication
+- [MEMO-008: Vault Token Exchange Flow](/memos/memo-008) - Credential management
 
 ## Revision History
 

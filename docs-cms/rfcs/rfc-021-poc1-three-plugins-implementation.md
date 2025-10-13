@@ -1362,7 +1362,7 @@ All components meet target coverage (80%+).
 
 ## Related Documents
 
-- [RFC-018: POC Implementation Strategy](/rfc/rfc-018-poc-implementation-strategy) - Overall POC roadmap
+- [RFC-018: POC Implementation Strategy](/rfc/rfc-018) - Overall POC roadmap
 - [RFC-022: Core Pattern SDK Code Layout](/rfc/rfc-022) - SDK structure and build system
 - [RFC-015: Plugin Acceptance Test Framework](/rfc/rfc-015) - Interface-based testing
 - [MEMO-006: Backend Interface Decomposition](/memos/memo-006) - Interface design

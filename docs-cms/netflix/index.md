@@ -36,10 +36,10 @@ Prism adopts many of Netflix's proven patterns while improving on performance an
 
 Netflix built multiple abstraction layers on their Data Gateway platform:
 
-- **[Key-Value](/prism-data-layer/netflix/abstractions)**: Primary abstraction for 400+ use cases
+- **[Key-Value](/netflix/netflix-abstractions)**: Primary abstraction for 400+ use cases
 - **TimeSeries**: Handles 10M writes/sec for event tracking
 - **Distributed Counter**: Scalable counting with tunable accuracy
-- **[Write-Ahead Log (WAL)](/prism-data-layer/netflix/write-ahead-log)**: Durable, ordered mutation delivery
+- **[Write-Ahead Log (WAL)](/netflix/netflix-write-ahead-log)**: Durable, ordered mutation delivery
 
 ### Scale & Performance
 
@@ -50,16 +50,16 @@ Netflix's Data Gateway operates at massive scale:
 - **3,500+ use cases** across the organization
 - **Petabyte-scale** storage with low-latency retrieval
 
-**[Read more about scale metrics →](/prism-data-layer/netflix/scale)**
+**[Read more about scale metrics →](/netflix/netflix-scale)**
 
 ### Migration Patterns
 
 Netflix's approach to zero-downtime migrations:
 
-- **[Dual-Write Pattern](/prism-data-layer/netflix/dual-write-migration)**: Write to old and new datastores simultaneously
+- **[Dual-Write Pattern](/netflix/netflix-dual-write-migration)**: Write to old and new datastores simultaneously
 - **Shadow Traffic**: Validate new systems with production load
 - **Phased Cutover**: Gradual migration with rollback capability
-- **[Schema Evolution](/prism-data-layer/netflix/data-evolve-migration)**: Automated compatibility checking
+- **[Schema Evolution](/netflix/netflix-data-evolve-migration)**: Automated compatibility checking
 
 ## Key Learnings
 
@@ -91,14 +91,14 @@ Product/feature sharding prevents noisy neighbor problems:
 - Independent scaling and capacity planning
 - Clear ownership and blast radius containment
 
-**[Read full lessons learned →](/prism-data-layer/netflix/summary)**
+**[Read full lessons learned →](/netflix/netflix-summary)**
 
 ## Reference Materials
 
-- **[Netflix Data Gateway Use Cases](/prism-data-layer/netflix/key-use-cases)**: Real-world applications
-- **[Scale Metrics](/prism-data-layer/netflix/scale)**: Performance and throughput numbers
-- **[Data Abstractions](/prism-data-layer/netflix/abstractions)**: Counter, WAL, and other patterns
-- **[Migration Strategies](/prism-data-layer/netflix/dual-write-migration)**: Dual-write and shadow traffic
+- **[Netflix Data Gateway Use Cases](/netflix/netflix-key-use-cases)**: Real-world applications
+- **[Scale Metrics](/netflix/netflix-scale)**: Performance and throughput numbers
+- **[Data Abstractions](/netflix/netflix-abstractions)**: Counter, WAL, and other patterns
+- **[Migration Strategies](/netflix/netflix-dual-write-migration)**: Dual-write and shadow traffic
 - **Video Transcripts**: Conference talks on data abstractions (see sidebar)
 
 ### PDF References

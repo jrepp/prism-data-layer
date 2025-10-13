@@ -679,8 +679,8 @@ func recordError(err *Error) {
 
 ## Related Documents
 
-- [RFC-001: Prism Architecture](/rfc/rfc-001-prism-architecture) - Overall architecture
-- [MEMO-006: Backend Interface Decomposition](/memos/memo-006-backend-interface-decomposition-schema-registry) - Interface design
+- [RFC-001: Prism Architecture](/rfc/rfc-001) - Overall architecture
+- [MEMO-006: Backend Interface Decomposition](/memos/memo-006) - Interface design
 - [Google API Error Model](https://cloud.google.com/apis/design/errors) - Industry best practices
 - [gRPC Error Handling](https://grpc.io/docs/guides/error/) - gRPC status codes
 

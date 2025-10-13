@@ -300,7 +300,7 @@ Proxy aggregates plugin capabilities and exposes via Capability API.
 
 - RFC-003: Admin gRPC API (where Capability API lives)
 - RFC-008: Proxy Plugin Architecture (backend capability reporting)
-- [Netflix Data Gateway Multi-Region](/prism-data-layer/netflix/scale)
+- [Netflix Data Gateway Multi-Region](/netflix/netflix-scale)
 - [gRPC Server Reflection](https://github.com/grpc/grpc/blob/master/doc/server-reflection.md)
 - [Kubernetes API Discovery](https://kubernetes.io/docs/reference/using-api/api-concepts/#discovery)
 

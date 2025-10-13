@@ -14,7 +14,7 @@ This page references the most important documents that drive the philosophy, arc
 
 ## 🎯 Vision & Requirements
 
-### [Product Requirements Document (PRD)](/prd)
+### [Product Requirements Document (PRD)](/prds/prd-001)
 **Why it matters**: Defines the core value proposition, user personas, success metrics, and implementation roadmap for Prism.
 
 **Key insights**:
@@ -82,7 +82,7 @@ This page references the most important documents that drive the philosophy, arc
 
 ## 📚 Development Practices
 
-### [CLAUDE.md (in repository root)](../../CLAUDE.md)
+### [CLAUDE.md (in repository root)](https://github.com/jrepp/prism-data-layer/blob/main/CLAUDE.md)
 **Why it matters**: Comprehensive development guide for contributors and AI assistants.
 
 **Key practices**:
@@ -115,9 +115,9 @@ This page references the most important documents that drive the philosophy, arc
 ## 📖 How to Use This Index
 
 **For new contributors**:
-1. Start with the [PRD](/prd) to understand the vision
+1. Start with the [PRD](/prds/prd-001) to understand the vision
 2. Read [ADR-001](/adr/adr-001) through [ADR-004](/adr/adr-004) for architectural foundations
-3. Review [CLAUDE.md](../../CLAUDE.md) for development practices
+3. Review [CLAUDE.md](https://github.com/jrepp/prism-data-layer/blob/main/CLAUDE.md) for development practices
 4. Explore [MEMO-004](/memos/memo-004) for implementation guidance
 
 **For architectural decisions**:
@@ -126,7 +126,7 @@ This page references the most important documents that drive the philosophy, arc
 - Ensure alignment with foundational principles
 
 **For implementation work**:
-- Follow TDD practices from [CLAUDE.md](../../CLAUDE.md)
+- Follow TDD practices from [CLAUDE.md](https://github.com/jrepp/prism-data-layer/blob/main/CLAUDE.md)
 - Refer to [MEMO-004](/memos/memo-004) for backend-specific guidance
 - Use [MEMO-015](/memos/memo-015) test framework for new backends
 - Ensure observability from [MEMO-016](/memos/memo-016) is integrated

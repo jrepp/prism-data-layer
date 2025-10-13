@@ -1436,9 +1436,9 @@ Test interface compliance under failure conditions:
 
 ## Related Documents
 
-- [MEMO-006: Backend Interface Decomposition](/memos/memo-006-backend-interface-decomposition-schema-registry) - Interface design principles
-- [RFC-008: Proxy Plugin Architecture](/rfc/rfc-008-proxy-plugin-architecture) - Plugin system overview
-- [MEMO-004: Backend Plugin Implementation Guide](/memos/memo-004-backend-plugin-implementation-guide) - Backend implementability rankings
+- [MEMO-006: Backend Interface Decomposition](/memos/memo-006) - Interface design principles
+- [RFC-008: Proxy Plugin Architecture](/rfc/rfc-008) - Plugin system overview
+- [MEMO-004: Backend Plugin Implementation Guide](/memos/memo-004) - Backend implementability rankings
 
 ## Revision History
 

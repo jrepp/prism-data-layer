@@ -107,7 +107,7 @@ Architecture Decision Records (ADRs) capture why technical choices were made.
 
 **When to read**: Understanding project philosophy, evaluating alternatives, onboarding.
 
-**Start with**: [Why Rust?](/adr/adr-001-rust-for-proxy) | [Client Configuration](/adr/adr-002)
+**Start with**: [Why Rust?](/adr/adr-001) | [Client Configuration](/adr/adr-002)
 
 ---
 
@@ -116,7 +116,7 @@ Request for Comments (RFCs) provide detailed specifications before implementatio
 
 **When to read**: Understanding system designs, implementing features, reviewing proposals.
 
-**Start with**: [Architecture](/rfc/rfc-001-prism-architecture) | [Layered Patterns](/rfc/rfc-014-layered-data-access-patterns)
+**Start with**: [Architecture](/rfc/rfc-001) | [Layered Patterns](/rfc/rfc-014)
 
 ---
 
@@ -201,7 +201,7 @@ message UserProfile {
 
 1. **Architecture**: Read [Architecture Guide](/docs/architecture) for system overview
 2. **Decisions**: Browse ADRs to understand technical choices
-3. **Designs**: Review key RFCs ([Architecture](/rfc/rfc-001-prism-architecture), [Layered Patterns](/rfc/rfc-014-layered-data-access-patterns))
+3. **Designs**: Review key RFCs ([Architecture](/rfc/rfc-001), [Layered Patterns](/rfc/rfc-014))
 4. **Setup**: Follow [repository instructions](https://github.com/jrepp/prism-data-layer)
 
 ---

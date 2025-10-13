@@ -529,7 +529,7 @@ Same pattern works with different backend combinations:
 4. **Testing Isolation**: Test patterns independently of backends
 5. **Organizational Scalability**: Teams configure namespaces independently with policy guardrails
 
-**Reference**: [RFC-014: Layered Data Access Patterns](/rfc/rfc-014-layered-data-access-patterns), [ADR-002: Client-Originated Configuration](/adr/adr-002)
+**Reference**: [RFC-014: Layered Data Access Patterns](/rfc/rfc-014), [ADR-002: Client-Originated Configuration](/adr/adr-002)
 
 ### Why Rust for Proxy?
 
@@ -547,7 +547,7 @@ Same pattern works with different backend combinations:
 | Memory (idle) | ~500MB | ~20MB | **25x** |
 | Cold Start | ~10s | ~100ms | **100x** |
 
-**Reference**: [ADR-001: Rust for Proxy Implementation](/adr/adr-001-rust-for-proxy)
+**Reference**: [ADR-001: Rust for Proxy Implementation](/adr/adr-001)
 
 ### Why Thin Interfaces Instead of Capability Flags?
 
@@ -576,7 +576,7 @@ implements:
 3. **No Runtime Surprises**: If backend claims interface, it MUST work
 4. **Proto-First**: All contracts in `.proto` files
 
-**Reference**: [MEMO-006: Backend Interface Decomposition](/memos/memo-006-backend-interface-decomposition-schema-registry)
+**Reference**: [MEMO-006: Backend Interface Decomposition](/memos/memo-006)
 
 ### Why Out-of-Process Pattern Providers?
 
@@ -592,7 +592,7 @@ implements:
 
 **Trade-off**: ~1-2ms latency overhead vs in-process (~0.1ms), but worth it for reliability.
 
-**Reference**: [RFC-008: Proxy Plugin Architecture](/rfc/rfc-008-proxy-plugin-architecture)
+**Reference**: [RFC-008: Proxy Plugin Architecture](/rfc/rfc-008)
 
 ### Why Provider-Side Token Validation?
 
@@ -606,29 +606,29 @@ implements:
 3. **Per-User Credentials**: Vault provides dynamic, short-lived credentials (1h TTL)
 4. **Audit Trails**: Backend logs show which user accessed what data
 
-**Reference**: [RFC-019: Plugin SDK Authorization Layer](/rfc/rfc-019-plugin-sdk-authorization-layer)
+**Reference**: [RFC-019: Plugin SDK Authorization Layer](/rfc/rfc-019)
 
 ---
 
 ## Related Documentation
 
 ### Core RFCs
-- [RFC-001: Prism Architecture](/rfc/rfc-001-prism-architecture) - Foundational design
-- [RFC-008: Proxy Plugin Architecture](/rfc/rfc-008-proxy-plugin-architecture) - Plugin system
-- [RFC-014: Layered Data Access Patterns](/rfc/rfc-014-layered-data-access-patterns) - Three-layer design
-- [RFC-017: Multicast Registry Pattern](/rfc/rfc-017-multicast-registry-pattern) - Pattern example
+- [RFC-001: Prism Architecture](/rfc/rfc-001) - Foundational design
+- [RFC-008: Proxy Plugin Architecture](/rfc/rfc-008) - Plugin system
+- [RFC-014: Layered Data Access Patterns](/rfc/rfc-014) - Three-layer design
+- [RFC-017: Multicast Registry Pattern](/rfc/rfc-017) - Pattern example
 
 ### Design Memos
-- [MEMO-005: Client Protocol Design Philosophy](/memos/memo-005-client-protocol-design-philosophy) - Composition vs use-case
-- [MEMO-006: Backend Interface Decomposition](/memos/memo-006-backend-interface-decomposition-schema-registry) - Interface catalog
+- [MEMO-005: Client Protocol Design Philosophy](/memos/memo-005) - Composition vs use-case
+- [MEMO-006: Backend Interface Decomposition](/memos/memo-006) - Interface catalog
 
 ### Implementation Guides
-- [MEMO-004: Backend Plugin Implementation Guide](/memos/memo-004-backend-plugin-implementation-guide) - Implementability scores
-- [RFC-015: Plugin Acceptance Test Framework](/rfc/rfc-015-plugin-acceptance-test-framework) - Testing strategy
+- [MEMO-004: Backend Plugin Implementation Guide](/memos/memo-004) - Implementability scores
+- [RFC-015: Plugin Acceptance Test Framework](/rfc/rfc-015) - Testing strategy
 
 ### Key ADRs
-- [ADR-001: Rust for Proxy Implementation](/adr/adr-001-rust-for-proxy) - Language choice
-- [ADR-050: Topaz for Policy-Based Authorization](/adr/adr-050-topaz-policy-authorization) - Authorization
+- [ADR-001: Rust for Proxy Implementation](/adr/adr-001) - Language choice
+- [ADR-050: Topaz for Policy-Based Authorization](/adr/adr-050) - Authorization
 
 ---
 

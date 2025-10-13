@@ -1099,10 +1099,10 @@ with client.session_transaction(session_id) as tx:
 
 ## Related Documents
 
-- [RFC-019: Plugin SDK Authorization Layer](/rfc/rfc-019-plugin-sdk-authorization-layer) - Token validation and credentials
-- [RFC-014: Layered Data Access Patterns](/rfc/rfc-014-layered-data-access-patterns) - Pattern composition
-- [RFC-011: Data Proxy Authentication](/rfc/rfc-011-data-proxy-authentication) - Secrets provider abstraction
-- [ADR-050: Topaz for Policy Authorization](/adr/adr-050-topaz-policy-authorization) - Policy enforcement
+- [RFC-019: Plugin SDK Authorization Layer](/rfc/rfc-019) - Token validation and credentials
+- [RFC-014: Layered Data Access Patterns](/rfc/rfc-014) - Pattern composition
+- [RFC-011: Data Proxy Authentication](/rfc/rfc-011) - Secrets provider abstraction
+- [ADR-050: Topaz for Policy Authorization](/adr/adr-050) - Policy enforcement
 
 ## Revision History
 

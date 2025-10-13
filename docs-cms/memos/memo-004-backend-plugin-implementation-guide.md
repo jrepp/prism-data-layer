@@ -1087,9 +1087,9 @@ go get github.com/testcontainers/testcontainers-go
 
 ## Related Documents
 
-- [RFC-015: Plugin Acceptance Test Framework](/rfc/rfc-015-plugin-acceptance-test-framework) - Testing framework referenced throughout
-- [ADR-004: Local-First Testing](/adr/adr-004-local-first-testing) - Testing philosophy
-- [RFC-008: Proxy Plugin Architecture](/rfc/rfc-008-proxy-plugin-architecture) - Plugin interface design
+- [RFC-015: Plugin Acceptance Test Framework](/rfc/rfc-015) - Testing framework referenced throughout
+- [ADR-004: Local-First Testing](/adr/adr-004) - Testing philosophy
+- [RFC-008: Proxy Plugin Architecture](/rfc/rfc-008) - Plugin interface design
 
 ## References
 

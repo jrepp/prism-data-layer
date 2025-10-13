@@ -1609,10 +1609,10 @@ authz:
 
 ## Related Documents
 
-- [ADR-050: Topaz for Policy Authorization](/adr/adr-050-topaz-policy-authorization) - Topaz selection and architecture
-- [RFC-010: Admin Protocol with OIDC](/rfc/rfc-010-admin-protocol-oidc) - OIDC authentication
-- [RFC-011: Data Proxy Authentication](/rfc/rfc-011-data-proxy-authentication) - Secrets provider abstraction
-- [RFC-008: Proxy Plugin Architecture](/rfc/rfc-008-proxy-plugin-architecture) - Plugin system
+- [ADR-050: Topaz for Policy Authorization](/adr/adr-050) - Topaz selection and architecture
+- [RFC-010: Admin Protocol with OIDC](/rfc/rfc-010) - OIDC authentication
+- [RFC-011: Data Proxy Authentication](/rfc/rfc-011) - Secrets provider abstraction
+- [RFC-008: Proxy Plugin Architecture](/rfc/rfc-008) - Plugin system
 - [RFC-022: Core Pattern SDK Code Layout](/rfc/rfc-022) - Pattern SDK structure
 
 ## Revision History

@@ -627,10 +627,10 @@ RUN apk add --no-cache curl busybox
 
 ## Related Documents
 
-- [ADR-049: Podman Container Optimization](/adr/adr-049-podman-container-optimization) - Decision to use Podman
-- [ADR-026: Distroless Container Images](/adr/adr-026-distroless-container-images) - Alternative to scratch
-- [MEMO-004: Backend Plugin Implementation Guide](/memos/memo-004-backend-plugin-implementation-guide) - Backend implementation guide
-- [MEMO-006: Backend Interface Decomposition and Schema Registry](/memos/memo-006-backend-interface-decomposition-schema-registry) - Pattern vs backend distinction (patterns like multicast-registry coordinate multiple backends)
+- [ADR-049: Podman Container Optimization](/adr/adr-049) - Decision to use Podman
+- [ADR-026: Distroless Container Images](/adr/adr-026) - Alternative to scratch
+- [MEMO-004: Backend Plugin Implementation Guide](/memos/memo-004) - Backend implementation guide
+- [MEMO-006: Backend Interface Decomposition and Schema Registry](/memos/memo-006) - Pattern vs backend distinction (patterns like multicast-registry coordinate multiple backends)
 
 ## Revision History
 

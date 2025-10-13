@@ -550,7 +550,7 @@ The proxy-to-pattern architecture handles adverse conditions gracefully, with fa
 
 - [RFC-018: POC Implementation Strategy](/rfc/rfc-018)
 - [MEMO-004: Backend Plugin Implementation Guide](/memos/memo-004)
-- [ADR-049: Podman and Container Optimization](/adr/adr-049-podman-container-optimization)
+- [ADR-049: Podman and Container Optimization](/adr/adr-049)
 
 ## References
 

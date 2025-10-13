@@ -839,10 +839,10 @@ StorageObject (5 operations):
 
 ## Related Documents
 
-- [RFC-008: Proxy Plugin Architecture](/rfc/rfc-008-proxy-plugin-architecture) - Plugin system overview
-- [MEMO-006: Backend Interface Decomposition](/memos/memo-006-backend-interface-decomposition-schema-registry) - Interface design principles
-- [RFC-009: Distributed Reliability Patterns](/rfc/rfc-009-distributed-reliability-patterns) - Related patterns (Event Sourcing, CDC)
-- [RFC-014: Layered Data Access Patterns](/rfc/rfc-014-layered-data-access-patterns) - PubSub pattern spec
+- [RFC-008: Proxy Plugin Architecture](/rfc/rfc-008) - Plugin system overview
+- [MEMO-006: Backend Interface Decomposition](/memos/memo-006) - Interface design principles
+- [RFC-009: Distributed Reliability Patterns](/rfc/rfc-009) - Related patterns (Event Sourcing, CDC)
+- [RFC-014: Layered Data Access Patterns](/rfc/rfc-014) - PubSub pattern spec
 
 ## Revision History
 

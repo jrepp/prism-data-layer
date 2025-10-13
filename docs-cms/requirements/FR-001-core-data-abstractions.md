@@ -367,7 +367,7 @@ proto/
 ## References
 
 - Netflix KV Data Abstraction Layer (docs/netflix/)
-- Netflix Real-Time Distributed Graph (docs/netflix/video2.md)
+- Netflix Real-Time Distributed Graph (docs/netflix/netflix-video2.md)
 - [AWS Neptune](https://aws.amazon.com/neptune/)
 - [Kafka as a Storage System](https://kafka.apache.org/documentation/#design_storage)
 

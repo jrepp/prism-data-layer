@@ -1680,11 +1680,11 @@ WS4     ████████                                   Python Client
 
 ## Related Documents
 
-- [RFC-018: POC Implementation Strategy](/rfc/rfc-018-poc-implementation-strategy) - Overall POC roadmap
-- [RFC-008: Proxy Plugin Architecture](/rfc/rfc-008-proxy-plugin-architecture) - Proxy design
-- [RFC-014: Layered Data Access Patterns](/rfc/rfc-014-layered-data-access-patterns) - KeyValue pattern spec
-- [MEMO-004: Backend Plugin Implementation Guide](/memos/memo-004-backend-plugin-implementation-guide) - MemStore priority rationale
-- [MEMO-006: Backend Interface Decomposition](/memos/memo-006-backend-interface-decomposition-schema-registry) - MemStore interfaces
+- [RFC-018: POC Implementation Strategy](/rfc/rfc-018) - Overall POC roadmap
+- [RFC-008: Proxy Plugin Architecture](/rfc/rfc-008) - Proxy design
+- [RFC-014: Layered Data Access Patterns](/rfc/rfc-014) - KeyValue pattern spec
+- [MEMO-004: Backend Plugin Implementation Guide](/memos/memo-004) - MemStore priority rationale
+- [MEMO-006: Backend Interface Decomposition](/memos/memo-006) - MemStore interfaces
 
 ## Revision History
 

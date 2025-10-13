@@ -2,7 +2,7 @@
 title: "RFC-030: Schema Evolution and Validation for Decoupled Pub/Sub"
 author: Platform Team
 created: 2025-10-13
-updated: 2025-10-13T18:00:00Z
+updated: 2025-10-13
 status: Draft
 tags: [schema, pubsub, validation, evolution, governance, developer-experience, internet-scale]
 id: rfc-030

@@ -15,7 +15,7 @@ title: Admin CLI (prismctl)
 **Updated**: 2025-10-09
 **Superseded By**: ADR-040 (Go Binary for Admin CLI)
 
-> **Note**: This RFC originally proposed a Python-based CLI. The implementation has shifted to **Go** for better performance, single-binary distribution, and consistency with backend plugins. See [ADR-040: Go Binary for Admin CLI](/prism-data-layer/adr/adr-040-go-binary-admin-cli) for the accepted implementation approach. The functional specifications below remain valid regardless of implementation language.
+> **Note**: This RFC originally proposed a Python-based CLI. The implementation has shifted to **Go** for better performance, single-binary distribution, and consistency with backend plugins. See [ADR-040: Go Binary for Admin CLI](/adr/adr-040) for the accepted implementation approach. The functional specifications below remain valid regardless of implementation language.
 
 ## Abstract
 
@@ -851,7 +851,7 @@ Query Compatibility:
 
 Plugin commands manage backend plugins (installation, updates, health monitoring, hot-reload).
 
-For complete plugin development guide, see [RFC-008: Plugin Development Experience](./RFC-008-proxy-plugin-architecture.md#plugin-development-experience).
+For complete plugin development guide, see [RFC-008: Plugin Development Experience](/rfc/rfc-008.md#plugin-development-experience).
 
 #### List Plugins
 
@@ -1139,7 +1139,7 @@ service AdminService {
 
 ## Implementation
 
-> **Note**: The implementation details below were from the original Python proposal. The actual implementation uses **Go** with Cobra/Viper framework. See [ADR-040](/prism-data-layer/adr/adr-040-go-binary-admin-cli) for Go-specific implementation details.
+> **Note**: The implementation details below were from the original Python proposal. The actual implementation uses **Go** with Cobra/Viper framework. See [ADR-040](/adr/adr-040) for Go-specific implementation details.
 
 ### Technology Stack (Go Implementation - see ADR-040)
 

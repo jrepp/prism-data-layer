@@ -1800,7 +1800,7 @@ prism plugin status mongodb
 prism plugin reload mongodb
 ```text
 
-For detailed plugin admin commands, see [RFC-006 Section: Plugin Management](./RFC-006-python-admin-cli.md#plugin-management).
+For detailed plugin admin commands, see [RFC-006 Section: Plugin Management](/rfc/rfc-006.md#plugin-management).
 
 ## Appendix: Plugin Development Guide
 

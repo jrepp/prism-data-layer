@@ -789,9 +789,9 @@ spec:
 
 ## Related Documents
 
-- [RFC-010: Admin Protocol with OIDC](/rfc/rfc-010-admin-protocol-oidc) - OIDC authentication
-- [RFC-011: Data Proxy Authentication](/rfc/rfc-011-data-proxy-authentication) - Secrets provider abstraction
-- [ADR-046: Dex IDP for Local Testing](/adr/adr-046-dex-idp-local-testing) - Local OIDC provider
+- [RFC-010: Admin Protocol with OIDC](/rfc/rfc-010) - OIDC authentication
+- [RFC-011: Data Proxy Authentication](/rfc/rfc-011) - Secrets provider abstraction
+- [ADR-046: Dex IDP for Local Testing](/adr/adr-046) - Local OIDC provider
 
 ## Consequences
 

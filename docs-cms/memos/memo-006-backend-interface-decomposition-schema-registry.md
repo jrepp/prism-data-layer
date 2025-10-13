@@ -858,10 +858,10 @@ Slot: messaging
 
 ## Related Documents
 
-- [RFC-014: Layered Data Access Patterns](/rfc/rfc-014-layered-data-access-patterns) - Layer 1 primitives
-- [RFC-017: Multicast Registry Pattern](/rfc/rfc-017-multicast-registry-pattern) - Example pattern with slots
-- [MEMO-005: Client Protocol Design Philosophy](/memos/memo-005-client-protocol-design-philosophy) - Layered API architecture
-- [RFC-008: Proxy Plugin Architecture](/rfc/rfc-008-proxy-plugin-architecture) - Plugin system
+- [RFC-014: Layered Data Access Patterns](/rfc/rfc-014) - Layer 1 primitives
+- [RFC-017: Multicast Registry Pattern](/rfc/rfc-017) - Example pattern with slots
+- [MEMO-005: Client Protocol Design Philosophy](/memos/memo-005) - Layered API architecture
+- [RFC-008: Proxy Plugin Architecture](/rfc/rfc-008) - Plugin system
 
 ## Revision History
 

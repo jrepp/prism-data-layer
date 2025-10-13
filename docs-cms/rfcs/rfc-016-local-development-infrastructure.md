@@ -851,12 +851,12 @@ For production:
 
 ## Related Documents
 
-- [ADR-047: OpenTelemetry Tracing Integration](/adr/adr-047-opentelemetry-tracing-integration)
-- [ADR-046: Dex IDP for Local Identity Testing](/adr/adr-046-dex-idp-local-testing)
-- [ADR-048: Local Signoz Instance for Observability Testing](/adr/adr-048-local-signoz-observability)
+- [ADR-047: OpenTelemetry Tracing Integration](/adr/adr-047)
+- [ADR-046: Dex IDP for Local Identity Testing](/adr/adr-046)
+- [ADR-048: Local Signoz Instance for Observability Testing](/adr/adr-048)
 - [RFC-010: Admin Protocol with OIDC](/rfc/rfc-010)
 - [RFC-011: Data Proxy Authentication](/rfc/rfc-011)
-- [MEMO-004: Backend Plugin Implementation Guide](/memos/memo-004-backend-plugin-implementation-guide)
+- [MEMO-004: Backend Plugin Implementation Guide](/memos/memo-004)
 
 ## Revision History
 

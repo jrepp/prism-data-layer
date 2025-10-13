@@ -1168,7 +1168,7 @@ filter_operators:
 - [RFC-014: Layered Data Access Patterns](/rfc/rfc-014) - Base client pattern catalog
 - [RFC-008: Proxy Plugin Architecture](/rfc/rfc-008) - Plugin composition model
 - [RFC-009: Distributed Reliability Patterns](/rfc/rfc-009) - Outbox pattern details
-- [MEMO-004: Backend Plugin Implementation Guide](/memos/memo-004-backend-plugin-implementation-guide) - Backend selection criteria
+- [MEMO-004: Backend Plugin Implementation Guide](/memos/memo-004) - Backend selection criteria
 
 ## References
 

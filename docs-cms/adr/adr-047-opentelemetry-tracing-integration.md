@@ -778,7 +778,7 @@ prism-proxy: handle_data_request [142ms]
 
 ## References
 
-- [ADR-008: Observability Strategy](/adr/adr-008-observability-strategy) - High-level observability architecture
+- [ADR-008: Observability Strategy](/adr/adr-008) - High-level observability architecture
 - [OpenTelemetry Specification](https://opentelemetry.io/docs/specs/otel/)
 - [W3C Trace Context](https://www.w3.org/TR/trace-context/)
 - [OpenTelemetry Rust](https://github.com/open-telemetry/opentelemetry-rust)

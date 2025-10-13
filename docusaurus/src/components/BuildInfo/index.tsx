@@ -15,6 +15,9 @@ export default function BuildInfo({ version, buildTime, commitHash }: BuildInfoP
     return date.toLocaleString('en-US', {
       month: 'short',
       day: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+      timeZoneName: 'short',
     });
   };
 

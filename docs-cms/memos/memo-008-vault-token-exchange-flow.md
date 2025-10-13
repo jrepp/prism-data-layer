@@ -1354,8 +1354,8 @@ func (scp *SessionConnectionPool) GetConnection(sessionID string) (*redis.Client
 ## Related Documents
 
 - [RFC-019: Pattern SDK Authorization Layer](/rfc/rfc-019) - Authorization architecture
-- [RFC-011: Data Proxy Authentication](/rfc/rfc-011-data-proxy-authentication) - Secrets provider abstraction
-- [ADR-050: Topaz for Policy Authorization](/adr/adr-050-topaz-policy-authorization) - Policy enforcement
+- [RFC-011: Data Proxy Authentication](/rfc/rfc-011) - Secrets provider abstraction
+- [ADR-050: Topaz for Policy Authorization](/adr/adr-050) - Policy enforcement
 
 ## Revision History
 

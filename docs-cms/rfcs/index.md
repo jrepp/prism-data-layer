@@ -31,7 +31,7 @@ RFCs serve to:
 **Status**: Draft
 **Summary**: Complete architecture for Prism, defining the high-performance data access gateway with unified interface, dynamic configuration, and backend abstraction.
 
-[Read RFC-001 →](./RFC-001-prism-architecture)
+[Read RFC-001 →](/rfc/rfc-001)
 
 ---
 
@@ -40,7 +40,7 @@ RFCs serve to:
 **Status**: Draft
 **Summary**: Specifies the complete data layer interface including gRPC services, message formats, error handling, and client patterns for five core abstractions: Sessions, Queues, PubSub, Readers, and Transactions.
 
-[Read RFC-002 →](./RFC-002-data-layer-interface)
+[Read RFC-002 →](/rfc/rfc-002)
 
 ---
 
@@ -49,7 +49,7 @@ RFCs serve to:
 **Status**: Proposed
 **Summary**: Administrative interface specification enabling operators to manage configurations, monitor sessions, view backend health, and perform operational tasks with both gRPC API and browser-based UI.
 
-[Read RFC-003 →](./RFC-003-admin-interface)
+[Read RFC-003 →](/rfc/rfc-003)
 
 ---
 
@@ -58,7 +58,7 @@ RFCs serve to:
 **Status**: Draft
 **Summary**: Comprehensive Redis integration covering three distinct access patterns: Cache (HashMap operations), PubSub (broadcasting), and Vector Similarity Search for ML embeddings and semantic search.
 
-[Read RFC-004 →](./RFC-004-redis-integration)
+[Read RFC-004 →](/rfc/rfc-004)
 
 ---
 
@@ -67,7 +67,7 @@ RFCs serve to:
 **Status**: Draft
 **Summary**: ClickHouse-backed time series analytics for OLAP workloads, supporting 1M+ events/sec ingestion with ReplicatedMergeTree engine, materialized views for pre-aggregations, and tiered storage with TTL.
 
-[Read RFC-005 →](./RFC-005-clickhouse-integration)
+[Read RFC-005 →](/rfc/rfc-005)
 
 ---
 

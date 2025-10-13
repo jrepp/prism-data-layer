@@ -66,7 +66,7 @@ Netflix's Data Gateway serves as our primary inspiration:
 - 3,500+ use cases across the organization
 - Petabyte-scale storage with low-latency retrieval
 
-**Key Lessons Adopted** ([Netflix Index](/netflix/netflix-index)):
+**Key Lessons Adopted** ([Netflix Index](/netflix/)):
 
 | Netflix Lesson | Prism Implementation |
 |---------------|---------------------|
@@ -993,7 +993,7 @@ Prism uses Docusaurus + GitHub Pages as a "micro-CMS":
 ### References
 
 **Netflix Data Gateway**:
-- [Netflix Index](/netflix/netflix-index) - Overview and key learnings
+- [Netflix Index](/netflix/) - Overview and key learnings
 - [Netflix Summary](/netflix/netflix-summary) - Lessons learned
 - [Netflix Abstractions](/netflix/netflix-abstractions) - Data models (KeyValue, TimeSeries, Counter, WAL)
 - [Netflix Key Use Cases](/netflix/netflix-key-use-cases) - Real-world applications

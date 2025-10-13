@@ -920,7 +920,7 @@ Go SDK for building Prism backend plugins with batteries-included authorization,
 
 - [API Reference](https://pkg.go.dev/github.com/prism/pattern-sdk)
 - [Examples](./patterns/)
-- [RFC-022: SDK Code Layout](https://jrepp.github.io/prism-data-layer/rfc/rfc-022-core-plugin-sdk-code-layout)
+- [RFC-022: SDK Code Layout](https://jrepp.github.io/rfc/rfc-022)
 
 ## Examples
 
@@ -1871,10 +1871,10 @@ jobs:
 
 ## Related Documents
 
-- [RFC-019: Plugin SDK Authorization Layer](/rfc/rfc-019-plugin-sdk-authorization-layer) - Authorization implementation
-- [RFC-008: Proxy Plugin Architecture](/rfc/rfc-008-proxy-plugin-architecture) - Plugin system overview
-- [MEMO-006: Backend Interface Decomposition](/memos/memo-006-backend-interface-decomposition-schema-registry) - Interface design principles
-- [RFC-021: POC 1 Implementation Plan](/rfc/rfc-021-poc1-keyvalue-memstore-implementation) - MemStore plugin example
+- [RFC-019: Plugin SDK Authorization Layer](/rfc/rfc-019) - Authorization implementation
+- [RFC-008: Proxy Plugin Architecture](/rfc/rfc-008) - Plugin system overview
+- [MEMO-006: Backend Interface Decomposition](/memos/memo-006) - Interface design principles
+- [RFC-021: POC 1 Implementation Plan](/rfc/rfc-021) - MemStore plugin example
 
 ## Revision History
 
