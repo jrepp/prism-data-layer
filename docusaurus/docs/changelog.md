@@ -75,6 +75,27 @@ Quick access to recently updated documentation. Changes listed in reverse chrono
 
 ---
 
+#### Documentation Structure Consistency Fixes (UPDATED)
+**Commits**: 0209b7c, 936d405
+**Links**: [README.md](https://github.com/jrepp/prism-data-layer/blob/main/README.md), [ADR-042](/adr/adr-042)
+
+**Summary**: Fixed documentation inconsistencies to reflect actual project structure using `patterns/` directory instead of legacy `backends/` references:
+
+**README.md Project Structure Fix** (0209b7c):
+- Corrected "Pluggable Backends" section directory structure from `backends/` to `patterns/`
+- Updated subdirectory listing to match actual implementation: core/, memstore/, redis/, nats/, kafka/, postgres/
+- Ensures new contributors see accurate project structure
+
+**ADR-042 File Path Correction** (936d405):
+- Fixed implementation code comment from `plugins/backends/sqs/plugin.go` to `patterns/sqs/plugin.go`
+- Aligns with project's pattern-based architecture where backend implementations live in patterns/ directory
+
+**Key Facts**: Polish pass identified two instances where documentation still referenced old directory structure. Both README.md and ADR-042 now accurately reflect that backend implementations live in the `patterns/` directory, not `backends/` or `plugins/backends/`. All validation and linting passed cleanly after fixes.
+
+**Impact**: Eliminates confusion for new contributors who would have followed documentation pointing to non-existent directories. Documentation now matches actual project structure. Future backend implementations will reference correct paths based on these fixes.
+
+---
+
 #### Documentation Consolidation and Canonical Changelog Migration (MAJOR UPDATE)
 **Links**: [Key Documents Index](/key-documents), [MEMO-015](/memos/memo-015), [MEMO-016](/memos/memo-016), [PRD](/prd)
 
