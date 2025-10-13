@@ -50,8 +50,8 @@ const config: Config = {
   organizationName: 'jrepp',
   projectName: 'prism-data-layer',
 
-  onBrokenLinks: 'warn',
-  onBrokenMarkdownLinks: 'warn',
+  onBrokenLinks: 'throw',
+  onBrokenMarkdownLinks: 'throw',
 
   future: {
     v4: true, // Improve compatibility with the upcoming Docusaurus v4
