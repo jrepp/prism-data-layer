@@ -2,10 +2,10 @@
 
 > A high-performance data access layer gateway
 
-[![CI](https://github.com/jrepp/prism-data-layer/actions/workflows/ci.yml/badge.svg)](https://github.com/jrepp/prism-data-layer/actions/workflows/ci.yml)
-[![Linting](https://github.com/jrepp/prism-data-layer/actions/workflows/pre-commit.yml/badge.svg)](https://github.com/jrepp/prism-data-layer/actions/workflows/pre-commit.yml)
-[![Docs](https://github.com/jrepp/prism-data-layer/actions/workflows/docs.yml/badge.svg)](https://github.com/jrepp/prism-data-layer/actions/workflows/docs.yml)
-[![GitHub Pages](https://img.shields.io/badge/docs-GitHub%20Pages-blue)](https://jrepp.github.io/prism-data-layer/)
+| CI/CD | Code Quality | Documentation |
+|-------|--------------|---------------|
+| [![CI](https://github.com/jrepp/prism-data-layer/actions/workflows/ci.yml/badge.svg)](https://github.com/jrepp/prism-data-layer/actions/workflows/ci.yml) | [![Go Report Card](https://goreportcard.com/badge/github.com/jrepp/prism-data-layer)](https://goreportcard.com/report/github.com/jrepp/prism-data-layer) | [![Docs](https://github.com/jrepp/prism-data-layer/actions/workflows/docs.yml/badge.svg)](https://github.com/jrepp/prism-data-layer/actions/workflows/docs.yml) |
+| [![Linting](https://github.com/jrepp/prism-data-layer/actions/workflows/pre-commit.yml/badge.svg)](https://github.com/jrepp/prism-data-layer/actions/workflows/pre-commit.yml) | [![Codecov](https://codecov.io/gh/jrepp/prism-data-layer/branch/main/graph/badge.svg)](https://codecov.io/gh/jrepp/prism-data-layer) | [![GitHub Pages](https://img.shields.io/badge/docs-GitHub%20Pages-blue)](https://jrepp.github.io/prism-data-layer/) |
 
 **[📖 Documentation](https://jrepp.github.io/prism-data-layer/)** | [Architecture](https://jrepp.github.io/prism-data-layer/docs/intro) | [ADRs](https://jrepp.github.io/prism-data-layer/adr) | [RFCs](https://jrepp.github.io/prism-data-layer/rfc)
 
