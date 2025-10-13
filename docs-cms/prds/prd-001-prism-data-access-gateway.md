@@ -677,41 +677,31 @@ Prism uses Docusaurus + GitHub Pages as a "micro-CMS":
 
 **Goal**: 50% reduction in time-to-production for new services
 
-**Measurement**:
-- Time from "repo created" to "first production request"
-- # of tickets/questions to platform team (should decrease)
-- Developer satisfaction survey (quarterly)
-
-**Target**:
-- Before Prism: 4-6 weeks (backend integration, testing, deployment)
-- With Prism: 1-2 weeks (focus on business logic only)
+| Metric | Before Prism | With Prism | Measurement |
+|--------|--------------|-----------|-------------|
+| **Time to Production** | 4-6 weeks | 1-2 weeks | Repo created → first production request |
+| **Platform Tickets** | Baseline | 50% reduction | Monthly support ticket volume |
+| **Developer Satisfaction** | N/A | &gt;80% "would recommend" | Quarterly survey |
 
 ### Operational Efficiency
 
-**Goal**: Reduce operational incidents by 50%
+**Goal**: Reduce data access incidents by 50%, MTTR &lt;15 minutes
 
-**Measurement**:
-- # of incidents related to data access (should decrease)
-- MTTR (Mean Time To Resolution) for data access issues
-- # of backend-related on-call pages
-
-**Target**:
-- Incidents: From 20/month → 10/month within 6 months
-- MTTR: &lt;15 minutes (centralized debugging)
-- On-call pages: 50% reduction
+| Metric | Baseline | Target (6 months) | Measurement |
+|--------|----------|-------------------|-------------|
+| **Incidents** | 20/month | 10/month | Data access-related incidents |
+| **MTTR** | Variable | &lt;15 minutes | Mean time to resolution |
+| **On-Call Pages** | Baseline | 50% reduction | Backend-related pages |
 
 ### Migration Velocity
 
-**Goal**: Enable 3+ major backend migrations per year
+**Goal**: Enable 3+ backend migrations/year with zero application code changes
 
-**Measurement**:
-- # of successful migrations completed
-- Migration duration (start to complete cutover)
-- Application code changes required (target: zero)
-
-**Target**:
-- Phase 1 (2026): 1 migration (Redis → DynamoDB)
-- Phase 2 (2027): 3+ migrations per year
+| Phase | Timeline | Target | Measurement |
+|-------|----------|--------|-------------|
+| **Phase 1** | 2026 | 1 migration | Redis → DynamoDB |
+| **Phase 2** | 2027+ | 3+ migrations/year | Successful cutover count |
+| **Code Changes** | All phases | Zero | Lines of application code changed |
 
 ### Performance
 
