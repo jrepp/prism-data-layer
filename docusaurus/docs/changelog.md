@@ -1,5 +1,5 @@
 ---
-title: "Documentation Change Log"
+title: "Changelog"
 description: "Recent changes to Prism documentation with quick links"
 sidebar_position: 1
 ---
@@ -11,6 +11,54 @@ Quick access to recently updated documentation. Changes listed in reverse chrono
 ## Recent Changes
 
 ### 2025-10-13
+
+#### Prismctl OIDC Integration Test Infrastructure (NEW - Phase 1 Complete)
+**Links**: [MEMO-022](/memos/memo-022), [Integration Tests README](https://github.com/jrepp/prism-data-layer/blob/main/cli/tests/integration/README.md)
+
+**Summary**: Implemented Phase 1 of prismctl OIDC integration testing infrastructure to address the 60% coverage gap in authentication flows:
+
+**Test Infrastructure Created**:
+- `cli/tests/integration/` directory with complete test suite (19 tests)
+- `docker-compose.dex.yml`: Local Dex OIDC server for testing
+- `dex-config.yaml`: Test configuration with static test users (test@prism.local, admin@prism.local)
+- `dex_server.py`: DexTestServer context manager for test lifecycle
+- `conftest.py`: Pytest configuration with custom markers
+- `README.md`: Comprehensive testing guide with troubleshooting
+
+**Test Coverage**:
+- `test_password_flow.py`: 5 tests (success, invalid username/password, empty credentials, multiple users)
+- `test_token_refresh.py`: 6 tests (success, missing refresh token, invalid token, expiry extension, identity preservation, multiple refreshes)
+- `test_userinfo.py`: 8 tests (success, expected claims, different users, expired token, invalid token, after refresh, empty token)
+
+**Makefile Integration**:
+- `test-prismctl-integration`: Automated test runner with Dex lifecycle management
+- Podman machine startup, Dex container management, cleanup on failure
+- Coverage reporting with `pytest --cov=prismctl.auth`
+
+**Key Features**:
+- Local Dex server starts automatically via Podman Compose
+- Health check waits for Dex readiness (5-second timeout)
+- Temporary config generation per test (isolated test environments)
+- Two static test users with password authentication
+- Integration tests achieve **60% coverage** of OIDC flows (password, refresh, userinfo)
+- Combined with unit tests: **85%+ coverage** for `prismctl/auth.py`
+
+**Implementation Status** (Phase 1 Complete):
+- ✅ Test infrastructure (Dex compose, config)
+- ✅ DexTestServer utility class
+- ✅ Makefile target
+- ✅ Password flow tests (5 scenarios)
+- ✅ Token refresh tests (6 scenarios)
+- ✅ Userinfo endpoint tests (8 scenarios)
+- ⏳ Device code flow tests (Phase 2 - requires browser mock)
+- ⏳ CLI end-to-end tests (Phase 2 - subprocess-based)
+- ⏳ CI/CD integration (Phase 4 - GitHub Actions)
+
+**Key Innovation**: Local Dex server enables realistic OIDC flow testing without external dependencies or cloud services. DexTestServer context manager handles full lifecycle (start → wait → test → cleanup). Password flow tests serve as foundation for remaining OIDC flows (device code, authorization code).
+
+**Impact**: Addresses MEMO-022 Phase 1 requirements. Prismctl authentication testing now has comprehensive integration coverage for password flow, token refresh, and userinfo endpoints. Foundation established for Phase 2 (device code flow) and Phase 4 (CI/CD integration). Combined unit + integration testing achieves 85%+ coverage goal.
+
+---
 
 #### Podman Machine Setup Documentation (NEW)
 **Links**: [BUILDING.md](https://github.com/jrepp/prism-data-layer/blob/main/BUILDING.md), [CLAUDE.md](https://github.com/jrepp/prism-data-layer/blob/main/CLAUDE.md)

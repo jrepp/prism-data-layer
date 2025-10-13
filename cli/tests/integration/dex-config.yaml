@@ -1,0 +1,59 @@
+# Dex Test Configuration for Prismctl Integration Tests
+#
+# This configuration sets up Dex as a local OIDC identity provider
+# with static test users and the prismctl-test client.
+#
+# See: MEMO-022 for integration testing requirements
+
+issuer: http://localhost:5556/dex
+
+storage:
+  type: memory  # In-memory storage for tests (no persistence needed)
+
+web:
+  http: 0.0.0.0:5556
+
+# OAuth2 clients
+staticClients:
+  - id: prismctl-test
+    name: "Prismctl Test Client"
+    redirectURIs:
+      - http://localhost:8080/callback
+      - http://localhost:8085/callback  # Device code flow callback
+    secret: test-secret
+    public: false
+
+# Connectors for authentication
+connectors:
+  - type: mockCallback
+    id: mock
+    name: Mock
+
+# Enable password database for password flow testing
+enablePasswordDB: true
+
+# Static test users
+# Password for all users: "password"
+# Hash generated with: htpasswd -bnBC 10 "" password | tr -d ':\n'
+staticPasswords:
+  - email: "test@prism.local"
+    hash: "$2a$10$2b2cU8CPhOTaGrs1HRQuAueS7JTT5ZHsHSzYiFPm1leZck7Mc8T4W"  # password
+    username: "test"
+    userID: "test-user-id"
+  - email: "admin@prism.local"
+    hash: "$2a$10$2b2cU8CPhOTaGrs1HRQuAueS7JTT5ZHsHSzYiFPm1leZck7Mc8T4W"  # password
+    username: "admin"
+    userID: "admin-user-id"
+
+# OAuth2 configuration
+oauth2:
+  skipApprovalScreen: true  # Auto-approve for faster testing
+  responseTypes:
+    - code
+    - token
+    - id_token
+
+# Logging
+logger:
+  level: "debug"
+  format: "text"

@@ -189,6 +189,16 @@ test-integration-go: ## Run Go integration tests (proxy-pattern lifecycle)
 	@cd tests/integration && go test -v -timeout 5m ./...
 	$(call print_green,Go integration tests passed)
 
+test-prismctl-integration: podman-start ## Run prismctl OIDC integration tests with Dex
+	$(call print_blue,Starting Dex test server...)
+	@cd cli/tests/integration && $(COMPOSE) -f docker-compose.dex.yml up -d
+	@sleep 5
+	$(call print_blue,Running prismctl integration tests...)
+	@cd cli && uv run pytest tests/integration/ -v --cov=prismctl.auth --cov-report=term-missing || (cd tests/integration && $(COMPOSE) -f docker-compose.dex.yml down && exit 1)
+	$(call print_blue,Stopping Dex test server...)
+	@cd cli/tests/integration && $(COMPOSE) -f docker-compose.dex.yml down
+	$(call print_green,Prismctl integration tests passed)
+
 ##@ Code Coverage
 
 coverage: coverage-proxy coverage-patterns ## Generate coverage reports for all components
