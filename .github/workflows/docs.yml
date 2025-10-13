@@ -76,21 +76,24 @@ jobs:
         id: deployment
         uses: actions/deploy-pages@v4
 
-      - name: Send Telegram notification
-        if: always() && (secrets.TELEGRAM_BOT_TOKEN != '' && secrets.TELEGRAM_CHAT_ID != '')
-        uses: appleboy/telegram-action@master
-        with:
-          to: ${{ secrets.TELEGRAM_CHAT_ID }}
-          token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          format: markdown
-          message: |
-            ${{ job.status == 'success' && '📚✅' || '📚❌' }} **Documentation Deployment ${{ job.status == 'success' && 'Succeeded' || 'Failed' }}**
+      - name: Send ntfy.sh notification
+        if: always() && secrets.NTFY_TOPIC != ''
+        run: |
+          STATUS_EMOJI="${{ job.status == 'success' && '📚✅' || '📚❌' }}"
+          STATUS_TEXT="${{ job.status == 'success' && 'Succeeded' || 'Failed' }}"
+          PRIORITY="${{ job.status == 'success' && 'default' || 'high' }}"
+          TAG="${{ job.status == 'success' && 'books,white_check_mark' || 'books,x' }}"
 
-            **Repository:** ${{ github.repository }}
-            **Branch:** `${{ github.ref_name }}`
-            **Commit:** `${{ github.sha | slice(0,7) }}`
-            **Author:** ${{ github.actor }}
+          curl -H "Title: ${STATUS_EMOJI} Documentation Deployment ${STATUS_TEXT}" \
+               -H "Priority: ${PRIORITY}" \
+               -H "Tags: ${TAG},docs" \
+               -H "Click: ${{ steps.deployment.outputs.page_url }}" \
+               -d "Repository: ${{ github.repository }}
+          Branch: ${{ github.ref_name }}
+          Commit: ${GITHUB_SHA:0:7}
+          Author: ${{ github.actor }}
 
-            **Deployment URL:** ${{ steps.deployment.outputs.page_url }}
+          Deployment URL: ${{ steps.deployment.outputs.page_url }}
 
-            [View Workflow Run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+          View workflow: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" \
+               https://ntfy.sh/${{ secrets.NTFY_TOPIC }}

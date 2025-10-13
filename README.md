@@ -245,31 +245,40 @@ See **[BUILDING.md](./BUILDING.md)** for complete documentation on building, tes
 
 ### CI/CD Notifications
 
-Prism CI/CD workflows can send status notifications to Telegram. To enable:
+Prism CI/CD workflows can send status notifications via **[ntfy.sh](https://ntfy.sh)** - a simple, open-source notification service that requires **no account creation**.
 
-1. **Create a Telegram bot** via [@BotFather](https://t.me/botfather):
+**Setup (3 steps, ~2 minutes):**
+
+1. **Pick a unique topic name** (keep it secret!):
    ```
-   /newbot
-   # Follow prompts to get your bot token
+   # Use something random and hard to guess
+   # Example: prism-ci-x7k9m2p4q8
    ```
 
-2. **Get your chat ID**:
-   - Start a chat with your bot
-   - Send it a message
-   - Visit `https://api.telegram.org/bot<YourBOTToken>/getUpdates`
-   - Find your `chat_id` in the response
+2. **Subscribe to your topic**:
+   - **Mobile**: Install [ntfy app](https://ntfy.sh) (iOS/Android) and subscribe to your topic
+   - **Desktop**: Visit `https://ntfy.sh/your-topic-name` in your browser
+   - **CLI**: `ntfy subscribe your-topic-name`
 
-3. **Add secrets to your GitHub repository**:
+3. **Add secret to GitHub repository**:
    - Go to Settings → Secrets and variables → Actions
-   - Add two repository secrets:
-     - `TELEGRAM_BOT_TOKEN`: Your bot token from BotFather
-     - `TELEGRAM_CHAT_ID`: Your chat ID from the previous step
+   - Add repository secret:
+     - Name: `NTFY_TOPIC`
+     - Value: `your-topic-name` (from step 1)
 
-The CI workflow will now send notifications for:
-- ✅ All pipeline status (pass/fail with job breakdown)
+**That's it!** The CI workflow will now send notifications for:
+- ✅ CI pipeline status (pass/fail with job breakdown)
 - 📚 Documentation deployments
+- 🔔 Clickable links to workflow runs and deployed docs
 
-**Note**: Notifications are optional. If secrets are not configured, workflows run normally without sending notifications.
+**Features**:
+- High priority alerts for failures
+- Emoji indicators (✅/❌)
+- Links open directly in the notification
+- Works on mobile, desktop, and CLI
+- Self-hostable (optional)
+
+**Note**: Notifications are optional. If `NTFY_TOPIC` is not configured, workflows run normally without sending notifications.
 
 ## Roadmap
 

@@ -535,31 +535,34 @@ jobs:
             echo "status=success" >> $GITHUB_OUTPUT
           fi
 
-      - name: Send Telegram notification
-        if: always() && (secrets.TELEGRAM_BOT_TOKEN != '' && secrets.TELEGRAM_CHAT_ID != '')
-        uses: appleboy/telegram-action@master
-        with:
-          to: ${{ secrets.TELEGRAM_CHAT_ID }}
-          token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          format: markdown
-          message: |
-            ${{ steps.ci_check.outputs.status == 'success' && '✅' || '❌' }} **CI Pipeline ${{ steps.ci_check.outputs.status == 'success' && 'Passed' || 'Failed' }}**
+      - name: Send ntfy.sh notification
+        if: always() && secrets.NTFY_TOPIC != ''
+        run: |
+          STATUS_EMOJI="${{ steps.ci_check.outputs.status == 'success' && '✅' || '❌' }}"
+          STATUS_TEXT="${{ steps.ci_check.outputs.status == 'success' && 'Passed' || 'Failed' }}"
+          PRIORITY="${{ steps.ci_check.outputs.status == 'success' && 'default' || 'high' }}"
+          TAG="${{ steps.ci_check.outputs.status == 'success' && 'white_check_mark' || 'x' }}"
 
-            **Repository:** ${{ github.repository }}
-            **Branch:** `${{ github.ref_name }}`
-            **Commit:** `${{ github.sha }}` (first 7 chars: `${{ github.sha | slice(0,7) }}`)
-            **Author:** ${{ github.actor }}
-            **Message:** ${{ github.event.head_commit.message }}
+          # Build job results summary
+          JOBS="Lint Rust: ${{ needs.lint-rust.result == 'success' && '✅' || '❌' }}
+          Lint Python: ${{ needs.lint-python.result == 'success' && '✅' || '❌' }}
+          Lint Go: ${{ needs.lint-go.result == 'success' && '✅' || '❌' }}
+          Test Proxy: ${{ needs.test-proxy.result == 'success' && '✅' || '❌' }}
+          Test Patterns: ${{ needs.test-patterns.result == 'success' && '✅' || '❌' }}
+          Test Integration: ${{ needs.test-integration.result == 'success' && '✅' || '❌' }}
+          Test Acceptance: ${{ needs.test-acceptance.result == 'success' && '✅' || '❌' }}
+          Validate Docs: ${{ needs.validate-docs.result == 'success' && '✅' || '❌' }}
+          Build: ${{ needs.build.result == 'success' && '✅' || '❌' }}"
 
-            **Job Results:**
-            • Lint Rust: ${{ needs.lint-rust.result == 'success' && '✅' || '❌' }}
-            • Lint Python: ${{ needs.lint-python.result == 'success' && '✅' || '❌' }}
-            • Lint Go: ${{ needs.lint-go.result == 'success' && '✅' || '❌' }}
-            • Test Proxy: ${{ needs.test-proxy.result == 'success' && '✅' || '❌' }}
-            • Test Patterns: ${{ needs.test-patterns.result == 'success' && '✅' || '❌' }}
-            • Test Integration: ${{ needs.test-integration.result == 'success' && '✅' || '❌' }}
-            • Test Acceptance: ${{ needs.test-acceptance.result == 'success' && '✅' || '❌' }}
-            • Validate Docs: ${{ needs.validate-docs.result == 'success' && '✅' || '❌' }}
-            • Build: ${{ needs.build.result == 'success' && '✅' || '❌' }}
+          curl -H "Title: ${STATUS_EMOJI} CI Pipeline ${STATUS_TEXT}" \
+               -H "Priority: ${PRIORITY}" \
+               -H "Tags: ${TAG},ci" \
+               -H "Click: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" \
+               -d "Repository: ${{ github.repository }}
+          Branch: ${{ github.ref_name }}
+          Commit: ${GITHUB_SHA:0:7}
+          Author: ${{ github.actor }}
 
-            [View Workflow Run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+          Job Results:
+          ${JOBS}" \
+               https://ntfy.sh/${{ secrets.NTFY_TOPIC }}
