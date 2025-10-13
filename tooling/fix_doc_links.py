@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""
-Fix documentation links to use Docusaurus absolute paths with lowercase IDs.
+"""Fix documentation links to use Docusaurus absolute paths with lowercase IDs.
 
 Converts:
   - ./ADR-XXX-name.md → /adr/adr-XXX
@@ -21,12 +20,12 @@ Usage:
 """
 
 import re
+import sys
 from pathlib import Path
 
 
 def fix_links_in_file(file_path: Path) -> tuple[int, int]:
-    """
-    Fix links in a single file.
+    """Fix links in a single file.
     Returns (relative_links_fixed, case_fixes_made).
     """
     content = file_path.read_text()
@@ -41,10 +40,10 @@ def fix_links_in_file(file_path: Path) -> tuple[int, int]:
         nonlocal relative_count
         relative_count += 1
         num = match.group(1)
-        return f'](/adr/adr-{num})'
+        return f"](/adr/adr-{num})"
 
     content = re.sub(
-        r'\]\(\.\.?/(?:adr/)?ADR-(\d+)[^)]*\.md\)',
+        r"\]\(\.\.?/(?:adr/)?ADR-(\d+)[^)]*\.md\)",
         fix_relative_adr,
         content
     )
@@ -54,10 +53,10 @@ def fix_links_in_file(file_path: Path) -> tuple[int, int]:
         nonlocal relative_count
         relative_count += 1
         num = match.group(1)
-        return f'](/rfc/rfc-{num})'
+        return f"](/rfc/rfc-{num})"
 
     content = re.sub(
-        r'\]\(\.\.?/(?:rfcs?/)?RFC-(\d+)[^)]*\.md\)',
+        r"\]\(\.\.?/(?:rfcs?/)?RFC-(\d+)[^)]*\.md\)",
         fix_relative_rfc,
         content
     )
@@ -67,10 +66,10 @@ def fix_links_in_file(file_path: Path) -> tuple[int, int]:
         nonlocal relative_count
         relative_count += 1
         num = match.group(1)
-        return f'](/memos/memo-{num})'
+        return f"](/memos/memo-{num})"
 
     content = re.sub(
-        r'\]\(\.\.?/(?:memos/)?MEMO-(\d+)[^)]*\.md\)',
+        r"\]\(\.\.?/(?:memos/)?MEMO-(\d+)[^)]*\.md\)",
         fix_relative_memo,
         content
     )
@@ -80,25 +79,25 @@ def fix_links_in_file(file_path: Path) -> tuple[int, int]:
     def fix_case_adr(match):
         nonlocal case_count
         case_count += 1
-        return f'/adr/adr-{match.group(1)}'
+        return f"/adr/adr-{match.group(1)}"
 
-    content = re.sub(r'/adr/ADR-(\d+)', fix_case_adr, content)
+    content = re.sub(r"/adr/ADR-(\d+)", fix_case_adr, content)
 
     # /rfc/RFC-XXX → /rfc/rfc-XXX
     def fix_case_rfc(match):
         nonlocal case_count
         case_count += 1
-        return f'/rfc/rfc-{match.group(1)}'
+        return f"/rfc/rfc-{match.group(1)}"
 
-    content = re.sub(r'/rfc/RFC-(\d+)', fix_case_rfc, content)
+    content = re.sub(r"/rfc/RFC-(\d+)", fix_case_rfc, content)
 
     # /memos/MEMO-XXX → /memos/memo-XXX
     def fix_case_memo(match):
         nonlocal case_count
         case_count += 1
-        return f'/memos/memo-{match.group(1)}'
+        return f"/memos/memo-{match.group(1)}"
 
-    content = re.sub(r'/memos/MEMO-(\d+)', fix_case_memo, content)
+    content = re.sub(r"/memos/MEMO-(\d+)", fix_case_memo, content)
 
     if content != original:
         file_path.write_text(content)
@@ -135,16 +134,16 @@ def main():
             sep = ", " if rel_msg and case_msg else ""
             print(f"✓ Fixed {rel_msg}{sep}{case_msg} in {md_file.relative_to(docs_root)}")
 
-    print(f"\n✅ Summary:")
+    print("\n✅ Summary:")
     print(f"   - Fixed {total_relative} relative markdown links (./FILE.md → /path/file)")
     print(f"   - Fixed {total_case} uppercase IDs (/path/FILE-XXX → /path/file-XXX)")
     print(f"   - Modified {total_files} files")
 
     if total_files > 0:
-        print(f"\nNext steps:")
-        print(f"1. Review changes: git diff docs-cms/")
-        print(f"2. Validate docs:   uv run tooling/validate_docs.py")
-        print(f"3. Commit changes:  git add docs-cms/ && git commit")
+        print("\nNext steps:")
+        print("1. Review changes: git diff docs-cms/")
+        print("2. Validate docs:   uv run tooling/validate_docs.py")
+        print("3. Commit changes:  git add docs-cms/ && git commit")
     else:
         print("\n✅ All links already use correct Docusaurus format!")
 
@@ -152,4 +151,4 @@ def main():
 
 
 if __name__ == "__main__":
-    exit(main())
+    sys.exit(main())

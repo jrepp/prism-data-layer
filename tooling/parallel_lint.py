@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""
-Parallel Linting Runner for Prism
+"""Parallel Linting Runner for Prism
 
 Runs golangci-lint with different linter categories in parallel for maximum speed.
 Instead of running all 50+ linters sequentially, this runs them in parallel groups.
@@ -30,7 +29,6 @@ import time
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
-from typing import List, Dict, Optional
 
 
 class LintStatus(str, Enum):
@@ -45,13 +43,13 @@ class LintStatus(str, Enum):
 class LintCategory:
     """Represents a category of linters that can run in parallel"""
     name: str
-    linters: List[str]
+    linters: list[str]
     description: str
     critical: bool = False  # If True, failure blocks other categories
     timeout: int = 300  # 5 minutes default
     status: LintStatus = LintStatus.PENDING
     output: str = ""
-    error: Optional[str] = None
+    error: str | None = None
     duration: float = 0.0
     issues_count: int = 0
 
@@ -184,14 +182,14 @@ LINT_CATEGORIES = [
 class ParallelLintRunner:
     """Orchestrates parallel linting execution"""
 
-    def __init__(self, max_parallel: int = 4, fail_fast: bool = False):
+    def __init__(self, max_parallel: int = 4, fail_fast: bool = False) -> None:
         self.max_parallel = max_parallel
         self.fail_fast = fail_fast
         self.semaphore = asyncio.Semaphore(max_parallel)
-        self.categories: List[LintCategory] = []
+        self.categories: list[LintCategory] = []
         self.start_time = 0.0
 
-    def find_go_modules(self, base_dir: Path) -> List[Path]:
+    def find_go_modules(self, base_dir: Path) -> list[Path]:
         """Find all directories containing go.mod files"""
         modules = []
         for go_mod in base_dir.rglob("go.mod"):
@@ -241,7 +239,7 @@ class ParallelLintRunner:
                             process.communicate(),
                             timeout=category.timeout
                         )
-                    except asyncio.TimeoutError:
+                    except TimeoutError:
                         process.kill()
                         category.status = LintStatus.FAILED
                         category.error = f"Timeout after {category.timeout}s in {module_dir}"
@@ -281,12 +279,12 @@ class ParallelLintRunner:
 
             self.print_progress()
 
-    def format_issues(self, issues: List[Dict], category_name: str) -> str:
+    def format_issues(self, issues: list[dict], category_name: str) -> str:
         """Format linting issues for display"""
         lines = [f"\n{category_name.upper()} ISSUES:"]
 
         # Group by file
-        by_file: Dict[str, List[Dict]] = {}
+        by_file: dict[str, list[dict]] = {}
         for issue in issues:
             file = issue.get("Pos", {}).get("Filename", "unknown")
             by_file.setdefault(file, []).append(issue)
@@ -315,7 +313,7 @@ class ParallelLintRunner:
 
         print(f"\r\033[K⚡ Linting: {running} running, {passed} passed, {failed} failed, {skipped} skipped, {pending} pending", end="", flush=True)
 
-    async def run(self, base_dir: Path, categories: Optional[List[str]] = None):
+    async def run(self, base_dir: Path, categories: list[str] | None = None):
         """Run all linter categories in parallel"""
         self.start_time = time.time()
 
@@ -328,7 +326,7 @@ class ParallelLintRunner:
         else:
             self.categories = LINT_CATEGORIES.copy()
 
-        print(f"🚀 Parallel Lint Runner")
+        print("🚀 Parallel Lint Runner")
         print(f"{'=' * 60}")
         print(f"📊 Categories: {len(self.categories)}")
         print(f"⚙️  Max parallel: {self.max_parallel}")
@@ -356,7 +354,7 @@ class ParallelLintRunner:
         total_duration = time.time() - self.start_time
 
         print(f"\n{'=' * 60}")
-        print(f"📊 LINTING RESULTS")
+        print("📊 LINTING RESULTS")
         print(f"{'=' * 60}\n")
 
         # Summary by status
@@ -386,7 +384,7 @@ class ParallelLintRunner:
         # Print detailed failures
         if failed:
             print(f"\n{'=' * 60}")
-            print(f"📋 DETAILED FAILURES")
+            print("📋 DETAILED FAILURES")
             print(f"{'=' * 60}")
 
             for cat in failed:
@@ -405,9 +403,9 @@ class ParallelLintRunner:
         print(f"{'=' * 60}\n")
 
         if failed:
-            print(f"❌ Linting failed - fix issues above\n")
+            print("❌ Linting failed - fix issues above\n")
         else:
-            print(f"✅ All linters passed!\n")
+            print("✅ All linters passed!\n")
 
 
 def list_categories():

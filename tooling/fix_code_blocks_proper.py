@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""
-Fix code block formatting issues in markdown files.
+"""Fix code block formatting issues in markdown files.
 
 Ensures:
 1. Opening fences have language: ```language
@@ -9,13 +8,13 @@ Ensures:
 """
 
 import sys
-import re
 from pathlib import Path
+
 
 def fix_code_blocks(file_path: Path) -> tuple[int, str]:
     """Fix code blocks in a file."""
-    content = file_path.read_text(encoding='utf-8')
-    lines = content.split('\n')
+    content = file_path.read_text(encoding="utf-8")
+    lines = content.split("\n")
     new_lines = []
 
     in_code_block = False
@@ -26,7 +25,7 @@ def fix_code_blocks(file_path: Path) -> tuple[int, str]:
     for i, line in enumerate(lines, start=1):
         stripped = line.strip()
 
-        if stripped.startswith('```'):
+        if stripped.startswith("```"):
             if not in_code_block:
                 # Opening fence
                 language = stripped[3:].strip()
@@ -37,7 +36,7 @@ def fix_code_blocks(file_path: Path) -> tuple[int, str]:
                     changes.append(f"Line {i}: Added 'text' to bare opening fence")
                     fixes += 1
                     in_code_block = True
-                    opening_language = 'text'
+                    opening_language = "text"
                 else:
                     # Valid opening
                     new_lines.append(line)
@@ -69,8 +68,8 @@ def fix_code_blocks(file_path: Path) -> tuple[int, str]:
         fixes += 1
 
     if fixes > 0:
-        file_path.write_text('\n'.join(new_lines), encoding='utf-8')
-        return fixes, '\n'.join(changes)
+        file_path.write_text("\n".join(new_lines), encoding="utf-8")
+        return fixes, "\n".join(changes)
 
     return 0, ""
 
@@ -91,7 +90,7 @@ def main():
         fixes, changes = fix_code_blocks(file_path)
         if fixes > 0:
             print(f"✓ Fixed {fixes} code blocks in {file_path.name}")
-            for change in changes.split('\n'):
+            for change in changes.split("\n"):
                 print(f"  {change}")
             total_fixes += fixes
             files_fixed += 1

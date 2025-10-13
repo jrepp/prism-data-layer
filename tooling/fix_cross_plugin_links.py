@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""
-Fix cross-plugin documentation links.
+"""Fix cross-plugin documentation links.
 
 Docusaurus plugins are isolated, so relative links between plugins don't work.
 This script converts cross-plugin relative links to absolute Docusaurus paths.
@@ -12,6 +11,7 @@ Usage:
 import re
 from pathlib import Path
 
+
 def fix_cross_plugin_links(file_path: Path, dry_run: bool = False) -> int:
     """Fix cross-plugin links in a single file."""
     content = file_path.read_text()
@@ -19,22 +19,22 @@ def fix_cross_plugin_links(file_path: Path, dry_run: bool = False) -> int:
 
     # Pattern: [text](../rfcs/RFC-XXX-name.md) -> [text](/rfc/RFC-XXX-name)
     content = re.sub(
-        r'\]\(\.\./rfcs/(RFC-[^)]+)\.md\)',
-        r'](/rfc/\1)',
+        r"\]\(\.\./rfcs/(RFC-[^)]+)\.md\)",
+        r"](/rfc/\1)",
         content
     )
 
     # Pattern: [text](../adr/ADR-XXX-name.md) -> [text](/adr/ADR-XXX-name)
     content = re.sub(
-        r'\]\(\.\./adr/(ADR-[^)]+)\.md\)',
-        r'](/adr/\1)',
+        r"\]\(\.\./adr/(ADR-[^)]+)\.md\)",
+        r"](/adr/\1)",
         content
     )
 
     # Pattern: [text](../memos/MEMO-XXX-name.md) -> [text](/memos/MEMO-XXX-name)
     content = re.sub(
-        r'\]\(\.\./memos/(MEMO-[^)]+)\.md\)',
-        r'](/memos/\1)',
+        r"\]\(\.\./memos/(MEMO-[^)]+)\.md\)",
+        r"](/memos/\1)",
         content
     )
 

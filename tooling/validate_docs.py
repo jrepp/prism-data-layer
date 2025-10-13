@@ -1,6 +1,5 @@
 #!/usr/bin/env -S uv run python3
-"""
-Document Validation and Link Checker for Prism
+"""Document Validation and Link Checker for Prism
 
 Validates markdown documents for:
 - YAML frontmatter format and required fields
@@ -34,18 +33,16 @@ import os
 import re
 import subprocess
 import sys
-from pathlib import Path
-from typing import Dict, List, Set, Tuple
 from dataclasses import dataclass, field
 from enum import Enum
+from pathlib import Path
 
 try:
     import frontmatter
     import yaml
     from pydantic import ValidationError
-    from tooling.doc_schemas import (
-        ADRFrontmatter, RFCFrontmatter, MemoFrontmatter, GenericDocFrontmatter
-    )
+
+    from tooling.doc_schemas import ADRFrontmatter, GenericDocFrontmatter, MemoFrontmatter, RFCFrontmatter
     ENHANCED_VALIDATION = True
 except ImportError as e:
     print("\n❌ CRITICAL ERROR: Required dependencies not found", file=sys.stderr)
@@ -78,10 +75,10 @@ class Document:
     title: str
     status: str = ""
     date: str = ""
-    tags: List[str] = field(default_factory=list)
+    tags: list[str] = field(default_factory=list)
     doc_id: str = ""  # Frontmatter id field (e.g., "adr-001", "rfc-015")
-    links: List['Link'] = field(default_factory=list)
-    errors: List[str] = field(default_factory=list)
+    links: list["Link"] = field(default_factory=list)
+    errors: list[str] = field(default_factory=list)
 
     def __hash__(self):
         return hash(str(self.file_path))
@@ -97,7 +94,7 @@ class Link:
     is_valid: bool = False
     error_message: str = ""
 
-    def __str__(self):
+    def __str__(self) -> str:
         status = "✓" if self.is_valid else "✗"
         return f"{status} {self.source_doc.name}:{self.line_number} -> {self.target}"
 
@@ -105,14 +102,14 @@ class Link:
 class PrismDocValidator:
     """Validates Prism documentation"""
 
-    def __init__(self, repo_root: Path, verbose: bool = False, fix: bool = False):
+    def __init__(self, repo_root: Path, verbose: bool = False, fix: bool = False) -> None:
         self.repo_root = repo_root.resolve()
         self.verbose = verbose
         self.fix = fix
-        self.documents: List[Document] = []
-        self.file_to_doc: Dict[Path, Document] = {}
-        self.all_links: List[Link] = []
-        self.errors: List[str] = []
+        self.documents: list[Document] = []
+        self.file_to_doc: dict[Path, Document] = {}
+        self.all_links: list[Link] = []
+        self.errors: list[str] = []
 
         # Load project configuration
         self.project_config = self._load_project_config()
@@ -122,7 +119,7 @@ class PrismDocValidator:
         config_path = self.repo_root / "docs-cms" / "docs-project.yaml"
         if config_path.exists():
             try:
-                with open(config_path, 'r') as f:
+                with open(config_path) as f:
                     config = yaml.safe_load(f)
                     self.log(f"✓ Loaded project config: {config['project']['id']}")
                     return config
@@ -144,9 +141,9 @@ class PrismDocValidator:
 
         # Filename patterns (adr-NNN-name-with-dashes.md or ADR-NNN-name-with-dashes.md)
         # Accept both lowercase (new standard) and uppercase (legacy) formats
-        adr_pattern = re.compile(r'^(adr|ADR)-(\d{3})-(.+)\.md$', re.IGNORECASE)
-        rfc_pattern = re.compile(r'^(rfc|RFC)-(\d{3})-(.+)\.md$', re.IGNORECASE)
-        memo_pattern = re.compile(r'^(memo|MEMO)-(\d{3})-(.+)\.md$', re.IGNORECASE)
+        adr_pattern = re.compile(r"^(adr|ADR)-(\d{3})-(.+)\.md$", re.IGNORECASE)
+        rfc_pattern = re.compile(r"^(rfc|RFC)-(\d{3})-(.+)\.md$", re.IGNORECASE)
+        memo_pattern = re.compile(r"^(memo|MEMO)-(\d{3})-(.+)\.md$", re.IGNORECASE)
 
         # Scan ADRs
         adr_dir = self.repo_root / "docs-cms" / "adr"
@@ -212,7 +209,7 @@ class PrismDocValidator:
                     self.log(f"   ✗ {md_file.name}: Invalid filename format")
                     continue
 
-                prefix, num, slug = match.groups()
+                _prefix, num, _slug = match.groups()
                 # Skip template files (000)
                 if num == "000":
                     self.log(f"   ⊘ {md_file.name}: Skipping template file")
@@ -253,37 +250,36 @@ class PrismDocValidator:
                 return doc
 
             # Validate against schema
-            schema = None
             try:
                 if doc_type == "adr":
-                    schema = ADRFrontmatter(**post.metadata)
+                    ADRFrontmatter(**post.metadata)
                 elif doc_type == "rfc":
-                    schema = RFCFrontmatter(**post.metadata)
+                    RFCFrontmatter(**post.metadata)
                 elif doc_type == "memo":
-                    schema = MemoFrontmatter(**post.metadata)
+                    MemoFrontmatter(**post.metadata)
                 else:
                     # Generic validation for other docs
-                    schema = GenericDocFrontmatter(**post.metadata)
+                    GenericDocFrontmatter(**post.metadata)
 
             except ValidationError as e:
                 # Pydantic validation errors - very detailed
                 doc = Document(
                     file_path=file_path,
                     doc_type=doc_type,
-                    title=post.metadata.get('title', 'Unknown'),
-                    status=post.metadata.get('status', ''),
-                    date=str(post.metadata.get('date', post.metadata.get('created', ''))),
-                    tags=post.metadata.get('tags', []),
-                    doc_id=post.metadata.get('id', '')
+                    title=post.metadata.get("title", "Unknown"),
+                    status=post.metadata.get("status", ""),
+                    date=str(post.metadata.get("date", post.metadata.get("created", ""))),
+                    tags=post.metadata.get("tags", []),
+                    doc_id=post.metadata.get("id", "")
                 )
 
                 for error in e.errors():
-                    field = '.'.join(str(loc) for loc in error['loc'])
-                    msg = error['msg']
-                    error_type = error['type']
+                    field = ".".join(str(loc) for loc in error["loc"])
+                    msg = error["msg"]
+                    error_type = error["type"]
 
                     # Format user-friendly error message
-                    if error_type == 'literal_error':
+                    if error_type == "literal_error":
                         # Extract allowed values from message
                         doc.errors.append(f"Frontmatter field '{field}': {msg}")
                     else:
@@ -297,11 +293,11 @@ class PrismDocValidator:
             doc = Document(
                 file_path=file_path,
                 doc_type=doc_type,
-                title=post.metadata.get('title', 'Unknown'),
-                status=post.metadata.get('status', ''),
-                date=str(post.metadata.get('date', post.metadata.get('created', ''))),
-                tags=post.metadata.get('tags', []),
-                doc_id=post.metadata.get('id', '')
+                title=post.metadata.get("title", "Unknown"),
+                status=post.metadata.get("status", ""),
+                date=str(post.metadata.get("date", post.metadata.get("created", ""))),
+                tags=post.metadata.get("tags", []),
+                doc_id=post.metadata.get("id", "")
             )
 
             self.log(f"   ✓ {file_path.name}: {doc.title}")
@@ -323,17 +319,17 @@ class PrismDocValidator:
 
         self.log(f"   Found {len(self.all_links)} total links")
 
-    def _extract_links_from_file(self, file_path: Path) -> List[Link]:
+    def _extract_links_from_file(self, file_path: Path) -> list[Link]:
         """Extract markdown links from a file"""
         links = []
 
         try:
-            content = file_path.read_text(encoding='utf-8')
-            lines = content.split('\n')
+            content = file_path.read_text(encoding="utf-8")
+            lines = content.split("\n")
 
             in_code_fence = False
-            code_fence_pattern = re.compile(r'^```')
-            link_pattern = re.compile(r'\[([^\]]+)\]\(([^)]+)\)')
+            code_fence_pattern = re.compile(r"^```")
+            link_pattern = re.compile(r"\[([^\]]+)\]\(([^)]+)\)")
 
             for line_num, line in enumerate(lines, start=1):
                 # Toggle code fence
@@ -345,13 +341,13 @@ class PrismDocValidator:
                     continue
 
                 # Remove inline code
-                line_without_code = re.sub(r'`[^`]+`', '', line)
+                line_without_code = re.sub(r"`[^`]+`", "", line)
 
                 for match in link_pattern.finditer(line_without_code):
                     link_target = match.group(2)
 
                     # Skip mailto and data links
-                    if link_target.startswith(('mailto:', 'data:')):
+                    if link_target.startswith(("mailto:", "data:")):
                         continue
 
                     link_type = self._classify_link(link_target, file_path)
@@ -371,24 +367,23 @@ class PrismDocValidator:
 
     def _classify_link(self, target: str, source_path: Path) -> LinkType:
         """Classify link by target"""
-        if target.startswith(('http://', 'https://')):
+        if target.startswith(("http://", "https://")):
             return LinkType.EXTERNAL
-        elif target.startswith('#'):
+        if target.startswith("#"):
             return LinkType.ANCHOR
-        elif target.startswith('/prism-data-layer/'):
+        if target.startswith("/prism-data-layer/"):
             # Docusaurus cross-plugin links (e.g., /prism-data-layer/netflix/scale)
             return LinkType.DOCUSAURUS_PLUGIN
-        elif target.startswith(('/adr/', '/rfc/', '/memos/', '/docs/', '/netflix/')):
+        if target.startswith(("/adr/", "/rfc/", "/memos/", "/docs/", "/netflix/")):
             # Docusaurus plugin routes (e.g., /adr/ADR-046, /rfc/RFC-001, /memos/MEMO-003)
             return LinkType.DOCUSAURUS_PLUGIN
-        elif 'adr/' in target or target.startswith('./') and 'docs/adr' in str(source_path):
+        if "adr/" in target or (target.startswith("./") and "docs/adr" in str(source_path)):
             return LinkType.INTERNAL_ADR
-        elif 'rfc' in target.lower() or target.startswith('./') and 'docs/rfcs' in str(source_path):
+        if "rfc" in target.lower() or (target.startswith("./") and "docs/rfcs" in str(source_path)):
             return LinkType.INTERNAL_RFC
-        elif target.endswith('.md') or target.startswith(('./', '../')):
+        if target.endswith(".md") or target.startswith(("./", "../")):
             return LinkType.INTERNAL_DOC
-        else:
-            return LinkType.UNKNOWN
+        return LinkType.UNKNOWN
 
     def validate_links(self):
         """Validate all links"""
@@ -416,15 +411,15 @@ class PrismDocValidator:
 
     def _validate_internal_link(self, link: Link):
         """Validate internal document link"""
-        target = link.target.split('#')[0]  # Remove anchor
+        target = link.target.split("#")[0]  # Remove anchor
 
         # Handle relative paths
-        if target.startswith(('./', '../')):
+        if target.startswith(("./", "../")):
             source_dir = link.source_doc.parent
             target_path = (source_dir / target).resolve()
 
-            if not target.endswith('.md'):
-                target_path = Path(str(target_path) + '.md')
+            if not target.endswith(".md"):
+                target_path = Path(str(target_path) + ".md")
 
             if target_path.exists():
                 link.is_valid = True
@@ -433,8 +428,8 @@ class PrismDocValidator:
                 link.error_message = f"File not found: {target_path}"
 
         # Handle absolute paths
-        elif target.startswith('/'):
-            target_path = self.repo_root / target.lstrip('/')
+        elif target.startswith("/"):
+            target_path = self.repo_root / target.lstrip("/")
             if target_path.exists():
                 link.is_valid = True
             else:
@@ -451,13 +446,13 @@ class PrismDocValidator:
 
         # Check if Node.js is available
         try:
-            subprocess.run(['node', '--version'], capture_output=True, timeout=5)
+            subprocess.run(["node", "--version"], check=False, capture_output=True, timeout=5)
         except (FileNotFoundError, subprocess.TimeoutExpired):
             self.log("   ⚠️  Node.js not found, skipping MDX compilation check")
             return True
 
         # Check if validate_mdx.mjs exists
-        mdx_validator = self.repo_root / 'docusaurus' / 'validate_mdx.mjs'
+        mdx_validator = self.repo_root / "docusaurus" / "validate_mdx.mjs"
         if not mdx_validator.exists():
             self.log("   ⚠️  validate_mdx.mjs not found, skipping MDX compilation check")
             return True
@@ -472,8 +467,8 @@ class PrismDocValidator:
         try:
             # Call Node.js validator
             result = subprocess.run(
-                ['node', str(mdx_validator)] + file_paths,
-                capture_output=True,
+                ["node", str(mdx_validator)] + file_paths,
+                check=False, capture_output=True,
                 text=True,
                 timeout=60
             )
@@ -493,17 +488,17 @@ class PrismDocValidator:
             # Process results
             has_errors = False
             for file_result in results:
-                file_path = Path(file_result['file'])
+                file_path = Path(file_result["file"])
 
                 # Find corresponding document
                 doc = self.file_to_doc.get(file_path)
                 if not doc:
                     continue
 
-                if not file_result['valid']:
+                if not file_result["valid"]:
                     has_errors = True
-                    error_msg = file_result.get('reason', file_result.get('message', 'Unknown MDX error'))
-                    line = file_result.get('line')
+                    error_msg = file_result.get("reason", file_result.get("message", "Unknown MDX error"))
+                    line = file_result.get("line")
 
                     if line:
                         error = f"MDX compilation error at line {line}: {error_msg}"
@@ -516,8 +511,7 @@ class PrismDocValidator:
             if not has_errors:
                 self.log("   ✓ All documents compile as valid MDX")
                 return True
-            else:
-                return False
+            return False
 
         except subprocess.TimeoutExpired:
             error = "MDX validation timed out"
@@ -536,20 +530,20 @@ class PrismDocValidator:
 
         # MDX doesn't like unescaped < and > in markdown
         problematic_patterns = [
-            (r'^\s*[-*]\s+.*<\d+', 'Unescaped < before number (use &lt; or backticks)'),
-            (r':\s+<\d+', 'Unescaped < after colon (use &lt; or backticks)'),
-            (r'^\s*[-*]\s+.*>\d+', 'Unescaped > before number (use &gt; or backticks)'),
+            (r"^\s*[-*]\s+.*<\d+", "Unescaped < before number (use &lt; or backticks)"),
+            (r":\s+<\d+", "Unescaped < after colon (use &lt; or backticks)"),
+            (r"^\s*[-*]\s+.*>\d+", "Unescaped > before number (use &gt; or backticks)"),
         ]
 
         mdx_issues_found = False
 
         for doc in self.documents:
             try:
-                content = doc.file_path.read_text(encoding='utf-8')
-                lines = content.split('\n')
+                content = doc.file_path.read_text(encoding="utf-8")
+                lines = content.split("\n")
 
                 in_code_fence = False
-                code_fence_pattern = re.compile(r'^```')
+                code_fence_pattern = re.compile(r"^```")
 
                 for line_num, line in enumerate(lines, start=1):
                     # Toggle code fence
@@ -561,7 +555,7 @@ class PrismDocValidator:
                         continue
 
                     # Remove inline code
-                    line_without_code = re.sub(r'`[^`]+`', '', line)
+                    line_without_code = re.sub(r"`[^`]+`", "", line)
 
                     for pattern, issue_desc in problematic_patterns:
                         if re.search(pattern, line_without_code):
@@ -580,12 +574,12 @@ class PrismDocValidator:
         """Check for problematic cross-plugin links"""
         self.log("\n🔗 Checking cross-plugin links...")
 
-        cross_plugin_pattern = re.compile(r'\[([^\]]+)\]\((\.\.\/){2,}[^)]+\)')
+        cross_plugin_pattern = re.compile(r"\[([^\]]+)\]\((\.\.\/){2,}[^)]+\)")
         issues_found = False
 
         for doc in self.documents:
             try:
-                content = doc.file_path.read_text(encoding='utf-8')
+                content = doc.file_path.read_text(encoding="utf-8")
                 matches = list(cross_plugin_pattern.finditer(content))
 
                 if matches:
@@ -604,7 +598,7 @@ class PrismDocValidator:
         """Run TypeScript typecheck on Docusaurus config"""
         self.log("\n🔍 Running TypeScript typecheck...")
 
-        docusaurus_dir = self.repo_root / 'docusaurus'
+        docusaurus_dir = self.repo_root / "docusaurus"
         if not docusaurus_dir.exists():
             self.log("   ⚠️  Docusaurus directory not found, skipping typecheck")
             return True
@@ -614,8 +608,8 @@ class PrismDocValidator:
             os.chdir(docusaurus_dir)
 
             result = subprocess.run(
-                ['npm', 'run', 'typecheck'],
-                capture_output=True,
+                ["npm", "run", "typecheck"],
+                check=False, capture_output=True,
                 text=True,
                 timeout=60
             )
@@ -623,13 +617,12 @@ class PrismDocValidator:
             if result.returncode == 0:
                 self.log("   ✓ TypeScript typecheck passed")
                 return True
-            else:
-                error = "TypeScript typecheck failed"
-                self.errors.append(error)
-                self.log(f"   ✗ {error}")
-                if self.verbose:
-                    self.log(f"      {result.stderr}")
-                return False
+            error = "TypeScript typecheck failed"
+            self.errors.append(error)
+            self.log(f"   ✗ {error}")
+            if self.verbose:
+                self.log(f"      {result.stderr}")
+            return False
 
         except subprocess.TimeoutExpired:
             error = "TypeScript typecheck timed out"
@@ -656,7 +649,7 @@ class PrismDocValidator:
         self.log("\n🏗️  Running Docusaurus build validation...")
         self.log("   This may take a minute...")
 
-        docusaurus_dir = self.repo_root / 'docusaurus'
+        docusaurus_dir = self.repo_root / "docusaurus"
         if not docusaurus_dir.exists():
             self.log("   ⚠️  Docusaurus directory not found, skipping build check")
             return True
@@ -666,8 +659,8 @@ class PrismDocValidator:
             os.chdir(docusaurus_dir)
 
             result = subprocess.run(
-                ['npm', 'run', 'build'],
-                capture_output=True,
+                ["npm", "run", "build"],
+                check=False, capture_output=True,
                 text=True,
                 timeout=300  # 5 minutes
             )
@@ -675,11 +668,11 @@ class PrismDocValidator:
             output = result.stdout + result.stderr
 
             # Extract warnings
-            warning_pattern = re.compile(r'Warning:\s+(.+)')
+            warning_pattern = re.compile(r"Warning:\s+(.+)")
             warnings = warning_pattern.findall(output)
 
             if result.returncode == 0:
-                self.log(f"   ✓ Docusaurus build succeeded")
+                self.log("   ✓ Docusaurus build succeeded")
                 if warnings:
                     self.log(f"   ⚠️  Build completed with {len(warnings)} warning(s)")
                     if self.verbose:
@@ -688,24 +681,23 @@ class PrismDocValidator:
                         if len(warnings) > 5:
                             self.log(f"      ... and {len(warnings) - 5} more warnings")
                 return True
-            else:
-                # Extract error details
-                error_pattern = re.compile(r'Error:\s+(.+)')
-                errors = error_pattern.findall(output)
+            # Extract error details
+            error_pattern = re.compile(r"Error:\s+(.+)")
+            errors = error_pattern.findall(output)
 
-                error_msg = "Docusaurus build failed"
-                self.errors.append(error_msg)
-                self.log(f"   ✗ {error_msg}")
+            error_msg = "Docusaurus build failed"
+            self.errors.append(error_msg)
+            self.log(f"   ✗ {error_msg}")
 
-                if errors:
-                    for error in errors[:3]:
-                        self.log(f"      {error}")
-                        self.errors.append(f"Build error: {error}")
-                elif self.verbose:
-                    # Show last 500 chars if no specific error found
-                    self.log(f"      {output[-500:]}")
+            if errors:
+                for error in errors[:3]:
+                    self.log(f"      {error}")
+                    self.errors.append(f"Build error: {error}")
+            elif self.verbose:
+                # Show last 500 chars if no specific error found
+                self.log(f"      {output[-500:]}")
 
-                return False
+            return False
 
         except subprocess.TimeoutExpired:
             error = "Docusaurus build timed out (5 minutes)"
@@ -738,8 +730,8 @@ class PrismDocValidator:
 
         for doc in self.documents:
             try:
-                content = doc.file_path.read_text(encoding='utf-8')
-                lines = content.split('\n')
+                content = doc.file_path.read_text(encoding="utf-8")
+                lines = content.split("\n")
 
                 in_code_block = False
                 in_frontmatter = False
@@ -753,7 +745,7 @@ class PrismDocValidator:
                     stripped = line.strip()
 
                     # Track frontmatter (first --- to second ---)
-                    if stripped == '---':
+                    if stripped == "---":
                         frontmatter_count += 1
                         if frontmatter_count == 1:
                             in_frontmatter = True
@@ -767,7 +759,7 @@ class PrismDocValidator:
 
                     # Check if this line is a code fence (must start with exactly ``` or more backticks)
                     # Per CommonMark: fence must be at least 3 backticks
-                    fence_match = re.match(r'^(`{3,})', stripped)
+                    fence_match = re.match(r"^(`{3,})", stripped)
                     if not fence_match:
                         continue
 
@@ -787,12 +779,12 @@ class PrismDocValidator:
                             # Still track as opening to detect closing
                             in_code_block = True
                             opening_line = line_num
-                            opening_language = '<none>'
+                            opening_language = "<none>"
                         else:
                             # Valid opening with language
                             in_code_block = True
                             opening_line = line_num
-                            opening_language = remainder.split()[0] if remainder else '<none>'
+                            opening_language = remainder.split()[0] if remainder else "<none>"
                     else:
                         # Closing fence
                         if remainder:
@@ -840,8 +832,8 @@ class PrismDocValidator:
 
         for doc in self.documents:
             try:
-                content = doc.file_path.read_text(encoding='utf-8')
-                lines = content.split('\n')
+                content = doc.file_path.read_text(encoding="utf-8")
+                lines = content.split("\n")
 
                 # Check for trailing whitespace
                 for line_num, line in enumerate(lines, start=1):
@@ -866,9 +858,8 @@ class PrismDocValidator:
         self.log("\n🆔 Checking document IDs...")
 
         # Track IDs for uniqueness check
-        seen_ids: Dict[str, Path] = {}
+        seen_ids: dict[str, Path] = {}
         id_errors = 0
-        id_warnings = 0
 
         for doc in self.documents:
             # Skip docs without doc_type (generic docs)
@@ -877,7 +868,7 @@ class PrismDocValidator:
 
             # Check if ID exists
             if not doc.doc_id:
-                error = f"Missing 'id' field in frontmatter"
+                error = "Missing 'id' field in frontmatter"
                 doc.errors.append(error)
                 self.log(f"   ✗ {doc.file_path.name}: {error}")
                 id_errors += 1
@@ -886,7 +877,7 @@ class PrismDocValidator:
             # Extract expected ID from filename
             filename = doc.file_path.name
             # Match adr-XXX, rfc-XXX, or memo-XXX pattern (case insensitive)
-            filename_pattern = re.compile(r'^(adr|rfc|memo)-(\d{3})-', re.IGNORECASE)
+            filename_pattern = re.compile(r"^(adr|rfc|memo)-(\d{3})-", re.IGNORECASE)
             match = filename_pattern.match(filename)
 
             if not match:
@@ -897,7 +888,7 @@ class PrismDocValidator:
                 id_errors += 1
                 continue
 
-            prefix, num = match.groups()
+            _prefix, num = match.groups()
             expected_id = f"{doc.doc_type}-{num}"
 
             # Check ID matches filename
@@ -908,7 +899,7 @@ class PrismDocValidator:
                 id_errors += 1
 
             # Check ID matches title number
-            title_pattern = re.compile(r'^(ADR|RFC|MEMO)-(\d{3}):', re.IGNORECASE)
+            title_pattern = re.compile(r"^(ADR|RFC|MEMO)-(\d{3}):", re.IGNORECASE)
             title_match = title_pattern.match(doc.title)
             if title_match:
                 title_prefix, title_num = title_match.groups()
@@ -936,7 +927,7 @@ class PrismDocValidator:
         else:
             self.log(f"   ✗ Found {id_errors} ID validation error(s)")
 
-    def generate_report(self) -> Tuple[bool, str]:
+    def generate_report(self) -> tuple[bool, str]:
         """Generate validation report"""
         lines = []
         lines.append("\n" + "="*80)
@@ -965,12 +956,12 @@ class PrismDocValidator:
         for link in self.all_links:
             link_counts[link.link_type] = link_counts.get(link.link_type, 0) + 1
 
-        lines.append(f"\n📋 Link Types:")
+        lines.append("\n📋 Link Types:")
         for link_type, count in sorted(link_counts.items(), key=lambda x: x[1], reverse=True):
             lines.append(f"   {link_type.value}: {count}")
 
         # Tags summary (union of all tags)
-        all_tags: Dict[str, int] = {}
+        all_tags: dict[str, int] = {}
         for doc in self.documents:
             for tag in doc.tags:
                 all_tags[tag] = all_tags.get(tag, 0) + 1
@@ -1001,7 +992,7 @@ class PrismDocValidator:
             lines.append(f"\n❌ BROKEN LINKS ({broken_links}):")
             lines.append("-"*80)
 
-            broken_by_doc: Dict[Path, List[Link]] = {}
+            broken_by_doc: dict[Path, list[Link]] = {}
             for link in self.all_links:
                 if not link.is_valid:
                     if link.source_doc not in broken_by_doc:
@@ -1083,21 +1074,21 @@ What this checks:
     )
 
     parser.add_argument(
-        '--verbose', '-v',
-        action='store_true',
-        help='Verbose output'
+        "--verbose", "-v",
+        action="store_true",
+        help="Verbose output"
     )
 
     parser.add_argument(
-        '--skip-build',
-        action='store_true',
-        help='Skip Docusaurus build check (faster, but less thorough)'
+        "--skip-build",
+        action="store_true",
+        help="Skip Docusaurus build check (faster, but less thorough)"
     )
 
     parser.add_argument(
-        '--fix',
-        action='store_true',
-        help='Auto-fix issues where possible (not yet implemented)'
+        "--fix",
+        action="store_true",
+        help="Auto-fix issues where possible (not yet implemented)"
     )
 
     args = parser.parse_args()
@@ -1115,5 +1106,5 @@ What this checks:
         sys.exit(2)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

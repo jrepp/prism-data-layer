@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""
-Update RFC-022 with build system sections and pattern terminology.
+"""Update RFC-022 with build system sections and pattern terminology.
 
 Updates:
 1. plugin-sdk → pattern-sdk
@@ -9,21 +8,23 @@ Updates:
 """
 
 import re
+import sys
 from pathlib import Path
+
 
 def main():
     rfc_path = Path("/Users/jrepp/dev/data-access/docs-cms/rfcs/RFC-022-core-plugin-sdk-code-layout.md")
     content = rfc_path.read_text()
 
     # Update module paths: plugin-sdk → pattern-sdk
-    content = re.sub(r'github\.com/prism/plugin-sdk', 'github.com/prism/pattern-sdk', content)
+    content = re.sub(r"github\.com/prism/plugin-sdk", "github.com/prism/pattern-sdk", content)
 
     # Update directory: examples/ → patterns/
-    content = re.sub(r'examples/', 'patterns/', content)
-    content = re.sub(r'\bexamples\b', 'patterns', content)
+    content = re.sub(r"examples/", "patterns/", content)
+    content = re.sub(r"\bexamples\b", "patterns", content)
 
     # Update "Example Plugin" → "Example Pattern"
-    content = re.sub(r'Example Plugin', 'Example Pattern', content)
+    content = re.sub(r"Example Plugin", "Example Pattern", content)
 
     # Add new build system sections before "Open Questions"
     build_sections = """
@@ -719,4 +720,4 @@ jobs:
     return 0
 
 if __name__ == "__main__":
-    exit(main())
+    sys.exit(main())

@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""
-Parallel Test Runner for Prism
+"""Parallel Test Runner for Prism
 
 Runs independent test suites in parallel with:
 - Fork-join execution model
@@ -35,7 +34,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import List, Dict, Optional
+
 
 # ANSI color codes
 class Color:
@@ -66,16 +65,16 @@ class TestSuite:
     description: str
     category: str  # "unit", "acceptance", "integration", "lint"
     timeout: int = 300  # 5 minutes default
-    depends_on: List[str] = field(default_factory=list)
-    parallel_group: Optional[str] = None  # Tests in same group run serially
+    depends_on: list[str] = field(default_factory=list)
+    parallel_group: str | None = None  # Tests in same group run serially
 
     # Runtime state
     status: TestStatus = TestStatus.PENDING
-    start_time: Optional[float] = None
-    end_time: Optional[float] = None
-    return_code: Optional[int] = None
-    log_file: Optional[Path] = None
-    error_message: Optional[str] = None
+    start_time: float | None = None
+    end_time: float | None = None
+    return_code: int | None = None
+    log_file: Path | None = None
+    error_message: str | None = None
 
 
 # Define all test suites
@@ -205,12 +204,12 @@ class ParallelTestRunner:
 
     def __init__(
         self,
-        suites: List[TestSuite],
+        suites: list[TestSuite],
         log_dir: Path,
         fail_fast: bool = False,
         max_parallel: int = 8,
         verbose: bool = False,
-    ):
+    ) -> None:
         self.suites = suites
         self.log_dir = log_dir
         self.fail_fast = fail_fast
@@ -219,10 +218,10 @@ class ParallelTestRunner:
 
         # Runtime state
         self.semaphore = asyncio.Semaphore(max_parallel)
-        self.parallel_groups: Dict[str, asyncio.Lock] = {}
+        self.parallel_groups: dict[str, asyncio.Lock] = {}
         self.failed = False
-        self.results: Dict[str, TestSuite] = {}
-        self.completion_events: Dict[str, asyncio.Event] = {}
+        self.results: dict[str, TestSuite] = {}
+        self.completion_events: dict[str, asyncio.Event] = {}
 
         # Create completion events for all suites (for dependency waiting)
         for suite in suites:
@@ -236,7 +235,7 @@ class ParallelTestRunner:
         print(f"\n{Color.BOLD}🚀 Prism Parallel Test Runner{Color.RESET}")
         print(f"{Color.GRAY}═══════════════════════════════════════════════════{Color.RESET}\n")
 
-        print(f"📊 Test Configuration:")
+        print("📊 Test Configuration:")
         print(f"  • Total suites: {len(self.suites)}")
         print(f"  • Max parallel: {self.max_parallel}")
         print(f"  • Fail-fast: {'enabled' if self.fail_fast else 'disabled'}")
@@ -327,7 +326,7 @@ class ParallelTestRunner:
             )
 
             # Write output to log file
-            with suite.log_file.open('wb') as log:
+            with suite.log_file.open("wb") as log:
                 while True:
                     line = await process.stdout.readline()
                     if not line:
@@ -340,7 +339,7 @@ class ParallelTestRunner:
             try:
                 await asyncio.wait_for(process.wait(), timeout=suite.timeout)
                 suite.return_code = process.returncode
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 process.kill()
                 suite.return_code = -1
                 suite.error_message = f"Timeout after {suite.timeout}s"
@@ -365,7 +364,7 @@ class ParallelTestRunner:
 
             # Show last 10 lines of error log
             if suite.log_file.exists():
-                with suite.log_file.open('r') as f:
+                with suite.log_file.open("r") as f:
                     lines = f.readlines()
                     print(f"\n  {Color.RED}Last 10 lines:{Color.RESET}")
                     for line in lines[-10:]:
@@ -418,9 +417,8 @@ class ParallelTestRunner:
         if failed == 0:
             print(f"{Color.GREEN}✅ All tests passed!{Color.RESET}\n")
             return True
-        else:
-            print(f"{Color.RED}❌ Tests failed{Color.RESET}\n")
-            return False
+        print(f"{Color.RED}❌ Tests failed{Color.RESET}\n")
+        return False
 
     def _generate_json_report(self, report_file: Path, duration: float):
         """Generate machine-readable JSON report"""
@@ -450,7 +448,7 @@ class ParallelTestRunner:
             }
         }
 
-        with report_file.open('w') as f:
+        with report_file.open("w") as f:
             json.dump(report, f, indent=2)
 
     @staticmethod
@@ -558,12 +556,12 @@ Examples:
         print(f"{Color.YELLOW}Fast mode: skipping acceptance tests{Color.RESET}")
 
     if args.categories:
-        categories = set(args.categories.split(','))
+        categories = set(args.categories.split(","))
         suites = [s for s in suites if s.category in categories]
         print(f"Running categories: {', '.join(sorted(categories))}")
 
     if args.suites:
-        suite_names = set(args.suites.split(','))
+        suite_names = set(args.suites.split(","))
         suites = [s for s in suites if s.name in suite_names]
         print(f"Running suites: {', '.join(sorted(suite_names))}")
 

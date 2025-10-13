@@ -9,7 +9,6 @@ import click
 @click.group(name="codegen")
 def codegen():
     """Generate code from protobuf definitions."""
-    pass
 
 
 @codegen.command()

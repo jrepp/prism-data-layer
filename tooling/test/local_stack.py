@@ -10,7 +10,6 @@ import click
 @click.group(name="local-stack")
 def local_stack():
     """Manage local testing infrastructure."""
-    pass
 
 
 @local_stack.command()
@@ -22,7 +21,7 @@ def up(wait: bool):
     if not compose_file.exists():
         click.echo(f"✗ docker-compose.test.yml not found at {compose_file}")
         click.echo("  Run this from the repository root")
-        raise click.Abort()
+        raise click.Abort
 
     click.echo("Starting local backend services...")
     subprocess.run(
@@ -70,9 +69,9 @@ def wait_healthy(timeout: int = 60):
     start = time.time()
     while time.time() - start < timeout:
         # Check if all services are healthy via docker compose
-        result = subprocess.run(
+        subprocess.run(
             ["docker", "compose", "-f", "docker-compose.test.yml", "ps", "--format", "json"],
-            capture_output=True,
+            check=False, capture_output=True,
             text=True,
         )
 

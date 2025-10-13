@@ -10,7 +10,6 @@ from tooling.test.local_stack import local_stack
 @click.version_option()
 def cli():
     """Prism development tooling."""
-    pass
 
 
 cli.add_command(codegen)

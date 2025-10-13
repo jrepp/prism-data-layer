@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""
-Convert ADR and RFC documents to use YAML frontmatter instead of inline metadata.
+"""Convert ADR and RFC documents to use YAML frontmatter instead of inline metadata.
 
 Usage:
     python tooling/convert_to_frontmatter.py
@@ -8,18 +7,17 @@ Usage:
 
 import re
 from pathlib import Path
-from typing import Dict, Optional
 
 
-def extract_metadata(content: str) -> tuple[Dict[str, str], str]:
+def extract_metadata(content: str) -> tuple[dict[str, str], str]:
     """Extract metadata from markdown content and return (metadata, remaining_content)."""
     metadata = {}
-    lines = content.split('\n')
+    lines = content.split("\n")
 
     # Extract title from first heading
-    title_match = re.match(r'^#\s+(.+)$', lines[0])
+    title_match = re.match(r"^#\s+(.+)$", lines[0])
     if title_match:
-        metadata['title'] = title_match.group(1)
+        metadata["title"] = title_match.group(1)
         lines = lines[1:]
 
     # Extract bold metadata lines
@@ -29,69 +27,66 @@ def extract_metadata(content: str) -> tuple[Dict[str, str], str]:
     for line in lines:
         if in_metadata:
             # Match **Key**: Value
-            meta_match = re.match(r'^\*\*([^*]+)\*\*:\s+(.+)$', line)
+            meta_match = re.match(r"^\*\*([^*]+)\*\*:\s+(.+)$", line)
             if meta_match:
-                key = meta_match.group(1).lower().replace(' ', '_')
+                key = meta_match.group(1).lower().replace(" ", "_")
                 value = meta_match.group(2)
 
                 # Handle tags specially - convert to array
-                if key == 'tags':
+                if key == "tags":
                     # Split comma-separated tags
-                    tags = [tag.strip() for tag in value.split(',')]
+                    tags = [tag.strip() for tag in value.split(",")]
                     metadata[key] = tags
                 else:
                     metadata[key] = value
                 continue
-            elif line.strip() == '':
+            if line.strip() == "":
                 # Empty line might separate metadata from content
                 continue
-            else:
-                # Non-metadata line, stop looking for metadata
-                in_metadata = False
+            # Non-metadata line, stop looking for metadata
+            in_metadata = False
 
         remaining_lines.append(line)
 
     # Remove leading empty lines from content
-    while remaining_lines and remaining_lines[0].strip() == '':
+    while remaining_lines and remaining_lines[0].strip() == "":
         remaining_lines.pop(0)
 
-    remaining_content = '\n'.join(remaining_lines)
+    remaining_content = "\n".join(remaining_lines)
     return metadata, remaining_content
 
 
-def format_frontmatter(metadata: Dict[str, str]) -> str:
+def format_frontmatter(metadata: dict[str, str]) -> str:
     """Format metadata as YAML frontmatter."""
-    lines = ['---']
+    lines = ["---"]
 
     # Order: title, status, date, author/deciders, tags, other
-    ordered_keys = ['title', 'status', 'date', 'author', 'deciders', 'created', 'updated', 'tags']
+    ordered_keys = ["title", "status", "date", "author", "deciders", "created", "updated", "tags"]
 
     for key in ordered_keys:
         if key in metadata:
             value = metadata[key]
             if isinstance(value, list):
                 # Format as YAML array
-                lines.append(f'{key}: {value}')
+                lines.append(f"{key}: {value}")
+            # Quote strings that might have special chars
+            elif ":" in value or "#" in value:
+                lines.append(f'{key}: "{value}"')
             else:
-                # Quote strings that might have special chars
-                if ':' in value or '#' in value:
-                    lines.append(f'{key}: "{value}"')
-                else:
-                    lines.append(f'{key}: {value}')
+                lines.append(f"{key}: {value}")
 
     # Add any remaining keys not in ordered list
     for key, value in metadata.items():
         if key not in ordered_keys:
             if isinstance(value, list):
-                lines.append(f'{key}: {value}')
+                lines.append(f"{key}: {value}")
+            elif ":" in value or "#" in value:
+                lines.append(f'{key}: "{value}"')
             else:
-                if ':' in value or '#' in value:
-                    lines.append(f'{key}: "{value}"')
-                else:
-                    lines.append(f'{key}: {value}')
+                lines.append(f"{key}: {value}")
 
-    lines.append('---')
-    return '\n'.join(lines)
+    lines.append("---")
+    return "\n".join(lines)
 
 
 def convert_file(file_path: Path) -> bool:
@@ -99,7 +94,7 @@ def convert_file(file_path: Path) -> bool:
     content = file_path.read_text()
 
     # Skip if already has frontmatter
-    if content.startswith('---\n'):
+    if content.startswith("---\n"):
         print(f"  Skipping {file_path.name} (already has frontmatter)")
         return False
 
@@ -126,9 +121,9 @@ def main():
 
     # Convert ADRs
     print("Converting ADRs...")
-    adr_dir = repo_root / 'docs' / 'adr'
+    adr_dir = repo_root / "docs" / "adr"
     adr_count = 0
-    for adr_file in sorted(adr_dir.glob('[0-9]*.md')):
+    for adr_file in sorted(adr_dir.glob("[0-9]*.md")):
         if convert_file(adr_file):
             adr_count += 1
 
@@ -136,9 +131,9 @@ def main():
 
     # Convert RFCs
     print("\nConverting RFCs...")
-    docs_dir = repo_root / 'docs'
+    docs_dir = repo_root / "docs"
     rfc_count = 0
-    for rfc_file in sorted(docs_dir.glob('RFC-*.md')):
+    for rfc_file in sorted(docs_dir.glob("RFC-*.md")):
         if convert_file(rfc_file):
             rfc_count += 1
 
@@ -146,5 +141,5 @@ def main():
     print(f"\nTotal: {adr_count + rfc_count} files converted")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

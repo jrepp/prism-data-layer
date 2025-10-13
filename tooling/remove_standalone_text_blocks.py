@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""
-Remove standalone ```text lines that were mistakenly added.
+"""Remove standalone ```text lines that were mistakenly added.
 
 These lines are not opening or closing actual code blocks - they're artifacts
 from the previous fix attempt.
@@ -11,17 +10,18 @@ Usage:
 
 from pathlib import Path
 
+
 def remove_standalone_text_blocks(file_path: Path) -> int:
     """Remove standalone ```text lines from a file."""
     content = file_path.read_text()
-    lines = content.split('\n')
+    lines = content.split("\n")
     new_lines = []
     removed = 0
 
     for i, line in enumerate(lines):
         # Check if this is a standalone ```text line
         # (i.e., the line before and after are not part of a code block pattern)
-        if line.strip() == '```text':
+        if line.strip() == "```text":
             # Check context - if previous line is not a code block content
             # and next line is not a code block content, this is likely standalone
             prev_line = lines[i-1] if i > 0 else ""
@@ -29,14 +29,14 @@ def remove_standalone_text_blocks(file_path: Path) -> int:
 
             # If both surrounding lines are blank or markdown content (not code),
             # this is a standalone artifact
-            if not prev_line.strip().startswith('```') and (not next_line.strip() or not next_line.startswith(' ')):
+            if not prev_line.strip().startswith("```") and (not next_line.strip() or not next_line.startswith(" ")):
                 removed += 1
                 continue
 
         new_lines.append(line)
 
     if removed > 0:
-        file_path.write_text('\n'.join(new_lines))
+        file_path.write_text("\n".join(new_lines))
 
     return removed
 

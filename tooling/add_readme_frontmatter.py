@@ -1,45 +1,43 @@
 #!/usr/bin/env python3
-"""
-Add frontmatter to README.md and index.md files in docs-cms.
+"""Add frontmatter to README.md and index.md files in docs-cms.
 
 Usage:
     python3 tooling/add_readme_frontmatter.py
 """
 
-import re
 from pathlib import Path
 
 FRONTMATTER_TEMPLATES = {
-    'adr/README.md': {
-        'id': 'adr-index',
-        'title': 'Architecture Decision Records',
-        'sidebar_label': 'ADR Index',
+    "adr/README.md": {
+        "id": "adr-index",
+        "title": "Architecture Decision Records",
+        "sidebar_label": "ADR Index",
     },
-    'adr/index.md': {
-        'id': 'adr-home',
-        'title': 'Architecture Decision Records Home',
-        'sidebar_label': 'ADR Home',
+    "adr/index.md": {
+        "id": "adr-home",
+        "title": "Architecture Decision Records Home",
+        "sidebar_label": "ADR Home",
     },
-    'rfcs/README.md': {
-        'id': 'rfc-index',
-        'title': 'Request for Comments',
-        'sidebar_label': 'RFC Index',
+    "rfcs/README.md": {
+        "id": "rfc-index",
+        "title": "Request for Comments",
+        "sidebar_label": "RFC Index",
     },
-    'memos/README.md': {
-        'id': 'memo-index',
-        'title': 'Technical Memos',
-        'sidebar_label': 'Memo Index',
+    "memos/README.md": {
+        "id": "memo-index",
+        "title": "Technical Memos",
+        "sidebar_label": "Memo Index",
     },
-    'netflix/README.md': {
-        'id': 'netflix-index',
-        'title': 'Netflix Data Gateway Research',
-        'sidebar_label': 'Netflix Index',
+    "netflix/README.md": {
+        "id": "netflix-index",
+        "title": "Netflix Data Gateway Research",
+        "sidebar_label": "Netflix Index",
     },
 }
 
 def has_frontmatter(content: str) -> bool:
     """Check if content already has frontmatter."""
-    return content.startswith('---\n')
+    return content.startswith("---\n")
 
 def add_frontmatter(file_path: Path, metadata: dict):
     """Add frontmatter to a file."""
@@ -50,13 +48,13 @@ def add_frontmatter(file_path: Path, metadata: dict):
         return False
 
     # Build frontmatter
-    frontmatter_lines = ['---']
+    frontmatter_lines = ["---"]
     for key, value in metadata.items():
         frontmatter_lines.append(f'{key}: "{value}"')
-    frontmatter_lines.append('---')
-    frontmatter_lines.append('')
+    frontmatter_lines.append("---")
+    frontmatter_lines.append("")
 
-    new_content = '\n'.join(frontmatter_lines) + content
+    new_content = "\n".join(frontmatter_lines) + content
     file_path.write_text(new_content)
     print(f"  ✓ Added frontmatter to {file_path.relative_to(file_path.parent.parent.parent)}")
     return True

@@ -1,6 +1,5 @@
 #!/usr/bin/env -S uv run python3
-"""
-Add UUID to all documentation frontmatter for backend tracking.
+"""Add UUID to all documentation frontmatter for backend tracking.
 
 This migration script adds a unique 'doc_uuid' field to all ADRs, RFCs, MEMOs,
 and general documentation files that don't already have one.
@@ -34,8 +33,7 @@ except ImportError as e:
 
 
 def add_uuid_to_file(file_path: Path, dry_run: bool = False, verbose: bool = False) -> bool:
-    """
-    Add doc_uuid to a markdown file's frontmatter.
+    """Add doc_uuid to a markdown file's frontmatter.
 
     Returns True if the file was modified (or would be modified in dry-run mode).
     """
@@ -50,8 +48,8 @@ def add_uuid_to_file(file_path: Path, dry_run: bool = False, verbose: bool = Fal
             return False
 
         # Check if doc_uuid already exists
-        if 'doc_uuid' in post.metadata:
-            existing_uuid = post.metadata['doc_uuid']
+        if "doc_uuid" in post.metadata:
+            existing_uuid = post.metadata["doc_uuid"]
             if verbose:
                 print(f"   ✓ {file_path.name}: Already has doc_uuid='{existing_uuid}'")
             return False
@@ -62,16 +60,15 @@ def add_uuid_to_file(file_path: Path, dry_run: bool = False, verbose: bool = Fal
         if dry_run:
             print(f"   [DRY-RUN] Would add doc_uuid='{new_uuid}' to {file_path.name}")
             return True
-        else:
-            # Add doc_uuid to frontmatter
-            post.metadata['doc_uuid'] = new_uuid
+        # Add doc_uuid to frontmatter
+        post.metadata["doc_uuid"] = new_uuid
 
-            # Write back the file
-            with open(file_path, 'w', encoding='utf-8') as f:
-                f.write(frontmatter.dumps(post))
+        # Write back the file
+        with open(file_path, "w", encoding="utf-8") as f:
+            f.write(frontmatter.dumps(post))
 
-            print(f"   ✅ {file_path.name}: Added doc_uuid='{new_uuid}'")
-            return True
+        print(f"   ✅ {file_path.name}: Added doc_uuid='{new_uuid}'")
+        return True
 
     except Exception as e:
         print(f"   ✗ {file_path.name}: Error - {e}", file=sys.stderr)
@@ -139,19 +136,19 @@ def migrate_docs(repo_root: Path, dry_run: bool = False, verbose: bool = False):
 
     # Summary
     print("\n" + "="*80)
-    print(f"📊 Summary")
+    print("📊 Summary")
     print("="*80)
     print(f"Total files processed: {total_files}")
     print(f"Files {'that would be ' if dry_run else ''}modified: {modified_files}")
     print(f"Files already up-to-date: {total_files - modified_files}")
 
     if dry_run and modified_files > 0:
-        print(f"\n💡 Tip: Run without --dry-run to apply changes")
+        print("\n💡 Tip: Run without --dry-run to apply changes")
     elif modified_files > 0:
-        print(f"\n✅ Migration complete! Run validation to verify:")
-        print(f"   uv run tooling/validate_docs.py")
+        print("\n✅ Migration complete! Run validation to verify:")
+        print("   uv run tooling/validate_docs.py")
     else:
-        print(f"\n✅ All files already have doc_uuid field")
+        print("\n✅ All files already have doc_uuid field")
 
     print()
 
@@ -181,15 +178,15 @@ What this does:
     )
 
     parser.add_argument(
-        '--dry-run',
-        action='store_true',
-        help='Preview changes without modifying files'
+        "--dry-run",
+        action="store_true",
+        help="Preview changes without modifying files"
     )
 
     parser.add_argument(
-        '--verbose', '-v',
-        action='store_true',
-        help='Show detailed progress'
+        "--verbose", "-v",
+        action="store_true",
+        help="Show detailed progress"
     )
 
     args = parser.parse_args()
@@ -205,5 +202,5 @@ What this does:
         sys.exit(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

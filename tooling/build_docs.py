@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""
-Build Docusaurus documentation site.
+"""Build Docusaurus documentation site.
 
 This script automates the Docusaurus build process using npm.
 The built site is output to the docs/ directory for GitHub Pages.

@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""
-Bootstrap Prism development environment.
+"""Bootstrap Prism development environment.
 
 Creates ~/.prism directory with:
 - Default configuration
@@ -11,7 +10,6 @@ Usage:
     uv run tooling/bootstrap.py
 """
 
-import os
 from pathlib import Path
 
 

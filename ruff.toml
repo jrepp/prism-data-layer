@@ -52,9 +52,8 @@ ignore = [
     "D100",   # Missing docstring in public module
     "D104",   # Missing docstring in public package
     "D203",   # 1 blank line required before class docstring (conflicts with D211)
+    "D205",   # 1 blank line required between summary and description (stylistic)
     "D213",   # Multi-line docstring summary should start at the second line (conflicts with D212)
-    "ANN101", # Missing type annotation for self in method
-    "ANN102", # Missing type annotation for cls in classmethod
     "S101",   # Use of assert detected (we use asserts in tests)
     "PLR0913", # Too many arguments to function call
 ]
@@ -64,6 +63,41 @@ ignore = [
     "S101",   # Use of assert (expected in tests)
     "ANN",    # Type annotations not required in tests
     "D",      # Docstrings not required in tests
+]
+"tooling/**/*.py" = [
+    "E501",    # Line length (allow longer lines for descriptions)
+    "T201",    # Allow print() in CLI tools
+    "PLR0911", # Too many return statements (allow in complex logic)
+    "PLR0912", # Allow complex functions in scripts
+    "PLR0915", # Allow long functions in scripts
+    "PLR2004", # Allow magic values in scripts
+    "ANN001",  # Missing type annotations for arguments (less critical for scripts)
+    "ANN201",  # Missing return type annotations (less critical for scripts)
+    "ANN202",  # Missing return type for private functions
+    "ANN204",  # Missing return type for special methods
+    "D101",    # Missing docstrings in public classes (less critical for internal)
+    "D103",    # Missing docstrings for functions (less critical for internal)
+    "D105",    # Missing docstrings in magic methods (less critical for internal)
+    "D107",    # Missing docstrings in __init__ (less critical for internal)
+    "D415",    # Docstring ending punctuation (less critical for scripts)
+    "PLC0415", # Import should be at top-level (some exceptions needed)
+    "PTH109",  # os.getcwd() vs Path.cwd() (allow both)
+    "PTH123",  # open() vs Path.open() (allow both in scripts)
+    "TRY003",  # Long exception messages (allow in scripts)
+    "TRY300",  # else block recommendations (stylistic)
+    "EM101",   # Exception string literals (allow in scripts)
+    "EM102",   # Exception f-string literals (allow in scripts)
+    "S603",    # subprocess without shell check (intentional in build scripts)
+    "S607",    # subprocess partial path (intentional for standard tools)
+    "RET504",  # Unnecessary variable before return (stylistic)
+    "SIM102",  # Nested if simplification (stylistic)
+    "PERF401", # list.extend recommendations (stylistic)
+    "RUF001",  # Ambiguous unicode characters (allow ℹ for info icons)
+    "RUF005",  # list concatenation vs unpacking (stylistic)
+    "RUF059",  # Unpacked variables never used (allow in scripts)
+    "DTZ005",  # datetime without timezone (allow in scripts for simplicity)
+    "B023",    # Function in loop variable binding (allow in scripts)
+    "E741",    # Ambiguous variable names (allow short vars in comprehensions)
 ]
 
 [lint.pydocstyle]

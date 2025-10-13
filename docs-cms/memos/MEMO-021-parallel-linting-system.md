@@ -1,13 +1,15 @@
 ---
-title: "MEMO-008: Parallel Linting System for Multi-Language Monorepo"
+title: "MEMO-021: Parallel Linting System for Multi-Language Monorepo"
 author: "Claude (AI Assistant)"
 created: 2025-10-12
 updated: 2025-10-12
 tags: [tooling, linting, performance, golang, python, rust, ci-cd]
-id: memo-008
+id: memo-021
+project_id: prism-data-layer
+doc_uuid: e8f9a3b4-c5d6-4e7f-8a9b-0c1d2e3f4a5b
 ---
 
-# MEMO-008: Parallel Linting System for Multi-Language Monorepo
+# MEMO-021: Parallel Linting System for Multi-Language Monorepo
 
 ## Summary
 

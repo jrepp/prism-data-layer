@@ -1,19 +1,18 @@
 #!/usr/bin/env python3
-"""
-Pydantic schemas for Prism documentation frontmatter validation.
+"""Pydantic schemas for Prism documentation frontmatter validation.
 
 These schemas enforce consistent metadata across ADRs, RFCs, and Memos.
 """
 
 import datetime
-from typing import List, Literal, Optional
-from pydantic import BaseModel, Field, field_validator
 import re
+from typing import Literal
+
+from pydantic import BaseModel, Field, field_validator
 
 
 class ADRFrontmatter(BaseModel):
-    """
-    Schema for Architecture Decision Record frontmatter.
+    """Schema for Architecture Decision Record frontmatter.
 
     REQUIRED FIELDS (all must be present):
     - title: Full title with ADR number prefix (e.g., "ADR-001: Use Rust for Proxy")
@@ -43,7 +42,7 @@ class ADRFrontmatter(BaseModel):
         ...,
         description="Who made the decision. Use team name (e.g., 'Core Team') or individual name"
     )
-    tags: List[str] = Field(
+    tags: list[str] = Field(
         default_factory=list,
         description="List of lowercase, hyphenated tags (e.g., ['architecture', 'backend', 'security'])"
     )
@@ -60,28 +59,28 @@ class ADRFrontmatter(BaseModel):
         description="Unique identifier for backend tracking. Must be valid UUID v4 format. Generated automatically by migration script"
     )
 
-    @field_validator('title')
+    @field_validator("title")
     @classmethod
     def validate_title_format(cls, v: str) -> str:
         """Ensure title starts with ADR-XXX"""
-        if not re.match(r'^ADR-\d{3}:', v):
+        if not re.match(r"^ADR-\d{3}:", v):
             raise ValueError(
                 f"ADR title must start with 'ADR-XXX:' format (e.g., 'ADR-001: Title Here'). Got: {v[:50]}"
             )
         return v
 
-    @field_validator('tags')
+    @field_validator("tags")
     @classmethod
-    def validate_tags_format(cls, v: List[str]) -> List[str]:
+    def validate_tags_format(cls, v: list[str]) -> list[str]:
         """Ensure tags are lowercase and hyphenated"""
         for tag in v:
-            if not re.match(r'^[a-z0-9\-]+$', tag):
+            if not re.match(r"^[a-z0-9\-]+$", tag):
                 raise ValueError(
                     f"Invalid tag '{tag}' - tags must be lowercase with hyphens only (e.g., 'data-access', 'backend')"
                 )
         return v
 
-    @field_validator('deciders')
+    @field_validator("deciders")
     @classmethod
     def validate_deciders(cls, v: str) -> str:
         """Ensure deciders is not empty"""
@@ -89,21 +88,21 @@ class ADRFrontmatter(BaseModel):
             raise ValueError("'deciders' field cannot be empty")
         return v
 
-    @field_validator('id')
+    @field_validator("id")
     @classmethod
     def validate_id_format(cls, v: str) -> str:
         """Ensure ID is lowercase adr-XXX format"""
-        if not re.match(r'^adr-\d{3}$', v):
+        if not re.match(r"^adr-\d{3}$", v):
             raise ValueError(
                 f"ADR id must be lowercase 'adr-XXX' format (e.g., 'adr-001'). Got: {v}"
             )
         return v
 
-    @field_validator('doc_uuid')
+    @field_validator("doc_uuid")
     @classmethod
     def validate_uuid_format(cls, v: str) -> str:
         """Ensure doc_uuid is a valid UUID v4"""
-        if not re.match(r'^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$', v):
+        if not re.match(r"^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$", v):
             raise ValueError(
                 f"doc_uuid must be a valid UUID v4 format. Got: {v}"
             )
@@ -111,8 +110,7 @@ class ADRFrontmatter(BaseModel):
 
 
 class RFCFrontmatter(BaseModel):
-    """
-    Schema for Request for Comments frontmatter.
+    """Schema for Request for Comments frontmatter.
 
     REQUIRED FIELDS (all must be present):
     - title: Full title with RFC number prefix (e.g., "RFC-015: Plugin Architecture")
@@ -143,11 +141,11 @@ class RFCFrontmatter(BaseModel):
         ...,
         description="Date RFC was first created in ISO 8601 format (YYYY-MM-DD). Do not change after initial creation"
     )
-    updated: Optional[datetime.date] = Field(
+    updated: datetime.date | None = Field(
         None,
         description="Date RFC was last modified in ISO 8601 format (YYYY-MM-DD). Update whenever content changes"
     )
-    tags: List[str] = Field(
+    tags: list[str] = Field(
         default_factory=list,
         description="List of lowercase, hyphenated tags (e.g., ['design', 'api', 'backend'])"
     )
@@ -164,28 +162,28 @@ class RFCFrontmatter(BaseModel):
         description="Unique identifier for backend tracking. Must be valid UUID v4 format. Generated automatically by migration script"
     )
 
-    @field_validator('title')
+    @field_validator("title")
     @classmethod
     def validate_title_format(cls, v: str) -> str:
         """Ensure title starts with RFC-XXX"""
-        if not re.match(r'^RFC-\d{3}:', v):
+        if not re.match(r"^RFC-\d{3}:", v):
             raise ValueError(
                 f"RFC title must start with 'RFC-XXX:' format (e.g., 'RFC-001: Title Here'). Got: {v[:50]}"
             )
         return v
 
-    @field_validator('tags')
+    @field_validator("tags")
     @classmethod
-    def validate_tags_format(cls, v: List[str]) -> List[str]:
+    def validate_tags_format(cls, v: list[str]) -> list[str]:
         """Ensure tags are lowercase and hyphenated"""
         for tag in v:
-            if not re.match(r'^[a-z0-9\-]+$', tag):
+            if not re.match(r"^[a-z0-9\-]+$", tag):
                 raise ValueError(
                     f"Invalid tag '{tag}' - tags must be lowercase with hyphens only (e.g., 'api-design', 'patterns')"
                 )
         return v
 
-    @field_validator('author')
+    @field_validator("author")
     @classmethod
     def validate_author(cls, v: str) -> str:
         """Ensure author is not empty"""
@@ -193,21 +191,21 @@ class RFCFrontmatter(BaseModel):
             raise ValueError("'author' field cannot be empty")
         return v
 
-    @field_validator('id')
+    @field_validator("id")
     @classmethod
     def validate_id_format(cls, v: str) -> str:
         """Ensure ID is lowercase rfc-XXX format"""
-        if not re.match(r'^rfc-\d{3}$', v):
+        if not re.match(r"^rfc-\d{3}$", v):
             raise ValueError(
                 f"RFC id must be lowercase 'rfc-XXX' format (e.g., 'rfc-001'). Got: {v}"
             )
         return v
 
-    @field_validator('doc_uuid')
+    @field_validator("doc_uuid")
     @classmethod
     def validate_uuid_format(cls, v: str) -> str:
         """Ensure doc_uuid is a valid UUID v4"""
-        if not re.match(r'^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$', v):
+        if not re.match(r"^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$", v):
             raise ValueError(
                 f"doc_uuid must be a valid UUID v4 format. Got: {v}"
             )
@@ -215,8 +213,7 @@ class RFCFrontmatter(BaseModel):
 
 
 class MemoFrontmatter(BaseModel):
-    """
-    Schema for technical memo frontmatter.
+    """Schema for technical memo frontmatter.
 
     REQUIRED FIELDS (all must be present):
     - title: Full title with MEMO number prefix (e.g., "MEMO-010: Load Test Results")
@@ -246,7 +243,7 @@ class MemoFrontmatter(BaseModel):
         ...,
         description="Date memo was last modified in ISO 8601 format (YYYY-MM-DD). Update whenever content changes"
     )
-    tags: List[str] = Field(
+    tags: list[str] = Field(
         default_factory=list,
         description="List of lowercase, hyphenated tags (e.g., ['implementation', 'testing', 'performance'])"
     )
@@ -263,28 +260,28 @@ class MemoFrontmatter(BaseModel):
         description="Unique identifier for backend tracking. Must be valid UUID v4 format. Generated automatically by migration script"
     )
 
-    @field_validator('title')
+    @field_validator("title")
     @classmethod
     def validate_title_format(cls, v: str) -> str:
         """Ensure title starts with MEMO-XXX"""
-        if not re.match(r'^MEMO-\d{3}:', v):
+        if not re.match(r"^MEMO-\d{3}:", v):
             raise ValueError(
                 f"Memo title must start with 'MEMO-XXX:' format (e.g., 'MEMO-001: Title Here'). Got: {v[:50]}"
             )
         return v
 
-    @field_validator('tags')
+    @field_validator("tags")
     @classmethod
-    def validate_tags_format(cls, v: List[str]) -> List[str]:
+    def validate_tags_format(cls, v: list[str]) -> list[str]:
         """Ensure tags are lowercase and hyphenated"""
         for tag in v:
-            if not re.match(r'^[a-z0-9\-]+$', tag):
+            if not re.match(r"^[a-z0-9\-]+$", tag):
                 raise ValueError(
                     f"Invalid tag '{tag}' - tags must be lowercase with hyphens only (e.g., 'architecture', 'design')"
                 )
         return v
 
-    @field_validator('author')
+    @field_validator("author")
     @classmethod
     def validate_author(cls, v: str) -> str:
         """Ensure author is not empty"""
@@ -292,21 +289,21 @@ class MemoFrontmatter(BaseModel):
             raise ValueError("'author' field cannot be empty")
         return v
 
-    @field_validator('id')
+    @field_validator("id")
     @classmethod
     def validate_id_format(cls, v: str) -> str:
         """Ensure ID is lowercase memo-XXX format"""
-        if not re.match(r'^memo-\d{3}$', v):
+        if not re.match(r"^memo-\d{3}$", v):
             raise ValueError(
                 f"Memo id must be lowercase 'memo-XXX' format (e.g., 'memo-001'). Got: {v}"
             )
         return v
 
-    @field_validator('doc_uuid')
+    @field_validator("doc_uuid")
     @classmethod
     def validate_uuid_format(cls, v: str) -> str:
         """Ensure doc_uuid is a valid UUID v4"""
-        if not re.match(r'^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$', v):
+        if not re.match(r"^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$", v):
             raise ValueError(
                 f"doc_uuid must be a valid UUID v4 format. Got: {v}"
             )
@@ -314,8 +311,7 @@ class MemoFrontmatter(BaseModel):
 
 
 class GenericDocFrontmatter(BaseModel):
-    """
-    Schema for generic documentation frontmatter (guides, tutorials, reference docs).
+    """Schema for generic documentation frontmatter (guides, tutorials, reference docs).
 
     REQUIRED FIELDS:
     - title: Document title (descriptive, no prefix required)
@@ -334,19 +330,19 @@ class GenericDocFrontmatter(BaseModel):
         min_length=3,
         description="Document title. Should be descriptive and clear (e.g., 'Getting Started Guide', 'API Reference')"
     )
-    description: Optional[str] = Field(
+    description: str | None = Field(
         None,
         description="Brief description of the document content. Optional but recommended"
     )
-    sidebar_position: Optional[int] = Field(
+    sidebar_position: int | None = Field(
         None,
         description="Position in Docusaurus sidebar (lower numbers appear first). Optional"
     )
-    tags: List[str] = Field(
+    tags: list[str] = Field(
         default_factory=list,
         description="List of lowercase, hyphenated tags (e.g., ['guide', 'tutorial', 'reference'])"
     )
-    id: Optional[str] = Field(
+    id: str | None = Field(
         None,
         description="Document identifier (optional). Use lowercase with hyphens if provided (e.g., 'getting-started')"
     )
@@ -359,22 +355,22 @@ class GenericDocFrontmatter(BaseModel):
         description="Unique identifier for backend tracking. Must be valid UUID v4 format. Generated automatically by migration script"
     )
 
-    @field_validator('tags')
+    @field_validator("tags")
     @classmethod
-    def validate_tags_format(cls, v: List[str]) -> List[str]:
+    def validate_tags_format(cls, v: list[str]) -> list[str]:
         """Ensure tags are lowercase and hyphenated"""
         for tag in v:
-            if not re.match(r'^[a-z0-9\-]+$', tag):
+            if not re.match(r"^[a-z0-9\-]+$", tag):
                 raise ValueError(
                     f"Invalid tag '{tag}' - tags must be lowercase with hyphens only"
                 )
         return v
 
-    @field_validator('doc_uuid')
+    @field_validator("doc_uuid")
     @classmethod
     def validate_uuid_format(cls, v: str) -> str:
         """Ensure doc_uuid is a valid UUID v4"""
-        if not re.match(r'^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$', v):
+        if not re.match(r"^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$", v):
             raise ValueError(
                 f"doc_uuid must be a valid UUID v4 format. Got: {v}"
             )

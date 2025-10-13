@@ -1,6 +1,5 @@
 #!/usr/bin/env -S uv run python3
-"""
-Add project_id to all documentation frontmatter.
+"""Add project_id to all documentation frontmatter.
 
 This migration script adds the 'project_id' field to all ADRs, RFCs, MEMOs,
 and general documentation files that don't already have it.
@@ -40,13 +39,12 @@ def load_project_config(repo_root: Path) -> dict:
         print(f"❌ ERROR: Configuration file not found: {config_path}", file=sys.stderr)
         sys.exit(1)
 
-    with open(config_path, 'r') as f:
+    with open(config_path) as f:
         return yaml.safe_load(f)
 
 
 def add_project_id_to_file(file_path: Path, project_id: str, dry_run: bool = False, verbose: bool = False) -> bool:
-    """
-    Add project_id to a markdown file's frontmatter.
+    """Add project_id to a markdown file's frontmatter.
 
     Returns True if the file was modified (or would be modified in dry-run mode).
     """
@@ -61,9 +59,9 @@ def add_project_id_to_file(file_path: Path, project_id: str, dry_run: bool = Fal
             return False
 
         # Check if project_id already exists
-        if 'project_id' in post.metadata:
+        if "project_id" in post.metadata:
             if verbose:
-                existing_id = post.metadata['project_id']
+                existing_id = post.metadata["project_id"]
                 if existing_id == project_id:
                     print(f"   ✓ {file_path.name}: Already has correct project_id='{project_id}'")
                 else:
@@ -71,18 +69,17 @@ def add_project_id_to_file(file_path: Path, project_id: str, dry_run: bool = Fal
             return False
 
         # Add project_id
-        post.metadata['project_id'] = project_id
+        post.metadata["project_id"] = project_id
 
         if dry_run:
             print(f"   [DRY-RUN] Would add project_id='{project_id}' to {file_path.name}")
             return True
-        else:
-            # Write back the file
-            with open(file_path, 'w', encoding='utf-8') as f:
-                f.write(frontmatter.dumps(post))
+        # Write back the file
+        with open(file_path, "w", encoding="utf-8") as f:
+            f.write(frontmatter.dumps(post))
 
-            print(f"   ✅ {file_path.name}: Added project_id='{project_id}'")
-            return True
+        print(f"   ✅ {file_path.name}: Added project_id='{project_id}'")
+        return True
 
     except Exception as e:
         print(f"   ✗ {file_path.name}: Error - {e}", file=sys.stderr)
@@ -97,7 +94,7 @@ def migrate_docs(repo_root: Path, dry_run: bool = False, verbose: bool = False):
 
     # Load configuration
     config = load_project_config(repo_root)
-    project_id = config['project']['id']
+    project_id = config["project"]["id"]
 
     print(f"\nProject ID: '{project_id}'")
     print(f"Mode: {'DRY-RUN (no changes will be made)' if dry_run else 'WRITE (files will be modified)'}")
@@ -155,19 +152,19 @@ def migrate_docs(repo_root: Path, dry_run: bool = False, verbose: bool = False):
 
     # Summary
     print("\n" + "="*80)
-    print(f"📊 Summary")
+    print("📊 Summary")
     print("="*80)
     print(f"Total files processed: {total_files}")
     print(f"Files {'that would be ' if dry_run else ''}modified: {modified_files}")
     print(f"Files already up-to-date: {total_files - modified_files}")
 
     if dry_run and modified_files > 0:
-        print(f"\n💡 Tip: Run without --dry-run to apply changes")
+        print("\n💡 Tip: Run without --dry-run to apply changes")
     elif modified_files > 0:
-        print(f"\n✅ Migration complete! Run validation to verify:")
-        print(f"   uv run tooling/validate_docs.py")
+        print("\n✅ Migration complete! Run validation to verify:")
+        print("   uv run tooling/validate_docs.py")
     else:
-        print(f"\n✅ All files already have project_id field")
+        print("\n✅ All files already have project_id field")
 
     print()
 
@@ -196,15 +193,15 @@ What this does:
     )
 
     parser.add_argument(
-        '--dry-run',
-        action='store_true',
-        help='Preview changes without modifying files'
+        "--dry-run",
+        action="store_true",
+        help="Preview changes without modifying files"
     )
 
     parser.add_argument(
-        '--verbose', '-v',
-        action='store_true',
-        help='Show detailed progress'
+        "--verbose", "-v",
+        action="store_true",
+        help="Show detailed progress"
     )
 
     args = parser.parse_args()
@@ -220,5 +217,5 @@ What this does:
         sys.exit(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

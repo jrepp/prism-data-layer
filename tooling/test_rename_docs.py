@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""
-Unit tests for documentation file renaming to match Docusaurus link style.
+"""Unit tests for documentation file renaming to match Docusaurus link style.
 
 Tests the conversion logic before applying any actual file renames.
 
@@ -8,13 +7,12 @@ Usage:
     uv run pytest tooling/test_rename_docs.py -v
 """
 
+
 import pytest
-from pathlib import Path
 
 
 def extract_doc_prefix(filename: str) -> tuple[str, str, str]:
-    """
-    Extract prefix, number, and rest from a documentation filename.
+    """Extract prefix, number, and rest from a documentation filename.
 
     Args:
         filename: Original filename (e.g., "ADR-001-rust-for-proxy.md")
@@ -32,7 +30,7 @@ def extract_doc_prefix(filename: str) -> tuple[str, str, str]:
     import re
 
     # Match ADR-NNN, RFC-NNN, or MEMO-NNN at start of filename (case insensitive)
-    match = re.match(r'^(ADR|RFC|MEMO)-(\d+)-(.+)$', filename, re.IGNORECASE)
+    match = re.match(r"^(ADR|RFC|MEMO)-(\d+)-(.+)$", filename, re.IGNORECASE)
     if not match:
         return (None, None, None)
 
@@ -44,8 +42,7 @@ def extract_doc_prefix(filename: str) -> tuple[str, str, str]:
 
 
 def generate_new_filename(filename: str) -> str:
-    """
-    Generate new lowercase filename matching Docusaurus link style.
+    """Generate new lowercase filename matching Docusaurus link style.
 
     Args:
         filename: Original filename (e.g., "ADR-001-rust-for-proxy.md")
@@ -74,8 +71,7 @@ def generate_new_filename(filename: str) -> str:
 
 
 def should_rename(filename: str) -> bool:
-    """
-    Check if a file needs renaming.
+    """Check if a file needs renaming.
 
     Args:
         filename: Filename to check
@@ -93,7 +89,7 @@ def should_rename(filename: str) -> bool:
 
 
 # Table-based tests using pytest parametrize
-@pytest.mark.parametrize("input_filename,expected_output", [
+@pytest.mark.parametrize(("input_filename", "expected_output"), [
     # ADR files
     ("ADR-001-rust-for-proxy.md", "adr-001-rust-for-proxy.md"),
     ("ADR-050-topaz-policy-authorization.md", "adr-050-topaz-policy-authorization.md"),
@@ -128,7 +124,7 @@ def test_generate_new_filename(input_filename, expected_output):
     assert result == expected_output, f"Expected {expected_output}, got {result}"
 
 
-@pytest.mark.parametrize("input_filename,expected_prefix,expected_number,expected_rest", [
+@pytest.mark.parametrize(("input_filename", "expected_prefix", "expected_number", "expected_rest"), [
     # Valid doc files (uppercase)
     ("ADR-001-rust-for-proxy.md", "ADR", "001", "rust-for-proxy.md"),
     ("RFC-015-plugin-tests.md", "RFC", "015", "plugin-tests.md"),
@@ -155,7 +151,7 @@ def test_extract_doc_prefix(input_filename, expected_prefix, expected_number, ex
     assert rest == expected_rest
 
 
-@pytest.mark.parametrize("input_filename,should_rename_expected", [
+@pytest.mark.parametrize(("input_filename", "should_rename_expected"), [
     # Uppercase prefixes (should rename)
     ("ADR-001-rust-for-proxy.md", True),
     ("RFC-015-plugin-tests.md", True),
@@ -195,7 +191,7 @@ def test_renamed_file_matches_frontmatter_id(input_filename):
 
     # Verify format matches frontmatter ID style
     import re
-    assert re.match(r'^(adr|rfc|memo)-\d+$', expected_id), \
+    assert re.match(r"^(adr|rfc|memo)-\d+$", expected_id), \
         f"Generated ID {expected_id} doesn't match frontmatter ID pattern"
 
 

@@ -48,8 +48,8 @@ build-proxy: ## Build Rust proxy
 	$(call print_blue,Building Rust proxy...)
 	@mkdir -p $(BINARIES_DIR)
 	@cd proxy && CARGO_TARGET_DIR=$(RUST_TARGET_DIR) cargo build --release
-	@cp $(RUST_TARGET_DIR)/release/proxy $(BINARIES_DIR)/proxy
-	$(call print_green,Proxy built: $(BINARIES_DIR)/proxy)
+	@cp $(RUST_TARGET_DIR)/release/prism-proxy $(BINARIES_DIR)/prism-proxy
+	$(call print_green,Proxy built: $(BINARIES_DIR)/prism-proxy)
 
 build-patterns: build-memstore build-redis build-nats ## Build all Go patterns
 
@@ -81,7 +81,7 @@ build-dev: ## Build all components in debug mode (faster)
 	$(call print_blue,Building in debug mode...)
 	@mkdir -p $(BINARIES_DIR)
 	@cd proxy && CARGO_TARGET_DIR=$(RUST_TARGET_DIR) cargo build
-	@cp $(RUST_TARGET_DIR)/debug/proxy $(BINARIES_DIR)/proxy-debug
+	@cp $(RUST_TARGET_DIR)/debug/prism-proxy $(BINARIES_DIR)/prism-proxy-debug
 	@cd patterns/memstore && go build -o $(BINARIES_DIR)/memstore-debug cmd/memstore/main.go
 	@cd patterns/redis && go build -o $(BINARIES_DIR)/redis-debug cmd/redis/main.go
 	@cd patterns/nats && go build -o $(BINARIES_DIR)/nats-debug cmd/nats/main.go
