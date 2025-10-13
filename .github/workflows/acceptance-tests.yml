@@ -73,7 +73,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        pattern: [memstore, redis, nats]
+        pattern: [interfaces, redis, nats]
 
     steps:
       - name: Checkout
@@ -135,6 +135,14 @@ jobs:
 
           # Save results as JSON
           mkdir -p ../../../build/acceptance-results
+
+          # Escape output for JSON (use jq with fallback)
+          if [ -f test-output.txt ]; then
+            OUTPUT_JSON=$(jq -Rs . < test-output.txt || echo '""')
+          else
+            OUTPUT_JSON='""'
+          fi
+
           cat > ../../../build/acceptance-results/acceptance-${{ matrix.pattern }}.json <<EOF
           {
             "pattern": "${{ matrix.pattern }}",
@@ -143,7 +151,7 @@ jobs:
             "tests_passed": $TESTS_PASSED,
             "tests_failed": $TESTS_FAILED,
             "duration": 0,
-            "output": $(jq -Rs . < test-output.txt)
+            "output": $OUTPUT_JSON
           }
           EOF
 
