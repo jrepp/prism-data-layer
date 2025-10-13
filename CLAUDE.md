@@ -212,7 +212,10 @@ uv run tooling/bootstrap.py
 # Start Podman machine (required for testcontainers)
 podman machine start
 
-# Set DOCKER_HOST for testcontainers (add to ~/.bashrc or ~/.zshrc)
+# Verify Podman is running and DOCKER_HOST is set (Makefile does this automatically)
+make env
+
+# If running testcontainers outside Makefile, set manually:
 export DOCKER_HOST="unix://$(podman machine inspect --format '{{.ConnectionInfo.PodmanSocket.Path}}')"
 ```
 

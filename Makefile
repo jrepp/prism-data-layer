@@ -5,6 +5,15 @@
 SHELL := /bin/bash
 export PATH := $(HOME)/.cargo/bin:$(shell go env GOPATH)/bin:$(PATH)
 
+# Docker/Podman setup for testcontainers (ADR-049: We use Podman instead of Docker Desktop)
+# testcontainers-go needs DOCKER_HOST to find the Podman socket for acceptance tests
+ifndef DOCKER_HOST
+  PODMAN_SOCKET := $(shell podman machine inspect --format '{{.ConnectionInfo.PodmanSocket.Path}}' 2>/dev/null)
+  ifneq ($(PODMAN_SOCKET),)
+    export DOCKER_HOST := unix://$(PODMAN_SOCKET)
+  endif
+endif
+
 # Build directories (hygienic out-of-source builds)
 BUILD_DIR := $(CURDIR)/build
 BINARIES_DIR := $(BUILD_DIR)/binaries
@@ -36,6 +45,16 @@ endef
 
 help: ## Display this help message
 	@awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n  make \033[36m<target>\033[0m\n"} /^[a-zA-Z_-]+:.*?##/ { printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2 } /^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5) } ' $(MAKEFILE_LIST)
+
+env: ## Show build environment variables
+	$(call print_blue,Build Environment:)
+	@echo "  SHELL:       $(SHELL)"
+	@echo "  PATH:        $(PATH)"
+	@echo "  DOCKER_HOST: $(DOCKER_HOST)"
+	@echo "  BUILD_DIR:   $(BUILD_DIR)"
+	@echo "  GO version:  $(shell go version)"
+	@echo "  Rust:        $(shell rustc --version 2>/dev/null || echo 'not found')"
+	@echo "  Podman:      $(shell podman --version 2>/dev/null || echo 'not found')"
 
 all: proto build ## Build all components (default target)
 	$(call print_green,All components built successfully)

@@ -35,6 +35,17 @@ This is the default target and builds:
 - All Go patterns (MemStore, etc.)
 - Generated protobuf code
 
+### Verify Environment
+
+```bash
+make env
+```
+
+Shows build environment including DOCKER_HOST (auto-configured for Podman):
+- Shell and PATH
+- DOCKER_HOST socket path
+- Go, Rust, and Podman versions
+
 ### Run All Tests
 
 ```bash
@@ -45,6 +56,8 @@ Runs:
 - Rust proxy unit tests (18 tests)
 - Go pattern tests (MemStore, Core SDK)
 - Shows coverage percentages
+
+**Note**: Acceptance tests require Podman. The Makefile automatically sets `DOCKER_HOST` for testcontainers-go.
 
 ### Run Tests in Parallel (⚡ 40%+ Faster)
 
@@ -253,14 +266,24 @@ If you see `panic: rootless Docker not found`, the Podman machine isn't running:
 # Start Podman machine
 podman machine start
 
-# Set DOCKER_HOST for testcontainers (add to ~/.bashrc or ~/.zshrc)
-export DOCKER_HOST="unix://$(podman machine inspect --format '{{.ConnectionInfo.PodmanSocket.Path}}')"
+# Verify DOCKER_HOST is set (Makefile sets this automatically)
+make env
+```
 
-# Or for current session only
-export DOCKER_HOST='unix:///var/folders/.../podman-machine-default-api.sock'
+**Automatic setup**: The Makefile now automatically detects and sets `DOCKER_HOST` when you run tests, so you don't need to manually export it. To verify:
+
+```bash
+make env  # Shows DOCKER_HOST and other environment variables
 ```
 
 **Why this is needed**: Per [ADR-049](/docs-cms/adr/adr-049-podman-container-optimization.md), we use Podman instead of Docker Desktop. The `testcontainers-go` library needs the `DOCKER_HOST` environment variable to find the Podman socket.
+
+**Manual setup** (if needed for other tools outside Makefile):
+
+```bash
+# Add to ~/.bashrc or ~/.zshrc for shell commands
+export DOCKER_HOST="unix://$(podman machine inspect --format '{{.ConnectionInfo.PodmanSocket.Path}}')"
+```
 
 **Alternative**: Run fast tests without containers:
 ```bash
