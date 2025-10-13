@@ -70,18 +70,20 @@ Prism sits between your applications and data backends, providing:
 
 ### 🔌 Pluggable Backends
 
-Each backend is a self-contained module:
+Each backend pattern is a self-contained Go module:
 
 ```
-backends/
-├── kafka/      # Event streaming
+patterns/
+├── core/       # Shared pattern SDK
+├── memstore/   # In-memory key-value (testing)
+├── redis/      # Redis backend
 ├── nats/       # Lightweight messaging
+├── kafka/      # Event streaming
 ├── postgres/   # Relational data
-├── sqlite/     # Local/embedded
-└── neptune/    # Graph data (AWS)
+└── ...         # More backends coming
 ```
 
-Adding a new backend? Implement the `Backend` trait and register it.
+Adding a new backend? Implement the pattern interfaces and register with the SDK.
 
 ### 🎯 Client-Originated Configuration
 
