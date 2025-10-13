@@ -9,6 +9,7 @@ These tests verify the 60% of prismctl authentication code that requires a real 
 - **Password Flow**: Resource Owner Password Credentials Grant
 - **Token Refresh**: Using refresh tokens to get new access tokens
 - **Userinfo Endpoint**: Retrieving user information with tokens
+- **CLI End-to-End**: Complete prismctl command workflows (login, whoami, logout)
 
 Combined with unit tests (40%), these integration tests achieve **85%+ coverage** for `prismctl/auth.py`.
 
@@ -67,7 +68,8 @@ tests/integration/
 ├── dex-config.yaml              # Dex OIDC configuration
 ├── test_password_flow.py        # Password flow tests (5 tests)
 ├── test_token_refresh.py        # Token refresh tests (6 tests)
-└── test_userinfo.py             # Userinfo endpoint tests (8 tests)
+├── test_userinfo.py             # Userinfo endpoint tests (8 tests)
+└── test_cli_endtoend.py         # CLI end-to-end tests (5 tests)
 ```
 
 ## Test Configuration
@@ -95,7 +97,7 @@ Two static users are configured in Dex:
 
 ## Implementation Status
 
-### ✅ Completed (Phase 1)
+### ✅ Completed (Phase 1-3)
 
 - [x] Test infrastructure (Dex compose file, config)
 - [x] DexTestServer utility class
@@ -103,11 +105,13 @@ Two static users are configured in Dex:
 - [x] Password flow tests (5 scenarios)
 - [x] Token refresh tests (6 scenarios)
 - [x] Userinfo endpoint tests (8 scenarios)
+- [x] CLI end-to-end tests (5 scenarios)
+
+**Total: 24 integration tests**
 
 ### ⏳ Planned (Future Phases)
 
 - [ ] Device code flow tests (requires browser mock)
-- [ ] CLI end-to-end tests (subprocess-based)
 - [ ] Error handling tests (network failures, timeouts)
 - [ ] CI/CD integration (GitHub Actions)
 
