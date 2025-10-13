@@ -98,11 +98,7 @@ def process_directory(directory: Path, dry_run: bool = False) -> tuple[int, int]
     total = 0
 
     # Find all .md files except templates and index
-    md_files = [
-        f
-        for f in directory.glob("*.md")
-        if f.name not in {"000-template.md", "index.md"}
-    ]
+    md_files = [f for f in directory.glob("*.md") if f.name not in {"000-template.md", "index.md"}]
 
     print(f"\nProcessing {directory.name}/")
     print("-" * 60)
@@ -119,9 +115,7 @@ def process_directory(directory: Path, dry_run: bool = False) -> tuple[int, int]
 
 def main():
     """Main entry point."""
-    parser = argparse.ArgumentParser(
-        description="Clean up document titles to remove redundant ID prefixes"
-    )
+    parser = argparse.ArgumentParser(description="Clean up document titles to remove redundant ID prefixes")
     parser.add_argument(
         "--dry-run",
         action="store_true",

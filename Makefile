@@ -358,9 +358,10 @@ lint-rust: ## Lint Rust code with clippy
 
 lint-python: lint-python-ruff lint-python-pylint ## Lint Python code with ruff and pylint
 
-lint-python-ruff: ## Lint Python code with ruff
+lint-python-ruff: ## Lint Python code with ruff (includes format check)
 	$(call print_blue,Linting Python code with ruff...)
 	@uv run ruff check tooling/
+	@uv run ruff format --check tooling/
 	$(call print_green,Ruff checks passed)
 
 lint-python-pylint: ## Lint Python code with pylint
