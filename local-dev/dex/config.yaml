@@ -1,0 +1,102 @@
+# Dex configuration for local development
+# https://dexidp.io/docs/
+
+issuer: http://localhost:5556/dex
+
+storage:
+  type: memory
+
+web:
+  http: 0.0.0.0:5556
+
+# Enable gRPC API (optional, for advanced use cases)
+grpc:
+  addr: 0.0.0.0:5557
+  tlsCert: /dev/null
+  tlsKey: /dev/null
+
+# Telemetry configuration
+telemetry:
+  http: 0.0.0.0:5558
+
+# OAuth2 configuration
+oauth2:
+  skipApprovalScreen: true  # Skip consent screen for local dev
+  responseTypes: ["code", "token", "id_token"]
+  grantTypes: ["authorization_code", "refresh_token", "password", "urn:ietf:params:oauth:grant-type:device_code"]
+  alwaysShowLoginScreen: false
+
+# Static clients for prismctl and other applications
+staticClients:
+  # prismctl CLI client (device code flow)
+  - id: prismctl
+    name: "Prism CLI"
+    secret: prismctl-secret
+    redirectURIs:
+      - http://localhost:8080/callback
+      - http://localhost:5556/dex/callback
+      - http://127.0.0.1:8080/callback
+    public: false  # Confidential client for CLI
+
+  # prism-admin web UI client
+  - id: prism-admin
+    name: "Prism Admin UI"
+    secret: prism-admin-secret
+    redirectURIs:
+      - http://localhost:3000/callback
+      - http://localhost:3000/auth/callback
+    public: false
+
+# Test users for local development
+# WARNING: Never use these in production!
+enablePasswordDB: true
+staticPasswords:
+  # Developer user
+  - email: "dev@local.prism"
+    hash: "$2a$10$2b2cU8CPhOTaGrs1HRQuAueS7JTT5ZHsHSzYiFPm1leZck7Mc8T4W"  # password: password
+    username: "dev"
+    userID: "08a8684b-db88-4b73-90a9-3cd1661f5466"
+
+  # Admin user
+  - email: "admin@local.prism"
+    hash: "$2a$10$2b2cU8CPhOTaGrs1HRQuAueS7JTT5ZHsHSzYiFPm1leZck7Mc8T4W"  # password: password
+    username: "admin"
+    userID: "3b241101-e2bb-4255-8caf-4136c566a962"
+
+  # Test user 1
+  - email: "alice@example.com"
+    hash: "$2a$10$2b2cU8CPhOTaGrs1HRQuAueS7JTT5ZHsHSzYiFPm1leZck7Mc8T4W"  # password: password
+    username: "alice"
+    userID: "41331323-6f44-45e6-b3b9-2c4b60c02be5"
+
+  # Test user 2
+  - email: "bob@example.com"
+    hash: "$2a$10$2b2cU8CPhOTaGrs1HRQuAueS7JTT5ZHsHSzYiFPm1leZck7Mc8T4W"  # password: password
+    username: "bob"
+    userID: "7e8b6c3e-5e37-4f5e-9e0e-3e5f8f8f8f8f"
+
+# Connectors for external identity providers (disabled for local dev)
+# connectors:
+#   - type: ldap
+#     name: OpenLDAP
+#     id: ldap
+#     config:
+#       host: ldap:389
+#       bindDN: cn=admin,dc=example,dc=org
+#       bindPW: admin
+
+# Expiry configuration
+expiry:
+  deviceRequests: "5m"
+  signingKeys: "6h"
+  idTokens: "24h"
+  authRequests: "24h"
+  refreshTokens:
+    reuseInterval: "3s"
+    validIfNotUsedFor: "2160h"  # 90 days
+    absoluteLifetime: "3960h"   # 165 days
+
+# Logging
+logger:
+  level: "debug"
+  format: "text"

@@ -1,0 +1,38 @@
+# Dex identity provider for local Prism development
+# Provides OIDC authentication for prismctl and admin UI
+#
+# Usage:
+#   docker-compose -f local-dev/docker-compose.dex.yml up -d
+#   docker-compose -f local-dev/docker-compose.dex.yml down
+#
+# Test users (all passwords: "password"):
+#   - dev@local.prism / dev
+#   - admin@local.prism / admin
+#   - alice@example.com / alice
+#   - bob@example.com / bob
+
+services:
+  dex:
+    image: ghcr.io/dexidp/dex:v2.37.0
+    container_name: prism-dex
+    ports:
+      - "5556:5556"  # HTTP
+      - "5557:5557"  # gRPC
+      - "5558:5558"  # Telemetry
+    volumes:
+      - ./dex/config.yaml:/etc/dex/config.yaml:ro
+    command: ["dex", "serve", "/etc/dex/config.yaml"]
+    restart: unless-stopped
+    networks:
+      - prism-local
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:5558/healthz"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+networks:
+  prism-local:
+    name: prism-local
+    driver: bridge
