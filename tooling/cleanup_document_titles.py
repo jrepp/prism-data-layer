@@ -101,7 +101,7 @@ def process_directory(directory: Path, dry_run: bool = False) -> tuple[int, int]
     md_files = [
         f
         for f in directory.glob("*.md")
-        if f.name != "000-template.md" and f.name != "index.md"
+        if f.name not in {"000-template.md", "index.md"}
     ]
 
     print(f"\nProcessing {directory.name}/")
