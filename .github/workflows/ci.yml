@@ -205,6 +205,20 @@ jobs:
       - name: Run Rust tests
         run: cd proxy && cargo test --lib --verbose
 
+      - name: Install cargo-tarpaulin
+        run: cargo install cargo-tarpaulin
+
+      - name: Generate Rust coverage
+        run: cd proxy && cargo tarpaulin --lib --out Xml --output-dir ../
+
+      - name: Upload Rust coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-rust
+          path: cobertura.xml
+          retention-days: 7
+          if-no-files-found: warn
+
   # Job 3: Test Go patterns
   test-patterns:
     name: Test Go Patterns
@@ -432,7 +446,7 @@ jobs:
   coverage-summary:
     name: Coverage Summary
     runs-on: ubuntu-latest
-    needs: [test-patterns, test-integration, test-acceptance]
+    needs: [test-proxy, test-patterns, test-integration, test-acceptance]
     if: always()
 
     steps:
@@ -440,7 +454,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           pattern: coverage-*
-          path: coverage-reports
+          path: build/coverage-reports
 
       - name: Display coverage summary
         run: |
@@ -448,7 +462,7 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "| Component | Coverage Files |" >> $GITHUB_STEP_SUMMARY
           echo "|-----------|----------------|" >> $GITHUB_STEP_SUMMARY
-          for dir in coverage-reports/*/; do
+          for dir in build/coverage-reports/*/; do
             component=$(basename "$dir")
             if [ -f "$dir/coverage.out" ]; then
               echo "| $component | ✅ Present |" >> $GITHUB_STEP_SUMMARY
@@ -456,6 +470,42 @@ jobs:
               echo "| $component | ❌ Missing |" >> $GITHUB_STEP_SUMMARY
             fi
           done
+
+  # Job 9: Upload to Codecov
+  codecov-upload:
+    name: Upload Coverage to Codecov
+    runs-on: ubuntu-latest
+    needs: [test-proxy, test-patterns, test-integration, test-acceptance]
+    if: always()
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download all coverage reports
+        uses: actions/download-artifact@v4
+        with:
+          pattern: coverage-*
+          path: build/coverage-reports
+
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: >-
+            build/coverage-reports/coverage-rust/cobertura.xml,
+            build/coverage-reports/coverage-core/coverage.out,
+            build/coverage-reports/coverage-memstore/coverage.out,
+            build/coverage-reports/coverage-redis/coverage.out,
+            build/coverage-reports/coverage-nats/coverage.out,
+            build/coverage-reports/coverage-integration/coverage.out,
+            build/coverage-reports/coverage-acceptance-interfaces/coverage.out,
+            build/coverage-reports/coverage-acceptance-redis/coverage.out,
+            build/coverage-reports/coverage-acceptance-nats/coverage.out
+          flags: unittests,integration,acceptance
+          name: prism-coverage
+          fail_ci_if_error: false
+          verbose: true
 
   # Job 9: CI status check (required for merge)
   ci-status:
