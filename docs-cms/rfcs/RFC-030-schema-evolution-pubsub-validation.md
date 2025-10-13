@@ -2,9 +2,9 @@
 title: "RFC-030: Schema Evolution and Validation for Decoupled Pub/Sub"
 author: Platform Team
 created: 2025-10-13
-updated: 2025-10-13
+updated: 2025-10-13T18:00:00Z
 status: Draft
-tags: [schema, pubsub, validation, evolution, governance, developer-experience]
+tags: [schema, pubsub, validation, evolution, governance, developer-experience, internet-scale]
 id: rfc-030
 project_id: prism-data-layer
 doc_uuid: 57465edc-4a60-43d5-8963-9198b3facc96
@@ -328,12 +328,137 @@ prism-config.yaml:
 - ❌ Licensing (Confluent Community vs Enterprise)
 - ❌ Heavy (JVM-based, 1GB+ memory)
 
-### Schema Declaration in Producer Config
+### Comparison with Kafka Ecosystem Registries
+
+**Validation Against Existing Standards:**
+
+Prism's schema registry approach is validated against three major Kafka ecosystem registries:
+
+| Feature | Confluent Schema Registry | AWS Glue Schema Registry | Apicurio Registry | Prism Schema Registry |
+|---------|---------------------------|--------------------------|-------------------|----------------------|
+| **Protocol Support** | REST | REST | REST | gRPC + REST |
+| **Schema Formats** | Avro, Protobuf, JSON Schema | Avro, JSON Schema, Protobuf | Avro, Protobuf, JSON, OpenAPI, AsyncAPI | Protobuf, JSON Schema, Avro |
+| **Backend Lock-In** | Kafka-specific | AWS-specific | Multi-backend | Multi-backend (NATS, Kafka, etc.) |
+| **Compatibility Checking** | ✅ Backward, Forward, Full | ✅ Backward, Forward, Full, None | ✅ Backward, Forward, Full | ✅ Backward, Forward, Full, None |
+| **Schema Evolution** | ✅ Subject-based versioning | ✅ Version-based | ✅ Artifact-based | ✅ Topic + namespace versioning |
+| **Language-agnostic** | ✅ Yes | ✅ Yes | ✅ Yes | ✅ Yes |
+| **Storage Backend** | Kafka topic | DynamoDB | PostgreSQL, Kafka, Infinispan | SQLite (dev), Postgres (prod) |
+| **Git Integration** | ❌ No | ❌ No | ⚠️ External only | ✅ Native GitHub support |
+| **Client-Side Caching** | ⚠️ Manual | ⚠️ Manual | ⚠️ Manual | ✅ Built-in (namespace config) |
+| **PII Governance** | ❌ No | ❌ No | ❌ No | ✅ Prism annotations |
+| **Deployment** | JVM (1GB+) | Managed service | JVM or native | Rust (<50MB) |
+| **Latency (P99)** | 10-20ms | 20-50ms | 10-30ms | &lt;10ms (in-cluster) |
+| **Pricing** | Free (OSS) / Enterprise $$ | Per API call | Free (OSS) | Free (OSS) |
+
+**Key Differentiators:**
+
+1. **Multi-Backend Support**: Prism works with NATS, Kafka, RabbitMQ, etc. (not Kafka-specific)
+2. **Git-Native**: Schemas can live in GitHub repos (no separate registry infrastructure for OSS)
+3. **Config-Time Resolution**: Schema validated once at namespace config, not per-message
+4. **PII Governance**: Built-in `@prism.pii` annotations for compliance
+5. **Lightweight**: Rust-based registry (50MB) vs JVM-based (1GB+)
+
+**Standard Compatibility:**
+
+Prism implements the same compatibility modes as Confluent:
+- **BACKWARD**: New schema can read old data (add optional fields)
+- **FORWARD**: Old schema can read new data (delete optional fields)
+- **FULL**: Both backward and forward
+- **NONE**: No compatibility checks
+
+Prism can also **interoperate** with Confluent Schema Registry via Tier 3 adapter (see above).
+
+### Internet-Scale Decoupled Usage Scenarios
+
+**CRITICAL DESIGN REQUIREMENT**: System must support truly independent producers/consumers across organizational boundaries.
+
+**Scenario 1: Open-Source Data Exchange**
+
+```text
+Producer: IoT Device Manufacturer (Acme Corp)
+  - Ships devices that publish telemetry to customer's Prism proxy
+  - Schema: github.com/acme/device-schemas/telemetry.v1.proto
+  - Public GitHub repo with MIT license
+
+Consumer: Independent Developer (Alice)
+  - Builds monitoring dashboard for Acme devices
+  - Discovers schema via GitHub
+  - Never talks to Acme directly
+
+Key Challenge: Alice discovers schema change (v2) 6 months after Acme ships it
+  - Solution: Backward compatibility enforced at Acme's CI/CD
+  - Alice's v1 consumer continues working
+  - Alice upgrades to v2 when ready (no coordination)
+```
+
+**Scenario 2: Multi-Tenant SaaS Platform**
+
+```text
+Producers: 1000s of customer applications (different companies)
+  - Each publishes events to their isolated namespace
+  - Schemas registered per-customer: customer123.orders.created
+
+Consumers: Platform analytics service (SaaS vendor)
+  - Subscribes to events from all customers
+  - Needs to handle schema drift per customer
+
+Key Challenge: Customer A uses v1 schema, Customer B uses v3 schema
+  - Solution: Schema metadata in message headers
+  - Consumer deserializes per-message using attached schema
+  - No cross-customer coordination needed
+```
+
+**Scenario 3: Public API Webhooks**
+
+```text
+Producer: Payment Gateway (Stripe-like)
+  - Sends webhook events to merchant endpoints
+  - Schema: stripe.com/schemas/payment.succeeded.v2.json
+
+Consumers: 100k+ merchants worldwide
+  - Implement webhook handlers in various languages
+  - Download JSON schema from public URL
+
+Key Challenge: Payment gateway evolves schema, merchants deploy asynchronously
+  - Solution: Public schema registry (read-only for merchants)
+  - Merchants use prism schema check in CI/CD
+  - Breaking changes trigger merchant notifications
+```
+
+**Scenario 4: Federated Event Bus**
+
+```text
+Producers: Multiple organizations in supply chain
+  - Manufacturer publishes: mfg.shipment.created
+  - Distributor publishes: dist.delivery.scheduled
+  - Retailer publishes: retail.order.fulfilled
+
+Consumers: Each organization subscribes to others' events
+  - No direct contracts between organizations
+  - Schema discovery via public registry
+
+Key Challenge: No central authority to enforce schemas
+  - Solution: Each organization runs own Prism Schema Registry
+  - Cross-organization schema discovery via DNS (schema-registry.mfg.example.com)
+  - Federation via schema URLs (like ActivityPub for events)
+```
+
+**Internet-Scale Design Principles:**
+
+1. **No Coordination Assumption**: Producers/consumers never talk directly
+2. **Public Schema Discovery**: Schemas must be fetchable via HTTPS
+3. **Long Version Lifetimes**: Schemas supported for years (not weeks)
+4. **Graceful Degradation**: Old consumers ignore new fields silently
+5. **Namespace Isolation**: Per-tenant/organization namespaces prevent conflicts
+
+### Schema Declaration in Namespace Config
+
+**CRITICAL ARCHITECTURAL DECISION**: Schema is declared ONCE in namespace configuration, not per-message. The proxy automatically attaches schema metadata to all published messages.
 
 **Client-Originated Configuration (RFC-014):**
 
 ```yaml
-# Producer namespace config
+# Producer namespace config - schema declared at configuration time
 namespaces:
   - name: order-events
     pattern: pubsub
@@ -341,38 +466,49 @@ namespaces:
       type: nats
       topic: orders.created
 
-    # Schema declaration
+    # Schema declaration (ONCE per namespace, not per publish)
     schema:
       # Option 1: GitHub reference
       registry_type: github
       url: github.com/myorg/order-service/schemas/orders.created.v2.proto
-      validation: strict  # fail publish if schema doesn't match
+      version: v2  # Explicit version for this namespace
 
-      # Option 2: Inline schema (protobuf)
-      registry_type: inline
-      format: protobuf
-      schema: |
-        syntax = "proto3";
-        message OrderCreated {
-          string order_id = 1 [(prism.index) = "primary"];
-          string user_id = 2 [(prism.pii) = "user_id"];
-          string email = 3 [(prism.pii) = "email"];
-          repeated OrderItem items = 4;
-          double total = 5;
-          string currency = 6;
-          optional double tax_amount = 7;  // New in v2
-        }
+      # When validation happens:
+      validation:
+        config_time: true   # Validate schema exists when namespace is configured
+        build_time: true    # Generate typed clients at build time
+        publish_time: false # NO per-message validation (performance)
+
+      # Option 2: Prism Schema Registry reference
+      registry_type: prism
+      registry_url: https://schema-registry.example.com
+      subject: orders.created  # Subject name in registry
+      version: v2
 
       # Compatibility policy
       compatibility: backward  # v2 consumers can read v1 data
 
-      # PII enforcement
+      # PII enforcement (checked at registration time, not runtime)
       pii_validation: enforce  # fail if PII fields not tagged
 ```
 
-### Schema Validation at Publish Time
+**Key Design Principles:**
 
-**Publish Flow with Schema Validation:**
+1. **Configuration-Time Schema Resolution**: When namespace is configured, Prism:
+   - Fetches schema from registry/GitHub
+   - Validates schema exists and is parseable
+   - Caches schema definition in proxy memory
+   - Generates code gen artifacts (if requested)
+
+2. **Zero Per-Message Overhead**: Proxy attaches cached schema metadata to every message without re-validation
+
+3. **Build-Time Assertions**: Client code generation ensures type safety at compile time
+
+4. **Optional Runtime Validation**: Only enabled explicitly for debugging (huge performance cost)
+
+### Schema Attachment at Publish Time
+
+**Configuration-Time Schema Resolution (ONCE):**
 
 ```text
 sequenceDiagram
@@ -380,33 +516,57 @@ sequenceDiagram
     participant Client as Prism Client SDK
     participant Proxy as Prism Proxy
     participant Registry as Schema Registry
+
+    Note over App,Proxy: 1. Namespace Configuration (happens ONCE at startup)
+
+    App->>Client: Configure namespace "order-events"
+    Client->>Proxy: ConfigureNamespace(schema_url="github.com/.../v2.proto")
+
+    Proxy->>Registry: GET schema (with cache)
+    Registry-->>Proxy: Schema definition + metadata
+
+    Proxy->>Proxy: Cache schema in memory
+    Proxy-->>Client: Namespace configured
+    Client-->>App: Ready to publish
+```
+
+**Publish Flow (NO per-message validation):**
+
+```text
+sequenceDiagram
+    participant App as Producer App
+    participant Client as Prism Client SDK
+    participant Proxy as Prism Proxy
     participant NATS as NATS Backend
 
-    App->>Client: publish(topic="orders.created", payload={...})
+    Note over App,NATS: 2. Publishing Messages (fast path, no validation)
 
-    Note over Client: Check if schema declared in config
+    App->>Client: publish(payload=OrderCreated{...})
 
-    Client->>Client: Serialize payload to protobuf/json
+    Note over Client: Serialize using generated code (build-time types)
 
-    Client->>Proxy: PublishRequest + schema_url
+    Client->>Proxy: PublishRequest(payload bytes)
 
-    Proxy->>Registry: GET schema (cached)
-    Registry-->>Proxy: Schema definition + PII tags
+    Note over Proxy: Lookup cached schema for namespace
 
-    Proxy->>Proxy: Validate payload matches schema
-    alt Schema Mismatch
-        Proxy-->>Client: Error: Field 'email' missing (required)
-        Client-->>App: PublishError
-    else PII Not Tagged
-        Proxy-->>Client: Error: Field 'email' requires @prism.pii tag
-        Client-->>App: PolicyViolation
-    else Valid
-        Proxy->>Proxy: Attach schema metadata to message
-        Proxy->>NATS: Publish message + headers{schema_url, schema_version}
-        NATS-->>Proxy: ACK
-        Proxy-->>Client: PublishResponse
-        Client-->>App: Success
-    end
+    Proxy->>Proxy: Attach schema metadata (0 cost lookup)
+    Proxy->>NATS: Publish + headers{schema_url, schema_version, schema_hash}
+    NATS-->>Proxy: ACK
+    Proxy-->>Client: Success
+    Client-->>App: Published
+```
+
+**Optional Runtime Validation (debugging only):**
+
+```text
+# Enable ONLY for debugging - huge performance cost
+validation:
+  config_time: true
+  build_time: true
+  publish_time: true  # ⚠️ WARNING: +50% latency overhead
+
+# Proxy validates every message against schema
+# Use only when debugging schema issues
 ```
 
 **Message Format with Schema Metadata:**
@@ -1307,4 +1467,11 @@ prism schema policy set --require-pii-tags --global
 
 ## Revision History
 
-- 2025-10-13: Initial draft exploring schema evolution and validation for decoupled pub/sub
+- 2025-10-13 (v2): Major architectural revisions based on feedback:
+  - **Schema declaration moved to namespace config** (not per-publish) for performance
+  - **Validation timing clarified**: Build-time (code gen) + config-time (validation), NOT runtime per-message
+  - **Comparison with Kafka ecosystem registries**: Confluent, AWS Glue, Apicurio feature matrix
+  - **Internet-scale scenarios added**: Open-source data exchange, multi-tenant SaaS, public webhooks, federated event bus
+  - **Key principle**: Zero per-message overhead via config-time schema resolution
+
+- 2025-10-13 (v1): Initial draft exploring schema evolution and validation for decoupled pub/sub
