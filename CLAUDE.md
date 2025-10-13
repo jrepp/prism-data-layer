@@ -208,6 +208,12 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 # Bootstrap the environment (creates ~/.prism directory)
 uv sync
 uv run tooling/bootstrap.py
+
+# Start Podman machine (required for testcontainers)
+podman machine start
+
+# Set DOCKER_HOST for testcontainers (add to ~/.bashrc or ~/.zshrc)
+export DOCKER_HOST="unix://$(podman machine inspect --format '{{.ConnectionInfo.PodmanSocket.Path}}')"
 ```
 
 The bootstrap script creates:

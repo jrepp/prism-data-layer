@@ -10,6 +10,31 @@ Quick access to recently updated documentation. Changes listed in reverse chrono
 
 ## Recent Changes
 
+### 2025-10-13
+
+#### Podman Machine Setup Documentation (NEW)
+**Links**: [BUILDING.md](https://github.com/jrepp/prism-data-layer/blob/main/BUILDING.md), [CLAUDE.md](https://github.com/jrepp/prism-data-layer/blob/main/CLAUDE.md)
+
+**Summary**: Added comprehensive Podman machine setup instructions to fix "rootless Docker not found" error from testcontainers-go:
+
+**BUILDING.md Troubleshooting Section**:
+- New "Podman machine not running" troubleshooting entry
+- Step-by-step instructions: `podman machine start` + `export DOCKER_HOST`
+- Explanation linking to ADR-049 (why Podman over Docker Desktop)
+- Alternative fast test approach: `go test -short ./...` (skips containers)
+- Dynamic DOCKER_HOST setup using `podman machine inspect` command
+
+**CLAUDE.md Development Workflow**:
+- Added Podman machine startup to Setup section
+- Included DOCKER_HOST environment variable configuration
+- Documents that Podman machine is required for testcontainers
+
+**Key Facts**: Per ADR-049, project uses Podman instead of Docker Desktop for container management. testcontainers-go library requires DOCKER_HOST environment variable to find Podman socket. Without this, integration tests fail with "panic: rootless Docker not found". Alternative is to run `go test -short` which skips integration tests and provides instant feedback (<1ms) using in-process backends (MemStore, SQLite).
+
+**Impact**: Eliminates common setup error for new developers. Documents why Podman is used (ADR-049 decision). Provides both container-based and instant testing workflows. Developers can now run full acceptance tests with real backends or skip to instant feedback mode. Foundation for local development environment matches CI/CD infrastructure.
+
+---
+
 ### 2025-10-12
 
 #### Parallel Linting System with Comprehensive Python Tooling Configuration (NEW)

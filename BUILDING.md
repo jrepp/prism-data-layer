@@ -245,6 +245,28 @@ Run `make coverage` to see current coverage statistics.
 
 ## Troubleshooting
 
+### Podman machine not running (testcontainers error)
+
+If you see `panic: rootless Docker not found`, the Podman machine isn't running:
+
+```bash
+# Start Podman machine
+podman machine start
+
+# Set DOCKER_HOST for testcontainers (add to ~/.bashrc or ~/.zshrc)
+export DOCKER_HOST="unix://$(podman machine inspect --format '{{.ConnectionInfo.PodmanSocket.Path}}')"
+
+# Or for current session only
+export DOCKER_HOST='unix:///var/folders/.../podman-machine-default-api.sock'
+```
+
+**Why this is needed**: Per [ADR-049](/docs-cms/adr/adr-049-podman-container-optimization.md), we use Podman instead of Docker Desktop. The `testcontainers-go` library needs the `DOCKER_HOST` environment variable to find the Podman socket.
+
+**Alternative**: Run fast tests without containers:
+```bash
+go test -short ./...  # Skips integration tests (instant feedback)
+```
+
 ### Cargo not found
 
 ```bash
