@@ -57,6 +57,7 @@ class TestResult:
     pattern: str
     status: TestStatus
     duration: float
+    coverage: float | None = None  # Coverage percentage (0-100)
     output: str = ""
     error: str = ""
 
@@ -173,7 +174,7 @@ class ParallelAcceptanceRunner:
             pattern_name = self.get_pattern_name(pattern_dir)
             print(f"🧪 Running {pattern_name} tests...")
 
-            cmd = ["go", "test", "-v", "-timeout", "10m", "./..."]
+            cmd = ["go", "test", "-v", "-cover", "-timeout", "10m", "./..."]
 
             # Add backend filter if specified
             if backend_filter:
@@ -243,12 +244,21 @@ class ParallelAcceptanceRunner:
             --- PASS: TestKeyValueBasicPattern/MemStore (0.15s)
             === RUN   TestKeyValueBasicPattern/Redis
             --- PASS: TestKeyValueBasicPattern/Redis (0.42s)
+            coverage: 79.7% of statements
         """
         results = []
         backend_tests: dict[str, dict[str, any]] = {}
+        coverage_pct = None
 
         lines = output.split("\n")
         for line in lines:
+            # Parse coverage line (e.g., "coverage: 79.7% of statements")
+            if "coverage:" in line and "% of statements" in line:
+                try:
+                    coverage_str = line.split("coverage:")[1].split("%")[0].strip()
+                    coverage_pct = float(coverage_str)
+                except (IndexError, ValueError):
+                    pass
             # Parse RUN lines to discover backends
             if "=== RUN" in line:
                 parts = line.split("/")
@@ -290,6 +300,7 @@ class ParallelAcceptanceRunner:
                     pattern=pattern,
                     status=data["status"],
                     duration=data["duration"],
+                    coverage=coverage_pct,
                     output=output,
                 )
             )
@@ -390,26 +401,32 @@ class ReportFormatter:
         # Header row
         header = f"  {'Pattern':<{max_pattern_len}} │ "
         header += " │ ".join(f"{b:^{col_width}}" for b in backends)
-        header += " │ Score"
+        header += " │ Score   │ Avg Cov"
         lines.append(header)
 
         # Separator
         sep = "  " + "─" * max_pattern_len + "─┼─"
         sep += "─┼─".join("─" * col_width for _ in backends)
-        sep += "─┼───────"
+        sep += "─┼─────────┼─────────"
         lines.append(sep)
 
         # Data rows
         for pattern in patterns:
             row = f"  {pattern:<{max_pattern_len}} │ "
             cells = []
+            pattern_coverages = []
 
             for backend in backends:
                 result = report.get_result(backend, pattern)
                 if result is None or result.status == TestStatus.NOT_SUPPORTED:
                     cell = "─" * col_width
                 elif result.status == TestStatus.PASS:
-                    cell = f"{'✅ PASS':^{col_width}}"
+                    if result.coverage is not None:
+                        pattern_coverages.append(result.coverage)
+                        cov_str = f"{result.coverage:4.1f}%"
+                        cell = f"✅ {cov_str:>{col_width - 3}}"
+                    else:
+                        cell = f"{'✅ PASS':^{col_width}}"
                 elif result.status == TestStatus.FAIL:
                     cell = f"{'❌ FAIL':^{col_width}}"
                 elif result.status == TestStatus.SKIP:
@@ -427,30 +444,50 @@ class ReportFormatter:
             score = report.pattern_score(pattern)
             row += f" │ {score:5.1f}%"
 
+            # Add average coverage
+            if pattern_coverages:
+                avg_cov = sum(pattern_coverages) / len(pattern_coverages)
+                row += f" │ {avg_cov:6.1f}%"
+            else:
+                row += " │      N/A"
+
             lines.append(row)
 
         # Footer separator
         lines.append(sep)
 
-        # Backend scores
+        # Backend scores and coverage
         score_row = f"  {'Score':<{max_pattern_len}} │ "
         score_cells = []
+        backend_coverages = []
         for backend in backends:
             score = report.backend_score(backend)
             score_cells.append(f"{score:>5.1f}%{' ' * (col_width - 7)}")
+            # Collect coverage for this backend
+            backend_results = [r for r in report.results if r.backend == backend and r.coverage is not None]
+            if backend_results:
+                backend_coverages.extend([r.coverage for r in backend_results])
         score_row += " │ ".join(score_cells)
         score_row += f" │ {report.passed_tests / max(report.total_tests, 1) * 100:5.1f}%"
+
+        # Overall average coverage
+        if backend_coverages:
+            overall_cov = sum(backend_coverages) / len(backend_coverages)
+            score_row += f" │ {overall_cov:6.1f}%"
+        else:
+            score_row += " │      N/A"
         lines.append(score_row)
 
         lines.append("")
 
         # Legend
         lines.append("Legend:")
-        lines.append("  ✅ PASS  - All tests passed")
+        lines.append("  ✅ XX.X% - All tests passed with code coverage percentage")
         lines.append("  ❌ FAIL  - One or more tests failed")
         lines.append("  ⏭️  SKIP  - Tests skipped (missing capability)")
         lines.append("  🔥 ERROR - Test execution error")
         lines.append("  ─────── - Pattern not supported by backend")
+        lines.append("  Avg Cov  - Average code coverage across tested backends")
         lines.append("")
 
         # Failures detail
@@ -511,24 +548,29 @@ class ReportFormatter:
             return "\n".join(lines)
 
         # Table header
-        header = "| Pattern | " + " | ".join(backends) + " | Score |"
+        header = "| Pattern | " + " | ".join(backends) + " | Score | Avg Cov |"
         lines.append(header)
 
         # Separator
-        sep = "| --- | " + " | ".join(["---" for _ in backends]) + " | ---: |"
+        sep = "| --- | " + " | ".join(["---" for _ in backends]) + " | ---: | ---: |"
         lines.append(sep)
 
         # Data rows
         for pattern in patterns:
             row = f"| {pattern} | "
             cells = []
+            pattern_coverages = []
 
             for backend in backends:
                 result = report.get_result(backend, pattern)
                 if result is None or result.status == TestStatus.NOT_SUPPORTED:
                     cells.append("—")
                 elif result.status == TestStatus.PASS:
-                    cells.append("✅")
+                    if result.coverage is not None:
+                        pattern_coverages.append(result.coverage)
+                        cells.append(f"✅ {result.coverage:.1f}%")
+                    else:
+                        cells.append("✅")
                 elif result.status == TestStatus.FAIL:
                     cells.append("❌")
                 elif result.status == TestStatus.SKIP:
@@ -538,17 +580,36 @@ class ReportFormatter:
 
             row += " | ".join(cells)
             score = report.pattern_score(pattern)
-            row += f" | {score:.1f}% |"
+            row += f" | {score:.1f}%"
+
+            # Add average coverage
+            if pattern_coverages:
+                avg_cov = sum(pattern_coverages) / len(pattern_coverages)
+                row += f" | {avg_cov:.1f}% |"
+            else:
+                row += " | N/A |"
             lines.append(row)
 
-        # Backend scores row
+        # Backend scores and coverage row
         score_row = "| **Score** | "
         score_cells = []
+        backend_coverages = []
         for backend in backends:
             score = report.backend_score(backend)
             score_cells.append(f"**{score:.1f}%**")
+            # Collect coverage for this backend
+            backend_results = [r for r in report.results if r.backend == backend and r.coverage is not None]
+            if backend_results:
+                backend_coverages.extend([r.coverage for r in backend_results])
         score_row += " | ".join(score_cells)
-        score_row += f" | **{report.passed_tests / max(report.total_tests, 1) * 100:.1f}%** |"
+        score_row += f" | **{report.passed_tests / max(report.total_tests, 1) * 100:.1f}%**"
+
+        # Overall average coverage
+        if backend_coverages:
+            overall_cov = sum(backend_coverages) / len(backend_coverages)
+            score_row += f" | **{overall_cov:.1f}%** |"
+        else:
+            score_row += " | **N/A** |"
         lines.append(score_row)
 
         lines.append("")
@@ -586,6 +647,7 @@ class ReportFormatter:
                     "pattern": r.pattern,
                     "status": r.status.value,
                     "duration": r.duration,
+                    "coverage": r.coverage,
                     "error": r.error if r.error else None,
                 }
                 for r in report.results
