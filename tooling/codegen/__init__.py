@@ -26,12 +26,7 @@ def generate(proto_path: str, check_only: bool):
 
     # Check if buf is installed
     try:
-        result = subprocess.run(
-            ["buf", "--version"],
-            capture_output=True,
-            text=True,
-            check=True
-        )
+        result = subprocess.run(["buf", "--version"], capture_output=True, text=True, check=True)
         click.echo(f"✓ buf version: {result.stdout.strip()}")
     except FileNotFoundError:
         click.echo("✗ buf not found. Please install buf:", err=True)
@@ -45,11 +40,7 @@ def generate(proto_path: str, check_only: bool):
     # Run buf lint
     click.echo("\n🔍 Running buf lint...")
     try:
-        subprocess.run(
-            ["buf", "lint"],
-            cwd=proto_dir,
-            check=True
-        )
+        subprocess.run(["buf", "lint"], cwd=proto_dir, check=True)
         click.echo("✓ Lint passed")
     except subprocess.CalledProcessError as e:
         click.echo(f"✗ Lint failed with exit code {e.returncode}", err=True)
@@ -62,11 +53,7 @@ def generate(proto_path: str, check_only: bool):
     # Generate Rust code
     click.echo("\n🦀 Generating Rust code...")
     try:
-        subprocess.run(
-            ["buf", "generate", "--template", "buf.gen.rust.yaml"],
-            cwd=proto_dir,
-            check=True
-        )
+        subprocess.run(["buf", "generate", "--template", "buf.gen.rust.yaml"], cwd=proto_dir, check=True)
         click.echo("✓ Rust code generated")
     except subprocess.CalledProcessError as e:
         click.echo(f"⚠ Rust generation skipped (exit code {e.returncode})")
@@ -75,11 +62,7 @@ def generate(proto_path: str, check_only: bool):
     # Generate Python code
     click.echo("\n🐍 Generating Python code...")
     try:
-        subprocess.run(
-            ["buf", "generate", "--template", "buf.gen.python.yaml"],
-            cwd=proto_dir,
-            check=True
-        )
+        subprocess.run(["buf", "generate", "--template", "buf.gen.python.yaml"], cwd=proto_dir, check=True)
         click.echo("✓ Python code generated")
     except subprocess.CalledProcessError as e:
         click.echo(f"⚠ Python generation skipped (exit code {e.returncode})")
@@ -102,11 +85,7 @@ def lint(proto_path: str):
     click.echo(f"🔍 Linting {proto_path}...")
 
     try:
-        subprocess.run(
-            ["buf", "lint"],
-            cwd=proto_dir,
-            check=True
-        )
+        subprocess.run(["buf", "lint"], cwd=proto_dir, check=True)
         click.echo("✓ Lint passed")
         return 0
     except FileNotFoundError:
@@ -131,11 +110,7 @@ def format_check(proto_path: str):
     click.echo(f"📝 Checking format for {proto_path}...")
 
     try:
-        subprocess.run(
-            ["buf", "format", "--diff", "--exit-code"],
-            cwd=proto_dir,
-            check=True
-        )
+        subprocess.run(["buf", "format", "--diff", "--exit-code"], cwd=proto_dir, check=True)
         click.echo("✓ Format check passed")
         return 0
     except FileNotFoundError:

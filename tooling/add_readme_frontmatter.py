@@ -35,9 +35,11 @@ FRONTMATTER_TEMPLATES = {
     },
 }
 
+
 def has_frontmatter(content: str) -> bool:
     """Check if content already has frontmatter."""
     return content.startswith("---\n")
+
 
 def add_frontmatter(file_path: Path, metadata: dict):
     """Add frontmatter to a file."""
@@ -59,6 +61,7 @@ def add_frontmatter(file_path: Path, metadata: dict):
     print(f"  ✓ Added frontmatter to {file_path.relative_to(file_path.parent.parent.parent)}")
     return True
 
+
 def main():
     docs_dir = Path(__file__).parent.parent / "docs-cms"
 
@@ -74,6 +77,7 @@ def main():
             print(f"  ⚠ {file_rel_path} doesn't exist")
 
     print(f"\n✅ Modified {modified} files")
+
 
 if __name__ == "__main__":
     main()

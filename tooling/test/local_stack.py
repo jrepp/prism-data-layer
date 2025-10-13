@@ -71,7 +71,8 @@ def wait_healthy(timeout: int = 60):
         # Check if all services are healthy via docker compose
         subprocess.run(
             ["docker", "compose", "-f", "docker-compose.test.yml", "ps", "--format", "json"],
-            check=False, capture_output=True,
+            check=False,
+            capture_output=True,
             text=True,
         )
 

@@ -31,6 +31,7 @@ def add_id_to_file(file_path: Path):
     print(f"  ✗ {file_path.name} doesn't have valid frontmatter")
     return False
 
+
 def main():
     docs_dir = Path(__file__).parent.parent / "docs-cms" / "netflix"
     netflix_files = sorted(docs_dir.glob("*.md"))
@@ -43,6 +44,7 @@ def main():
             modified += 1
 
     print(f"\n✅ Modified {modified} files")
+
 
 if __name__ == "__main__":
     main()

@@ -31,7 +31,7 @@ def fix_code_blocks(file_path: Path) -> tuple[int, str]:
                 language = stripped[3:].strip()
                 if not language:
                     # Bare opening - add 'text' language
-                    indent = line[:len(line) - len(line.lstrip())]
+                    indent = line[: len(line) - len(line.lstrip())]
                     new_lines.append(f"{indent}```text")
                     changes.append(f"Line {i}: Added 'text' to bare opening fence")
                     fixes += 1
@@ -47,7 +47,7 @@ def fix_code_blocks(file_path: Path) -> tuple[int, str]:
                 language = stripped[3:].strip()
                 if language:
                     # Closing fence has language - remove it
-                    indent = line[:len(line) - len(line.lstrip())]
+                    indent = line[: len(line) - len(line.lstrip())]
                     new_lines.append(f"{indent}```")
                     changes.append(f"Line {i}: Removed '{language}' from closing fence")
                     fixes += 1
@@ -73,6 +73,7 @@ def fix_code_blocks(file_path: Path) -> tuple[int, str]:
 
     return 0, ""
 
+
 def main():
     if len(sys.argv) < 2:
         print("Usage: python3 fix_code_blocks_proper.py <file1.md> <file2.md> ...")
@@ -96,6 +97,7 @@ def main():
             files_fixed += 1
 
     print(f"\n✅ Fixed {total_fixes} code blocks across {files_fixed} files")
+
 
 if __name__ == "__main__":
     main()

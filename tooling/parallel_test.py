@@ -60,6 +60,7 @@ class TestStatus(Enum):
 @dataclass
 class TestSuite:
     """Configuration for a test suite"""
+
     name: str
     command: str
     description: str
@@ -115,7 +116,6 @@ TEST_SUITES = [
         category="unit",
         timeout=60,
     ),
-
     # Lint Tests (fast, parallel)
     TestSuite(
         name="lint-rust",
@@ -152,7 +152,6 @@ TEST_SUITES = [
         category="lint",
         timeout=30,
     ),
-
     # Acceptance Tests (slower, parallel but may need containers)
     TestSuite(
         name="acceptance-interfaces",
@@ -178,7 +177,6 @@ TEST_SUITES = [
         timeout=600,
         parallel_group="acceptance",
     ),
-
     # Integration Tests (medium speed)
     TestSuite(
         name="integration-go",
@@ -391,10 +389,7 @@ class ParallelTestRunner:
         print(f"\n  ⏱️  Total time: {duration:.1f}s")
 
         # Calculate time savings (estimate sequential time)
-        sequential_time = sum(
-            (s.end_time - s.start_time) for s in self.suites
-            if s.start_time and s.end_time
-        )
+        sequential_time = sum((s.end_time - s.start_time) for s in self.suites if s.start_time and s.end_time)
         if sequential_time > duration:
             savings = sequential_time - duration
             speedup = sequential_time / duration if duration > 0 else 1
@@ -445,7 +440,7 @@ class ParallelTestRunner:
                 "passed": sum(1 for s in self.suites if s.status == TestStatus.PASSED),
                 "failed": sum(1 for s in self.suites if s.status == TestStatus.FAILED),
                 "skipped": sum(1 for s in self.suites if s.status == TestStatus.SKIPPED),
-            }
+            },
         }
 
         with report_file.open("w") as f:
@@ -483,7 +478,7 @@ Examples:
 
   # Limit parallelism
   uv run tooling/parallel_test.py --max-parallel 4
-        """
+        """,
     )
 
     parser.add_argument(

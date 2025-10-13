@@ -43,6 +43,7 @@ try:
     from pydantic import ValidationError
 
     from tooling.doc_schemas import ADRFrontmatter, GenericDocFrontmatter, MemoFrontmatter, RFCFrontmatter
+
     ENHANCED_VALIDATION = True
 except ImportError as e:
     print("\n❌ CRITICAL ERROR: Required dependencies not found", file=sys.stderr)
@@ -58,18 +59,20 @@ except ImportError as e:
 
 class LinkType(Enum):
     """Types of links in markdown documents"""
-    INTERNAL_DOC = "internal_doc"      # ./relative.md or /docs/path.md
-    INTERNAL_ADR = "internal_adr"      # ADR cross-references
-    INTERNAL_RFC = "internal_rfc"      # RFC cross-references
+
+    INTERNAL_DOC = "internal_doc"  # ./relative.md or /docs/path.md
+    INTERNAL_ADR = "internal_adr"  # ADR cross-references
+    INTERNAL_RFC = "internal_rfc"  # RFC cross-references
     DOCUSAURUS_PLUGIN = "docusaurus_plugin"  # Cross-plugin links (e.g., /prism-data-layer/netflix/...)
-    EXTERNAL = "external"              # http(s)://
-    ANCHOR = "anchor"                  # #section
+    EXTERNAL = "external"  # http(s)://
+    ANCHOR = "anchor"  # #section
     UNKNOWN = "unknown"
 
 
 @dataclass
 class Document:
     """Represents a Prism documentation file"""
+
     file_path: Path
     doc_type: str  # "adr", "rfc", "memo", or "doc"
     title: str
@@ -87,6 +90,7 @@ class Document:
 @dataclass
 class Link:
     """Represents a link in a document"""
+
     source_doc: Path
     target: str
     line_number: int
@@ -155,7 +159,9 @@ class PrismDocValidator:
 
                 match = adr_pattern.match(md_file.name)
                 if not match:
-                    self.errors.append(f"Invalid ADR filename: {md_file.name} (expected: adr-NNN-name-with-dashes.md or ADR-NNN-name-with-dashes.md)")
+                    self.errors.append(
+                        f"Invalid ADR filename: {md_file.name} (expected: adr-NNN-name-with-dashes.md or ADR-NNN-name-with-dashes.md)"
+                    )
                     self.log(f"   ✗ {md_file.name}: Invalid filename format")
                     continue
 
@@ -180,7 +186,9 @@ class PrismDocValidator:
 
                 match = rfc_pattern.match(md_file.name)
                 if not match:
-                    self.errors.append(f"Invalid RFC filename: {md_file.name} (expected: rfc-NNN-name-with-dashes.md or RFC-NNN-name-with-dashes.md)")
+                    self.errors.append(
+                        f"Invalid RFC filename: {md_file.name} (expected: rfc-NNN-name-with-dashes.md or RFC-NNN-name-with-dashes.md)"
+                    )
                     self.log(f"   ✗ {md_file.name}: Invalid filename format")
                     continue
 
@@ -205,7 +213,9 @@ class PrismDocValidator:
 
                 match = memo_pattern.match(md_file.name)
                 if not match:
-                    self.errors.append(f"Invalid MEMO filename: {md_file.name} (expected: memo-NNN-name-with-dashes.md or MEMO-NNN-name-with-dashes.md)")
+                    self.errors.append(
+                        f"Invalid MEMO filename: {md_file.name} (expected: memo-NNN-name-with-dashes.md or MEMO-NNN-name-with-dashes.md)"
+                    )
                     self.log(f"   ✗ {md_file.name}: Invalid filename format")
                     continue
 
@@ -270,7 +280,7 @@ class PrismDocValidator:
                     status=post.metadata.get("status", ""),
                     date=str(post.metadata.get("date", post.metadata.get("created", ""))),
                     tags=post.metadata.get("tags", []),
-                    doc_id=post.metadata.get("id", "")
+                    doc_id=post.metadata.get("id", ""),
                 )
 
                 for error in e.errors():
@@ -297,7 +307,7 @@ class PrismDocValidator:
                 status=post.metadata.get("status", ""),
                 date=str(post.metadata.get("date", post.metadata.get("created", ""))),
                 tags=post.metadata.get("tags", []),
-                doc_id=post.metadata.get("id", "")
+                doc_id=post.metadata.get("id", ""),
             )
 
             self.log(f"   ✓ {file_path.name}: {doc.title}")
@@ -352,12 +362,7 @@ class PrismDocValidator:
 
                     link_type = self._classify_link(link_target, file_path)
 
-                    link = Link(
-                        source_doc=file_path,
-                        target=link_target,
-                        line_number=line_num,
-                        link_type=link_type
-                    )
+                    link = Link(source_doc=file_path, target=link_target, line_number=line_num, link_type=link_type)
                     links.append(link)
 
         except Exception as e:
@@ -467,10 +472,7 @@ class PrismDocValidator:
         try:
             # Call Node.js validator
             result = subprocess.run(
-                ["node", str(mdx_validator)] + file_paths,
-                check=False, capture_output=True,
-                text=True,
-                timeout=60
+                ["node", str(mdx_validator)] + file_paths, check=False, capture_output=True, text=True, timeout=60
             )
 
             # Parse JSON results
@@ -608,10 +610,7 @@ class PrismDocValidator:
             os.chdir(docusaurus_dir)
 
             result = subprocess.run(
-                ["npm", "run", "typecheck"],
-                check=False, capture_output=True,
-                text=True,
-                timeout=60
+                ["npm", "run", "typecheck"], check=False, capture_output=True, text=True, timeout=60
             )
 
             if result.returncode == 0:
@@ -660,9 +659,10 @@ class PrismDocValidator:
 
             result = subprocess.run(
                 ["npm", "run", "build"],
-                check=False, capture_output=True,
+                check=False,
+                capture_output=True,
                 text=True,
-                timeout=300  # 5 minutes
+                timeout=300,  # 5 minutes
             )
 
             output = result.stdout + result.stderr
@@ -765,7 +765,7 @@ class PrismDocValidator:
 
                     # This is a fence line
                     fence_backticks = fence_match.group(1)
-                    remainder = stripped[len(fence_backticks):].strip()
+                    remainder = stripped[len(fence_backticks) :].strip()
 
                     if not in_code_block:
                         # Opening fence
@@ -824,7 +824,9 @@ class PrismDocValidator:
                 doc.errors.append(f"Error checking code blocks: {e}")
                 self.log(f"   ✗ {doc.file_path.name}: Exception - {e}")
 
-        self.log(f"\n   Total: {total_valid} valid code blocks, {total_invalid} invalid code blocks across {len(self.documents)} documents")
+        self.log(
+            f"\n   Total: {total_valid} valid code blocks, {total_invalid} invalid code blocks across {len(self.documents)} documents"
+        )
 
     def check_formatting(self):
         """Check markdown formatting issues"""
@@ -930,9 +932,9 @@ class PrismDocValidator:
     def generate_report(self) -> tuple[bool, str]:
         """Generate validation report"""
         lines = []
-        lines.append("\n" + "="*80)
+        lines.append("\n" + "=" * 80)
         lines.append("📊 PRISM DOCUMENTATION VALIDATION REPORT")
-        lines.append("="*80)
+        lines.append("=" * 80)
 
         # Summary
         total_docs = len(self.documents)
@@ -978,7 +980,7 @@ class PrismDocValidator:
         # Document errors
         if docs_with_errors > 0:
             lines.append(f"\n❌ DOCUMENTS WITH ERRORS ({docs_with_errors}):")
-            lines.append("-"*80)
+            lines.append("-" * 80)
 
             for doc in self.documents:
                 if doc.errors:
@@ -990,7 +992,7 @@ class PrismDocValidator:
         # Broken links
         if broken_links > 0:
             lines.append(f"\n❌ BROKEN LINKS ({broken_links}):")
-            lines.append("-"*80)
+            lines.append("-" * 80)
 
             broken_by_doc: dict[Path, list[Link]] = {}
             for link in self.all_links:
@@ -1008,19 +1010,19 @@ class PrismDocValidator:
         # Validation-level errors (TypeScript, build, etc.)
         if self.errors:
             lines.append(f"\n❌ VALIDATION ERRORS ({len(self.errors)}):")
-            lines.append("-"*80)
+            lines.append("-" * 80)
             for error in self.errors:
                 lines.append(f"   ✗ {error}")
 
         # Final status
-        lines.append("\n" + "="*80)
+        lines.append("\n" + "=" * 80)
         if docs_with_errors == 0 and broken_links == 0 and not self.errors:
             lines.append("✅ SUCCESS: All documents valid!")
             all_valid = True
         else:
             lines.append("❌ FAILURE: Validation errors found")
             all_valid = False
-        lines.append("="*80 + "\n")
+        lines.append("=" * 80 + "\n")
 
         return all_valid, "\n".join(lines)
 
@@ -1070,26 +1072,16 @@ What this checks:
     ✓ Cross-plugin link issues
     ✓ TypeScript compilation
     ✓ Full Docusaurus build
-        """
+        """,
     )
 
-    parser.add_argument(
-        "--verbose", "-v",
-        action="store_true",
-        help="Verbose output"
-    )
+    parser.add_argument("--verbose", "-v", action="store_true", help="Verbose output")
 
     parser.add_argument(
-        "--skip-build",
-        action="store_true",
-        help="Skip Docusaurus build check (faster, but less thorough)"
+        "--skip-build", action="store_true", help="Skip Docusaurus build check (faster, but less thorough)"
     )
 
-    parser.add_argument(
-        "--fix",
-        action="store_true",
-        help="Auto-fix issues where possible (not yet implemented)"
-    )
+    parser.add_argument("--fix", action="store_true", help="Auto-fix issues where possible (not yet implemented)")
 
     args = parser.parse_args()
 
@@ -1102,6 +1094,7 @@ What this checks:
     except Exception as e:
         print(f"\n❌ ERROR: {e}", file=sys.stderr)
         import traceback
+
         traceback.print_exc()
         sys.exit(2)
 

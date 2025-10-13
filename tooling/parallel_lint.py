@@ -42,6 +42,7 @@ class LintStatus(str, Enum):
 @dataclass
 class LintCategory:
     """Represents a category of linters that can run in parallel"""
+
     name: str
     linters: list[str]
     description: str
@@ -221,9 +222,12 @@ class ParallelLintRunner:
                     cmd = [
                         "golangci-lint",
                         "run",
-                        "--enable-only", linters_str,
-                        "--timeout", f"{category.timeout}s",
-                        "--output.json.path", "stdout",
+                        "--enable-only",
+                        linters_str,
+                        "--timeout",
+                        f"{category.timeout}s",
+                        "--output.json.path",
+                        "stdout",
                         "./...",
                     ]
 
@@ -235,10 +239,7 @@ class ParallelLintRunner:
                     )
 
                     try:
-                        stdout, stderr = await asyncio.wait_for(
-                            process.communicate(),
-                            timeout=category.timeout
-                        )
+                        stdout, stderr = await asyncio.wait_for(process.communicate(), timeout=category.timeout)
                     except TimeoutError:
                         process.kill()
                         category.status = LintStatus.FAILED
@@ -311,7 +312,11 @@ class ParallelLintRunner:
         failed = sum(1 for c in self.categories if c.status == LintStatus.FAILED)
         skipped = sum(1 for c in self.categories if c.status == LintStatus.SKIPPED)
 
-        print(f"\r\033[K⚡ Linting: {running} running, {passed} passed, {failed} failed, {skipped} skipped, {pending} pending", end="", flush=True)
+        print(
+            f"\r\033[K⚡ Linting: {running} running, {passed} passed, {failed} failed, {skipped} skipped, {pending} pending",
+            end="",
+            flush=True,
+        )
 
     async def run(self, base_dir: Path, categories: list[str] | None = None):
         """Run all linter categories in parallel"""
@@ -334,10 +339,7 @@ class ParallelLintRunner:
         print(f"{'=' * 60}\n")
 
         # Run categories in parallel
-        tasks = [
-            self.run_category(category, base_dir)
-            for category in self.categories
-        ]
+        tasks = [self.run_category(category, base_dir) for category in self.categories]
 
         await asyncio.gather(*tasks)
 

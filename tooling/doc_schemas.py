@@ -28,35 +28,34 @@ class ADRFrontmatter(BaseModel):
     title: str = Field(
         ...,
         min_length=10,
-        description="ADR title with prefix (e.g., 'ADR-001: Use Rust for Proxy'). Must start with 'ADR-XXX:'"
+        description="ADR title with prefix (e.g., 'ADR-001: Use Rust for Proxy'). Must start with 'ADR-XXX:'",
     )
     status: Literal["Proposed", "Accepted", "Implemented", "Deprecated", "Superseded"] = Field(
         ...,
-        description="Decision status. Use 'Proposed' for drafts, 'Accepted' for approved, 'Implemented' for completed"
+        description="Decision status. Use 'Proposed' for drafts, 'Accepted' for approved, 'Implemented' for completed",
     )
     date: datetime.date = Field(
         ...,
-        description="Date of decision in ISO 8601 format (YYYY-MM-DD). Use date decision was made, not file creation date"
+        description="Date of decision in ISO 8601 format (YYYY-MM-DD). Use date decision was made, not file creation date",
     )
     deciders: str = Field(
-        ...,
-        description="Who made the decision. Use team name (e.g., 'Core Team') or individual name"
+        ..., description="Who made the decision. Use team name (e.g., 'Core Team') or individual name"
     )
     tags: list[str] = Field(
         default_factory=list,
-        description="List of lowercase, hyphenated tags (e.g., ['architecture', 'backend', 'security'])"
+        description="List of lowercase, hyphenated tags (e.g., ['architecture', 'backend', 'security'])",
     )
     id: str = Field(
         ...,
-        description="Lowercase ID matching filename format: 'adr-XXX' where XXX is 3-digit number (e.g., 'adr-001')"
+        description="Lowercase ID matching filename format: 'adr-XXX' where XXX is 3-digit number (e.g., 'adr-001')",
     )
     project_id: str = Field(
         ...,
-        description="Project identifier from docs-project.yaml. Must match configured project ID (e.g., 'prism-data-layer')"
+        description="Project identifier from docs-project.yaml. Must match configured project ID (e.g., 'prism-data-layer')",
     )
     doc_uuid: str = Field(
         ...,
-        description="Unique identifier for backend tracking. Must be valid UUID v4 format. Generated automatically by migration script"
+        description="Unique identifier for backend tracking. Must be valid UUID v4 format. Generated automatically by migration script",
     )
 
     @field_validator("title")
@@ -93,9 +92,7 @@ class ADRFrontmatter(BaseModel):
     def validate_id_format(cls, v: str) -> str:
         """Ensure ID is lowercase adr-XXX format"""
         if not re.match(r"^adr-\d{3}$", v):
-            raise ValueError(
-                f"ADR id must be lowercase 'adr-XXX' format (e.g., 'adr-001'). Got: {v}"
-            )
+            raise ValueError(f"ADR id must be lowercase 'adr-XXX' format (e.g., 'adr-001'). Got: {v}")
         return v
 
     @field_validator("doc_uuid")
@@ -103,9 +100,7 @@ class ADRFrontmatter(BaseModel):
     def validate_uuid_format(cls, v: str) -> str:
         """Ensure doc_uuid is a valid UUID v4"""
         if not re.match(r"^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$", v):
-            raise ValueError(
-                f"doc_uuid must be a valid UUID v4 format. Got: {v}"
-            )
+            raise ValueError(f"doc_uuid must be a valid UUID v4 format. Got: {v}")
         return v
 
 
@@ -127,39 +122,35 @@ class RFCFrontmatter(BaseModel):
     title: str = Field(
         ...,
         min_length=10,
-        description="RFC title with prefix (e.g., 'RFC-015: Plugin Architecture'). Must start with 'RFC-XXX:'"
+        description="RFC title with prefix (e.g., 'RFC-015: Plugin Architecture'). Must start with 'RFC-XXX:'",
     )
     status: Literal["Draft", "Proposed", "Accepted", "Implemented", "Deprecated", "Superseded"] = Field(
-        ...,
-        description="RFC status. Use 'Draft' for work-in-progress, 'Proposed' for review, 'Accepted' for approved"
+        ..., description="RFC status. Use 'Draft' for work-in-progress, 'Proposed' for review, 'Accepted' for approved"
     )
     author: str = Field(
-        ...,
-        description="RFC author. Use person name or team name (e.g., 'Platform Team', 'John Smith')"
+        ..., description="RFC author. Use person name or team name (e.g., 'Platform Team', 'John Smith')"
     )
     created: datetime.date = Field(
         ...,
-        description="Date RFC was first created in ISO 8601 format (YYYY-MM-DD). Do not change after initial creation"
+        description="Date RFC was first created in ISO 8601 format (YYYY-MM-DD). Do not change after initial creation",
     )
     updated: datetime.date | None = Field(
-        None,
-        description="Date RFC was last modified in ISO 8601 format (YYYY-MM-DD). Update whenever content changes"
+        None, description="Date RFC was last modified in ISO 8601 format (YYYY-MM-DD). Update whenever content changes"
     )
     tags: list[str] = Field(
-        default_factory=list,
-        description="List of lowercase, hyphenated tags (e.g., ['design', 'api', 'backend'])"
+        default_factory=list, description="List of lowercase, hyphenated tags (e.g., ['design', 'api', 'backend'])"
     )
     id: str = Field(
         ...,
-        description="Lowercase ID matching filename format: 'rfc-XXX' where XXX is 3-digit number (e.g., 'rfc-015')"
+        description="Lowercase ID matching filename format: 'rfc-XXX' where XXX is 3-digit number (e.g., 'rfc-015')",
     )
     project_id: str = Field(
         ...,
-        description="Project identifier from docs-project.yaml. Must match configured project ID (e.g., 'prism-data-layer')"
+        description="Project identifier from docs-project.yaml. Must match configured project ID (e.g., 'prism-data-layer')",
     )
     doc_uuid: str = Field(
         ...,
-        description="Unique identifier for backend tracking. Must be valid UUID v4 format. Generated automatically by migration script"
+        description="Unique identifier for backend tracking. Must be valid UUID v4 format. Generated automatically by migration script",
     )
 
     @field_validator("title")
@@ -196,9 +187,7 @@ class RFCFrontmatter(BaseModel):
     def validate_id_format(cls, v: str) -> str:
         """Ensure ID is lowercase rfc-XXX format"""
         if not re.match(r"^rfc-\d{3}$", v):
-            raise ValueError(
-                f"RFC id must be lowercase 'rfc-XXX' format (e.g., 'rfc-001'). Got: {v}"
-            )
+            raise ValueError(f"RFC id must be lowercase 'rfc-XXX' format (e.g., 'rfc-001'). Got: {v}")
         return v
 
     @field_validator("doc_uuid")
@@ -206,9 +195,7 @@ class RFCFrontmatter(BaseModel):
     def validate_uuid_format(cls, v: str) -> str:
         """Ensure doc_uuid is a valid UUID v4"""
         if not re.match(r"^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$", v):
-            raise ValueError(
-                f"doc_uuid must be a valid UUID v4 format. Got: {v}"
-            )
+            raise ValueError(f"doc_uuid must be a valid UUID v4 format. Got: {v}")
         return v
 
 
@@ -229,35 +216,31 @@ class MemoFrontmatter(BaseModel):
     title: str = Field(
         ...,
         min_length=10,
-        description="Memo title with prefix (e.g., 'MEMO-010: Load Test Results'). Must start with 'MEMO-XXX:'"
+        description="Memo title with prefix (e.g., 'MEMO-010: Load Test Results'). Must start with 'MEMO-XXX:'",
     )
-    author: str = Field(
-        ...,
-        description="Memo author. Use person name or team name (e.g., 'Platform Team', 'Claude')"
-    )
+    author: str = Field(..., description="Memo author. Use person name or team name (e.g., 'Platform Team', 'Claude')")
     created: datetime.date = Field(
         ...,
-        description="Date memo was first created in ISO 8601 format (YYYY-MM-DD). Do not change after initial creation"
+        description="Date memo was first created in ISO 8601 format (YYYY-MM-DD). Do not change after initial creation",
     )
     updated: datetime.date = Field(
-        ...,
-        description="Date memo was last modified in ISO 8601 format (YYYY-MM-DD). Update whenever content changes"
+        ..., description="Date memo was last modified in ISO 8601 format (YYYY-MM-DD). Update whenever content changes"
     )
     tags: list[str] = Field(
         default_factory=list,
-        description="List of lowercase, hyphenated tags (e.g., ['implementation', 'testing', 'performance'])"
+        description="List of lowercase, hyphenated tags (e.g., ['implementation', 'testing', 'performance'])",
     )
     id: str = Field(
         ...,
-        description="Lowercase ID matching filename format: 'memo-XXX' where XXX is 3-digit number (e.g., 'memo-010')"
+        description="Lowercase ID matching filename format: 'memo-XXX' where XXX is 3-digit number (e.g., 'memo-010')",
     )
     project_id: str = Field(
         ...,
-        description="Project identifier from docs-project.yaml. Must match configured project ID (e.g., 'prism-data-layer')"
+        description="Project identifier from docs-project.yaml. Must match configured project ID (e.g., 'prism-data-layer')",
     )
     doc_uuid: str = Field(
         ...,
-        description="Unique identifier for backend tracking. Must be valid UUID v4 format. Generated automatically by migration script"
+        description="Unique identifier for backend tracking. Must be valid UUID v4 format. Generated automatically by migration script",
     )
 
     @field_validator("title")
@@ -294,9 +277,7 @@ class MemoFrontmatter(BaseModel):
     def validate_id_format(cls, v: str) -> str:
         """Ensure ID is lowercase memo-XXX format"""
         if not re.match(r"^memo-\d{3}$", v):
-            raise ValueError(
-                f"Memo id must be lowercase 'memo-XXX' format (e.g., 'memo-001'). Got: {v}"
-            )
+            raise ValueError(f"Memo id must be lowercase 'memo-XXX' format (e.g., 'memo-001'). Got: {v}")
         return v
 
     @field_validator("doc_uuid")
@@ -304,9 +285,7 @@ class MemoFrontmatter(BaseModel):
     def validate_uuid_format(cls, v: str) -> str:
         """Ensure doc_uuid is a valid UUID v4"""
         if not re.match(r"^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$", v):
-            raise ValueError(
-                f"doc_uuid must be a valid UUID v4 format. Got: {v}"
-            )
+            raise ValueError(f"doc_uuid must be a valid UUID v4 format. Got: {v}")
         return v
 
 
@@ -328,31 +307,29 @@ class GenericDocFrontmatter(BaseModel):
     title: str = Field(
         ...,
         min_length=3,
-        description="Document title. Should be descriptive and clear (e.g., 'Getting Started Guide', 'API Reference')"
+        description="Document title. Should be descriptive and clear (e.g., 'Getting Started Guide', 'API Reference')",
     )
     description: str | None = Field(
-        None,
-        description="Brief description of the document content. Optional but recommended"
+        None, description="Brief description of the document content. Optional but recommended"
     )
     sidebar_position: int | None = Field(
-        None,
-        description="Position in Docusaurus sidebar (lower numbers appear first). Optional"
+        None, description="Position in Docusaurus sidebar (lower numbers appear first). Optional"
     )
     tags: list[str] = Field(
         default_factory=list,
-        description="List of lowercase, hyphenated tags (e.g., ['guide', 'tutorial', 'reference'])"
+        description="List of lowercase, hyphenated tags (e.g., ['guide', 'tutorial', 'reference'])",
     )
     id: str | None = Field(
         None,
-        description="Document identifier (optional). Use lowercase with hyphens if provided (e.g., 'getting-started')"
+        description="Document identifier (optional). Use lowercase with hyphens if provided (e.g., 'getting-started')",
     )
     project_id: str = Field(
         ...,
-        description="Project identifier from docs-project.yaml. Must match configured project ID (e.g., 'prism-data-layer')"
+        description="Project identifier from docs-project.yaml. Must match configured project ID (e.g., 'prism-data-layer')",
     )
     doc_uuid: str = Field(
         ...,
-        description="Unique identifier for backend tracking. Must be valid UUID v4 format. Generated automatically by migration script"
+        description="Unique identifier for backend tracking. Must be valid UUID v4 format. Generated automatically by migration script",
     )
 
     @field_validator("tags")
@@ -361,9 +338,7 @@ class GenericDocFrontmatter(BaseModel):
         """Ensure tags are lowercase and hyphenated"""
         for tag in v:
             if not re.match(r"^[a-z0-9\-]+$", tag):
-                raise ValueError(
-                    f"Invalid tag '{tag}' - tags must be lowercase with hyphens only"
-                )
+                raise ValueError(f"Invalid tag '{tag}' - tags must be lowercase with hyphens only")
         return v
 
     @field_validator("doc_uuid")
@@ -371,9 +346,7 @@ class GenericDocFrontmatter(BaseModel):
     def validate_uuid_format(cls, v: str) -> str:
         """Ensure doc_uuid is a valid UUID v4"""
         if not re.match(r"^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$", v):
-            raise ValueError(
-                f"doc_uuid must be a valid UUID v4 format. Got: {v}"
-            )
+            raise ValueError(f"doc_uuid must be a valid UUID v4 format. Got: {v}")
         return v
 
 
@@ -383,8 +356,24 @@ VALID_RFC_STATUSES = ["Draft", "Proposed", "Accepted", "Implemented", "Deprecate
 
 # Common tag suggestions (not enforced, just for reference)
 COMMON_TAGS = [
-    "architecture", "backend", "performance", "go", "rust", "testing",
-    "reliability", "dx", "operations", "observability", "plugin",
-    "cli", "protobuf", "api-design", "deployment", "security",
-    "authentication", "patterns", "schemas", "registry"
+    "architecture",
+    "backend",
+    "performance",
+    "go",
+    "rust",
+    "testing",
+    "reliability",
+    "dx",
+    "operations",
+    "observability",
+    "plugin",
+    "cli",
+    "protobuf",
+    "api-design",
+    "deployment",
+    "security",
+    "authentication",
+    "patterns",
+    "schemas",
+    "registry",
 ]

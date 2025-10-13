@@ -109,14 +109,10 @@ Examples:
 
     # Apply fixes
     uv run tooling/fix_mdx_syntax.py
-        """
+        """,
     )
 
-    parser.add_argument(
-        "--dry-run",
-        action="store_true",
-        help="Show what would be changed without making changes"
-    )
+    parser.add_argument("--dry-run", action="store_true", help="Show what would be changed without making changes")
 
     args = parser.parse_args()
 
@@ -153,4 +149,5 @@ Examples:
 
 if __name__ == "__main__":
     import sys
+
     sys.exit(main())

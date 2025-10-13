@@ -37,6 +37,7 @@ def add_id_to_rfc(file_path: Path):
     print(f"  ✗ {file_path.name} doesn't have valid frontmatter")
     return False
 
+
 def main():
     docs_dir = Path(__file__).parent.parent / "docs-cms" / "rfcs"
     rfc_files = sorted(docs_dir.glob("RFC-*.md"))
@@ -49,6 +50,7 @@ def main():
             modified += 1
 
     print(f"\n✅ Modified {modified} files")
+
 
 if __name__ == "__main__":
     main()

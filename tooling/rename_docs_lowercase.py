@@ -24,11 +24,7 @@ from test_rename_docs import (
 )
 
 
-def rename_files_in_directory(
-    directory: Path,
-    dry_run: bool = False,
-    verbose: bool = False
-) -> dict:
+def rename_files_in_directory(directory: Path, dry_run: bool = False, verbose: bool = False) -> dict:
     """Rename all documentation files in a directory to lowercase format.
 
     Args:
@@ -85,10 +81,7 @@ def rename_files_in_directory(
                 # Use git mv for case-only renames (macOS is case-insensitive)
                 # This works even when source and target are the same on case-insensitive FS
                 result = subprocess.run(
-                    ["git", "mv", str(md_file), str(new_path)],
-                    capture_output=True,
-                    text=True,
-                    check=False
+                    ["git", "mv", str(md_file), str(new_path)], capture_output=True, text=True, check=False
                 )
 
                 if result.returncode == 0:
@@ -153,24 +146,11 @@ def print_summary(stats: dict, dry_run: bool):
 
 def main():
     """Main entry point."""
-    parser = argparse.ArgumentParser(
-        description="Rename docs to match Docusaurus link style (lowercase)"
-    )
+    parser = argparse.ArgumentParser(description="Rename docs to match Docusaurus link style (lowercase)")
+    parser.add_argument("--dry-run", action="store_true", help="Show what would be renamed without modifying files")
+    parser.add_argument("--verbose", "-v", action="store_true", help="Enable verbose output")
     parser.add_argument(
-        "--dry-run",
-        action="store_true",
-        help="Show what would be renamed without modifying files"
-    )
-    parser.add_argument(
-        "--verbose", "-v",
-        action="store_true",
-        help="Enable verbose output"
-    )
-    parser.add_argument(
-        "--path",
-        type=Path,
-        default=Path("docs-cms"),
-        help="Path to documentation directory (default: docs-cms)"
+        "--path", type=Path, default=Path("docs-cms"), help="Path to documentation directory (default: docs-cms)"
     )
 
     args = parser.parse_args()
@@ -179,11 +159,7 @@ def main():
         print("🔍 DRY RUN MODE - No files will be modified\n")
 
     # Rename files
-    stats = rename_files_in_directory(
-        args.path,
-        dry_run=args.dry_run,
-        verbose=args.verbose
-    )
+    stats = rename_files_in_directory(args.path, dry_run=args.dry_run, verbose=args.verbose)
 
     # Print summary
     success = print_summary(stats, args.dry_run)

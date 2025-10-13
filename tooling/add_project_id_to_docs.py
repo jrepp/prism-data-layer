@@ -88,9 +88,9 @@ def add_project_id_to_file(file_path: Path, project_id: str, dry_run: bool = Fal
 
 def migrate_docs(repo_root: Path, dry_run: bool = False, verbose: bool = False):
     """Migrate all documentation files to include project_id"""
-    print("="*80)
+    print("=" * 80)
     print("📦 Add project_id to Documentation Frontmatter")
-    print("="*80)
+    print("=" * 80)
 
     # Load configuration
     config = load_project_config(repo_root)
@@ -151,9 +151,9 @@ def migrate_docs(repo_root: Path, dry_run: bool = False, verbose: bool = False):
                 modified_files += 1
 
     # Summary
-    print("\n" + "="*80)
+    print("\n" + "=" * 80)
     print("📊 Summary")
-    print("="*80)
+    print("=" * 80)
     print(f"Total files processed: {total_files}")
     print(f"Files {'that would be ' if dry_run else ''}modified: {modified_files}")
     print(f"Files already up-to-date: {total_files - modified_files}")
@@ -189,20 +189,12 @@ What this does:
     ✓ Adds 'project_id' field to frontmatter of all docs
     ✓ Preserves existing frontmatter and content
     ✓ Skips files that already have project_id
-        """
+        """,
     )
 
-    parser.add_argument(
-        "--dry-run",
-        action="store_true",
-        help="Preview changes without modifying files"
-    )
+    parser.add_argument("--dry-run", action="store_true", help="Preview changes without modifying files")
 
-    parser.add_argument(
-        "--verbose", "-v",
-        action="store_true",
-        help="Show detailed progress"
-    )
+    parser.add_argument("--verbose", "-v", action="store_true", help="Show detailed progress")
 
     args = parser.parse_args()
 
@@ -213,6 +205,7 @@ What this does:
     except Exception as e:
         print(f"\n❌ ERROR: {e}", file=sys.stderr)
         import traceback
+
         traceback.print_exc()
         sys.exit(1)
 

@@ -127,12 +127,7 @@ class DocMigrator:
             num = match.group(1)
             return f"](/adr/adr-{num})"
 
-        content = re.sub(
-            r"\]\(\.\.?/(?:adr/)?ADR-(\d+)[^)]*\.md\)",
-            fix_relative_adr,
-            content,
-            flags=re.IGNORECASE
-        )
+        content = re.sub(r"\]\(\.\.?/(?:adr/)?ADR-(\d+)[^)]*\.md\)", fix_relative_adr, content, flags=re.IGNORECASE)
 
         # RFC links
         def fix_relative_rfc(match):
@@ -141,12 +136,7 @@ class DocMigrator:
             num = match.group(1)
             return f"](/rfc/rfc-{num})"
 
-        content = re.sub(
-            r"\]\(\.\.?/(?:rfcs?/)?RFC-(\d+)[^)]*\.md\)",
-            fix_relative_rfc,
-            content,
-            flags=re.IGNORECASE
-        )
+        content = re.sub(r"\]\(\.\.?/(?:rfcs?/)?RFC-(\d+)[^)]*\.md\)", fix_relative_rfc, content, flags=re.IGNORECASE)
 
         # MEMO links
         def fix_relative_memo(match):
@@ -155,12 +145,7 @@ class DocMigrator:
             num = match.group(1)
             return f"](/memos/memo-{num})"
 
-        content = re.sub(
-            r"\]\(\.\.?/(?:memos/)?MEMO-(\d+)[^)]*\.md\)",
-            fix_relative_memo,
-            content,
-            flags=re.IGNORECASE
-        )
+        content = re.sub(r"\]\(\.\.?/(?:memos/)?MEMO-(\d+)[^)]*\.md\)", fix_relative_memo, content, flags=re.IGNORECASE)
 
         # Fix uppercase in existing absolute links
         # /adr/ADR-XXX -> /adr/adr-XXX
@@ -224,12 +209,18 @@ class DocMigrator:
             # Write changes if needed
             if frontmatter_changed or links_fixed > 0:
                 if self.dry_run:
-                    self.log(f"Would update {file_path.name} (frontmatter: {frontmatter_changed}, links: {links_fixed})", "info")
+                    self.log(
+                        f"Would update {file_path.name} (frontmatter: {frontmatter_changed}, links: {links_fixed})",
+                        "info",
+                    )
                 else:
                     # Write file with frontmatter
                     output = frontmatter.dumps(post)
                     file_path.write_text(output, encoding="utf-8")
-                    self.log(f"Updated {file_path.name} (frontmatter: {frontmatter_changed}, links: {links_fixed})", "success")
+                    self.log(
+                        f"Updated {file_path.name} (frontmatter: {frontmatter_changed}, links: {links_fixed})",
+                        "success",
+                    )
 
                 self.stats["files_modified"] += 1
                 return True
@@ -302,24 +293,11 @@ class DocMigrator:
 
 def main():
     """Main entry point."""
-    parser = argparse.ArgumentParser(
-        description="Migrate documentation to consistent Docusaurus format"
-    )
+    parser = argparse.ArgumentParser(description="Migrate documentation to consistent Docusaurus format")
+    parser.add_argument("--dry-run", action="store_true", help="Show what would be changed without modifying files")
+    parser.add_argument("--verbose", "-v", action="store_true", help="Enable verbose output")
     parser.add_argument(
-        "--dry-run",
-        action="store_true",
-        help="Show what would be changed without modifying files"
-    )
-    parser.add_argument(
-        "--verbose", "-v",
-        action="store_true",
-        help="Enable verbose output"
-    )
-    parser.add_argument(
-        "--path",
-        type=Path,
-        default=Path("docs-cms"),
-        help="Path to documentation directory (default: docs-cms)"
+        "--path", type=Path, default=Path("docs-cms"), help="Path to documentation directory (default: docs-cms)"
     )
 
     args = parser.parse_args()

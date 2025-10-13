@@ -42,11 +42,7 @@ def fix_links_in_file(file_path: Path) -> tuple[int, int]:
         num = match.group(1)
         return f"](/adr/adr-{num})"
 
-    content = re.sub(
-        r"\]\(\.\.?/(?:adr/)?ADR-(\d+)[^)]*\.md\)",
-        fix_relative_adr,
-        content
-    )
+    content = re.sub(r"\]\(\.\.?/(?:adr/)?ADR-(\d+)[^)]*\.md\)", fix_relative_adr, content)
 
     # RFC: ./RFC-XXX-anything.md → /rfc/rfc-XXX
     def fix_relative_rfc(match):
@@ -55,11 +51,7 @@ def fix_links_in_file(file_path: Path) -> tuple[int, int]:
         num = match.group(1)
         return f"](/rfc/rfc-{num})"
 
-    content = re.sub(
-        r"\]\(\.\.?/(?:rfcs?/)?RFC-(\d+)[^)]*\.md\)",
-        fix_relative_rfc,
-        content
-    )
+    content = re.sub(r"\]\(\.\.?/(?:rfcs?/)?RFC-(\d+)[^)]*\.md\)", fix_relative_rfc, content)
 
     # MEMO: ./MEMO-XXX-anything.md → /memos/memo-XXX
     def fix_relative_memo(match):
@@ -68,11 +60,7 @@ def fix_links_in_file(file_path: Path) -> tuple[int, int]:
         num = match.group(1)
         return f"](/memos/memo-{num})"
 
-    content = re.sub(
-        r"\]\(\.\.?/(?:memos/)?MEMO-(\d+)[^)]*\.md\)",
-        fix_relative_memo,
-        content
-    )
+    content = re.sub(r"\]\(\.\.?/(?:memos/)?MEMO-(\d+)[^)]*\.md\)", fix_relative_memo, content)
 
     # Fix case in existing absolute links
     # /adr/ADR-XXX → /adr/adr-XXX

@@ -77,9 +77,9 @@ def add_uuid_to_file(file_path: Path, dry_run: bool = False, verbose: bool = Fal
 
 def migrate_docs(repo_root: Path, dry_run: bool = False, verbose: bool = False):
     """Migrate all documentation files to include doc_uuid"""
-    print("="*80)
+    print("=" * 80)
     print("🔑 Add UUID to Documentation Frontmatter")
-    print("="*80)
+    print("=" * 80)
     print("\nPurpose: Add unique identifier for backend document tracking")
     print(f"Mode: {'DRY-RUN (no changes will be made)' if dry_run else 'WRITE (files will be modified)'}")
     print()
@@ -135,9 +135,9 @@ def migrate_docs(repo_root: Path, dry_run: bool = False, verbose: bool = False):
                 modified_files += 1
 
     # Summary
-    print("\n" + "="*80)
+    print("\n" + "=" * 80)
     print("📊 Summary")
-    print("="*80)
+    print("=" * 80)
     print(f"Total files processed: {total_files}")
     print(f"Files {'that would be ' if dry_run else ''}modified: {modified_files}")
     print(f"Files already up-to-date: {total_files - modified_files}")
@@ -174,20 +174,12 @@ What this does:
     ✓ Preserves existing frontmatter and content
     ✓ Skips files that already have doc_uuid
     ✓ Enables backend document tracking and management
-        """
+        """,
     )
 
-    parser.add_argument(
-        "--dry-run",
-        action="store_true",
-        help="Preview changes without modifying files"
-    )
+    parser.add_argument("--dry-run", action="store_true", help="Preview changes without modifying files")
 
-    parser.add_argument(
-        "--verbose", "-v",
-        action="store_true",
-        help="Show detailed progress"
-    )
+    parser.add_argument("--verbose", "-v", action="store_true", help="Show detailed progress")
 
     args = parser.parse_args()
 
@@ -198,6 +190,7 @@ What this does:
     except Exception as e:
         print(f"\n❌ ERROR: {e}", file=sys.stderr)
         import traceback
+
         traceback.print_exc()
         sys.exit(1)
 

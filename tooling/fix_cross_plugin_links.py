@@ -18,31 +18,20 @@ def fix_cross_plugin_links(file_path: Path, dry_run: bool = False) -> int:
     original_content = content
 
     # Pattern: [text](../rfcs/RFC-XXX-name.md) -> [text](/rfc/RFC-XXX-name)
-    content = re.sub(
-        r"\]\(\.\./rfcs/(RFC-[^)]+)\.md\)",
-        r"](/rfc/\1)",
-        content
-    )
+    content = re.sub(r"\]\(\.\./rfcs/(RFC-[^)]+)\.md\)", r"](/rfc/\1)", content)
 
     # Pattern: [text](../adr/ADR-XXX-name.md) -> [text](/adr/ADR-XXX-name)
-    content = re.sub(
-        r"\]\(\.\./adr/(ADR-[^)]+)\.md\)",
-        r"](/adr/\1)",
-        content
-    )
+    content = re.sub(r"\]\(\.\./adr/(ADR-[^)]+)\.md\)", r"](/adr/\1)", content)
 
     # Pattern: [text](../memos/MEMO-XXX-name.md) -> [text](/memos/MEMO-XXX-name)
-    content = re.sub(
-        r"\]\(\.\./memos/(MEMO-[^)]+)\.md\)",
-        r"](/memos/\1)",
-        content
-    )
+    content = re.sub(r"\]\(\.\./memos/(MEMO-[^)]+)\.md\)", r"](/memos/\1)", content)
 
     if content != original_content:
         if not dry_run:
             file_path.write_text(content)
         return 1
     return 0
+
 
 def main():
     """Fix all cross-plugin links in docs-cms."""
@@ -66,6 +55,7 @@ def main():
                 total_fixed += 1
 
     print(f"\n✅ Fixed {total_fixed} files with cross-plugin links")
+
 
 if __name__ == "__main__":
     main()

@@ -36,11 +36,11 @@ def fix_code_blocks(file_path: Path) -> tuple[int, str]:
                 if code_fence == "```":
                     # Unlabeled! Fix it
                     # Determine indentation
-                    indent = line[:len(line) - len(line.lstrip())]
+                    indent = line[: len(line) - len(line.lstrip())]
                     new_lines.append(f"{indent}```text")
                     fixes += 1
                     in_code_block = True
-                    changes_made.append(f"Line {i+1}: Added 'text' language")
+                    changes_made.append(f"Line {i + 1}: Added 'text' language")
                 else:
                     # Has a language, keep as is
                     new_lines.append(line)
@@ -59,6 +59,7 @@ def fix_code_blocks(file_path: Path) -> tuple[int, str]:
         return fixes, "\n".join(changes_made)
 
     return 0, ""
+
 
 def main():
     """Fix all MEMO, ADR, RFC, and Netflix docs."""
@@ -87,6 +88,7 @@ def main():
                 total_files += 1
 
     print(f"\n✅ Fixed {total_fixed} code blocks across {total_files} files")
+
 
 if __name__ == "__main__":
     main()

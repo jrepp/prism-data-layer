@@ -24,8 +24,8 @@ def remove_standalone_text_blocks(file_path: Path) -> int:
         if line.strip() == "```text":
             # Check context - if previous line is not a code block content
             # and next line is not a code block content, this is likely standalone
-            prev_line = lines[i-1] if i > 0 else ""
-            next_line = lines[i+1] if i < len(lines)-1 else ""
+            prev_line = lines[i - 1] if i > 0 else ""
+            next_line = lines[i + 1] if i < len(lines) - 1 else ""
 
             # If both surrounding lines are blank or markdown content (not code),
             # this is a standalone artifact
@@ -39,6 +39,7 @@ def remove_standalone_text_blocks(file_path: Path) -> int:
         file_path.write_text("\n".join(new_lines))
 
     return removed
+
 
 def main():
     """Remove standalone ```text blocks from all documentation."""
@@ -64,6 +65,7 @@ def main():
                 total_files += 1
 
     print(f"\n✅ Removed {total_removed} standalone ```text blocks across {total_files} files")
+
 
 if __name__ == "__main__":
     main()
