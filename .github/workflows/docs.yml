@@ -76,8 +76,8 @@ jobs:
         id: deployment
         uses: actions/deploy-pages@v4
 
-      - name: Send ntfy.sh notification
-        if: always() && secrets.NTFY_TOPIC != ''
+      - name: send-ntfy-notification
+        if: always() && vars.NTFY_TOPIC != ''
         run: |
           STATUS_EMOJI="${{ job.status == 'success' && '📚✅' || '📚❌' }}"
           STATUS_TEXT="${{ job.status == 'success' && 'Succeeded' || 'Failed' }}"
@@ -96,4 +96,4 @@ jobs:
           Deployment URL: ${{ steps.deployment.outputs.page_url }}
 
           View workflow: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" \
-               https://ntfy.sh/${{ secrets.NTFY_TOPIC }}
+               https://ntfy.sh/${{ vars.NTFY_TOPIC }}

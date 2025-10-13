@@ -260,9 +260,10 @@ Prism CI/CD workflows can send status notifications via **[ntfy.sh](https://ntfy
    - **Desktop**: Visit `https://ntfy.sh/your-topic-name` in your browser
    - **CLI**: `ntfy subscribe your-topic-name`
 
-3. **Add secret to GitHub repository**:
-   - Go to Settings → Secrets and variables → Actions
-   - Add repository secret:
+3. **Add variable to GitHub repository**:
+   - Go to Settings → Secrets and variables → Actions → Variables tab
+   - Click "New repository variable"
+   - Add repository variable:
      - Name: `NTFY_TOPIC`
      - Value: `your-topic-name` (from step 1)
 

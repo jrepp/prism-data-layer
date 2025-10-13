@@ -535,8 +535,8 @@ jobs:
             echo "status=success" >> $GITHUB_OUTPUT
           fi
 
-      - name: Send ntfy.sh notification
-        if: always() && secrets.NTFY_TOPIC != ''
+      - name: send-ntfy-notification
+        if: always() && vars.NTFY_TOPIC != ''
         run: |
           STATUS_EMOJI="${{ steps.ci_check.outputs.status == 'success' && '✅' || '❌' }}"
           STATUS_TEXT="${{ steps.ci_check.outputs.status == 'success' && 'Passed' || 'Failed' }}"
@@ -565,4 +565,4 @@ jobs:
 
           Job Results:
           ${JOBS}" \
-               https://ntfy.sh/${{ secrets.NTFY_TOPIC }}
+               https://ntfy.sh/${{ vars.NTFY_TOPIC }}
