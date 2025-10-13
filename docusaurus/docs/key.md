@@ -1,7 +1,9 @@
 ---
-title: Key Philosophy & Foundational Documents
+title: Foundations
 sidebar_position: 2
 id: key-documents
+project_id: prism-data-layer
+doc_uuid: 939d9f73-b542-4d3c-8cd3-43cc04222098
 ---
 
 # Key Philosophy & Foundational Documents
