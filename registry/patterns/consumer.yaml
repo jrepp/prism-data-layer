@@ -1,0 +1,175 @@
+pattern: consumer
+version: v1
+description: "Message consumer with retry logic, state management, and dead letter queue support"
+executor: prism-pattern-consumer:v1.0.0
+
+# Pattern requires one mandatory slot (message_source) and two optional slots
+slots:
+  message_source:
+    description: "Provides messages to consume from topic/queue"
+    required_interfaces:
+      - pubsub_basic  # MUST implement basic pub/sub operations
+    alternative_interfaces:
+      - queue_basic   # OR queue operations (mutually exclusive with pubsub)
+    recommended_backends:
+      - nats          # Lightweight pub/sub
+      - kafka         # Durable streaming
+      - redis         # In-memory pub/sub
+      - rabbitmq      # Full-featured message broker
+
+  state_store:
+    description: "Stores consumer state (offsets, checkpoints, retry counts)"
+    required_interfaces:
+      - keyvalue_basic  # MUST implement basic KV operations
+    optional_interfaces:
+      - keyvalue_ttl    # Nice to have: auto-expire old state
+    recommended_backends:
+      - redis           # Fast in-memory state
+      - postgres        # Durable relational state
+      - memstore        # Local testing only
+      - etcd            # Distributed consensus
+    optional: true      # Consumer runs in stateless mode if not provided
+
+  dead_letter_queue:
+    description: "Stores messages that fail after max retries"
+    required_interfaces:
+      - queue_basic           # MUST implement basic queue ops
+      - queue_visibility      # MUST support visibility timeout
+    recommended_backends:
+      - postgres        # Durable queue with SKIP LOCKED
+      - sqs             # AWS managed queue
+      - rabbitmq        # Full-featured DLQ support
+    optional: true      # Failed messages logged but not persisted if not provided
+
+# Pattern-level API (client-facing)
+api:
+  proto_file: "proto/patterns/consumer.proto"
+  service: ConsumerService
+  methods:
+    - Start(StartRequest) returns (StartResponse)
+    - Stop(StopRequest) returns (StopResponse)
+    - Health(HealthRequest) returns (HealthResponse)
+    - GetState(GetStateRequest) returns (GetStateResponse)
+    - Acknowledge(AcknowledgeRequest) returns (AcknowledgeResponse)
+
+# How pattern executor uses slots
+implementation:
+  start_flow:
+    - slot: state_store  # Optional
+      operation: Get(consumer_state_key)  # Load last checkpoint
+    - slot: message_source
+      operation: Subscribe(topic, consumer_group)  # Begin consuming
+
+  process_message_flow:
+    - user_processor: Process(message)  # User-defined handler
+    - on_success:
+        - slot: state_store  # Optional
+          operation: Set(consumer_state_key, updated_state)  # Save checkpoint
+    - on_failure:
+        - retry_logic: Check MaxRetries
+        - if_exhausted:
+            - slot: dead_letter_queue  # Optional
+              operation: Enqueue(dlq_topic, failed_message)
+
+  stop_flow:
+    - slot: message_source
+      operation: Unsubscribe(topic, consumer_group)
+    - slot: state_store  # Optional
+      operation: Set(consumer_state_key, final_state)  # Final checkpoint
+
+# Configuration parameters
+parameters:
+  consumer_group:
+    description: "Consumer group ID for coordinated consumption"
+    type: string
+    required: true
+
+  topic:
+    description: "Topic or queue name to consume from"
+    type: string
+    required: true
+
+  max_retries:
+    description: "Maximum retry attempts before sending to DLQ"
+    type: integer
+    default: 3
+    min: 0
+
+  auto_commit:
+    description: "Automatically commit offsets after successful processing"
+    type: boolean
+    default: true
+
+  batch_size:
+    description: "Number of messages to process in a batch (0 = single message)"
+    type: integer
+    default: 0
+    min: 0
+
+  commit_interval:
+    description: "Interval for auto-committing offsets (if auto_commit=true)"
+    type: duration
+    default: "5s"
+    examples:
+      - "1s"
+      - "5s"
+      - "30s"
+
+# Example configurations
+examples:
+  - name: "stateful-nats-redis"
+    description: "NATS for messaging, Redis for state (stateful consumer)"
+    slots:
+      message_source:
+        backend: nats
+        interfaces: [pubsub_basic]
+      state_store:
+        backend: redis
+        interfaces: [keyvalue_basic, keyvalue_ttl]
+
+  - name: "stateless-kafka"
+    description: "Kafka for messaging only (stateless consumer)"
+    slots:
+      message_source:
+        backend: kafka
+        interfaces: [pubsub_basic, pubsub_persistent]
+      # No state_store - runs stateless
+
+  - name: "full-durability-postgres"
+    description: "Kafka + PostgreSQL state + PostgreSQL DLQ (full durability)"
+    slots:
+      message_source:
+        backend: kafka
+        interfaces: [pubsub_basic, pubsub_persistent]
+      state_store:
+        backend: postgres
+        interfaces: [keyvalue_basic]
+      dead_letter_queue:
+        backend: postgres
+        interfaces: [queue_basic, queue_visibility]
+
+# Validation rules
+validation:
+  - rule: "message_source must implement pubsub_basic OR queue_basic"
+  - rule: "If state_store provided, must implement keyvalue_basic"
+  - rule: "If dead_letter_queue provided, must implement queue_basic AND queue_visibility"
+  - rule: "consumer_group and topic must be non-empty strings"
+  - rule: "max_retries must be >= 0"
+  - rule: "batch_size must be >= 0"
+
+# Operational modes
+modes:
+  stateless:
+    description: "No state persistence, consume from latest"
+    slots_required: [message_source]
+    use_case: "Ephemeral message processing, alerting, real-time analytics"
+
+  stateful:
+    description: "State persistence enables resume from last checkpoint"
+    slots_required: [message_source, state_store]
+    use_case: "Durable processing, at-least-once delivery, fault tolerance"
+
+  full_durability:
+    description: "State + DLQ for maximum reliability"
+    slots_required: [message_source, state_store, dead_letter_queue]
+    use_case: "Critical business transactions, audit trails, compliance"

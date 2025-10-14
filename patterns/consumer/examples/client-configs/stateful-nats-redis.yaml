@@ -1,0 +1,51 @@
+# Example: Stateful Consumer with NATS + Redis
+# Use case: Event processing with checkpoint resume capability
+
+namespaces:
+  - name: order-processor
+    pattern: consumer
+    pattern_version: v1
+    description: "Processes order events with state persistence"
+
+    # Client-provided slot configuration (filled after pattern executor is running)
+    slots:
+      message_source:
+        backend: nats
+        # NATS implements: pubsub_basic, pubsub_wildcards
+        interfaces:
+          - pubsub_basic
+        config:
+          connection: "nats://localhost:4222"
+          subject: "orders.created"
+          max_reconnects: 10
+          reconnect_wait: "2s"
+
+      state_store:
+        backend: redis
+        # Redis implements: keyvalue_basic, keyvalue_scan, keyvalue_ttl
+        interfaces:
+          - keyvalue_basic
+          - keyvalue_ttl  # Auto-expire old consumer state
+        config:
+          connection: "redis://localhost:6379/0"
+          key_prefix: "consumer:order-processor:"
+          ttl_seconds: 86400  # 24 hours
+          pool_size: 10
+
+      # No DLQ configured - failed messages logged only
+
+    # Consumer behavior parameters
+    behavior:
+      consumer_group: "order-processor-group"
+      topic: "orders.created"
+      max_retries: 3
+      auto_commit: true
+      batch_size: 0  # Single message processing
+      commit_interval: "5s"
+
+# Expected pattern executor startup:
+#   1. Pattern executor reads this config
+#   2. Initializes NATS driver with pubsub_basic interface
+#   3. Initializes Redis driver with keyvalue_basic interface
+#   4. Binds slots: consumer.BindSlots(nats, redis, nil)
+#   5. Starts consuming with user-provided message processor

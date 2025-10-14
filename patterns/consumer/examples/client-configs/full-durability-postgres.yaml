@@ -1,0 +1,71 @@
+# Example: Full Durability with Kafka + PostgreSQL State + PostgreSQL DLQ
+# Use case: Critical business transactions requiring maximum reliability
+
+namespaces:
+  - name: payment-processor
+    pattern: consumer
+    pattern_version: v1
+    description: "Processes payment events with full durability guarantees"
+
+    # Client-provided slot configuration (all three slots filled)
+    slots:
+      message_source:
+        backend: kafka
+        # Kafka implements: pubsub_basic, pubsub_persistent, stream_basic, stream_consumer_groups
+        interfaces:
+          - pubsub_basic
+          - pubsub_persistent
+        config:
+          connection: "kafka://localhost:9092"
+          topic: "payments.pending"
+          group_id: "payment-processor-group"
+          auto_offset_reset: "earliest"  # Process all messages
+          enable_auto_commit: false  # Manual commit after DB writes
+          isolation_level: "read_committed"  # Transactional reads
+
+      state_store:
+        backend: postgres
+        # Postgres implements: keyvalue_basic, keyvalue_scan, keyvalue_transactional, keyvalue_batch
+        interfaces:
+          - keyvalue_basic
+          - keyvalue_transactional  # ACID transactions
+        config:
+          connection: "postgresql://prism:prism@localhost:5432/prism"
+          table: "consumer_state"
+          max_connections: 20
+          sslmode: "require"  # Production security
+
+      dead_letter_queue:
+        backend: postgres
+        # Postgres implements: queue_basic, queue_visibility, queue_dead_letter, queue_delayed
+        interfaces:
+          - queue_basic
+          - queue_visibility
+          - queue_dead_letter
+        config:
+          connection: "postgresql://prism:prism@localhost:5432/prism"
+          table: "payment_dlq"
+          visibility_timeout: 300  # 5 minutes
+          max_receives: 3  # Move to permanent DLQ after 3 attempts
+          dlq_table: "payment_permanent_dlq"
+
+    # Consumer behavior parameters (conservative for critical payments)
+    behavior:
+      consumer_group: "payment-processor-group"
+      topic: "payments.pending"
+      max_retries: 5  # Generous retry attempts
+      auto_commit: false  # Manual commit in transaction with state
+      batch_size: 10  # Process 10 payments per batch for efficiency
+      commit_interval: "0s"  # Not used (manual commit)
+
+# Expected pattern executor startup:
+#   1. Pattern executor reads this config
+#   2. Initializes Kafka driver with pubsub_basic + pubsub_persistent interfaces
+#   3. Initializes PostgreSQL driver for state with keyvalue_basic interface
+#   4. Initializes PostgreSQL driver for DLQ with queue_basic interface
+#   5. Binds slots: consumer.BindSlots(kafka, postgres_state, postgres_dlq)
+#   6. Starts consuming with full durability:
+#      - State persisted to PostgreSQL after each message
+#      - Failed messages after 5 retries go to DLQ
+#      - Kafka offsets committed after PostgreSQL transaction succeeds
+#      - Exactly-once semantics (Kafka + PostgreSQL transaction)

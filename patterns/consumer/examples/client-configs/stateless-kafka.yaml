@@ -1,0 +1,44 @@
+# Example: Stateless Consumer with Kafka Only
+# Use case: Real-time alerting, ephemeral processing
+
+namespaces:
+  - name: alert-processor
+    pattern: consumer
+    pattern_version: v1
+    description: "Processes alert events without state persistence"
+
+    # Client-provided slot configuration (minimal - only message source)
+    slots:
+      message_source:
+        backend: kafka
+        # Kafka implements: pubsub_basic, pubsub_persistent, stream_basic, stream_consumer_groups
+        interfaces:
+          - pubsub_basic
+          - pubsub_persistent  # Kafka has durable storage
+        config:
+          connection: "kafka://localhost:9092"
+          topic: "alerts.critical"
+          group_id: "alert-processor-group"
+          auto_offset_reset: "latest"  # Start from newest messages
+          enable_auto_commit: true
+
+      # No state_store configured - runs in stateless mode
+      # Consumer processes from latest offset, no checkpoint resume
+
+      # No DLQ configured - failed alerts logged only
+
+    # Consumer behavior parameters
+    behavior:
+      consumer_group: "alert-processor-group"
+      topic: "alerts.critical"
+      max_retries: 1  # Quick retries only
+      auto_commit: false  # Manual commits via Kafka consumer group
+      batch_size: 0
+      commit_interval: "0s"  # Not used in stateless mode
+
+# Expected pattern executor startup:
+#   1. Pattern executor reads this config
+#   2. Initializes Kafka driver with pubsub_basic interface
+#   3. Binds slots: consumer.BindSlots(kafka, nil, nil)  # No state store!
+#   4. Starts consuming in stateless mode (no checkpoint resume)
+#   5. Processes messages from latest offset

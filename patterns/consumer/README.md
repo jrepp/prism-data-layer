@@ -12,13 +12,52 @@ The consumer pattern depends **only on backend interfaces**, not concrete implem
 
 ### Slot-Based Design
 
-The consumer pattern has **3 slots** that must be filled with backend drivers:
+The consumer pattern has **3 slots** that can be filled with backend drivers:
 
-| Slot | Required Interface | Purpose |
-|------|-------------------|---------|
-| **MessageSource** | `PubSubInterface` or `QueueInterface` | Provides messages to consume |
-| **StateStore** | `KeyValueBasicInterface` | Stores consumer state (offsets, checkpoints) |
-| **DeadLetterQueue** | `QueueInterface` (optional) | Stores failed messages |
+| Slot | Required Interface | Purpose | Required? |
+|------|-------------------|---------|-----------|
+| **MessageSource** | `PubSubInterface` or `QueueInterface` | Provides messages to consume | ✅ Yes |
+| **StateStore** | `KeyValueBasicInterface` | Stores consumer state (offsets, checkpoints) | ⚠️ Optional* |
+| **DeadLetterQueue** | `QueueInterface` | Stores failed messages | ⚠️ Optional |
+
+\* **StateStore is optional**: If not provided, consumer runs in **stateless mode** (no checkpoint resume, processes from latest offset).
+
+### Operational Modes
+
+The consumer pattern supports three operational modes based on which slots are filled:
+
+#### 1. Stateless Mode (Minimal)
+**Slots**: MessageSource only
+**Use case**: Ephemeral processing, real-time alerts, analytics
+**Behavior**: Processes from latest offset, no state persistence
+
+```yaml
+slots:
+  message_source: nats  # Only slot filled
+```
+
+#### 2. Stateful Mode (Standard)
+**Slots**: MessageSource + StateStore
+**Use case**: Durable processing, at-least-once delivery, fault tolerance
+**Behavior**: Checkpoints after each message, resumes from last checkpoint on restart
+
+```yaml
+slots:
+  message_source: kafka
+  state_store: redis      # Enables checkpoint resume
+```
+
+#### 3. Full Durability Mode (Maximum Reliability)
+**Slots**: MessageSource + StateStore + DeadLetterQueue
+**Use case**: Critical transactions, audit trails, compliance
+**Behavior**: Checkpoints + DLQ for failed messages + retry exhaustion handling
+
+```yaml
+slots:
+  message_source: kafka
+  state_store: postgres
+  dead_letter_queue: postgres  # Failed messages persisted
+```
 
 ### Interface Contracts
 
@@ -212,38 +251,136 @@ plugin, _ := kafkapostgres.New(config)
 
 ## Configuration
 
-### YAML Configuration
+### Pattern Schema (Registry)
+
+The consumer pattern is defined in `/registry/patterns/consumer.yaml` following MEMO-006's schema architecture:
 
 ```yaml
-# consumer-config.yaml
-name: "order-processor"
-description: "Processes order events"
-
+pattern: consumer
+version: v1
 slots:
   message_source:
-    driver: "nats"
-    config:
-      url: "nats://localhost:4222"
-      max_reconnects: 10
+    description: "Provides messages to consume from topic/queue"
+    required_interfaces: [pubsub_basic]
+    alternative_interfaces: [queue_basic]
+    recommended_backends: [nats, kafka, redis, rabbitmq]
 
   state_store:
-    driver: "redis"
-    config:
-      address: "localhost:6379"
-      pool_size: 10
+    description: "Stores consumer state (offsets, checkpoints, retry counts)"
+    required_interfaces: [keyvalue_basic]
+    optional_interfaces: [keyvalue_ttl]
+    recommended_backends: [redis, postgres, memstore, etcd]
+    optional: true  # Consumer runs in stateless mode if not provided
 
   dead_letter_queue:
-    driver: "nats"
-    config:
-      url: "nats://localhost:4222"
+    description: "Stores messages that fail after max retries"
+    required_interfaces: [queue_basic, queue_visibility]
+    recommended_backends: [postgres, sqs, rabbitmq]
+    optional: true
+```
 
-behavior:
-  consumer_group: "order-processor-group"
-  topic: "orders.created"
-  max_retries: 3
-  batch_size: 0
-  auto_commit: true
-  commit_interval: "5s"
+### Client-Provided Configuration
+
+After the pattern executor is running, clients provide configuration to fill slots with specific backends:
+
+#### Example 1: Stateful Consumer (NATS + Redis)
+
+See [`examples/client-configs/stateful-nats-redis.yaml`](examples/client-configs/stateful-nats-redis.yaml):
+
+```yaml
+namespaces:
+  - name: order-processor
+    pattern: consumer
+    pattern_version: v1
+
+    slots:
+      message_source:
+        backend: nats
+        interfaces: [pubsub_basic]
+        config:
+          connection: "nats://localhost:4222"
+          subject: "orders.created"
+
+      state_store:
+        backend: redis
+        interfaces: [keyvalue_basic, keyvalue_ttl]
+        config:
+          connection: "redis://localhost:6379/0"
+          key_prefix: "consumer:order-processor:"
+          ttl_seconds: 86400
+
+    behavior:
+      consumer_group: "order-processor-group"
+      topic: "orders.created"
+      max_retries: 3
+      auto_commit: true
+```
+
+#### Example 2: Stateless Consumer (Kafka Only)
+
+See [`examples/client-configs/stateless-kafka.yaml`](examples/client-configs/stateless-kafka.yaml):
+
+```yaml
+namespaces:
+  - name: alert-processor
+    pattern: consumer
+    pattern_version: v1
+
+    slots:
+      message_source:
+        backend: kafka
+        interfaces: [pubsub_basic, pubsub_persistent]
+        config:
+          connection: "kafka://localhost:9092"
+          topic: "alerts.critical"
+          auto_offset_reset: "latest"
+
+      # No state_store - runs in stateless mode
+
+    behavior:
+      consumer_group: "alert-processor-group"
+      topic: "alerts.critical"
+      max_retries: 1
+```
+
+#### Example 3: Full Durability (Kafka + PostgreSQL State + PostgreSQL DLQ)
+
+See [`examples/client-configs/full-durability-postgres.yaml`](examples/client-configs/full-durability-postgres.yaml):
+
+```yaml
+namespaces:
+  - name: payment-processor
+    pattern: consumer
+    pattern_version: v1
+
+    slots:
+      message_source:
+        backend: kafka
+        interfaces: [pubsub_basic, pubsub_persistent]
+        config:
+          connection: "kafka://localhost:9092"
+          topic: "payments.pending"
+
+      state_store:
+        backend: postgres
+        interfaces: [keyvalue_basic, keyvalue_transactional]
+        config:
+          connection: "postgresql://prism:prism@localhost:5432/prism"
+          table: "consumer_state"
+
+      dead_letter_queue:
+        backend: postgres
+        interfaces: [queue_basic, queue_visibility, queue_dead_letter]
+        config:
+          connection: "postgresql://prism:prism@localhost:5432/prism"
+          table: "payment_dlq"
+          visibility_timeout: 300
+
+    behavior:
+      consumer_group: "payment-processor-group"
+      topic: "payments.pending"
+      max_retries: 5
+      batch_size: 10
 ```
 
 ## State Management
@@ -347,6 +484,7 @@ consumer.BindSlots(nats, s3, nil)
 
 ## Related Patterns
 
+- **[MEMO-006: Backend Interface Decomposition & Schema Registry](/memos/memo-006)** - Pattern schema architecture
 - **[RFC-017: Multicast Registry Pattern](/rfc/rfc-017)** - Schematized backend slots
 - **[MEMO-004: Backend Implementation Guide](/memos/memo-004)** - Backend comparison
 - **[RFC-008: Proxy Plugin Architecture](/rfc/rfc-008)** - Plugin lifecycle

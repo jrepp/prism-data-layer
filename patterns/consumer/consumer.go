@@ -76,10 +76,7 @@ func (c *Consumer) BindSlots(
 		return fmt.Errorf("message_source must implement PubSubInterface or QueueInterface")
 	}
 
-	// State store is required
-	if stateStore == nil {
-		return fmt.Errorf("state_store cannot be nil")
-	}
+	// State store is optional (consumer will run stateless if nil)
 	c.stateStore = stateStore
 
 	// Dead letter queue is optional
@@ -109,8 +106,8 @@ func (c *Consumer) Start(ctx context.Context) error {
 		return fmt.Errorf("consumer already running")
 	}
 
-	if c.messageSource == nil || c.stateStore == nil {
-		return fmt.Errorf("slots must be bound before starting")
+	if c.messageSource == nil {
+		return fmt.Errorf("message_source slot must be bound before starting")
 	}
 
 	if c.processor == nil {
@@ -123,8 +120,14 @@ func (c *Consumer) Start(ctx context.Context) error {
 	// Start consumption based on message source type
 	go c.consume()
 
+	stateful := "stateless"
+	if c.stateStore != nil {
+		stateful = "stateful"
+	}
+
 	slog.Info("consumer started",
 		"name", c.name,
+		"mode", stateful,
 		"group", c.config.Behavior.ConsumerGroup,
 		"topic", c.config.Behavior.Topic)
 
@@ -247,7 +250,17 @@ func (c *Consumer) sendToDeadLetter(msg *plugin.PubSubMessage) error {
 }
 
 // loadState loads the consumer state from the state store.
+// If stateStore is nil, returns a new empty state (stateless mode).
 func (c *Consumer) loadState() (*ConsumerState, error) {
+	// Stateless mode: return new state each time
+	if c.stateStore == nil {
+		return &ConsumerState{
+			Offset:      0,
+			LastUpdated: time.Now(),
+			RetryCount:  0,
+		}, nil
+	}
+
 	stateKey := c.stateKey()
 
 	data, found, err := c.stateStore.Get(stateKey)
@@ -273,7 +286,13 @@ func (c *Consumer) loadState() (*ConsumerState, error) {
 }
 
 // saveState saves the consumer state to the state store.
+// If stateStore is nil, this is a no-op (stateless mode).
 func (c *Consumer) saveState(state *ConsumerState) error {
+	// Stateless mode: skip persistence
+	if c.stateStore == nil {
+		return nil
+	}
+
 	stateKey := c.stateKey()
 
 	data, err := json.Marshal(state)
