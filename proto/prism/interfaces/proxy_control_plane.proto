@@ -1,0 +1,218 @@
+syntax = "proto3";
+
+package prism.interfaces;
+
+option go_package = "github.com/jrepp/prism-data-layer/proto/gen/prism/interfaces";
+
+import "google/protobuf/struct.proto";
+import "prism/interfaces/lifecycle.proto";
+
+// ProxyControlPlane is the service that patterns connect to.
+// The proxy runs this service, and patterns connect as clients.
+//
+// Architecture:
+//   Proxy (Server) <──── Pattern (Client connects back)
+//
+// Flow:
+//   1. Proxy launches pattern with: consumer-runner -proxy-addr localhost:9090
+//   2. Pattern connects to ProxyControlPlane.ManagePattern()
+//   3. Pattern sends RegisterRequest with its capabilities
+//   4. Proxy sends commands (Initialize, Start, Stop) via stream
+//   5. Pattern executes commands and sends responses back
+service ProxyControlPlane {
+  // ManagePattern establishes a bidirectional stream for pattern lifecycle management.
+  // Pattern initiates connection and keeps it open for receiving commands.
+  rpc ManagePattern(stream PatternMessage) returns (stream ProxyCommand);
+}
+
+// PatternMessage is sent from pattern to proxy
+message PatternMessage {
+  // Unique ID for correlating requests/responses
+  string correlation_id = 1;
+
+  oneof message {
+    // Initial registration when pattern connects
+    RegisterRequest register = 2;
+
+    // Responses to proxy commands
+    InitializeResponse initialize_response = 3;
+    StartResponse start_response = 4;
+    StopResponse stop_response = 5;
+    HealthCheckResponse health_response = 6;
+
+    // Periodic heartbeat to maintain connection
+    HeartbeatMessage heartbeat = 7;
+  }
+}
+
+// ProxyCommand is sent from proxy to pattern
+message ProxyCommand {
+  // Unique ID for correlating requests/responses
+  string correlation_id = 1;
+
+  oneof command {
+    // Acknowledge successful registration
+    RegisterResponse register_ack = 2;
+
+    // Lifecycle commands
+    InitializeRequest initialize = 3;
+    StartRequest start = 4;
+    StopRequest stop = 5;
+    HealthCheckRequest health_check = 6;
+
+    // Graceful shutdown initiated by proxy
+    ShutdownRequest shutdown = 7;
+  }
+}
+
+// RegisterRequest is sent by pattern when it first connects
+message RegisterRequest {
+  // Pattern name (e.g., "consumer", "multicast_registry")
+  string pattern_name = 1;
+
+  // Pattern version
+  string pattern_version = 2;
+
+  // Process ID for lifecycle tracking
+  int32 process_id = 3;
+
+  // Capabilities and interfaces implemented
+  PatternMetadata metadata = 4;
+
+  // Consumer protocol specification (RFC-030)
+  ConsumerProtocol consumer_protocol = 5;
+}
+
+// ConsumerProtocol specifies what the consumer expects (RFC-030)
+message ConsumerProtocol {
+  // Topics this consumer will subscribe to
+  repeated string topics = 1;
+
+  // Schema expectations per topic
+  map<string, SchemaExpectation> schema_expectations = 2;
+
+  // Consumer metadata (governance, RFC-030 §1298-1412)
+  ConsumerMetadata metadata = 3;
+}
+
+// SchemaExpectation defines what schema version/format the consumer expects
+message SchemaExpectation {
+  // Expected schema version (e.g., "v2", "latest")
+  string expected_version = 1;
+
+  // Compatibility mode this consumer supports
+  CompatibilityMode compatibility_mode = 2;
+
+  // Action on schema mismatch
+  OnMismatchAction on_mismatch = 3;
+
+  // Field-level access control (RFC-030 §1495-1544)
+  repeated string allowed_fields = 4;
+}
+
+enum CompatibilityMode {
+  COMPATIBILITY_MODE_UNSPECIFIED = 0;
+  COMPATIBILITY_MODE_BACKWARD = 1;  // Consumer reads new data with old schema
+  COMPATIBILITY_MODE_FORWARD = 2;   // Consumer reads old data with new schema
+  COMPATIBILITY_MODE_FULL = 3;      // Both backward and forward
+  COMPATIBILITY_MODE_NONE = 4;      // No compatibility guarantees
+}
+
+enum OnMismatchAction {
+  ON_MISMATCH_UNSPECIFIED = 0;
+  ON_MISMATCH_ERROR = 1;   // Reject subscription if schema mismatch
+  ON_MISMATCH_WARN = 2;    // Log warning but continue
+  ON_MISMATCH_IGNORE = 3;  // Silently accept any schema
+}
+
+// ConsumerMetadata provides governance information (RFC-030 §1384-1412)
+message ConsumerMetadata {
+  // Team owning this consumer
+  string team = 1;
+
+  // Purpose/use case for consuming this data
+  string purpose = 2;
+
+  // Data usage category
+  DataUsage data_usage = 3;
+
+  // Whether PII access is required
+  PIIAccess pii_access = 4;
+
+  // How long consumer retains data (days)
+  int32 retention_days = 5;
+
+  // Compliance frameworks this consumer adheres to
+  repeated string compliance_frameworks = 6;
+
+  // Approval ticket/email (if required by schema)
+  string approved_by = 7;
+
+  // Approval date
+  string approval_date = 8;
+
+  // Access pattern
+  AccessPattern access_pattern = 9;
+
+  // Rate limiting
+  RateLimit rate_limit = 10;
+}
+
+enum DataUsage {
+  DATA_USAGE_UNSPECIFIED = 0;
+  DATA_USAGE_ANALYTICS = 1;
+  DATA_USAGE_OPERATIONAL = 2;
+  DATA_USAGE_ML_TRAINING = 3;
+  DATA_USAGE_DEBUGGING = 4;
+}
+
+enum PIIAccess {
+  PII_ACCESS_UNSPECIFIED = 0;
+  PII_ACCESS_REQUIRED = 1;
+  PII_ACCESS_NOT_NEEDED = 2;
+}
+
+enum AccessPattern {
+  ACCESS_PATTERN_UNSPECIFIED = 0;
+  ACCESS_PATTERN_READ_ONLY = 1;
+  ACCESS_PATTERN_WRITE_THROUGH = 2;
+  ACCESS_PATTERN_BIDIRECTIONAL = 3;
+}
+
+message RateLimit {
+  // Maximum messages per second this consumer can handle
+  int32 max_messages_per_second = 1;
+
+  // Maximum concurrent consumer instances
+  int32 max_consumers = 2;
+}
+
+// RegisterResponse acknowledges successful registration
+message RegisterResponse {
+  // Success indicator
+  bool success = 1;
+
+  // Error message if registration failed
+  string error = 2;
+
+  // Assigned pattern instance ID
+  string instance_id = 3;
+}
+
+// HeartbeatMessage keeps connection alive and reports status
+message HeartbeatMessage {
+  // Current timestamp
+  int64 timestamp = 1;
+
+  // Quick health indicator (avoid full health check overhead)
+  HealthStatus status = 2;
+}
+
+// ShutdownRequest tells pattern to gracefully terminate
+message ShutdownRequest {
+  // Graceful shutdown timeout in seconds
+  int32 timeout_seconds = 1;
+
+  // Reason for shutdown (for logging/debugging)
+  string reason = 2;
+}
