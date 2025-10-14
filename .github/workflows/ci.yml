@@ -94,16 +94,16 @@ jobs:
             ~/.cargo/registry/index/
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
-            proxy/target/
-          key: ${{ runner.os }}-cargo-${{ hashFiles('proxy/Cargo.lock') }}
+            prism-proxy/target/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('prism-proxy/Cargo.lock') }}
           restore-keys: |
             ${{ runner.os }}-cargo-
 
       - name: Format Rust code
-        run: cd proxy && cargo fmt --all -- --check
+        run: cd prism-proxy && cargo fmt --all -- --check
 
       - name: Lint Rust with Clippy
-        run: cd proxy && cargo clippy -- -D warnings
+        run: cd prism-proxy && cargo clippy -- -D warnings
 
   # Job 2: Lint Python code
   lint-python:
@@ -210,20 +210,20 @@ jobs:
             ~/.cargo/registry/index/
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
-            proxy/target/
-          key: ${{ runner.os }}-cargo-test-${{ hashFiles('proxy/Cargo.lock') }}
+            prism-proxy/target/
+          key: ${{ runner.os }}-cargo-test-${{ hashFiles('prism-proxy/Cargo.lock') }}
           restore-keys: |
             ${{ runner.os }}-cargo-test-
             ${{ runner.os }}-cargo-
 
       - name: Run Rust tests
-        run: cd proxy && cargo test --lib --verbose
+        run: cd prism-proxy && cargo test --lib --verbose
 
       - name: Install cargo-tarpaulin
         run: cargo install cargo-tarpaulin
 
       - name: Generate Rust coverage
-        run: cd proxy && cargo tarpaulin --lib --out Xml --output-dir ../
+        run: cd prism-proxy && cargo tarpaulin --lib --out Xml --output-dir ../
 
       - name: Upload Rust coverage
         uses: actions/upload-artifact@v4
@@ -436,14 +436,14 @@ jobs:
             ~/.cargo/registry/index/
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
-            proxy/target/
-          key: ${{ runner.os }}-cargo-build-${{ hashFiles('proxy/Cargo.lock') }}
+            prism-proxy/target/
+          key: ${{ runner.os }}-cargo-build-${{ hashFiles('prism-proxy/Cargo.lock') }}
           restore-keys: |
             ${{ runner.os }}-cargo-build-
             ${{ runner.os }}-cargo-
 
       - name: Build Rust proxy
-        run: cd proxy && cargo build --release
+        run: cd prism-proxy && cargo build --release
 
       - name: Build Go patterns
         run: |
@@ -455,7 +455,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: proxy-binary
-          path: proxy/target/release/prism-proxy
+          path: prism-proxy/target/release/prism-proxy
           retention-days: 7
 
       - name: Upload pattern binaries
