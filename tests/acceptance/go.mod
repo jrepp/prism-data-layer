@@ -3,11 +3,14 @@ module github.com/jrepp/prism-data-layer/tests/acceptance
 go 1.24.0
 
 require (
-	github.com/jrepp/prism-data-layer/patterns/core v0.0.0
-	github.com/jrepp/prism-data-layer/patterns/nats v0.0.0
-	github.com/jrepp/prism-data-layer/patterns/redis v0.0.0
+	github.com/jrepp/prism-data-layer/patterns/consumer v0.0.0
+	github.com/jrepp/prism-data-layer/pkg/drivers/memstore v0.0.0
+	github.com/jrepp/prism-data-layer/pkg/drivers/nats v0.0.0
+	github.com/jrepp/prism-data-layer/pkg/drivers/redis v0.0.0
+	github.com/jrepp/prism-data-layer/pkg/plugin v0.0.0
 	github.com/jrepp/prism-data-layer/tests/testing v0.0.0
 	github.com/stretchr/testify v1.11.1
+	github.com/testcontainers/testcontainers-go/modules/nats v0.34.0
 )
 
 require (
@@ -36,7 +39,6 @@ require (
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.16.0 // indirect
 	github.com/jackc/pgx/v5 v5.7.3 // indirect
-	github.com/jrepp/prism-data-layer/patterns/memstore v0.0.0-20251010231143-1b1778c9ef05 // indirect
 	github.com/klauspost/compress v1.18.0 // indirect
 	github.com/lufia/plan9stats v0.0.0-20211012122336-39d0f177ccd0 // indirect
 	github.com/magiconair/properties v1.8.10 // indirect
@@ -60,7 +62,6 @@ require (
 	github.com/shirou/gopsutil/v4 v4.25.6 // indirect
 	github.com/sirupsen/logrus v1.9.3 // indirect
 	github.com/testcontainers/testcontainers-go v0.39.0 // indirect
-	github.com/testcontainers/testcontainers-go/modules/nats v0.34.0 // indirect
 	github.com/testcontainers/testcontainers-go/modules/postgres v0.39.0 // indirect
 	github.com/testcontainers/testcontainers-go/modules/redis v0.34.0 // indirect
 	github.com/tklauser/go-sysconf v0.3.12 // indirect
@@ -84,9 +85,10 @@ require (
 )
 
 replace (
-	github.com/jrepp/prism-data-layer/patterns/core => ../../patterns/core
-	github.com/jrepp/prism-data-layer/patterns/memstore => ../../patterns/memstore
-	github.com/jrepp/prism-data-layer/patterns/nats => ../../patterns/nats
-	github.com/jrepp/prism-data-layer/patterns/redis => ../../patterns/redis
+	github.com/jrepp/prism-data-layer/patterns/consumer => ../../patterns/consumer
+	github.com/jrepp/prism-data-layer/pkg/drivers/memstore => ../../pkg/drivers/memstore
+	github.com/jrepp/prism-data-layer/pkg/drivers/nats => ../../pkg/drivers/nats
+	github.com/jrepp/prism-data-layer/pkg/drivers/redis => ../../pkg/drivers/redis
+	github.com/jrepp/prism-data-layer/pkg/plugin => ../../pkg/plugin
 	github.com/jrepp/prism-data-layer/tests/testing => ../testing
 )

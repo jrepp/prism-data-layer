@@ -13,40 +13,40 @@ import (
 // PatternHarness provides common test utilities for pattern testing
 type PatternHarness struct {
 	t       *testing.T
-	plugin  core.Plugin
+	plugin  plugin.Plugin
 	ctx     context.Context
 	cancel  context.CancelFunc
 	cleanup []func()
 }
 
 // NewPatternHarness creates a new test harness for a pattern
-func NewPatternHarness(t *testing.T, plugin core.Plugin, config *core.Config) *PatternHarness {
+func NewPatternHarness(t *testing.T, p plugin.Plugin, config *plugin.Config) *PatternHarness {
 	t.Helper()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 
 	h := &PatternHarness{
 		t:       t,
-		plugin:  plugin,
+		plugin:  p,
 		ctx:     ctx,
 		cancel:  cancel,
 		cleanup: []func(){},
 	}
 
 	// Initialize plugin
-	err := plugin.Initialize(ctx, config)
+	err := p.Initialize(ctx, config)
 	require.NoError(t, err, "Failed to initialize plugin")
 
 	// Start plugin in goroutine (Start() blocks until context is cancelled)
 	go func() {
-		if err := plugin.Start(ctx); err != nil {
+		if err := p.Start(ctx); err != nil {
 			t.Logf("Plugin Start() returned: %v", err)
 		}
 	}()
 
 	// Register cleanup
 	h.AddCleanup(func() {
-		_ = plugin.Stop(ctx)
+		_ = p.Stop(ctx)
 	})
 
 	return h
@@ -70,7 +70,7 @@ func (h *PatternHarness) Cleanup() {
 }
 
 // Plugin returns the pattern plugin
-func (h *PatternHarness) Plugin() core.Plugin {
+func (h *PatternHarness) Plugin() plugin.Plugin {
 	return h.plugin
 }
 
@@ -89,7 +89,7 @@ func (h *PatternHarness) WaitForHealthy(timeout time.Duration) error {
 	ticker := time.NewTicker(100 * time.Millisecond)
 	defer ticker.Stop()
 
-	var lastStatus *core.HealthStatus
+	var lastStatus *plugin.HealthStatus
 	var lastErr error
 	attempts := 0
 
@@ -123,7 +123,7 @@ func (h *PatternHarness) WaitForHealthy(timeout time.Duration) error {
 				continue
 			}
 			lastStatus = status
-			if status.Status == core.HealthHealthy {
+			if status.Status == plugin.HealthHealthy {
 				return nil
 			}
 		}
@@ -134,7 +134,7 @@ func (h *PatternHarness) WaitForHealthy(timeout time.Duration) error {
 type HealthCheckError struct {
 	Timeout    time.Duration
 	Attempts   int
-	LastStatus *core.HealthStatus
+	LastStatus *plugin.HealthStatus
 	LastErr    error
 }
 
@@ -157,5 +157,5 @@ func (h *PatternHarness) AssertHealthy() {
 
 	status, err := h.plugin.Health(h.ctx)
 	require.NoError(h.t, err, "Health check failed")
-	require.Equal(h.t, core.HealthHealthy, status.Status, "Plugin not healthy: %s", status.Message)
+	require.Equal(h.t, plugin.HealthHealthy, status.Status, "Plugin not healthy: %s", status.Message)
 }

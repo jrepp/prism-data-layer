@@ -52,8 +52,8 @@ func setupNATS(t *testing.T, ctx context.Context) (interface{}, func()) {
 	driver := nats.New()
 
 	// Configure driver with testcontainer connection
-	config := &core.Config{
-		Plugin: core.PluginConfig{
+	config := &plugin.Config{
+		Plugin: plugin.PluginConfig{
 			Name:    "nats-test",
 			Version: "0.1.0",
 		},
@@ -90,7 +90,7 @@ func setupNATS(t *testing.T, ctx context.Context) (interface{}, func()) {
 }
 
 // waitForNATSHealthy polls the NATS driver's health endpoint
-func waitForNATSHealthy(driver core.Plugin, timeout time.Duration) error {
+func waitForNATSHealthy(driver plugin.Plugin, timeout time.Duration) error {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
@@ -103,7 +103,7 @@ func waitForNATSHealthy(driver core.Plugin, timeout time.Duration) error {
 			return ctx.Err()
 		case <-ticker.C:
 			health, err := driver.Health(ctx)
-			if err == nil && health.Status == core.HealthHealthy {
+			if err == nil && health.Status == plugin.HealthHealthy {
 				return nil
 			}
 		}

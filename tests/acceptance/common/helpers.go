@@ -38,10 +38,10 @@ func (tc *TestConfig) WithVersion(version string) *TestConfig {
 	return tc
 }
 
-// Build creates the core.Config
-func (tc *TestConfig) Build() *core.Config {
-	return &core.Config{
-		Plugin: core.PluginConfig{
+// Build creates the plugin.Config
+func (tc *TestConfig) Build() *plugin.Config {
+	return &plugin.Config{
+		Plugin: plugin.PluginConfig{
 			Name:    tc.name,
 			Version: tc.version,
 		},
@@ -50,7 +50,7 @@ func (tc *TestConfig) Build() *core.Config {
 }
 
 // SetupRedisTest is a convenience wrapper that sets up a Redis pattern with defaults
-func SetupRedisTest(t *testing.T, plugin core.Plugin) (*PatternHarness, *backends.RedisBackend) {
+func SetupRedisTest(t *testing.T, p plugin.Plugin) (*PatternHarness, *backends.RedisBackend) {
 	t.Helper()
 	ctx := context.Background()
 
@@ -59,7 +59,7 @@ func SetupRedisTest(t *testing.T, plugin core.Plugin) (*PatternHarness, *backend
 		WithBackendOption("address", backend.ConnectionString).
 		Build()
 
-	harness := NewPatternHarness(t, plugin, config)
+	harness := NewPatternHarness(t, p, config)
 	err := harness.WaitForHealthy(5 * time.Second)
 	require.NoError(t, err, "Plugin did not become healthy")
 
@@ -67,7 +67,7 @@ func SetupRedisTest(t *testing.T, plugin core.Plugin) (*PatternHarness, *backend
 }
 
 // SetupNATSTest is a convenience wrapper that sets up a NATS pattern with defaults
-func SetupNATSTest(t *testing.T, plugin core.Plugin) (*PatternHarness, *backends.NATSBackend) {
+func SetupNATSTest(t *testing.T, p plugin.Plugin) (*PatternHarness, *backends.NATSBackend) {
 	t.Helper()
 	ctx := context.Background()
 
@@ -76,7 +76,7 @@ func SetupNATSTest(t *testing.T, plugin core.Plugin) (*PatternHarness, *backends
 		WithBackendOption("url", backend.ConnectionString).
 		Build()
 
-	harness := NewPatternHarness(t, plugin, config)
+	harness := NewPatternHarness(t, p, config)
 	err := harness.WaitForHealthy(5 * time.Second)
 	require.NoError(t, err, "Plugin did not become healthy")
 
@@ -92,11 +92,11 @@ func WithCleanup(t *testing.T, setup func() func(), test func()) {
 }
 
 // AssertHealthyWithMessage checks health and provides custom failure message
-func AssertHealthyWithMessage(t *testing.T, plugin core.Plugin, ctx context.Context, message string) {
+func AssertHealthyWithMessage(t *testing.T, p plugin.Plugin, ctx context.Context, message string) {
 	t.Helper()
-	status, err := plugin.Health(ctx)
+	status, err := p.Health(ctx)
 	require.NoError(t, err, "Health check failed: %s", message)
-	require.Equal(t, core.HealthHealthy, status.Status,
+	require.Equal(t, plugin.HealthHealthy, status.Status,
 		"%s - Plugin status: %s, message: %s", message, status.Status, status.Message)
 }
 

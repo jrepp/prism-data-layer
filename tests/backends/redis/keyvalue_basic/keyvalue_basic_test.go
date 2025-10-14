@@ -54,7 +54,11 @@ func createRedisBackend(t *testing.T) plugin.KeyValueBasicInterface {
 
 	// Initialize with container endpoint
 	config := &plugin.Config{
-		BackendConfig: map[string]interface{}{
+		Plugin: plugin.PluginConfig{
+			Name:    "redis",
+			Version: "0.1.0",
+		},
+		Backend: map[string]interface{}{
 			"address": endpoint,
 		},
 	}

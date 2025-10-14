@@ -35,7 +35,11 @@ func createMemStoreBackend(t *testing.T) plugin.KeyValueBasicInterface {
 
 	// Initialize with default config
 	config := &plugin.Config{
-		BackendConfig: map[string]interface{}{
+		Plugin: plugin.PluginConfig{
+			Name:    "memstore",
+			Version: "0.1.0",
+		},
+		Backend: map[string]interface{}{
 			"max_keys":       10000,
 			"cleanup_period": "60s",
 		},

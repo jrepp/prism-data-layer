@@ -71,8 +71,8 @@ func setupRedisDriver(t *testing.T, ctx context.Context) (KeyValueBasicDriver, f
 	driver := redis.New()
 
 	// Configure with shared testcontainer
-	config := &core.Config{
-		Plugin: core.PluginConfig{
+	config := &plugin.Config{
+		Plugin: plugin.PluginConfig{
 			Name:    "redis-test",
 			Version: "0.1.0",
 		},
@@ -117,8 +117,8 @@ func setupPostgresDriver(t *testing.T, ctx context.Context) (KeyValueBasicDriver
 	driver := postgres.New()
 
 	// Configure with shared testcontainer
-	config := &core.Config{
-		Plugin: core.PluginConfig{
+	config := &plugin.Config{
+		Plugin: plugin.PluginConfig{
 			Name:    "postgres-test",
 			Version: "0.1.0",
 		},
