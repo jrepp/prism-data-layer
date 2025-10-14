@@ -472,18 +472,20 @@ jobs:
 
       - name: Display coverage summary
         run: |
-          echo "## Coverage Summary" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "| Component | Coverage Files |" >> $GITHUB_STEP_SUMMARY
-          echo "|-----------|----------------|" >> $GITHUB_STEP_SUMMARY
-          for dir in build/coverage-reports/*/; do
-            component=$(basename "$dir")
-            if [ -f "$dir/coverage.out" ]; then
-              echo "| $component | ✅ Present |" >> $GITHUB_STEP_SUMMARY
-            else
-              echo "| $component | ❌ Missing |" >> $GITHUB_STEP_SUMMARY
-            fi
-          done
+          {
+            echo "## Coverage Summary"
+            echo ""
+            echo "| Component | Coverage Files |"
+            echo "|-----------|----------------|"
+            for dir in build/coverage-reports/*/; do
+              component=$(basename "$dir")
+              if [ -f "$dir/coverage.out" ]; then
+                echo "| $component | ✅ Present |"
+              else
+                echo "| $component | ❌ Missing |"
+              fi
+            done
+          } >> "$GITHUB_STEP_SUMMARY"
 
   # Job 9: Upload to Codecov
   codecov-upload:

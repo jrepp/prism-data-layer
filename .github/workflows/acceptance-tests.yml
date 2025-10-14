@@ -117,71 +117,70 @@ jobs:
 
       - name: Generate summary report
         run: |
-          echo "# 📊 Acceptance Test Summary" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-
           # Overall status
           INTERFACES_STATUS="${{ needs.test-interfaces.result }}"
           REDIS_STATUS="${{ needs.test-redis.result }}"
           NATS_STATUS="${{ needs.test-nats.result }}"
 
-          if [[ "$INTERFACES_STATUS" == "success" && "$REDIS_STATUS" == "success" && "$NATS_STATUS" == "success" ]]; then
-            echo "## ✅ All Tests Passed" >> $GITHUB_STEP_SUMMARY
-          else
-            echo "## ❌ Some Tests Failed" >> $GITHUB_STEP_SUMMARY
-          fi
-          echo "" >> $GITHUB_STEP_SUMMARY
-
-          # Test results table
-          echo "| Backend | Status | Coverage |" >> $GITHUB_STEP_SUMMARY
-          echo "|---------|--------|----------|" >> $GITHUB_STEP_SUMMARY
-
           # Interfaces
           if [[ "$INTERFACES_STATUS" == "success" ]]; then
-            STATUS="✅ Pass"
+            INTERFACES_STATUS_TEXT="✅ Pass"
           else
-            STATUS="❌ Fail"
+            INTERFACES_STATUS_TEXT="❌ Fail"
           fi
           if [ -f build/coverage-reports/coverage-interfaces/coverage.out ]; then
-            COVERAGE=$(go tool cover -func=build/coverage-reports/coverage-interfaces/coverage.out | grep total | awk '{print $3}')
+            INTERFACES_COVERAGE=$(go tool cover -func=build/coverage-reports/coverage-interfaces/coverage.out | grep total | awk '{print $3}')
           else
-            COVERAGE="N/A"
+            INTERFACES_COVERAGE="N/A"
           fi
-          echo "| Interfaces | $STATUS | $COVERAGE |" >> $GITHUB_STEP_SUMMARY
 
           # Redis
           if [[ "$REDIS_STATUS" == "success" ]]; then
-            STATUS="✅ Pass"
+            REDIS_STATUS_TEXT="✅ Pass"
           else
-            STATUS="❌ Fail"
+            REDIS_STATUS_TEXT="❌ Fail"
           fi
           if [ -f build/coverage-reports/coverage-redis/coverage.out ]; then
-            COVERAGE=$(go tool cover -func=build/coverage-reports/coverage-redis/coverage.out | grep total | awk '{print $3}')
+            REDIS_COVERAGE=$(go tool cover -func=build/coverage-reports/coverage-redis/coverage.out | grep total | awk '{print $3}')
           else
-            COVERAGE="N/A"
+            REDIS_COVERAGE="N/A"
           fi
-          echo "| Redis | $STATUS | $COVERAGE |" >> $GITHUB_STEP_SUMMARY
 
           # NATS
           if [[ "$NATS_STATUS" == "success" ]]; then
-            STATUS="✅ Pass"
+            NATS_STATUS_TEXT="✅ Pass"
           else
-            STATUS="❌ Fail"
+            NATS_STATUS_TEXT="❌ Fail"
           fi
           if [ -f build/coverage-reports/coverage-nats/coverage.out ]; then
-            COVERAGE=$(go tool cover -func=build/coverage-reports/coverage-nats/coverage.out | grep total | awk '{print $3}')
+            NATS_COVERAGE=$(go tool cover -func=build/coverage-reports/coverage-nats/coverage.out | grep total | awk '{print $3}')
           else
-            COVERAGE="N/A"
+            NATS_COVERAGE="N/A"
           fi
-          echo "| NATS | $STATUS | $COVERAGE |" >> $GITHUB_STEP_SUMMARY
 
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "View detailed results in the artifacts for each job." >> $GITHUB_STEP_SUMMARY
+          # Write summary
+          {
+            echo "# 📊 Acceptance Test Summary"
+            echo ""
+            if [[ "$INTERFACES_STATUS" == "success" && "$REDIS_STATUS" == "success" && "$NATS_STATUS" == "success" ]]; then
+              echo "## ✅ All Tests Passed"
+            else
+              echo "## ❌ Some Tests Failed"
+            fi
+            echo ""
+            echo "| Backend | Status | Coverage |"
+            echo "|---------|--------|----------|"
+            echo "| Interfaces | $INTERFACES_STATUS_TEXT | $INTERFACES_COVERAGE |"
+            echo "| Redis | $REDIS_STATUS_TEXT | $REDIS_COVERAGE |"
+            echo "| NATS | $NATS_STATUS_TEXT | $NATS_COVERAGE |"
+            echo ""
+            echo "View detailed results in the artifacts for each job."
+          } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Display summary
         run: |
           echo "📊 Acceptance Test Summary:"
-          cat $GITHUB_STEP_SUMMARY
+          cat "$GITHUB_STEP_SUMMARY"
 
   # Status check for acceptance tests (required for merge)
   acceptance-status:
