@@ -19,7 +19,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/jrepp/prism-data-layer/patterns/core"
+	"github.com/jrepp/prism-data-layer/pkg/plugin"
 	"github.com/jrepp/prism-data-layer/patterns/mybackend"
 	"github.com/jrepp/prism-data-layer/tests/acceptance/framework"
 	"github.com/stretchr/testify/require"

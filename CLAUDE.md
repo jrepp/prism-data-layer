@@ -94,14 +94,27 @@ prism/
 │       └── changelog.md   # 📝 CANONICAL CHANGELOG
 ├── docs/                  # Built docs (GitHub Pages output)
 ├── admin/                 # FastAPI-based admin UI
-├── prismctl/              # Go CLI for Prism (OIDC auth, namespace management)
 ├── prism-proxy/           # Rust high-performance gateway
-├── patterns/               # Go backend plugins (containers)
-│   ├── core/              # Shared plugin package
-│   ├── postgres/          # PostgreSQL plugin
-│   ├── kafka/             # Kafka plugin
-│   ├── redis/             # Redis plugin
-│   └── watcher/           # File watcher for hot reload
+├── cmd/                   # Command-line tools (Go)
+│   ├── prismctl/          # Go CLI for Prism (OIDC auth, namespace management)
+│   ├── prism-loadtest/    # Load testing tool
+│   └── plugin-watcher/    # File watcher for hot reload
+├── pkg/                   # Importable Go libraries
+│   ├── plugin/            # Plugin SDK (gRPC protocol, lifecycle, observability)
+│   └── drivers/           # Backend driver implementations
+│       ├── memstore/      # In-memory storage driver
+│       ├── redis/         # Redis driver
+│       ├── nats/          # NATS driver
+│       ├── kafka/         # Kafka driver
+│       ├── postgres/      # PostgreSQL driver
+│       └── multicast_registry/  # Multicast registry driver
+├── backends/              # Backend pattern servers (containers)
+│   ├── memstore/          # MemStore pattern server
+│   ├── redis/             # Redis pattern server
+│   ├── nats/              # NATS pattern server
+│   ├── kafka/             # Kafka pattern server
+│   ├── postgres/          # PostgreSQL pattern server
+│   └── multicast_registry/  # Multicast registry server
 ├── proto/                 # Protobuf definitions (source of truth)
 ├── tooling/               # Python utilities for repo management
 ├── tests/                 # Integration and load tests
@@ -302,14 +315,14 @@ build/binaries/prismctl namespace list
 build/binaries/prismctl health
 
 # Or install to $GOPATH/bin
-cd prismctl && make install
+cd cmd/prismctl && make install
 prismctl --help
 
 # Build backend plugins
-cd patterns && make build
+make build-patterns
 
 # Watch plugins for changes and auto-rebuild
-cd patterns && go run ./watcher --reload
+cd cmd/plugin-watcher && go run .
 
 # Run proxy locally
 cd prism-proxy && cargo run --release

@@ -1,6 +1,7 @@
 # Dex configuration for local development
 # https://dexidp.io/docs/
 
+# Issuer must match Dex's actual endpoint paths
 issuer: http://localhost:5556/dex
 
 storage:
@@ -27,7 +28,7 @@ oauth2:
 
 # Static clients for prismctl and other applications
 staticClients:
-  # prismctl CLI client (device code flow)
+  # prismctl CLI client (device code flow + password flow for testing)
   - id: prismctl
     name: "Prism CLI"
     secret: prismctl-secret
@@ -35,9 +36,12 @@ staticClients:
       - http://localhost:8080/callback
       - http://localhost:5556/dex/callback
       - http://localhost:5556/dex/device/callback
+      - http://localhost:5556/device/callback  # Device code internal redirect
       - http://127.0.0.1:8080/callback
+      - /device/callback  # Relative path workaround for Dex device code bug
+      - /dex/device/callback  # Absolute path under issuer
       - urn:ietf:wg:oauth:2.0:oob  # Out-of-band for device code flow
-    public: false  # Confidential client for CLI
+    public: false  # Confidential client (required for password flow)
 
   # prism-admin web UI client
   - id: prism-admin

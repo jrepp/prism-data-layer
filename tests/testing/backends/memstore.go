@@ -5,8 +5,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/jrepp/prism-data-layer/patterns/core"
-	"github.com/jrepp/prism-data-layer/patterns/memstore"
+	"github.com/jrepp/prism-data-layer/pkg/plugin"
+	"github.com/jrepp/prism-data-layer/pkg/drivers/memstore"
 	"github.com/stretchr/testify/require"
 )
 

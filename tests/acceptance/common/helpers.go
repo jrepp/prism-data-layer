@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/jrepp/prism-data-layer/patterns/core"
+	"github.com/jrepp/prism-data-layer/pkg/plugin"
 	"github.com/jrepp/prism-data-layer/tests/testing/backends"
 	"github.com/stretchr/testify/require"
 )

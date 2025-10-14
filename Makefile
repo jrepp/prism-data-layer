@@ -81,25 +81,25 @@ build-patterns: build-memstore build-redis build-nats ## Build all Go patterns
 build-memstore: ## Build MemStore pattern
 	$(call print_blue,Building MemStore pattern...)
 	@mkdir -p $(BINARIES_DIR)
-	@cd patterns/memstore && go build -o $(BINARIES_DIR)/memstore cmd/memstore/main.go
+	@cd backends/memstore && go build -o $(BINARIES_DIR)/memstore cmd/memstore/main.go
 	$(call print_green,MemStore built: $(BINARIES_DIR)/memstore)
 
 build-redis: ## Build Redis pattern
 	$(call print_blue,Building Redis pattern...)
 	@mkdir -p $(BINARIES_DIR)
-	@cd patterns/redis && go build -o $(BINARIES_DIR)/redis cmd/redis/main.go
+	@cd backends/redis && go build -o $(BINARIES_DIR)/redis cmd/redis/main.go
 	$(call print_green,Redis built: $(BINARIES_DIR)/redis)
 
 build-nats: ## Build NATS pattern
 	$(call print_blue,Building NATS pattern...)
 	@mkdir -p $(BINARIES_DIR)
-	@cd patterns/nats && go build -o $(BINARIES_DIR)/nats cmd/nats/main.go
+	@cd backends/nats && go build -o $(BINARIES_DIR)/nats cmd/nats/main.go
 	$(call print_green,NATS built: $(BINARIES_DIR)/nats)
 
 build-prismctl: ## Build prismctl CLI
 	$(call print_blue,Building prismctl CLI...)
 	@mkdir -p $(BINARIES_DIR)
-	@cd prismctl && go build -o $(BINARIES_DIR)/prismctl .
+	@cd cmd/prismctl && go build -o $(BINARIES_DIR)/prismctl .
 	$(call print_green,prismctl built: $(BINARIES_DIR)/prismctl)
 
 build-dev: ## Build all components in debug mode (faster)
@@ -107,9 +107,9 @@ build-dev: ## Build all components in debug mode (faster)
 	@mkdir -p $(BINARIES_DIR)
 	@cd prism-proxy && CARGO_TARGET_DIR=$(RUST_TARGET_DIR) cargo build
 	@cp $(RUST_TARGET_DIR)/debug/prism-proxy $(BINARIES_DIR)/prism-proxy-debug
-	@cd patterns/memstore && go build -o $(BINARIES_DIR)/memstore-debug cmd/memstore/main.go
-	@cd patterns/redis && go build -o $(BINARIES_DIR)/redis-debug cmd/redis/main.go
-	@cd patterns/nats && go build -o $(BINARIES_DIR)/nats-debug cmd/nats/main.go
+	@cd backends/memstore && go build -o $(BINARIES_DIR)/memstore-debug cmd/memstore/main.go
+	@cd backends/redis && go build -o $(BINARIES_DIR)/redis-debug cmd/redis/main.go
+	@cd backends/nats && go build -o $(BINARIES_DIR)/nats-debug cmd/nats/main.go
 	$(call print_green,Debug builds complete: $(BINARIES_DIR)/*-debug)
 
 ##@ Testing
@@ -141,27 +141,27 @@ test-patterns: test-memstore test-redis test-nats test-core test-prismctl ## Run
 
 test-memstore: ## Run MemStore tests
 	$(call print_blue,Running MemStore tests...)
-	@cd patterns/memstore && go test -v -cover ./...
+	@cd backends/memstore && go test -v -cover ./...
 	$(call print_green,MemStore tests passed)
 
 test-redis: ## Run Redis tests
 	$(call print_blue,Running Redis tests...)
-	@cd patterns/redis && go test -v -cover ./...
+	@cd backends/redis && go test -v -cover ./...
 	$(call print_green,Redis tests passed)
 
 test-nats: ## Run NATS tests
 	$(call print_blue,Running NATS tests...)
-	@cd patterns/nats && go test -v -cover ./...
+	@cd backends/nats && go test -v -cover ./...
 	$(call print_green,NATS tests passed)
 
 test-core: ## Run Core SDK tests
 	$(call print_blue,Running Core SDK tests...)
-	@cd patterns/core && go test -v -cover ./...
+	@cd pkg/plugin && go test -v -cover ./...
 	$(call print_green,Core SDK tests passed)
 
 test-prismctl: ## Run prismctl tests
 	$(call print_blue,Running prismctl tests...)
-	@cd prismctl && go test -v -cover ./...
+	@cd cmd/prismctl && go test -v -cover ./...
 	$(call print_green,prismctl tests passed)
 
 test-integration: build-memstore ## Run integration tests (requires built MemStore binary)
@@ -247,33 +247,33 @@ coverage-patterns: coverage-memstore coverage-redis coverage-nats coverage-core 
 coverage-memstore: ## Generate MemStore coverage report
 	$(call print_blue,Generating MemStore coverage...)
 	@mkdir -p $(COVERAGE_DIR)/memstore
-	@cd patterns/memstore && go test -coverprofile=../../build/coverage/memstore/coverage.out ./...
-	@cd patterns/memstore && go tool cover -func=../../build/coverage/memstore/coverage.out | grep total
-	@cd patterns/memstore && go tool cover -html=../../build/coverage/memstore/coverage.out -o ../../build/coverage/memstore/coverage.html
+	@cd backends/memstore && go test -coverprofile=../../build/coverage/memstore/coverage.out ./...
+	@cd backends/memstore && go tool cover -func=../../build/coverage/memstore/coverage.out | grep total
+	@cd backends/memstore && go tool cover -html=../../build/coverage/memstore/coverage.out -o ../../build/coverage/memstore/coverage.html
 	$(call print_green,MemStore coverage: $(COVERAGE_DIR)/memstore/coverage.html)
 
 coverage-redis: ## Generate Redis coverage report
 	$(call print_blue,Generating Redis coverage...)
 	@mkdir -p $(COVERAGE_DIR)/redis
-	@cd patterns/redis && go test -coverprofile=../../build/coverage/redis/coverage.out ./...
-	@cd patterns/redis && go tool cover -func=../../build/coverage/redis/coverage.out | grep total
-	@cd patterns/redis && go tool cover -html=../../build/coverage/redis/coverage.out -o ../../build/coverage/redis/coverage.html
+	@cd backends/redis && go test -coverprofile=../../build/coverage/redis/coverage.out ./...
+	@cd backends/redis && go tool cover -func=../../build/coverage/redis/coverage.out | grep total
+	@cd backends/redis && go tool cover -html=../../build/coverage/redis/coverage.out -o ../../build/coverage/redis/coverage.html
 	$(call print_green,Redis coverage: $(COVERAGE_DIR)/redis/coverage.html)
 
 coverage-nats: ## Generate NATS coverage report
 	$(call print_blue,Generating NATS coverage...)
 	@mkdir -p $(COVERAGE_DIR)/nats
-	@cd patterns/nats && go test -coverprofile=../../build/coverage/nats/coverage.out ./...
-	@cd patterns/nats && go tool cover -func=../../build/coverage/nats/coverage.out | grep total
-	@cd patterns/nats && go tool cover -html=../../build/coverage/nats/coverage.out -o ../../build/coverage/nats/coverage.html
+	@cd backends/nats && go test -coverprofile=../../build/coverage/nats/coverage.out ./...
+	@cd backends/nats && go tool cover -func=../../build/coverage/nats/coverage.out | grep total
+	@cd backends/nats && go tool cover -html=../../build/coverage/nats/coverage.out -o ../../build/coverage/nats/coverage.html
 	$(call print_green,NATS coverage: $(COVERAGE_DIR)/nats/coverage.html)
 
 coverage-core: ## Generate Core SDK coverage report
 	$(call print_blue,Generating Core SDK coverage...)
 	@mkdir -p $(COVERAGE_DIR)/core
-	@cd patterns/core && go test -coverprofile=../../build/coverage/core/coverage.out ./...
-	@cd patterns/core && go tool cover -func=../../build/coverage/core/coverage.out | grep total
-	@cd patterns/core && go tool cover -html=../../build/coverage/core/coverage.out -o ../../build/coverage/core/coverage.html
+	@cd pkg/plugin && go test -coverprofile=../../build/coverage/core/coverage.out ./...
+	@cd pkg/plugin && go tool cover -func=../../build/coverage/core/coverage.out | grep total
+	@cd pkg/plugin && go tool cover -html=../../build/coverage/core/coverage.out -o ../../build/coverage/core/coverage.html
 	$(call print_green,Core SDK coverage: $(COVERAGE_DIR)/core/coverage.html)
 
 coverage-acceptance: coverage-acceptance-interfaces coverage-acceptance-redis coverage-acceptance-nats ## Generate coverage for acceptance tests
@@ -316,7 +316,7 @@ proto: proto-go proto-rust ## Generate protobuf code for all languages
 
 proto-go: ## Generate Go protobuf code
 	$(call print_blue,Generating Go protobuf code...)
-	@mkdir -p patterns/core/gen
+	@mkdir -p pkg/plugin/gen
 	@cd proto && buf generate --template buf.gen.go.yaml
 	$(call print_green,Go protobuf code generated)
 
@@ -335,10 +335,10 @@ clean-build: ## Clean build directory (recommended)
 
 clean-legacy: ## Clean legacy in-source build artifacts (deprecated)
 	$(call print_blue,Cleaning legacy build artifacts...)
-	@rm -f patterns/memstore/memstore patterns/memstore/coverage.out patterns/memstore/coverage.html
-	@rm -f patterns/redis/redis patterns/redis/coverage.out patterns/redis/coverage.html
-	@rm -f patterns/nats/nats patterns/nats/coverage.out patterns/nats/coverage.html
-	@rm -f patterns/core/coverage.out patterns/core/coverage.html
+	@rm -f backends/memstore/memstore backends/memstore/coverage.out backends/memstore/coverage.html
+	@rm -f backends/redis/redis backends/redis/coverage.out backends/redis/coverage.html
+	@rm -f backends/nats/nats backends/nats/coverage.out backends/nats/coverage.html
+	@rm -f pkg/plugin/coverage.out pkg/plugin/coverage.html
 	@rm -f tests/acceptance/interfaces/coverage.out tests/acceptance/interfaces/coverage.html
 	@rm -f tests/acceptance/redis/coverage.out tests/acceptance/redis/coverage.html
 	@rm -f tests/acceptance/nats/coverage.out tests/acceptance/nats/coverage.html
@@ -348,7 +348,7 @@ clean-legacy: ## Clean legacy in-source build artifacts (deprecated)
 
 clean-proto: ## Clean generated protobuf code
 	$(call print_blue,Cleaning generated protobuf code...)
-	@rm -rf patterns/core/gen
+	@rm -rf pkg/plugin/gen
 	$(call print_green,Generated protobuf code cleaned)
 
 ##@ Development
@@ -368,11 +368,11 @@ fmt-rust: ## Format Rust code
 
 fmt-go: ## Format Go code
 	$(call print_blue,Formatting Go code...)
-	@cd patterns/memstore && go fmt ./...
-	@cd patterns/redis && go fmt ./...
-	@cd patterns/nats && go fmt ./...
-	@cd patterns/core && go fmt ./...
-	@cd prismctl && go fmt ./...
+	@cd backends/memstore && go fmt ./...
+	@cd backends/redis && go fmt ./...
+	@cd backends/nats && go fmt ./...
+	@cd pkg/plugin && go fmt ./...
+	@cd cmd/prismctl && go fmt ./...
 	@cd tests/acceptance/interfaces && go fmt ./...
 	@cd tests/acceptance/redis && go fmt ./...
 	@cd tests/acceptance/nats && go fmt ./...
