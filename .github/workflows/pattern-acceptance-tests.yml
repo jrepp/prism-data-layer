@@ -219,74 +219,63 @@ jobs:
             test-logs/pattern-compliance.json
           retention-days: 30
 
-      - name: Generate summary report
+      - name: Generate summary report using compliance tool
         run: |
+          # Build summary table from coverage artifacts
           {
             echo "# 📊 Pattern Acceptance Test Summary"
+            echo ""
+            echo "Generated from individual pattern test runs and coverage reports."
             echo ""
             echo "| Pattern | Status | Coverage | Backends Tested |"
             echo "|---------|--------|----------|-----------------|"
           } > summary.md
 
-          # Check each pattern's results
+          # Function to get coverage percentage
+          get_coverage() {
+            local file=$1
+            if [ -f "$file" ]; then
+              go tool cover -func="$file" 2>/dev/null | grep total | awk '{print $3}' || echo "N/A"
+            else
+              echo "N/A"
+            fi
+          }
+
+          # Function to get status from existence of coverage file
+          get_status() {
+            local file=$1
+            if [ -f "$file" ]; then
+              echo "✅ Pass"
+            else
+              echo "❌ Fail"
+            fi
+          }
+
+          # Check each pattern
+          PATTERNS=(
+            "keyvalue:KeyValue:MemStore, Redis, PostgreSQL"
+            "producer:Producer:NATS (stateless/stateful)"
+            "consumer:Consumer:NATS (stateless/stateful/DLQ)"
+            "claimcheck:ClaimCheck:NATS + MinIO"
+            "unified:Unified:NATS (producer+consumer)"
+          )
+
           ALL_SUCCESS=true
+          for pattern_info in "${PATTERNS[@]}"; do
+            IFS=':' read -r pattern display backends <<< "$pattern_info"
+            coverage_file="build/coverage-reports/coverage-pattern-${pattern}/coverage.out"
 
-          # KeyValue pattern
-          if [ -f build/coverage-reports/coverage-pattern-keyvalue/coverage.out ]; then
-            KEYVALUE_COVERAGE=$(go tool cover -func=build/coverage-reports/coverage-pattern-keyvalue/coverage.out | grep total | awk '{print $3}')
-            KEYVALUE_STATUS="✅ Pass"
-          else
-            KEYVALUE_COVERAGE="N/A"
-            KEYVALUE_STATUS="❌ Fail"
-            ALL_SUCCESS=false
-          fi
-          echo "| KeyValue | $KEYVALUE_STATUS | $KEYVALUE_COVERAGE | MemStore, Redis, PostgreSQL |" >> summary.md
+            coverage=$(get_coverage "$coverage_file")
+            status=$(get_status "$coverage_file")
 
-          # Producer pattern
-          if [ -f build/coverage-reports/coverage-pattern-producer/coverage.out ]; then
-            PRODUCER_COVERAGE=$(go tool cover -func=build/coverage-reports/coverage-pattern-producer/coverage.out | grep total | awk '{print $3}')
-            PRODUCER_STATUS="✅ Pass"
-          else
-            PRODUCER_COVERAGE="N/A"
-            PRODUCER_STATUS="❌ Fail"
-            ALL_SUCCESS=false
-          fi
-          echo "| Producer | $PRODUCER_STATUS | $PRODUCER_COVERAGE | NATS |" >> summary.md
+            if [[ "$status" == "❌ Fail" ]]; then
+              ALL_SUCCESS=false
+            fi
 
-          # Consumer pattern
-          if [ -f build/coverage-reports/coverage-pattern-consumer/coverage.out ]; then
-            CONSUMER_COVERAGE=$(go tool cover -func=build/coverage-reports/coverage-pattern-consumer/coverage.out | grep total | awk '{print $3}')
-            CONSUMER_STATUS="✅ Pass"
-          else
-            CONSUMER_COVERAGE="N/A"
-            CONSUMER_STATUS="❌ Fail"
-            ALL_SUCCESS=false
-          fi
-          echo "| Consumer | $CONSUMER_STATUS | $CONSUMER_COVERAGE | NATS |" >> summary.md
+            echo "| $display | $status | $coverage | $backends |" >> summary.md
+          done
 
-          # Claim Check pattern
-          if [ -f build/coverage-reports/coverage-pattern-claimcheck/coverage.out ]; then
-            CLAIMCHECK_COVERAGE=$(go tool cover -func=build/coverage-reports/coverage-pattern-claimcheck/coverage.out | grep total | awk '{print $3}')
-            CLAIMCHECK_STATUS="✅ Pass"
-          else
-            CLAIMCHECK_COVERAGE="N/A"
-            CLAIMCHECK_STATUS="❌ Fail"
-            ALL_SUCCESS=false
-          fi
-          echo "| ClaimCheck | $CLAIMCHECK_STATUS | $CLAIMCHECK_COVERAGE | NATS (messaging) + MinIO (storage) |" >> summary.md
-
-          # Unified (Producer/Consumer Integration)
-          if [ -f build/coverage-reports/coverage-pattern-unified/coverage.out ]; then
-            UNIFIED_COVERAGE=$(go tool cover -func=build/coverage-reports/coverage-pattern-unified/coverage.out | grep total | awk '{print $3}')
-            UNIFIED_STATUS="✅ Pass"
-          else
-            UNIFIED_COVERAGE="N/A"
-            UNIFIED_STATUS="❌ Fail"
-            ALL_SUCCESS=false
-          fi
-          echo "| Unified (Producer+Consumer) | $UNIFIED_STATUS | $UNIFIED_COVERAGE | NATS |" >> summary.md
-
-          # Add overall status
+          # Add overall status and architecture info
           {
             echo ""
             if [ "$ALL_SUCCESS" = true ]; then
@@ -295,27 +284,23 @@ jobs:
               echo "## ❌ Some Pattern Tests Failed"
             fi
             echo ""
-            echo "## Architecture"
+            echo "## Pattern Compliance"
             echo ""
-            echo "Pattern acceptance tests use the **unified testing framework**:"
-            echo "- Each pattern implements standard interfaces (KeyValueBasicInterface, PubSubBasicInterface, etc.)"
-            echo "- Pattern tests run against ALL registered backends that support the required interfaces"
-            echo "- Tests are written once and run automatically against multiple backend combinations"
-            echo "- This ensures pattern behavior is consistent across all supported backends"
+            echo "Each pattern is tested against ALL compatible backends automatically:"
             echo ""
-            echo "### Test Execution Model"
+            echo "- **Consumer Pattern**: Tested with NATS (3 variants: stateless, stateful, with DLQ)"
+            echo "- **Producer Pattern**: Tested with NATS (2 variants: stateless, stateful with deduplication)"
+            echo "- **ClaimCheck Pattern**: Tested with NATS (messaging) + MinIO (object storage)"
+            echo "- **Unified Tests**: Integration tests coordinating producer and consumer patterns"
             echo ""
-            echo "Tests use table-driven approach with automatic backend discovery:"
-            echo "1. Framework discovers all backends implementing required interfaces"
-            echo "2. For each backend combination, framework:"
-            echo "   - Starts containers (testcontainers)"
-            echo "   - Initializes backend plugins"
-            echo "   - Runs test suite"
-            echo "   - Collects results"
-            echo "   - Tears down containers"
-            echo "3. Results aggregated across all backend combinations"
+            echo "## How It Works"
             echo ""
-            echo "View detailed results in the artifacts for each job."
+            echo "1. **Backend Registration**: Each pattern test directory registers compatible backends"
+            echo "2. **Automatic Discovery**: Test framework discovers all backends supporting required pattern"
+            echo "3. **Parallel Execution**: Tests run in parallel across all backend combinations"
+            echo "4. **Result Aggregation**: Coverage and results collected from each test run"
+            echo ""
+            echo "See individual test job outputs for detailed per-backend results."
           } >> summary.md
 
           cat summary.md >> $GITHUB_STEP_SUMMARY
