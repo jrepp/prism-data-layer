@@ -12,6 +12,72 @@ Quick access to recently updated documentation. Changes listed in reverse chrono
 
 ### 2025-10-14
 
+#### RFC-033: Claim Check Pattern + ADRs for Object Storage Testing (NEW)
+**Links**: [RFC-033](/rfc/rfc-033), [ADR-051](/adr/adr-051), [ADR-052](/adr/adr-052), [ADR-053](/adr/adr-053), [Test Framework Updates](https://github.com/jrepp/prism-data-layer/tree/main/tests/acceptance/framework)
+
+**Summary**: Comprehensive design documentation for claim check pattern enabling large payload handling via object storage with namespace coordination:
+
+**RFC-033 Claim Check Pattern**:
+- Enterprise Integration Pattern for handling payloads >1MB threshold
+- Producer uploads large payloads to object storage, sends claim reference through message broker
+- Consumer retrieves payload using claim check from object storage
+- Namespace-level coordination: Producers/consumers share claim check configuration
+- ClaimCheckMessage protobuf with claim_id, bucket, object_key, checksum, compression info
+- Proxy validates producer/consumer claim check configs match
+- Configuration: threshold (1MB default), backend (minio/s3/gcs), bucket, TTL, compression
+- Producer flow: Check size → compress → upload → set TTL → send claim
+- Consumer flow: Receive claim → download → verify checksum → decompress → process
+- ObjectStoreInterface definition for claim check operations
+- Acceptance test scenarios: LargePayload (5MB), ThresholdBoundary, Compression, TTL, ChecksumValidation
+
+**ADR-051 MinIO Testing Infrastructure**:
+- Decision: Use MinIO for local claim check testing (not LocalStack, Azurite, S3Mock)
+- Rationale: Full S3 compatibility, lightweight (50MB), fast startup (2s), complete TTL/lifecycle support
+- testcontainers setup pattern with MinIO container lifecycle management
+- Test bucket isolation strategy: `{suite}-{backend}-{timestamp}` naming
+- Lifecycle policy setup for automatic claim expiration
+- Implementation plan: MinIO driver (Week 1), test framework integration (Week 1), claim check tests (Week 2)
+- Migration path to production S3/GCS/Azure
+- Test setup pattern with cleanup and health checks
+
+**ADR-052 Object Store Interface**:
+- Core ObjectStoreInterface definition for claim check operations
+- 11 methods: Put, PutStream, Get, GetStream, Delete, Exists, GetMetadata, SetTTL, CreateBucket, DeleteBucket, BucketExists
+- Design principles: minimal surface area, streaming support, idempotent deletes, metadata separation, TTL abstraction
+- ObjectMetadata struct for metadata-only operations
+- MinIO driver implementation examples with error translation
+- Streaming thresholds: Use PutStream for payloads >10MB
+- Error handling with standard types (ErrObjectNotFound, ErrBucketNotFound, ErrAccessDenied)
+- Testing strategy with contract tests for all backends (MinIO, S3, GCS, Mock)
+- Performance considerations: connection pooling, retry strategy, metadata caching
+- Implementation phases: Interface definition (1 day), MinIO driver (3 days), S3 driver (3 days), mock implementation (1 day)
+
+**ADR-053 TTL and Garbage Collection**:
+- Two-phase TTL strategy: consumer-driven cleanup + lifecycle policy safety net
+- Configuration options: max_age (24h default), delete_after_read (true), retention_after_read (5min), grace_period (1h)
+- Three configuration strategies: Aggressive (minimize storage cost), Conservative (handle slow consumers), Redelivery protection (handle retries)
+- Producer: Set bucket lifecycle policy at startup, upload with metadata
+- Consumer: Retrieve claim, verify checksum, conditionally delete based on configuration
+- Proxy validation: TTL compatibility check between producer/consumer configs
+- S3/MinIO lifecycle behavior: Bucket-level policies with daily/hourly processing
+- Monitoring metrics: ClaimsCreated, ClaimsDeleted, ClaimNotFoundErrors, ClaimDeleteFailures
+- Alerts: Storage leak detection, TTL too short detection, delete failure alerts
+- Testing strategy with time simulation and MinIO lifecycle
+
+**Test Framework Updates**:
+- Added `PatternObjectStore` constant to framework/types.go
+- Added `SupportsObjectStore` capability and `MaxObjectSize` to Capabilities struct
+- Updated `HasCapability` function to recognize "ObjectStore" capability
+- Framework now supports multi-pattern tests coordinating Producer + Consumer + ObjectStore
+
+**Key Innovation**: Claim check pattern decouples message broker from large payload storage, using object storage economics (cheap, durable) while maintaining message broker simplicity. Namespace coordination ensures producer/consumer compatibility validated by proxy. Two-phase TTL strategy balances storage costs (immediate deletion) with safety (lifecycle policy backstop). MinIO provides production-like S3 testing without external dependencies.
+
+**Impact**: Eliminates message broker size limits for large payloads (videos, images, ML models, datasets). Reduces message broker memory pressure and network congestion by 90%+ for large messages. Object storage costs 10-100x cheaper than message transfer. TTL automation prevents storage bloat. Namespace validation prevents misconfiguration errors. MinIO enables fast, realistic acceptance testing (<2s startup, full S3 compatibility). Foundation for handling multi-GB payloads through Prism with automatic claim lifecycle management. Addresses cost optimization, performance degradation, and size limit problems in messaging systems.
+
+---
+
+### 2025-10-14
+
 #### RFC-031: Payload Encryption with Post-Quantum Support + Producer Pattern Implementation (MAJOR UPDATE)
 **Links**: [RFC-031](/rfc/rfc-031), [Producer Pattern](https://github.com/jrepp/prism-data-layer/tree/main/patterns/producer), [Unified Test](https://github.com/jrepp/prism-data-layer/tree/main/tests/acceptance/patterns/unified)
 

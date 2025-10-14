@@ -24,6 +24,9 @@ const (
 	// Queue patterns (future)
 	PatternQueueBasic Pattern = "QueueBasic"
 
+	// Object Store patterns
+	PatternObjectStore Pattern = "ObjectStore"
+
 	// High-level patterns (composites)
 	PatternProducer Pattern = "Producer"
 	PatternConsumer Pattern = "Consumer"
@@ -73,6 +76,10 @@ type Capabilities struct {
 	// Message ordering guarantees
 	SupportsOrdering bool
 
+	// Object store support
+	SupportsObjectStore bool
+	MaxObjectSize       int64 // Maximum object size in bytes (0 = unlimited)
+
 	// Size limits (0 = unlimited)
 	MaxValueSize int64
 	MaxKeySize   int
@@ -98,6 +105,8 @@ func (c Capabilities) HasCapability(name string) bool {
 		return c.SupportsTransactions
 	case "Ordering":
 		return c.SupportsOrdering
+	case "ObjectStore":
+		return c.SupportsObjectStore
 	default:
 		// Check custom capabilities
 		if val, ok := c.Custom[name]; ok {
