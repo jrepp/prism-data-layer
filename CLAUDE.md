@@ -95,7 +95,7 @@ prism/
 ├── docs/                  # Built docs (GitHub Pages output)
 ├── admin/                 # FastAPI-based admin UI
 ├── prismctl/              # Go CLI for Prism (OIDC auth, namespace management)
-├── proxy/                 # Rust high-performance gateway
+├── prism-proxy/           # Rust high-performance gateway
 ├── patterns/               # Go backend plugins (containers)
 │   ├── core/              # Shared plugin package
 │   ├── postgres/          # PostgreSQL plugin
@@ -312,7 +312,7 @@ cd patterns && make build
 cd patterns && go run ./watcher --reload
 
 # Run proxy locally
-cd proxy && cargo run --release
+cd prism-proxy && cargo run --release
 
 # Run admin UI
 cd admin && npm run dev

@@ -66,7 +66,7 @@ build: build-proxy build-patterns build-prismctl ## Build all components
 build-proxy: ## Build Rust proxy
 	$(call print_blue,Building Rust proxy...)
 	@mkdir -p $(BINARIES_DIR)
-	@cd proxy && CARGO_TARGET_DIR=$(RUST_TARGET_DIR) cargo build --release
+	@cd prism-proxy && CARGO_TARGET_DIR=$(RUST_TARGET_DIR) cargo build --release
 	@cp $(RUST_TARGET_DIR)/release/prism-proxy $(BINARIES_DIR)/prism-proxy
 	$(call print_green,Proxy built: $(BINARIES_DIR)/prism-proxy)
 
@@ -105,7 +105,7 @@ build-prismctl: ## Build prismctl CLI
 build-dev: ## Build all components in debug mode (faster)
 	$(call print_blue,Building in debug mode...)
 	@mkdir -p $(BINARIES_DIR)
-	@cd proxy && CARGO_TARGET_DIR=$(RUST_TARGET_DIR) cargo build
+	@cd prism-proxy && CARGO_TARGET_DIR=$(RUST_TARGET_DIR) cargo build
 	@cp $(RUST_TARGET_DIR)/debug/prism-proxy $(BINARIES_DIR)/prism-proxy-debug
 	@cd patterns/memstore && go build -o $(BINARIES_DIR)/memstore-debug cmd/memstore/main.go
 	@cd patterns/redis && go build -o $(BINARIES_DIR)/redis-debug cmd/redis/main.go
@@ -134,7 +134,7 @@ test-parallel-fail-fast: ## Run tests in parallel with fail-fast
 
 test-proxy: ## Run Rust proxy unit tests
 	$(call print_blue,Running Rust proxy tests...)
-	@cd proxy && cargo test --lib
+	@cd prism-proxy && cargo test --lib
 	$(call print_green,Proxy unit tests passed)
 
 test-patterns: test-memstore test-redis test-nats test-core test-prismctl ## Run all Go pattern tests
@@ -166,7 +166,7 @@ test-prismctl: ## Run prismctl tests
 
 test-integration: build-memstore ## Run integration tests (requires built MemStore binary)
 	$(call print_blue,Running integration tests...)
-	@cd proxy && cargo test --test integration_test -- --ignored --nocapture
+	@cd prism-proxy && cargo test --test integration_test -- --ignored --nocapture
 	$(call print_green,Integration tests passed)
 
 test-all: test test-integration test-integration-go test-acceptance ## Run all tests (unit, integration, acceptance)
@@ -239,7 +239,7 @@ coverage: coverage-proxy coverage-patterns ## Generate coverage reports for all 
 
 coverage-proxy: ## Generate Rust proxy coverage report
 	$(call print_blue,Generating proxy coverage...)
-	@cd proxy && cargo test --lib -- --test-threads=1
+	@cd prism-proxy && cargo test --lib -- --test-threads=1
 	$(call print_green,Proxy coverage report generated)
 
 coverage-patterns: coverage-memstore coverage-redis coverage-nats coverage-core ## Generate coverage for all patterns
@@ -343,7 +343,7 @@ clean-legacy: ## Clean legacy in-source build artifacts (deprecated)
 	@rm -f tests/acceptance/redis/coverage.out tests/acceptance/redis/coverage.html
 	@rm -f tests/acceptance/nats/coverage.out tests/acceptance/nats/coverage.html
 	@rm -f tests/integration/coverage.out tests/integration/coverage.html
-	@rm -rf test-logs/ proxy/target/
+	@rm -rf test-logs/ prism-proxy/target/
 	$(call print_green,Legacy artifacts cleaned)
 
 clean-proto: ## Clean generated protobuf code
@@ -354,16 +354,16 @@ clean-proto: ## Clean generated protobuf code
 ##@ Development
 
 watch-proxy: ## Watch and rebuild proxy on changes (requires cargo-watch)
-	@cd proxy && cargo watch -x build
+	@cd prism-proxy && cargo watch -x build
 
 watch-test: ## Watch and rerun tests on changes (requires cargo-watch)
-	@cd proxy && cargo watch -x test
+	@cd prism-proxy && cargo watch -x test
 
 fmt: fmt-rust fmt-go fmt-python ## Format all code
 
 fmt-rust: ## Format Rust code
 	$(call print_blue,Formatting Rust code...)
-	@cd proxy && cargo fmt
+	@cd prism-proxy && cargo fmt
 	$(call print_green,Rust code formatted)
 
 fmt-go: ## Format Go code
@@ -388,7 +388,7 @@ lint: lint-rust lint-go lint-python lint-workflows ## Lint all code and workflow
 
 lint-rust: ## Lint Rust code with clippy
 	$(call print_blue,Linting Rust code...)
-	@cd proxy && cargo clippy -- -D warnings
+	@cd prism-proxy && cargo clippy -- -D warnings
 	$(call print_green,Rust code linted)
 
 lint-python: lint-python-ruff lint-python-pylint ## Lint Python code with ruff and pylint
@@ -441,8 +441,8 @@ lint-workflows: ## Lint GitHub Actions workflows with actionlint
 lint-fix: ## Auto-fix linting issues where possible
 	$(call print_blue,Auto-fixing linting issues...)
 	@golangci-lint run --fix ./...
-	@cd proxy && cargo fmt
-	@cd proxy && cargo clippy --fix --allow-dirty -- -D warnings
+	@cd prism-proxy && cargo fmt
+	@cd prism-proxy && cargo clippy --fix --allow-dirty -- -D warnings
 	@uv run ruff check --fix tooling/
 	@uv run ruff format tooling/
 	$(call print_green,Auto-fix complete)

@@ -17,10 +17,10 @@ build/
 
 # === Legacy build artifacts (deprecated, use ./build instead) ===
 # Rust
-proxy/target/
-proxy/**/*.rs.bk
-proxy/**/*.pdb
-proxy/Cargo.lock  # Uncomment if library
+prism-proxy/target/
+prism-proxy/**/*.rs.bk
+prism-proxy/**/*.pdb
+prism-proxy/Cargo.lock  # Uncomment if library
 
 # Go binaries
 patterns/*/memstore
