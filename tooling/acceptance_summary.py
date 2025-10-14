@@ -43,7 +43,7 @@ def parse_coverage_file(coverage_path: Path) -> float | None:
         # Parse output for "total" line
         for line in result.stdout.split("\n"):
             if "total:" in line:
-                # Format: "total:    (statements)    XX.X%"
+                # Expected format: total: (statements) XX.X%
                 parts = line.split()
                 if len(parts) >= 3:
                     coverage_str = parts[-1].rstrip("%")
@@ -195,10 +195,7 @@ def generate_markdown_summary(results: dict) -> str:
         duration_str = f"{pattern['duration']:.1f}s"
 
         # Coverage
-        if pattern["coverage"] is not None:
-            coverage_str = f"{pattern['coverage']:.1f}%"
-        else:
-            coverage_str = "N/A"
+        coverage_str = f"{pattern['coverage']:.1f}%" if pattern["coverage"] is not None else "N/A"
 
         # Test counts
         tests_str = f"{pattern['tests_passed']} passed"
@@ -243,8 +240,8 @@ def generate_markdown_summary(results: dict) -> str:
             coverage = pattern["coverage"]
             # Visual bar (20 chars width, scaled to 100%)
             filled = int(coverage / 5)  # 5% per character
-            bar = "█" * filled + "░" * (20 - filled)
-            lines.append(f"- **{pattern_name}:** `{bar}` {coverage:.1f}%")
+            coverage_bar = "█" * filled + "░" * (20 - filled)
+            lines.append(f"- **{pattern_name}:** `{coverage_bar}` {coverage:.1f}%")
 
     lines.append("")
 
