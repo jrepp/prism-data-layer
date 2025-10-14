@@ -22,7 +22,7 @@ func setupTestNATS(t *testing.T) (*NATSPattern, *natsserver.Server) {
 
 	// Create pattern config pointing to test server
 	config := &core.Config{
-		Plugin: core.PluginConfig{
+		Plugin: plugin.PluginConfig{
 			Name:    "nats-test",
 			Version: "0.1.0",
 		},
@@ -78,7 +78,7 @@ func TestNATSPattern_Health(t *testing.T) {
 		t.Fatalf("Health() error = %v", err)
 	}
 
-	if health.Status != core.HealthHealthy {
+	if health.Status != plugin.HealthHealthy {
 		t.Errorf("Expected HEALTHY status, got %v", health.Status)
 	}
 
@@ -411,7 +411,7 @@ func TestNATSPattern_HealthAfterDisconnect(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Health() error = %v", err)
 	}
-	if health1.Status != core.HealthHealthy {
+	if health1.Status != plugin.HealthHealthy {
 		t.Errorf("Expected HEALTHY status, got %v", health1.Status)
 	}
 
@@ -425,7 +425,7 @@ func TestNATSPattern_HealthAfterDisconnect(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Health() error = %v", err)
 	}
-	if health2.Status != core.HealthUnhealthy {
+	if health2.Status != plugin.HealthUnhealthy {
 		t.Errorf("Expected UNHEALTHY status after stop, got %v", health2.Status)
 	}
 }
@@ -491,7 +491,7 @@ func TestNATSPattern_InitializeWithDefaults(t *testing.T) {
 
 	// Create pattern with minimal config (tests default values)
 	config := &core.Config{
-		Plugin: core.PluginConfig{
+		Plugin: plugin.PluginConfig{
 			Name:    "nats-minimal",
 			Version: "0.1.0",
 		},
@@ -520,7 +520,7 @@ func TestNATSPattern_InitializeWithDefaults(t *testing.T) {
 func TestNATSPattern_InitializeFailure(t *testing.T) {
 	// Create pattern with invalid NATS URL
 	config := &core.Config{
-		Plugin: core.PluginConfig{
+		Plugin: plugin.PluginConfig{
 			Name:    "nats-fail",
 			Version: "0.1.0",
 		},

@@ -49,7 +49,7 @@ func (r *RedisPattern) Version() string {
 }
 
 // Initialize prepares the plugin with configuration
-func (r *RedisPattern) Initialize(ctx context.Context, config *core.Config) error {
+func (r *RedisPattern) Initialize(ctx context.Context, config *plugin.Config) error {
 	// Extract backend-specific config
 	var backendConfig Config
 	if err := config.GetBackendConfig(&backendConfig); err != nil {
@@ -125,11 +125,11 @@ func (r *RedisPattern) Stop(ctx context.Context) error {
 }
 
 // Health returns the plugin health status
-func (r *RedisPattern) Health(ctx context.Context) (*core.HealthStatus, error) {
+func (r *RedisPattern) Health(ctx context.Context) (*plugin.HealthStatus, error) {
 	// Check Redis connection with PING
 	if err := r.client.Ping(ctx).Err(); err != nil {
-		return &core.HealthStatus{
-			Status:  core.HealthUnhealthy,
+		return &plugin.HealthStatus{
+			Status:  plugin.HealthUnhealthy,
 			Message: fmt.Sprintf("Redis ping failed: %v", err),
 			Details: map[string]string{
 				"error": err.Error(),
@@ -140,16 +140,16 @@ func (r *RedisPattern) Health(ctx context.Context) (*core.HealthStatus, error) {
 	// Get pool stats
 	stats := r.client.PoolStats()
 
-	status := core.HealthHealthy
+	status := plugin.HealthHealthy
 	message := fmt.Sprintf("healthy, %d connections", stats.TotalConns)
 
 	// Check if pool is near capacity
 	if stats.TotalConns >= uint32(r.config.PoolSize*90/100) {
-		status = core.HealthDegraded
+		status = plugin.HealthDegraded
 		message = fmt.Sprintf("pool near capacity: %d/%d connections", stats.TotalConns, r.config.PoolSize)
 	}
 
-	return &core.HealthStatus{
+	return &plugin.HealthStatus{
 		Status:  status,
 		Message: message,
 		Details: map[string]string{
@@ -208,9 +208,9 @@ func (r *RedisPattern) Exists(key string) (bool, error) {
 // Compile-time interface compliance checks
 // These ensure that RedisPattern implements the expected interfaces
 var (
-	_ core.Plugin                 = (*RedisPattern)(nil) // Core plugin interface
-	_ core.KeyValueBasicInterface = (*RedisPattern)(nil) // KeyValue basic operations
-	_ core.InterfaceSupport       = (*RedisPattern)(nil) // Interface introspection
+	_ plugin.Plugin                 = (*RedisPattern)(nil) // Core plugin interface
+	_ plugin.KeyValueBasicInterface = (*RedisPattern)(nil) // KeyValue basic operations
+	_ plugin.InterfaceSupport       = (*RedisPattern)(nil) // Interface introspection
 )
 
 // SupportsInterface returns true if RedisPattern implements the named interface

@@ -47,7 +47,7 @@ func (p *PostgresPlugin) Version() string {
 }
 
 // Initialize prepares the PostgreSQL connection pool and creates schema
-func (p *PostgresPlugin) Initialize(ctx context.Context, config *core.Config) error {
+func (p *PostgresPlugin) Initialize(ctx context.Context, config *plugin.Config) error {
 	slog.Info("initializing postgres plugin", "version", p.Version())
 
 	// Extract backend-specific config
@@ -169,10 +169,10 @@ func (p *PostgresPlugin) Stop(ctx context.Context) error {
 }
 
 // Health reports the plugin health status
-func (p *PostgresPlugin) Health(ctx context.Context) (*core.HealthStatus, error) {
+func (p *PostgresPlugin) Health(ctx context.Context) (*plugin.HealthStatus, error) {
 	if p.pool == nil {
-		return &core.HealthStatus{
-			Status:  core.HealthUnhealthy,
+		return &plugin.HealthStatus{
+			Status:  plugin.HealthUnhealthy,
 			Message: "database pool not initialized",
 		}, nil
 	}
@@ -182,8 +182,8 @@ func (p *PostgresPlugin) Health(ctx context.Context) (*core.HealthStatus, error)
 	defer cancel()
 
 	if err := p.pool.Ping(pingCtx); err != nil {
-		return &core.HealthStatus{
-			Status:  core.HealthUnhealthy,
+		return &plugin.HealthStatus{
+			Status:  plugin.HealthUnhealthy,
 			Message: fmt.Sprintf("database ping failed: %v", err),
 			Details: map[string]string{
 				"error": err.Error(),
@@ -194,8 +194,8 @@ func (p *PostgresPlugin) Health(ctx context.Context) (*core.HealthStatus, error)
 	// Check pool stats
 	stats := p.pool.Stat()
 	if stats.AcquiredConns() >= int32(float64(stats.MaxConns())*0.9) {
-		return &core.HealthStatus{
-			Status:  core.HealthDegraded,
+		return &plugin.HealthStatus{
+			Status:  plugin.HealthDegraded,
 			Message: "connection pool near capacity",
 			Details: map[string]string{
 				"acquired": fmt.Sprintf("%d", stats.AcquiredConns()),
@@ -205,8 +205,8 @@ func (p *PostgresPlugin) Health(ctx context.Context) (*core.HealthStatus, error)
 		}, nil
 	}
 
-	return &core.HealthStatus{
-		Status:  core.HealthHealthy,
+	return &plugin.HealthStatus{
+		Status:  plugin.HealthHealthy,
 		Message: "database healthy",
 		Details: map[string]string{
 			"acquired": fmt.Sprintf("%d", stats.AcquiredConns()),
@@ -415,8 +415,8 @@ func (p *PostgresPlugin) ListInterfaces() []string {
 
 // Compile-time interface compliance checks
 var (
-	_ core.Plugin                 = (*PostgresPlugin)(nil)
-	_ core.KeyValueBasicInterface = (*PostgresPlugin)(nil)
-	_ core.KeyValueScanInterface  = (*PostgresPlugin)(nil)
-	_ core.InterfaceSupport       = (*PostgresPlugin)(nil)
+	_ plugin.Plugin                 = (*PostgresPlugin)(nil)
+	_ plugin.KeyValueBasicInterface = (*PostgresPlugin)(nil)
+	_ plugin.KeyValueScanInterface  = (*PostgresPlugin)(nil)
+	_ plugin.InterfaceSupport       = (*PostgresPlugin)(nil)
 )

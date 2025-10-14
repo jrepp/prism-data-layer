@@ -1,4 +1,4 @@
-package core
+package plugin
 
 // KeyValueBasicInterface defines the basic KeyValue operations
 // Maps to prism.interfaces.keyvalue.KeyValueBasicInterface proto service

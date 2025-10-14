@@ -45,7 +45,7 @@ func (m *MemStore) Version() string {
 }
 
 // Initialize prepares the plugin with configuration
-func (m *MemStore) Initialize(ctx context.Context, config *core.Config) error {
+func (m *MemStore) Initialize(ctx context.Context, config *plugin.Config) error {
 	// Extract backend-specific config
 	var backendConfig Config
 	if err := config.GetBackendConfig(&backendConfig); err != nil {
@@ -91,18 +91,18 @@ func (m *MemStore) Stop(ctx context.Context) error {
 }
 
 // Health returns the plugin health status
-func (m *MemStore) Health(ctx context.Context) (*core.HealthStatus, error) {
+func (m *MemStore) Health(ctx context.Context) (*plugin.HealthStatus, error) {
 	keyCount := 0
 	m.data.Range(func(key, value interface{}) bool {
 		keyCount++
 		return true
 	})
 
-	status := core.HealthHealthy
+	status := plugin.HealthHealthy
 	message := fmt.Sprintf("healthy, %d keys stored", keyCount)
 
 	if m.config != nil && keyCount >= m.config.MaxKeys {
-		status = core.HealthDegraded
+		status = plugin.HealthDegraded
 		message = fmt.Sprintf("at capacity: %d/%d keys", keyCount, m.config.MaxKeys)
 	}
 
@@ -114,7 +114,7 @@ func (m *MemStore) Health(ctx context.Context) (*core.HealthStatus, error) {
 		details["max_keys"] = fmt.Sprintf("%d", m.config.MaxKeys)
 	}
 
-	return &core.HealthStatus{
+	return &plugin.HealthStatus{
 		Status:  status,
 		Message: message,
 		Details: details,
@@ -220,9 +220,9 @@ func (m *MemStore) cleanupExpiredKeys(ctx context.Context) {
 // Compile-time interface compliance checks
 // These ensure that MemStore implements the expected interfaces
 var (
-	_ core.Plugin                 = (*MemStore)(nil) // Core plugin interface
-	_ core.KeyValueBasicInterface = (*MemStore)(nil) // KeyValue basic operations
-	_ core.InterfaceSupport       = (*MemStore)(nil) // Interface introspection
+	_ plugin.Plugin                 = (*MemStore)(nil) // Core plugin interface
+	_ plugin.KeyValueBasicInterface = (*MemStore)(nil) // KeyValue basic operations
+	_ plugin.InterfaceSupport       = (*MemStore)(nil) // Interface introspection
 )
 
 // SupportsInterface returns true if MemStore implements the named interface

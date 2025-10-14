@@ -13,7 +13,7 @@ func TestMemStore_SetGet(t *testing.T) {
 
 	// Initialize with test config
 	config := &core.Config{
-		Plugin: core.PluginConfig{
+		Plugin: plugin.PluginConfig{
 			Name:    "memstore",
 			Version: "0.1.0",
 		},
@@ -55,7 +55,7 @@ func TestMemStore_Delete(t *testing.T) {
 	m := New()
 
 	config := &core.Config{
-		Plugin: core.PluginConfig{
+		Plugin: plugin.PluginConfig{
 			Name:    "memstore",
 			Version: "0.1.0",
 		},
@@ -101,7 +101,7 @@ func TestMemStore_TTL(t *testing.T) {
 	m := New()
 
 	config := &core.Config{
-		Plugin: core.PluginConfig{
+		Plugin: plugin.PluginConfig{
 			Name:    "memstore",
 			Version: "0.1.0",
 		},
@@ -145,7 +145,7 @@ func TestMemStore_CapacityLimit(t *testing.T) {
 	m := New()
 
 	config := &core.Config{
-		Plugin: core.PluginConfig{
+		Plugin: plugin.PluginConfig{
 			Name:    "memstore",
 			Version: "0.1.0",
 		},
@@ -186,7 +186,7 @@ func TestMemStore_Health(t *testing.T) {
 	m := New()
 
 	config := &core.Config{
-		Plugin: core.PluginConfig{
+		Plugin: plugin.PluginConfig{
 			Name:    "memstore",
 			Version: "0.1.0",
 		},
@@ -208,7 +208,7 @@ func TestMemStore_Health(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to get health: %v", err)
 	}
-	if health.Status != core.HealthHealthy {
+	if health.Status != plugin.HealthHealthy {
 		t.Errorf("Expected healthy status, got %v", health.Status)
 	}
 
@@ -223,7 +223,7 @@ func TestMemStore_Health(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to get health: %v", err)
 	}
-	if health.Status != core.HealthDegraded {
+	if health.Status != plugin.HealthDegraded {
 		t.Errorf("Expected degraded status at capacity, got %v", health.Status)
 	}
 }

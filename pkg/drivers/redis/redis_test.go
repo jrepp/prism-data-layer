@@ -21,7 +21,7 @@ func setupTestRedis(t *testing.T) (*RedisPattern, *miniredis.Miniredis) {
 
 	// Create config pointing to miniredis
 	config := &core.Config{
-		Plugin: core.PluginConfig{
+		Plugin: plugin.PluginConfig{
 			Name:    "redis",
 			Version: "0.1.0",
 		},
@@ -64,13 +64,13 @@ func TestRedisPattern_Initialize(t *testing.T) {
 
 	tests := []struct {
 		name    string
-		config  *core.Config
+		config  *plugin.Config
 		wantErr bool
 	}{
 		{
 			name: "valid config",
 			config: &core.Config{
-				Plugin:       core.PluginConfig{Name: "redis", Version: "0.1.0"},
+				Plugin:       plugin.PluginConfig{Name: "redis", Version: "0.1.0"},
 				ControlPlane: core.ControlPlaneConfig{Port: 9091},
 				Backend: map[string]any{
 					"address": mr.Addr(),
@@ -83,7 +83,7 @@ func TestRedisPattern_Initialize(t *testing.T) {
 		{
 			name: "invalid address",
 			config: &core.Config{
-				Plugin:       core.PluginConfig{Name: "redis", Version: "0.1.0"},
+				Plugin:       plugin.PluginConfig{Name: "redis", Version: "0.1.0"},
 				ControlPlane: core.ControlPlaneConfig{Port: 9091},
 				Backend: map[string]any{
 					"address": "localhost:9999", // Invalid port that's unlikely to have Redis
@@ -294,8 +294,8 @@ func TestRedisPattern_Health(t *testing.T) {
 		t.Fatalf("Health() error = %v", err)
 	}
 
-	if health.Status != core.HealthHealthy {
-		t.Errorf("Health() status = %v, want %v", health.Status, core.HealthHealthy)
+	if health.Status != plugin.HealthHealthy {
+		t.Errorf("Health() status = %v, want %v", health.Status, plugin.HealthHealthy)
 	}
 
 	if health.Message == "" {
@@ -318,8 +318,8 @@ func TestRedisPattern_HealthUnhealthy(t *testing.T) {
 		t.Fatalf("Health() error = %v", err)
 	}
 
-	if health.Status != core.HealthUnhealthy {
-		t.Errorf("Health() status = %v, want %v", health.Status, core.HealthUnhealthy)
+	if health.Status != plugin.HealthUnhealthy {
+		t.Errorf("Health() status = %v, want %v", health.Status, plugin.HealthUnhealthy)
 	}
 }
 

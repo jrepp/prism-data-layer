@@ -100,25 +100,40 @@ prism/
 │   ├── prism-loadtest/    # Load testing tool
 │   └── plugin-watcher/    # File watcher for hot reload
 ├── pkg/                   # Importable Go libraries
-│   ├── plugin/            # Plugin SDK (gRPC protocol, lifecycle, observability)
-│   └── drivers/           # Backend driver implementations
+│   ├── plugin/            # Plugin SDK (interfaces, lifecycle, observability)
+│   └── drivers/           # Backend driver implementations (LIBRARIES, not executables)
 │       ├── memstore/      # In-memory storage driver
 │       ├── redis/         # Redis driver
 │       ├── nats/          # NATS driver
 │       ├── kafka/         # Kafka driver
 │       └── postgres/      # PostgreSQL driver
-├── backends/              # Backend servers (containers for data stores)
-│   ├── memstore/          # MemStore backend server
-│   ├── redis/             # Redis backend server
-│   ├── nats/              # NATS backend server
-│   ├── kafka/             # Kafka backend server
-│   └── postgres/          # PostgreSQL backend server
-├── patterns/              # Composite patterns (use multiple backends)
-│   └── multicast_registry/  # Multicast registry pattern (Redis + NATS)
+├── patterns/              # Data access pattern implementations (libraries)
+│   ├── multicast_registry/ # Multicast registry pattern (Redis + NATS)
+│   ├── keyvalue/          # Key-value pattern
+│   └── consumer/          # Consumer pattern
 ├── proto/                 # Protobuf definitions (source of truth)
 ├── tooling/               # Python utilities for repo management
 ├── tests/                 # Integration and load tests
 └── pyproject.toml         # Python tooling dependencies (uv)
+```
+
+### Architecture Overview
+
+**Data Flow**: Pattern Commands → Prism Proxy (Rust) → Backend Drivers (Go) → Actual Backends (Redis, NATS, etc.)
+
+- **Prism Proxy** (`prism-proxy/`): The central Rust-based gateway that routes requests and manages connections
+- **Backend Drivers** (`pkg/drivers/`): Importable Go libraries that implement connections to specific backends (Redis, NATS, Kafka, PostgreSQL, MemStore)
+- **Patterns** (`patterns/`): Composite implementations that use multiple drivers to provide higher-level abstractions
+- **Commands** (`cmd/`): Executable tools that interact with the proxy or manage the system
+  - `prismctl`: CLI for authentication, namespace management
+  - `plugin-watcher`: Hot-reload watcher for development
+  - `prism-loadtest`: Load testing tool
+
+**Key Architectural Points**:
+- Drivers are **libraries only** - no main() functions, just importable packages
+- The Prism proxy (Rust) loads drivers dynamically as needed
+- Pattern commands connect to the proxy, which orchestrates driver usage
+- No standalone backend servers - everything goes through the proxy
 ```
 
 ### 📚 Documentation Authority: `./docs-cms/` and `./docusaurus/docs/`
@@ -318,14 +333,14 @@ build/binaries/prismctl health
 cd cmd/prismctl && make install
 prismctl --help
 
-# Build backend plugins
-make build-patterns
+# Run proxy locally (the main server)
+cd prism-proxy && cargo run --release
 
-# Watch plugins for changes and auto-rebuild
+# Watch for code changes during development
 cd cmd/plugin-watcher && go run .
 
-# Run proxy locally
-cd prism-proxy && cargo run --release
+# Run load tests
+cd cmd/prism-loadtest && go run .
 
 # Run admin UI
 cd admin && npm run dev

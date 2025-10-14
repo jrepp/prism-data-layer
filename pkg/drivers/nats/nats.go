@@ -51,7 +51,7 @@ func (n *NATSPattern) Version() string {
 }
 
 // Initialize prepares the plugin with configuration
-func (n *NATSPattern) Initialize(ctx context.Context, config *core.Config) error {
+func (n *NATSPattern) Initialize(ctx context.Context, config *plugin.Config) error {
 	// Extract backend-specific config with defaults
 	var backendConfig Config
 	if err := config.GetBackendConfig(&backendConfig); err != nil {
@@ -139,10 +139,10 @@ func (n *NATSPattern) Stop(ctx context.Context) error {
 }
 
 // Health returns the plugin health status
-func (n *NATSPattern) Health(ctx context.Context) (*core.HealthStatus, error) {
+func (n *NATSPattern) Health(ctx context.Context) (*plugin.HealthStatus, error) {
 	if n.conn == nil {
-		return &core.HealthStatus{
-			Status:  core.HealthUnhealthy,
+		return &plugin.HealthStatus{
+			Status:  plugin.HealthUnhealthy,
 			Message: "NATS connection not established",
 		}, nil
 	}
@@ -157,8 +157,8 @@ func (n *NATSPattern) Health(ctx context.Context) (*core.HealthStatus, error) {
 
 		stats := n.conn.Stats()
 
-		return &core.HealthStatus{
-			Status:  core.HealthHealthy,
+		return &plugin.HealthStatus{
+			Status:  plugin.HealthHealthy,
 			Message: fmt.Sprintf("Connected to %s", n.conn.ConnectedUrl()),
 			Details: map[string]string{
 				"subscriptions": fmt.Sprintf("%d", subCount),
@@ -169,13 +169,13 @@ func (n *NATSPattern) Health(ctx context.Context) (*core.HealthStatus, error) {
 			},
 		}, nil
 	case nats.RECONNECTING:
-		return &core.HealthStatus{
-			Status:  core.HealthDegraded,
+		return &plugin.HealthStatus{
+			Status:  plugin.HealthDegraded,
 			Message: "Reconnecting to NATS server",
 		}, nil
 	default:
-		return &core.HealthStatus{
-			Status:  core.HealthUnhealthy,
+		return &plugin.HealthStatus{
+			Status:  plugin.HealthUnhealthy,
 			Message: fmt.Sprintf("NATS connection status: %v", status),
 		}, nil
 	}
@@ -274,8 +274,8 @@ type Message struct {
 // Compile-time interface compliance checks
 // These ensure that NATSPattern implements the expected interfaces
 var (
-	_ core.Plugin           = (*NATSPattern)(nil) // Core plugin interface
-	_ core.InterfaceSupport = (*NATSPattern)(nil) // Interface introspection
+	_ plugin.Plugin           = (*NATSPattern)(nil) // Core plugin interface
+	_ plugin.InterfaceSupport = (*NATSPattern)(nil) // Interface introspection
 	// TODO: Add core.PubSubBasicInterface once signature is aligned (context param, message type)
 )
 

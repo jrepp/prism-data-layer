@@ -30,4 +30,4 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
-replace github.com/jrepp/prism-data-layer/pkg/plugin => ../core
+replace github.com/jrepp/prism-data-layer/pkg/plugin => ../../plugin
