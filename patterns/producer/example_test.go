@@ -8,6 +8,7 @@ import (
 	"github.com/jrepp/prism-data-layer/patterns/producer"
 	"github.com/jrepp/prism-data-layer/pkg/drivers/memstore"
 	"github.com/jrepp/prism-data-layer/pkg/drivers/nats"
+	"github.com/jrepp/prism-data-layer/pkg/plugin"
 )
 
 // ExampleProducer_simple demonstrates basic producer usage.
@@ -29,7 +30,7 @@ func ExampleProducer_simple() {
 	}
 
 	// Initialize NATS driver
-	natsDriver := nats.NewDriver()
+	natsDriver := nats.New()
 	cfg := map[string]interface{}{
 		"url": "nats://localhost:4222",
 	}
@@ -37,8 +38,8 @@ func ExampleProducer_simple() {
 		panic(err)
 	}
 
-	// Bind message sink
-	if err := prod.BindSlots(natsDriver, nil); err != nil {
+	// Bind message sink (messageSink, stateStore, objectStore)
+	if err := prod.BindSlots(natsDriver, nil, nil); err != nil {
 		panic(err)
 	}
 
@@ -73,10 +74,10 @@ func ExampleProducer_batching() {
 	prod, _ := producer.New(config)
 
 	// Initialize backend
-	memDriver := memstore.NewDriver()
+	memDriver := memstore.New()
 	memDriver.Init(context.Background(), map[string]interface{}{"capacity": 1000})
 
-	prod.BindSlots(memDriver, nil)
+	prod.BindSlots(memDriver, nil, nil)
 
 	ctx := context.Background()
 	prod.Start(ctx)
@@ -110,10 +111,10 @@ func ExampleProducer_deduplication() {
 	prod, _ := producer.New(config)
 
 	// Need state store for deduplication
-	memDriver := memstore.NewDriver()
+	memDriver := memstore.New()
 	memDriver.Init(context.Background(), map[string]interface{}{"capacity": 1000})
 
-	prod.BindSlots(memDriver, memDriver) // Use same memstore for both message sink and state
+	prod.BindSlots(memDriver, memDriver, nil) // Use same memstore for both message sink and state
 
 	ctx := context.Background()
 	prod.Start(ctx)
@@ -151,7 +152,7 @@ func TestProducer_lifecycle(t *testing.T) {
 	}
 
 	// Initialize backend
-	memDriver := memstore.NewDriver()
+	memDriver := memstore.New()
 	if err := memDriver.Init(context.Background(), map[string]interface{}{"capacity": 100}); err != nil {
 		t.Fatalf("Failed to init memstore: %v", err)
 	}
@@ -184,8 +185,8 @@ func TestProducer_lifecycle(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to get health: %v", err)
 	}
-	if health.Status != "healthy" {
-		t.Errorf("Expected healthy status, got %s", health.Status)
+	if health.Status != plugin.HealthStateHealthy {
+		t.Errorf("Expected healthy status, got %v", health.Status)
 	}
 
 	// Stop producer
@@ -211,9 +212,9 @@ func TestProducer_batching(t *testing.T) {
 		t.Fatalf("Failed to create producer: %v", err)
 	}
 
-	memDriver := memstore.NewDriver()
+	memDriver := memstore.New()
 	memDriver.Init(context.Background(), map[string]interface{}{"capacity": 100})
-	prod.BindSlots(memDriver, nil)
+	prod.BindSlots(memDriver, nil, nil)
 
 	ctx := context.Background()
 	prod.Start(ctx)
@@ -254,9 +255,9 @@ func TestProducer_deduplication(t *testing.T) {
 
 	prod, _ := producer.New(config)
 
-	memDriver := memstore.NewDriver()
+	memDriver := memstore.New()
 	memDriver.Init(context.Background(), map[string]interface{}{"capacity": 100})
-	prod.BindSlots(memDriver, memDriver) // Same driver for both slots
+	prod.BindSlots(memDriver, memDriver, nil) // Same driver for both slots
 
 	ctx := context.Background()
 	prod.Start(ctx)

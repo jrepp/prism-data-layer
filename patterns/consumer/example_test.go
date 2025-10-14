@@ -92,8 +92,8 @@ func Example() {
 		return
 	}
 
-	// Bind slots to consumer
-	if err := c.BindSlots(natsDriver, memstoreDriver, nil); err != nil {
+	// Bind slots to consumer (messageSink, stateStore, deadLetterQueue, objectStore)
+	if err := c.BindSlots(natsDriver, memstoreDriver, nil, nil); err != nil {
 		fmt.Printf("Failed to bind slots: %v\n", err)
 		return
 	}
@@ -203,8 +203,8 @@ func TestConsumerWithMemStore(t *testing.T) {
 		t.Fatalf("Failed to initialize MemStore: %v", err)
 	}
 
-	// Bind and start
-	if err := c.BindSlots(natsDriver, memstoreDriver, nil); err != nil {
+	// Bind and start (messageSink, stateStore, deadLetterQueue, objectStore)
+	if err := c.BindSlots(natsDriver, memstoreDriver, nil, nil); err != nil {
 		t.Fatalf("Failed to bind slots: %v", err)
 	}
 
