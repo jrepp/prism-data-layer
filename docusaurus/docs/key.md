@@ -6,166 +6,272 @@ project_id: prism-data-layer
 doc_uuid: 939d9f73-b542-4d3c-8cd3-43cc04222098
 ---
 
-# Key Philosophy & Foundational Documents
+# Essential Reading Guide
 
-This page references the most important documents that drive the philosophy, architecture, and development practices of the Prism Data Access Layer.
-
----
-
-## 🎯 Vision & Requirements
-
-### [Product Requirements Document (PRD)](/prds/prd-001)
-**Why it matters**: Defines the core value proposition, user personas, success metrics, and implementation roadmap for Prism.
-
-**Key insights**:
-- 10-100x faster than existing solutions (Netflix Data Gateway)
-- Self-service data provisioning
-- Zero-downtime migrations
-- Sub-millisecond P50 latency target
+Get up to speed on Prism fundamentals through this curated reading path. Each section builds on the previous, taking you from vision to implementation in ~45 minutes of focused reading.
 
 ---
 
-## 🏛️ Architectural Foundations
+## TL;DR: What is Prism?
 
-### [ADR-001: Why Rust for the Proxy](/adr/adr-001)
-**Why it matters**: Explains the fundamental technology choice that enables Prism's performance characteristics.
+**The Problem**: Netflix-scale organizations need a unified data access layer, but existing solutions (Netflix's Data Gateway) are too slow and hard to self-service.
 
-**Key decision**: Rust provides 10-100x performance improvement over JVM-based proxies with memory safety guarantees.
+**The Solution**: A Rust-based proxy that's 10-100x faster, with client-originated configuration that enables team self-service while maintaining policy guardrails.
 
-### [ADR-002: Client-Originated Configuration](/adr/adr-002)
-**Why it matters**: Defines how applications declare their data access patterns and requirements.
+**The Key Insight**: Separate **what** (client APIs), **how** (patterns), and **where** (backends) into three layers. Applications declare needs; Prism handles backend selection, provisioning, and reliability patterns.
 
-**Key insight**: Applications specify requirements (RPS, consistency, latency SLOs); Prism auto-configures and provisions backends.
-
-### [ADR-003: Protobuf as Single Source of Truth](/adr/adr-003)
-**Why it matters**: Establishes the data modeling philosophy and code generation strategy.
-
-**Key principle**: Protobuf definitions with custom tags drive code generation across all components (clients, proxy, backends).
-
-### [ADR-004: Local-First Testing Strategy](/adr/adr-004)
-**Why it matters**: Defines the development and testing philosophy that prioritizes real backends over mocks.
-
-**Key practice**: Use real local backends (SQLite, local Kafka, PostgreSQL in Docker) for realistic testing.
+**Performance**: P50 <1ms, P99 <10ms, 200k+ RPS per proxy instance.
 
 ---
 
-## 🔧 Implementation Philosophy
+## The Learning Journey
 
-### [MEMO-004: Backend Plugin Implementation Guide](/memos/memo-004)
-**Why it matters**: Comprehensive backend comparison and implementation priorities.
+### Phase 1: The Vision (10 min)
 
-**Key content**:
-- 8 backends ranked by implementability
-- Go SDK quality, data models, testing difficulty analysis
-- Demo plugin configurations
-- Implementation phases and priorities
+**Read**: [Product Requirements Document (PRD)](/prds/prd-001)
 
-### [MEMO-006: Backend Interface Decomposition & Schema Registry](/memos/memo-006)
-**Why it matters**: Defines the three-layer schema architecture and backend interface decomposition strategy.
+**Why start here**: Understand the problem Prism solves, who it's for, and what success looks like.
 
-**Key architecture**:
-- Layer 1: Backend Capabilities (KeyValue, PubSub, Timeseries, Locks)
-- Layer 2: Proxy DAL Patterns (KeyValue, Entity, TimeSeries, Graph)
-- Layer 3: Client Protocols (application-specific)
+**Key takeaways**:
+- **50x team scaling**: Infrastructure team of 10 supports 500+ app teams
+- **Zero-downtime migrations**: Swap backends without client changes
+- **Self-service provisioning**: Teams declare needs; platform provisions resources
+- **Success metrics**: <1ms P50 latency, 10k+ RPS, 99.99% uptime
 
-### [RFC-018: POC Implementation Strategy](/rfc/rfc-018)
-**Why it matters**: Defines the incremental POC approach with Walking Skeleton methodology.
-
-**Key strategy**:
-- POC 1: KeyValue + MemStore (foundation)
-- POC 2: KeyValue + Redis (real backend)
-- POC 3: PubSub + NATS (messaging pattern)
-- POC 4: Multicast Registry (composite pattern)
-- POC 5: Authentication (security + multi-tenancy)
+**After reading**: You'll understand *why* Prism exists and *who* benefits.
 
 ---
 
-## 📚 Development Practices
+### Phase 2: Core Decisions (15 min)
 
-### [CLAUDE.md (in repository root)](https://github.com/jrepp/prism-data-layer/blob/main/CLAUDE.md)
-**Why it matters**: Comprehensive development guide for contributors and AI assistants.
+Read these four ADRs in order - they establish Prism's technical foundation:
 
-**Key practices**:
-- Documentation validation workflow (mandatory before commits)
-- Test-Driven Development (TDD) with code coverage requirements
-- Git commit best practices
-- Architecture Decision Records (ADR) process
-- Monorepo structure and navigation
+#### [ADR-001: Why Rust for the Proxy](/adr/adr-001) (4 min)
 
----
+**The choice**: Rust instead of JVM (Go/Java/Scala)
 
-## 🧪 Testing & Quality
+**The rationale**:
+- 10-100x performance improvement (P50: 1ms vs 5-50ms)
+- Memory safety without GC pauses
+- 20MB idle memory vs 500MB+ JVM
 
-### [MEMO-015: Cross-Backend Acceptance Test Framework](/memos/memo-015)
-**Why it matters**: Establishes the table-driven, property-based testing approach for backend compliance.
-
-**Key innovation**: Single test suite automatically validates all backends (Redis, MemStore, PostgreSQL) with randomized data.
-
-### [MEMO-016: Observability & Lifecycle Implementation](/memos/memo-016)
-**Why it matters**: Documents the observability infrastructure and lifecycle testing framework.
-
-**Key features**:
-- OpenTelemetry tracing
-- Prometheus metrics endpoints
-- Graceful shutdown handling
-- Zero-boilerplate backend drivers
+**Key quote**: "Performance is a feature. Users perceive <100ms as instant; every millisecond counts."
 
 ---
 
-## 📖 How to Use This Index
+#### [ADR-002: Client-Originated Configuration](/adr/adr-002) (4 min)
 
-**For new contributors**:
-1. Start with the [PRD](/prds/prd-001) to understand the vision
-2. Read [ADR-001](/adr/adr-001) through [ADR-004](/adr/adr-004) for architectural foundations
-3. Review [CLAUDE.md](https://github.com/jrepp/prism-data-layer/blob/main/CLAUDE.md) for development practices
-4. Explore [MEMO-004](/memos/memo-004) for implementation guidance
+**The choice**: Applications declare requirements; Prism provisions infrastructure
 
-**For architectural decisions**:
-- Review existing ADRs to understand past decisions
-- Follow the ADR template when proposing new decisions
-- Ensure alignment with foundational principles
+**The rationale**:
+- Applications know their needs best (RPS, consistency, latency)
+- Platform team sets policy boundaries (approved backends, cost limits)
+- Self-service scales to hundreds of teams
 
-**For implementation work**:
-- Follow TDD practices from [CLAUDE.md](https://github.com/jrepp/prism-data-layer/blob/main/CLAUDE.md)
-- Refer to [MEMO-004](/memos/memo-004) for backend-specific guidance
-- Use [MEMO-015](/memos/memo-015) test framework for new backends
-- Ensure observability from [MEMO-016](/memos/memo-016) is integrated
-
----
-
-## 🔗 Document Hierarchy
-
-```text
-Vision & Requirements (WHY)
-├── PRD - Product vision and success criteria
-│
-Architecture (WHAT)
-├── ADR-001 - Technology: Rust
-├── ADR-002 - Pattern: Client-originated config
-├── ADR-003 - Data modeling: Protobuf
-├── ADR-004 - Testing: Local-first
-│
-Implementation (HOW)
-├── MEMO-004 - Backend implementation guide
-├── MEMO-006 - Three-layer schema architecture
-├── RFC-018 - POC implementation strategy
-│
-Development Practices (WORKFLOWS)
-├── CLAUDE.md - Development guide
-├── MEMO-015 - Testing framework
-└── MEMO-016 - Observability implementation
+**Example**:
+```protobuf
+message UserEvents {
+  option (prism.access_pattern) = "append_heavy";
+  option (prism.estimated_write_rps) = "10000";
+  option (prism.retention_days) = "90";
+}
+// Prism selects: Kafka with 20 partitions
 ```
 
 ---
 
-## 📝 Keeping This Index Updated
+#### [ADR-003: Protobuf as Single Source of Truth](/adr/adr-003) (4 min)
 
-When creating new foundational documents:
-1. Add them to this index with a brief explanation of "Why it matters"
-2. Update the document hierarchy if the structure changes
-3. Ensure cross-references are maintained
-4. Update the changelog with notable additions
+**The choice**: Protobuf definitions with custom tags drive all code generation
+
+**The rationale**:
+- DRY principle: Define once, generate everywhere
+- Type safety across languages
+- Custom tags drive: indexing, PII handling, backend selection
+
+**Example**:
+```protobuf
+message UserProfile {
+  string email = 2 [
+    (prism.pii) = "email",
+    (prism.encrypt_at_rest) = true,
+    (prism.mask_in_logs) = true
+  ];
+}
+// Generates: Encryption, masked logging, audit trails
+```
 
 ---
 
-*Last updated: 2025-10-12*
+#### [ADR-004: Local-First Testing Strategy](/adr/adr-004) (3 min)
+
+**The choice**: Real local backends (SQLite, Docker Postgres) instead of mocks
+
+**The rationale**:
+- Mocks hide backend-specific behavior
+- Local backends catch integration bugs early
+- Testcontainers make this practical
+
+**Key practice**: If you can't test it locally, you can't test it in CI.
+
+---
+
+### Phase 3: System Architecture (10 min)
+
+**Read**: [MEMO-006: Backend Interface Decomposition & Schema Registry](/memos/memo-006)
+
+**Why read this**: Understand the three-layer architecture that makes backend swapping possible.
+
+**The three layers**:
+
+```text
+Layer 3: Client Protocols (Application APIs)
+         ↓
+Layer 2: Proxy DAL Patterns (KeyValue, Entity, TimeSeries, Graph)
+         ↓
+Layer 1: Backend Capabilities (45 thin interfaces)
+```
+
+**Key insight**: Patterns compose backend interfaces to provide higher-level abstractions.
+
+**Example**: Multicast Registry pattern uses:
+- `keyvalue_basic` (for registration storage)
+- `pubsub_basic` (for event distribution)
+- `queue_basic` (for durability)
+
+Same pattern works with Redis+NATS+Postgres OR DynamoDB+SNS+SQS by swapping Layer 1 backends.
+
+---
+
+### Phase 4: Implementation Roadmap (10 min)
+
+#### [RFC-018: POC Implementation Strategy](/rfc/rfc-018) (7 min)
+
+**Why read this**: See how we're building Prism incrementally with Walking Skeleton approach.
+
+**The 5 POCs**:
+1. **KeyValue + MemStore** (2 weeks) - Simplest possible end-to-end
+2. **KeyValue + Redis** (2 weeks) - Real backend + acceptance testing
+3. **PubSub + NATS** (2 weeks) - Messaging pattern
+4. **Multicast Registry** (3 weeks) - Composite pattern (KeyValue + PubSub + Queue)
+5. **Authentication** (2 weeks) - Security + multi-tenancy
+
+**Key principle**: Build thinnest possible slice end-to-end, then iterate.
+
+---
+
+#### [MEMO-004: Backend Plugin Implementation Guide](/memos/memo-004) (3 min)
+
+**Why skim this**: See backend priorities and implementability rankings.
+
+**Quick reference**:
+- **Highest priority**: MemStore, Kafka, NATS, PostgreSQL (internal needs)
+- **External priorities**: Redis, SQLite, S3/MinIO, ClickHouse
+- **Implementability ranking**: MemStore (easiest) → Neptune (hardest)
+
+**Use this when**: Choosing which backend to implement next.
+
+---
+
+## Development Practices (5 min)
+
+### [CLAUDE.md (Repository Root)](https://github.com/jrepp/prism-data-layer/blob/main/CLAUDE.md)
+
+**Why read this**: Your guide to contributing to Prism.
+
+**Essential sections**:
+1. **Documentation Validation** - Mandatory before committing docs
+2. **TDD Workflow** - Red/Green/Refactor with coverage requirements
+3. **Git Commit Format** - Concise messages with user prompts
+4. **Monorepo Structure** - Where things live
+
+**Coverage requirements**:
+- Core Plugin SDK: 85% minimum, 90% target
+- Plugins (complex): 80% minimum, 85% target
+- Plugins (simple): 85% minimum, 90% target
+
+**Key quote**: "Write tests first. If you can't test it locally, you can't test it in CI."
+
+---
+
+## Your Reading Path
+
+### New to Prism? (35 min)
+
+Follow this sequence to build complete understanding:
+
+1. **Vision** (10 min): [PRD](/prds/prd-001)
+2. **Decisions** (15 min): [ADR-001](/adr/adr-001), [ADR-002](/adr/adr-002), [ADR-003](/adr/adr-003), [ADR-004](/adr/adr-004)
+3. **Architecture** (10 min): [MEMO-006](/memos/memo-006)
+4. **Development** (5 min): [CLAUDE.md](https://github.com/jrepp/prism-data-layer/blob/main/CLAUDE.md)
+
+**After this**: You'll understand Prism's vision, technical foundation, architecture, and development practices.
+
+---
+
+### Implementing a Feature? (20 min)
+
+Start with implementation context:
+
+1. **POC Strategy** (7 min): [RFC-018](/rfc/rfc-018) - Which POC phase are we in?
+2. **Backend Guide** (3 min): [MEMO-004](/memos/memo-004) - Backend-specific guidance
+3. **Testing Framework** (5 min): [MEMO-015](/memos/memo-015) - How to write acceptance tests
+4. **Observability** (5 min): [MEMO-016](/memos/memo-016) - Add tracing/metrics
+
+**Then**: Follow TDD workflow from [CLAUDE.md](https://github.com/jrepp/prism-data-layer/blob/main/CLAUDE.md)
+
+---
+
+### Writing an ADR/RFC? (10 min)
+
+Understand the decision-making context:
+
+1. **Read existing ADRs**: See [ADR Index](/adr) for past decisions
+2. **Check RFC precedents**: See [RFC Index](/rfc) for design patterns
+3. **Use templates**: `docs-cms/adr/ADR-000-template.md` for ADRs
+
+**Key principle**: Every significant architectural decision gets an ADR. Every feature design gets an RFC.
+
+---
+
+## Quick Reference
+
+### Most Referenced Documents
+
+| Document | Purpose | When to Read |
+|----------|---------|--------------|
+| [PRD](/prds/prd-001) | Product vision | Onboarding, strategic decisions |
+| [ADR-001](/adr/adr-001) - [ADR-004](/adr/adr-004) | Core decisions | Understanding technical foundation |
+| [MEMO-006](/memos/memo-006) | Three-layer architecture | Designing patterns, understanding backend abstraction |
+| [RFC-018](/rfc/rfc-018) | POC roadmap | Planning implementation work |
+| [CLAUDE.md](https://github.com/jrepp/prism-data-layer/blob/main/CLAUDE.md) | Development guide | Daily development, code reviews |
+
+---
+
+### Additional Deep Dives
+
+Once you're comfortable with foundations, explore these for deeper understanding:
+
+- **Testing**: [MEMO-015](/memos/memo-015) - Cross-backend acceptance testing, [MEMO-030](/memos/memo-030) - Pattern-based test migration
+- **Security**: [MEMO-031](/memos/memo-031) - RFC-031 security review, [ADR-050](/adr/adr-050) - Authentication strategy
+- **Performance**: [MEMO-007](/memos/memo-007) - Podman container optimization, [ADR-049](/adr/adr-049) - Container strategy
+- **Observability**: [MEMO-016](/memos/memo-016) - OpenTelemetry integration, [RFC-016](/rfc/rfc-016) - Local dev infrastructure
+
+---
+
+## Document Evolution
+
+This guide evolves as the project grows. When adding foundational documents:
+
+1. **Place in narrative**: Where does it fit in the learning journey?
+2. **Add time estimate**: How long to read/understand?
+3. **Explain "Why read this"**: What understanding does it unlock?
+4. **Update reading paths**: Does it change the recommended sequence?
+
+**Principle**: Every document should have a clear purpose in someone's learning journey.
+
+---
+
+*Reading time estimates assume focused reading with note-taking. Skim faster if reviewing familiar concepts.*
+
+*Last updated: 2025-10-14*
