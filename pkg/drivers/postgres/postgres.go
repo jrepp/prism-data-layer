@@ -9,6 +9,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/jrepp/prism-data-layer/pkg/plugin"
+	pb "github.com/jrepp/prism-data-layer/pkg/plugin/gen/prism/interfaces"
 )
 
 // PostgresPlugin implements the Prism backend plugin for PostgreSQL
@@ -388,35 +389,26 @@ func (p *PostgresPlugin) ScanWithValues(prefix string, limit int) (map[string][]
 	return results, nil
 }
 
-// =============================================================================
-// InterfaceSupport Implementation
-// =============================================================================
-
-// SupportsInterface returns true if PostgreSQL implements the named interface
-func (p *PostgresPlugin) SupportsInterface(interfaceName string) bool {
-	supported := map[string]bool{
-		"Plugin":                    true,
-		"KeyValueBasicInterface":    true,
-		"KeyValueScanInterface":     true,
-		"InterfaceSupport":          true,
-	}
-	return supported[interfaceName]
-}
-
-// ListInterfaces returns all interfaces that PostgreSQL implements
-func (p *PostgresPlugin) ListInterfaces() []string {
-	return []string{
-		"Plugin",
-		"KeyValueBasicInterface",
-		"KeyValueScanInterface",
-		"InterfaceSupport",
-	}
-}
-
 // Compile-time interface compliance checks
 var (
 	_ plugin.Plugin                 = (*PostgresPlugin)(nil)
 	_ plugin.KeyValueBasicInterface = (*PostgresPlugin)(nil)
 	_ plugin.KeyValueScanInterface  = (*PostgresPlugin)(nil)
-	_ plugin.InterfaceSupport       = (*PostgresPlugin)(nil)
 )
+
+// GetInterfaceDeclarations returns the interfaces this driver implements
+// This is used during registration with the proxy (replacing runtime introspection)
+func (p *PostgresPlugin) GetInterfaceDeclarations() []*pb.InterfaceDeclaration {
+	return []*pb.InterfaceDeclaration{
+		{
+			Name:      "KeyValueBasicInterface",
+			ProtoFile: "prism/interfaces/keyvalue/keyvalue_basic.proto",
+			Version:   "v1",
+		},
+		{
+			Name:      "KeyValueScanInterface",
+			ProtoFile: "prism/interfaces/keyvalue/keyvalue_scan.proto",
+			Version:   "v1",
+		},
+	}
+}

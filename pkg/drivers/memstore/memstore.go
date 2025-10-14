@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/jrepp/prism-data-layer/pkg/plugin"
+	pb "github.com/jrepp/prism-data-layer/pkg/plugin/gen/prism/interfaces"
 )
 
 // MemStore implements an in-memory key-value store plugin
@@ -222,24 +223,16 @@ func (m *MemStore) cleanupExpiredKeys(ctx context.Context) {
 var (
 	_ plugin.Plugin                 = (*MemStore)(nil) // Core plugin interface
 	_ plugin.KeyValueBasicInterface = (*MemStore)(nil) // KeyValue basic operations
-	_ plugin.InterfaceSupport       = (*MemStore)(nil) // Interface introspection
 )
 
-// SupportsInterface returns true if MemStore implements the named interface
-func (m *MemStore) SupportsInterface(interfaceName string) bool {
-	supported := map[string]bool{
-		"Plugin":                 true,
-		"KeyValueBasicInterface": true,
-		"InterfaceSupport":       true,
-	}
-	return supported[interfaceName]
-}
-
-// ListInterfaces returns all interfaces that MemStore implements
-func (m *MemStore) ListInterfaces() []string {
-	return []string{
-		"Plugin",
-		"KeyValueBasicInterface",
-		"InterfaceSupport",
+// GetInterfaceDeclarations returns the interfaces this driver implements
+// This is used during registration with the proxy (replacing runtime introspection)
+func (m *MemStore) GetInterfaceDeclarations() []*pb.InterfaceDeclaration {
+	return []*pb.InterfaceDeclaration{
+		{
+			Name:      "KeyValueBasicInterface",
+			ProtoFile: "prism/interfaces/keyvalue/keyvalue_basic.proto",
+			Version:   "v1",
+		},
 	}
 }

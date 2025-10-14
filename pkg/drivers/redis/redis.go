@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/jrepp/prism-data-layer/pkg/plugin"
+	pb "github.com/jrepp/prism-data-layer/pkg/plugin/gen/prism/interfaces"
 	"github.com/redis/go-redis/v9"
 )
 
@@ -210,24 +211,16 @@ func (r *RedisPattern) Exists(key string) (bool, error) {
 var (
 	_ plugin.Plugin                 = (*RedisPattern)(nil) // Core plugin interface
 	_ plugin.KeyValueBasicInterface = (*RedisPattern)(nil) // KeyValue basic operations
-	_ plugin.InterfaceSupport       = (*RedisPattern)(nil) // Interface introspection
 )
 
-// SupportsInterface returns true if RedisPattern implements the named interface
-func (r *RedisPattern) SupportsInterface(interfaceName string) bool {
-	supported := map[string]bool{
-		"Plugin":                 true,
-		"KeyValueBasicInterface": true,
-		"InterfaceSupport":       true,
-	}
-	return supported[interfaceName]
-}
-
-// ListInterfaces returns all interfaces that RedisPattern implements
-func (r *RedisPattern) ListInterfaces() []string {
-	return []string{
-		"Plugin",
-		"KeyValueBasicInterface",
-		"InterfaceSupport",
+// GetInterfaceDeclarations returns the interfaces this driver implements
+// This is used during registration with the proxy (replacing runtime introspection)
+func (r *RedisPattern) GetInterfaceDeclarations() []*pb.InterfaceDeclaration {
+	return []*pb.InterfaceDeclaration{
+		{
+			Name:      "KeyValueBasicInterface",
+			ProtoFile: "prism/interfaces/keyvalue/keyvalue_basic.proto",
+			Version:   "v1",
+		},
 	}
 }

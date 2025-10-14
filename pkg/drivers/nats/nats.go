@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/jrepp/prism-data-layer/pkg/plugin"
+	pb "github.com/jrepp/prism-data-layer/pkg/plugin/gen/prism/interfaces"
 	"github.com/nats-io/nats.go"
 )
 
@@ -262,31 +263,94 @@ func (n *NATSPattern) Unsubscribe(ctx context.Context, topic string, subscriberI
 	return nil
 }
 
+// QueueInterface implementation for NATS queue groups
+
+// Enqueue sends a message to a queue (uses NATS pub/sub with queue groups)
+func (n *NATSPattern) Enqueue(ctx context.Context, queue string, payload []byte, metadata map[string]string) (string, error) {
+	// NATS doesn't have a separate queue type - we use topics
+	// The Receive side will use queue subscriptions for load balancing
+	return n.Publish(ctx, queue, payload, metadata)
+}
+
+// Receive receives messages from a queue using NATS queue groups
+// Queue groups provide load balancing - only one subscriber in the group gets each message
+func (n *NATSPattern) Receive(ctx context.Context, queue string) (<-chan *plugin.PubSubMessage, error) {
+	if n.conn == nil {
+		return nil, fmt.Errorf("NATS connection not established")
+	}
+
+	// Create message channel
+	msgChan := make(chan *plugin.PubSubMessage, n.config.MaxPendingMsgs)
+
+	// Use queue subscription for load balancing across consumers
+	// Queue name is the same as the topic name for simplicity
+	queueGroup := fmt.Sprintf("%s-queue", queue)
+	sub, err := n.conn.QueueSubscribe(queue, queueGroup, func(msg *nats.Msg) {
+		select {
+		case msgChan <- &plugin.PubSubMessage{
+			Topic:     msg.Subject,
+			Payload:   msg.Data,
+			MessageID: fmt.Sprintf("%s-%d", msg.Subject, time.Now().UnixNano()),
+			Timestamp: time.Now().Unix(),
+		}:
+		case <-ctx.Done():
+			return
+		default:
+			// Channel full, drop message
+			fmt.Printf("Warning: message dropped for queue %s (channel full)\n", queue)
+		}
+	})
+
+	if err != nil {
+		close(msgChan)
+		return nil, fmt.Errorf("failed to subscribe to queue %s: %w", queue, err)
+	}
+
+	// Store subscription
+	n.subsMu.Lock()
+	key := fmt.Sprintf("queue:%s", queue)
+	n.subs[key] = sub
+	n.subsMu.Unlock()
+
+	return msgChan, nil
+}
+
+// Acknowledge acknowledges a message (NATS core doesn't have explicit acks)
+func (n *NATSPattern) Acknowledge(ctx context.Context, queue string, messageID string) error {
+	// NATS core pub/sub doesn't have explicit acknowledgment
+	// Messages are at-most-once delivery by default
+	// For at-least-once, would need JetStream
+	return nil
+}
+
+// Reject rejects a message (NATS core doesn't have explicit nacks)
+func (n *NATSPattern) Reject(ctx context.Context, queue string, messageID string, requeue bool) error {
+	// NATS core pub/sub doesn't have explicit negative acknowledgment
+	// For this, would need JetStream with redelivery
+	return nil
+}
+
 // Compile-time interface compliance checks
 // These ensure that NATSPattern implements the expected interfaces
 var (
-	_ plugin.Plugin           = (*NATSPattern)(nil) // Core plugin interface
-	_ plugin.InterfaceSupport = (*NATSPattern)(nil) // Interface introspection
-	_ plugin.PubSubInterface  = (*NATSPattern)(nil) // PubSub interface
+	_ plugin.Plugin          = (*NATSPattern)(nil) // Core plugin interface
+	_ plugin.PubSubInterface = (*NATSPattern)(nil) // PubSub interface
+	_ plugin.QueueInterface  = (*NATSPattern)(nil) // Queue interface
 )
 
-// SupportsInterface returns true if NATSPattern implements the named interface
-func (n *NATSPattern) SupportsInterface(interfaceName string) bool {
-	supported := map[string]bool{
-		"Plugin":               true,
-		"PubSubBasicInterface": true,
-		"PubSubInterface":      true,
-		"InterfaceSupport":     true,
-	}
-	return supported[interfaceName]
-}
-
-// ListInterfaces returns all interfaces that NATSPattern implements
-func (n *NATSPattern) ListInterfaces() []string {
-	return []string{
-		"Plugin",
-		"PubSubBasicInterface",
-		"PubSubInterface",
-		"InterfaceSupport",
+// GetInterfaceDeclarations returns the interfaces this driver implements
+// This is used during registration with the proxy (replacing runtime introspection)
+func (n *NATSPattern) GetInterfaceDeclarations() []*pb.InterfaceDeclaration {
+	return []*pb.InterfaceDeclaration{
+		{
+			Name:      "PubSubInterface",
+			ProtoFile: "prism/interfaces/pubsub/pubsub.proto",
+			Version:   "v1",
+		},
+		{
+			Name:      "QueueInterface",
+			ProtoFile: "prism/interfaces/queue/queue.proto",
+			Version:   "v1",
+		},
 	}
 }
