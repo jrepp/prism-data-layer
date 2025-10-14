@@ -233,15 +233,31 @@ jobs:
           retention-days: 7
           if-no-files-found: warn
 
-  # Job 3: Test Go patterns
+  # Job 3: Test Go drivers and patterns
   test-patterns:
-    name: Test Go Patterns
+    name: Test ${{ matrix.name }}
     runs-on: ubuntu-latest
     needs: generate-proto
 
     strategy:
+      fail-fast: false
       matrix:
-        pattern: [core, memstore, redis, nats]
+        include:
+          - name: "MemStore Driver"
+            path: "pkg/drivers/memstore"
+            artifact: "memstore"
+          - name: "Redis Driver"
+            path: "pkg/drivers/redis"
+            artifact: "redis"
+          - name: "NATS Driver"
+            path: "pkg/drivers/nats"
+            artifact: "nats"
+          - name: "Consumer Pattern"
+            path: "patterns/consumer"
+            artifact: "consumer"
+          - name: "Producer Pattern"
+            path: "patterns/producer"
+            artifact: "producer"
 
     steps:
       - name: Checkout
@@ -258,20 +274,20 @@ jobs:
           name: proto-generated
           path: pkg/plugin/gen/
 
-      - name: Run tests for ${{ matrix.pattern }}
-        run: cd patterns/${{ matrix.pattern }} && go test -v -cover -race ./...
+      - name: Run tests for ${{ matrix.name }}
+        run: cd ${{ matrix.path }} && go test -v -cover -race ./...
 
       - name: Generate coverage report
         run: |
-          cd patterns/${{ matrix.pattern }}
+          cd ${{ matrix.path }}
           go test -coverprofile=coverage.out ./...
           go tool cover -func=coverage.out | grep total | awk '{print "Coverage: " $3}'
 
       - name: Upload coverage
         uses: actions/upload-artifact@v4
         with:
-          name: coverage-${{ matrix.pattern }}
-          path: patterns/${{ matrix.pattern }}/coverage.out
+          name: coverage-${{ matrix.artifact }}
+          path: ${{ matrix.path }}/coverage.out
           retention-days: 7
 
   # Job 4: Integration tests
@@ -390,11 +406,11 @@ jobs:
       - name: Build Rust proxy
         run: cd prism-proxy && cargo build --release
 
-      - name: Build Go patterns
+      - name: Build Go pattern runners
         run: |
-          cd patterns/memstore && go build -o memstore cmd/memstore/main.go
-          cd ../redis && go build -o redis cmd/redis/main.go
-          cd ../nats && go build -o nats cmd/nats/main.go
+          cd patterns/consumer/cmd/consumer-runner && go build -o consumer-runner .
+          cd ../../../producer/cmd/producer-runner && go build -o producer-runner .
+          cd ../../../multicast_registry/cmd/multicast-registry-runner && go build -o multicast-registry-runner .
 
       - name: Upload proxy binary
         uses: actions/upload-artifact@v4
@@ -403,14 +419,14 @@ jobs:
           path: prism-proxy/target/release/prism-proxy
           retention-days: 7
 
-      - name: Upload pattern binaries
+      - name: Upload pattern runner binaries
         uses: actions/upload-artifact@v4
         with:
           name: pattern-binaries
           path: |
-            patterns/memstore/memstore
-            patterns/redis/redis
-            patterns/nats/nats
+            patterns/consumer/cmd/consumer-runner/consumer-runner
+            patterns/producer/cmd/producer-runner/producer-runner
+            patterns/multicast_registry/cmd/multicast-registry-runner/multicast-registry-runner
           retention-days: 7
 
   # Job 8: Coverage summary
@@ -467,10 +483,11 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: >-
             build/coverage-reports/coverage-rust/cobertura.xml,
-            build/coverage-reports/coverage-core/coverage.out,
             build/coverage-reports/coverage-memstore/coverage.out,
             build/coverage-reports/coverage-redis/coverage.out,
             build/coverage-reports/coverage-nats/coverage.out,
+            build/coverage-reports/coverage-consumer/coverage.out,
+            build/coverage-reports/coverage-producer/coverage.out,
             build/coverage-reports/coverage-integration/coverage.out,
           flags: unittests,integration,acceptance
           name: prism-coverage
