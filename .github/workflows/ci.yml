@@ -63,7 +63,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: proto-generated
-          path: patterns/core/gen/
+          path: pkg/plugin/gen/
           retention-days: 1
 
   # Job 1: Lint Rust code
@@ -153,7 +153,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: proto-generated
-          path: patterns/core/gen/
+          path: pkg/plugin/gen/
 
       - name: Install golangci-lint
         run: |
@@ -220,7 +220,7 @@ jobs:
         run: cd prism-proxy && cargo test --lib --verbose
 
       - name: Install cargo-tarpaulin
-        run: cargo install cargo-tarpaulin
+        run: cargo install cargo-tarpaulin --force
 
       - name: Generate Rust coverage
         run: cd prism-proxy && cargo tarpaulin --lib --out Xml --output-dir ../
@@ -256,7 +256,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: proto-generated
-          path: patterns/core/gen/
+          path: pkg/plugin/gen/
 
       - name: Run tests for ${{ matrix.pattern }}
         run: cd patterns/${{ matrix.pattern }} && go test -v -cover -race ./...
@@ -293,7 +293,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: proto-generated
-          path: patterns/core/gen/
+          path: pkg/plugin/gen/
 
       - name: Run integration tests
         run: cd tests/integration && go test -v -timeout 5m -race ./...
@@ -371,7 +371,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: proto-generated
-          path: patterns/core/gen/
+          path: pkg/plugin/gen/
 
       - name: Cache Rust dependencies
         uses: actions/cache@v4
