@@ -8,7 +8,7 @@ import (
 
 	"github.com/alicebob/miniredis/v2"
 	natsserver "github.com/nats-io/nats-server/v2/test"
-	"github.com/prism/patterns/multicast_registry/backends"
+	"github.com/jrepp/prism-data-layer/patterns/multicast_registry/backends"
 )
 
 // TestIntegration_FullStack tests coordinator with Redis + NATS backends

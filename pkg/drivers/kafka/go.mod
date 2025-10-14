@@ -4,13 +4,13 @@ go 1.24.0
 
 require (
 	github.com/confluentinc/confluent-kafka-go/v2 v2.6.1
+	github.com/google/uuid v1.6.0
 	github.com/jrepp/prism-data-layer/pkg/plugin v0.0.0
 )
 
 require (
 	github.com/go-logr/logr v1.4.3 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
-	github.com/google/uuid v1.6.0 // indirect
 	go.opentelemetry.io/auto/sdk v1.1.0 // indirect
 	go.opentelemetry.io/otel v1.37.0 // indirect
 	go.opentelemetry.io/otel/exporters/stdout/stdouttrace v1.24.0 // indirect

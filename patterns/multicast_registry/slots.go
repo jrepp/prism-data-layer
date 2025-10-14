@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/prism/patterns/multicast_registry/backends"
+	"github.com/jrepp/prism-data-layer/patterns/multicast_registry/backends"
 )
 
 // RegistryBackend defines the interface for identity registry storage

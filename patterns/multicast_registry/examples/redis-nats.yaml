@@ -1,0 +1,36 @@
+# Multicast Registry Pattern Configuration
+# Backend: Redis (registry) + NATS (messaging)
+# Use case: Device fleet management with multicast notifications
+
+namespaces:
+  - name: device-fleet
+    pattern: multicast-registry
+    pattern_version: v1
+    description: "Device fleet management with Redis registry and NATS messaging"
+
+    # Slot configuration: registry + messaging
+    slots:
+      registry:
+        backend: redis
+        interfaces:
+          - KeyValueBasicInterface
+        config:
+          address: localhost:6379
+          password: ""
+          db: 0
+          prefix: "device:"
+
+      messaging:
+        backend: nats
+        interfaces:
+          - PubSubInterface
+        config:
+          servers:
+            - nats://localhost:4222
+
+    # Behavior configuration
+    behavior:
+      max_identities: 10000
+      topic_prefix: "prism.multicast"
+      retry_attempts: 3
+      retry_delay_ms: 100

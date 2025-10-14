@@ -5,6 +5,8 @@ created: 2025-10-13
 updated: 2025-10-13
 tags: [tenancy, isolation, architecture, deployment, security]
 id: memo-023
+project_id: prism-data-layer
+doc_uuid: 023e8f72-4b9c-4d1a-a716-446655440023
 ---
 
 # Multi-Tenancy Models and Isolation Strategies
@@ -21,7 +23,7 @@ This memo explores three primary tenancy models and three isolation levels, prov
 
 **Architecture**: One proxy deployment per tenant, fully isolated infrastructure.
 
-```
+```text
 ┌─────────────────────────────────────────────────────┐
 │ Tenant A (Large Enterprise Application)            │
 │                                                     │
@@ -51,7 +53,7 @@ This memo explores three primary tenancy models and three isolation levels, prov
 ```
 
 **Use Cases**:
-- **Large enterprise applications** with high throughput requirements (>10K RPS)
+- **Large enterprise applications** with high throughput requirements (&gt;10K RPS)
 - **Regulatory compliance** requirements mandating physical infrastructure separation (HIPAA, PCI-DSS, FedRAMP)
 - **Noisy neighbor elimination** for mission-critical applications
 - **Independent upgrade cycles** - tenant controls when to upgrade Prism versions
@@ -143,7 +145,7 @@ observability:
 
 **Architecture**: Control plane manages pool of proxies using `prism-bridge`, serving multiple tenants.
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────┐
 │ Prism Control Plane (prism-bridge)                          │
 │                                                              │
@@ -369,7 +371,7 @@ curl -X POST http://prism-bridge:8980/api/v1/loadbalancer/reload
 
 **Architecture**: Combination of single-tenant for premium customers and multi-tenant for standard customers.
 
-```
+```text
 ┌──────────────────────────────────────────────────────┐
 │ Prism Control Plane (prism-bridge)                   │
 │                                                       │
@@ -428,7 +430,7 @@ Isolation levels control how tenant workloads are separated **within** a shared 
 
 **Description**: No enforced bulkhead between tenant data. All tenants share the same connection pools and backend resources.
 
-```
+```text
 ┌─────────────────────────────────────┐
 │ Prism Proxy                          │
 │                                      │
@@ -478,7 +480,7 @@ proxy:
 
 **Description**: Each namespace has its own pool of pattern providers (backend connections). Namespaces are the primary isolation boundary.
 
-```
+```text
 ┌─────────────────────────────────────────────────────┐
 │ Prism Proxy                                          │
 │                                                      │
@@ -581,7 +583,7 @@ proxy:
 
 **Description**: Shared pool of pattern providers (connections), but each session (client connection) gets dedicated connections that are **not reused** for other sessions. Connections are set up and torn down for each unique session.
 
-```
+```text
 ┌─────────────────────────────────────────────────────┐
 │ Prism Proxy                                          │
 │                                                      │
@@ -650,7 +652,7 @@ proxy:
    ```
 
 2. **Connection Lifecycle**:
-   ```
+   ```text
    Client connects → Session created → Connections established
                                      ↓
    Client sends request → Use session's dedicated connections
@@ -753,7 +755,7 @@ proxy:
 - [ ] Compliance mandates connection-level isolation (PCI-DSS, HIPAA)
 - [ ] Audit requirements need per-session connection tracking
 - [ ] Premium customers pay for guaranteed dedicated connections
-- [ ] Sessions are short-lived (<5 minutes)
+- [ ] Sessions are short-lived (&lt;5 minutes)
 - [ ] Connection setup cost (5-50ms) is acceptable
 
 ## Configuration Examples

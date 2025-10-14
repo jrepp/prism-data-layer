@@ -25,6 +25,7 @@ import yaml
 @dataclass
 class TestConfig:
     """Configuration for a single matrix test"""
+
     name: str
     config_file: Path
     mode: str
@@ -35,6 +36,7 @@ class TestConfig:
 @dataclass
 class TestResult:
     """Result of a single test run"""
+
     config: TestConfig
     passed: bool
     duration: float
@@ -62,21 +64,21 @@ class ConsumerMatrixTester:
                 config_file=self.test_configs_dir / "stateless-nats.yaml",
                 mode="stateless",
                 backends=["nats"],
-                expected_behavior="ephemeral processing from latest offset"
+                expected_behavior="ephemeral processing from latest offset",
             ),
             TestConfig(
                 name="Stateful NATS+Redis",
                 config_file=self.test_configs_dir / "stateful-nats-redis.yaml",
                 mode="stateful",
                 backends=["nats", "redis"],
-                expected_behavior="checkpoint resume from last offset"
+                expected_behavior="checkpoint resume from last offset",
             ),
             TestConfig(
                 name="Full Durability Kafka+Postgres",
                 config_file=self.test_configs_dir / "full-durability-postgres.yaml",
                 mode="full_durability",
                 backends=["kafka", "postgres"],
-                expected_behavior="state + DLQ for maximum reliability"
+                expected_behavior="state + DLQ for maximum reliability",
             ),
         ]
 
@@ -94,12 +96,12 @@ class ConsumerMatrixTester:
 
     def run_test(self, config: TestConfig) -> TestResult:
         """Run a single consumer pattern test with the given configuration"""
-        print(f"\n{'='*70}")
+        print(f"\n{'=' * 70}")
         print(f"🧪 Testing: {config.name}")
         print(f"   Mode: {config.mode}")
         print(f"   Backends: {', '.join(config.backends)}")
         print(f"   Config: {config.config_file.name}")
-        print(f"{'='*70}")
+        print(f"{'=' * 70}")
 
         start_time = time.time()
 
@@ -108,7 +110,7 @@ class ConsumerMatrixTester:
             if self.verbose:
                 print(f"\n🔍 [VERBOSE] Loading configuration from {config.config_file}")
 
-            with open(config.config_file) as f:
+            with open(config.config_file, encoding="utf-8") as f:
                 config_data = yaml.safe_load(f)
 
             if self.verbose:
@@ -127,10 +129,7 @@ class ConsumerMatrixTester:
                 print(f"   Expected behavior validated: {config.expected_behavior}")
 
                 return TestResult(
-                    config=config,
-                    passed=True,
-                    duration=duration,
-                    messages_processed=result["messages_processed"]
+                    config=config, passed=True, duration=duration, messages_processed=result["messages_processed"]
                 )
             print(f"❌ FAIL: {config.name} ({duration:.2f}s)")
             print(f"   Error: {result['error']}")
@@ -140,7 +139,7 @@ class ConsumerMatrixTester:
                 passed=False,
                 duration=duration,
                 messages_processed=result.get("messages_processed", 0),
-                error=result["error"]
+                error=result["error"],
             )
 
         except Exception as e:
@@ -148,13 +147,7 @@ class ConsumerMatrixTester:
             print(f"❌ ERROR: {config.name} ({duration:.2f}s)")
             print(f"   Exception: {e!s}")
 
-            return TestResult(
-                config=config,
-                passed=False,
-                duration=duration,
-                messages_processed=0,
-                error=str(e)
-            )
+            return TestResult(config=config, passed=False, duration=duration, messages_processed=0, error=str(e))
 
     def _run_consumer_test(self, config: TestConfig, config_data: dict) -> dict:
         """Run the actual consumer pattern test.
@@ -172,10 +165,7 @@ class ConsumerMatrixTester:
             print("\n🔍 [VERBOSE] Step 1: Validating configuration structure")
 
         if "namespaces" not in config_data:
-            return {
-                "success": False,
-                "error": "Missing 'namespaces' key in configuration"
-            }
+            return {"success": False, "error": "Missing 'namespaces' key in configuration"}
 
         namespace = config_data["namespaces"][0]
 
@@ -189,17 +179,11 @@ class ConsumerMatrixTester:
         required_fields = ["name", "pattern", "slots", "behavior"]
         for field in required_fields:
             if field not in namespace:
-                return {
-                    "success": False,
-                    "error": f"Missing required field: {field}"
-                }
+                return {"success": False, "error": f"Missing required field: {field}"}
 
         # Validate pattern is consumer
         if namespace["pattern"] != "consumer":
-            return {
-                "success": False,
-                "error": f"Expected pattern 'consumer', got '{namespace['pattern']}'"
-            }
+            return {"success": False, "error": f"Expected pattern 'consumer', got '{namespace['pattern']}'"}
 
         # Validate slots based on mode
         slots = namespace["slots"]
@@ -214,10 +198,7 @@ class ConsumerMatrixTester:
 
         # message_source is always required
         if "message_source" not in slots:
-            return {
-                "success": False,
-                "error": "Missing required slot: message_source"
-            }
+            return {"success": False, "error": "Missing required slot: message_source"}
 
         # Validate mode-specific requirements
         if self.verbose:
@@ -228,33 +209,21 @@ class ConsumerMatrixTester:
                 print("🔍 [VERBOSE] Stateless mode: verifying NO state_store slot")
             # Should NOT have state_store
             if slots.get("state_store"):
-                return {
-                    "success": False,
-                    "error": "Stateless mode should not have state_store slot"
-                }
+                return {"success": False, "error": "Stateless mode should not have state_store slot"}
         elif config.mode == "stateful":
             if self.verbose:
                 print("🔍 [VERBOSE] Stateful mode: verifying state_store slot exists")
             # MUST have state_store
             if "state_store" not in slots:
-                return {
-                    "success": False,
-                    "error": "Stateful mode requires state_store slot"
-                }
+                return {"success": False, "error": "Stateful mode requires state_store slot"}
         elif config.mode == "full_durability":
             if self.verbose:
                 print("🔍 [VERBOSE] Full durability mode: verifying state_store AND dead_letter_queue slots")
             # MUST have state_store and dead_letter_queue
             if "state_store" not in slots:
-                return {
-                    "success": False,
-                    "error": "Full durability mode requires state_store slot"
-                }
+                return {"success": False, "error": "Full durability mode requires state_store slot"}
             if "dead_letter_queue" not in slots:
-                return {
-                    "success": False,
-                    "error": "Full durability mode requires dead_letter_queue slot"
-                }
+                return {"success": False, "error": "Full durability mode requires dead_letter_queue slot"}
 
         # Validate behavior configuration
         if self.verbose:
@@ -264,10 +233,7 @@ class ConsumerMatrixTester:
         required_behavior_fields = ["consumer_group", "topic", "max_retries"]
         for field in required_behavior_fields:
             if field not in behavior:
-                return {
-                    "success": False,
-                    "error": f"Missing required behavior field: {field}"
-                }
+                return {"success": False, "error": f"Missing required behavior field: {field}"}
 
         if self.verbose:
             print("✓ Configuration structure validated")
@@ -345,7 +311,7 @@ class ConsumerMatrixTester:
         return {
             "success": True,
             "messages_processed": 10,  # Simulated
-            "note": "Configuration validated. Full pattern execution not yet implemented."
+            "note": "Configuration validated. Full pattern execution not yet implemented.",
         }
 
     def run_all_tests(self, mode_filter: str | None = None) -> bool:
@@ -374,9 +340,9 @@ class ConsumerMatrixTester:
 
     def print_summary(self):
         """Print test summary"""
-        print(f"\n{'='*70}")
+        print(f"\n{'=' * 70}")
         print("📊 Test Summary")
-        print(f"{'='*70}")
+        print(f"{'=' * 70}")
 
         passed = sum(1 for r in self.results if r.passed)
         failed = sum(1 for r in self.results if not r.passed)
@@ -409,15 +375,9 @@ def main():
         description="Run matrix tests for consumer pattern with different slot configurations"
     )
     parser.add_argument(
-        "--mode",
-        choices=["stateless", "stateful", "full_durability"],
-        help="Filter tests by operational mode"
+        "--mode", choices=["stateless", "stateful", "full_durability"], help="Filter tests by operational mode"
     )
-    parser.add_argument(
-        "-v", "--verbose",
-        action="store_true",
-        help="Verbose output"
-    )
+    parser.add_argument("-v", "--verbose", action="store_true", help="Verbose output")
 
     args = parser.parse_args()
 

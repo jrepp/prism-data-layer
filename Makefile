@@ -109,7 +109,7 @@ test-proxy: ## Run Rust proxy unit tests
 	@cd prism-proxy && cargo test --lib
 	$(call print_green,Proxy unit tests passed)
 
-test-patterns: test-memstore test-redis test-nats test-core test-prismctl ## Run all Go pattern tests
+test-patterns: test-memstore test-redis test-nats test-kafka test-postgres test-core test-prismctl ## Run all Go pattern tests
 
 test-memstore: ## Run MemStore tests
 	$(call print_blue,Running MemStore tests...)
@@ -125,6 +125,16 @@ test-nats: ## Run NATS tests
 	$(call print_blue,Running NATS tests...)
 	@cd pkg/drivers/nats && go test -v -cover ./...
 	$(call print_green,NATS tests passed)
+
+test-kafka: ## Run Kafka tests
+	$(call print_blue,Running Kafka tests...)
+	@cd pkg/drivers/kafka && go test -v -cover ./...
+	$(call print_green,Kafka tests passed)
+
+test-postgres: ## Run PostgreSQL tests
+	$(call print_blue,Running PostgreSQL tests...)
+	@cd pkg/drivers/postgres && go test -v -cover ./...
+	$(call print_green,PostgreSQL tests passed)
 
 test-core: ## Run Core SDK tests
 	$(call print_blue,Running Core SDK tests...)
@@ -144,7 +154,7 @@ test-integration: build-memstore ## Run integration tests (requires built MemSto
 test-all: test test-integration test-integration-go test-acceptance ## Run all tests (unit, integration, acceptance)
 	$(call print_green,All tests (unit + integration + acceptance) passed)
 
-test-acceptance: test-acceptance-interfaces test-acceptance-redis test-acceptance-nats ## Run all acceptance tests with testcontainers
+test-acceptance: test-acceptance-interfaces test-acceptance-redis test-acceptance-nats test-acceptance-kafka test-acceptance-postgres ## Run all acceptance tests with testcontainers
 	$(call print_green,All acceptance tests passed)
 
 test-acceptance-interfaces: ## Run interface-based acceptance tests (tests multiple backends)
@@ -161,6 +171,16 @@ test-acceptance-nats: ## Run NATS acceptance tests with testcontainers
 	$(call print_blue,Running NATS acceptance tests...)
 	@cd tests/acceptance/nats && go test -v -timeout 10m ./...
 	$(call print_green,NATS acceptance tests passed)
+
+test-acceptance-kafka: ## Run Kafka acceptance tests with testcontainers
+	$(call print_blue,Running Kafka acceptance tests...)
+	@cd tests/acceptance && go test -v -timeout 10m ./kafka/...
+	$(call print_green,Kafka acceptance tests passed)
+
+test-acceptance-postgres: ## Run PostgreSQL acceptance tests with testcontainers
+	$(call print_blue,Running PostgreSQL acceptance tests...)
+	@cd tests/acceptance && go test -v -timeout 10m ./postgres/...
+	$(call print_green,PostgreSQL acceptance tests passed)
 
 test-acceptance-quiet: ## Run all acceptance tests in quiet mode (suppress container logs)
 	$(call print_blue,Running acceptance tests in quiet mode...)
@@ -214,7 +234,7 @@ coverage-proxy: ## Generate Rust proxy coverage report
 	@cd prism-proxy && cargo test --lib -- --test-threads=1
 	$(call print_green,Proxy coverage report generated)
 
-coverage-patterns: coverage-memstore coverage-redis coverage-nats coverage-core ## Generate coverage for all patterns
+coverage-patterns: coverage-memstore coverage-redis coverage-nats coverage-kafka coverage-postgres coverage-core ## Generate coverage for all patterns
 
 coverage-memstore: ## Generate MemStore coverage report
 	$(call print_blue,Generating MemStore coverage...)
@@ -240,6 +260,22 @@ coverage-nats: ## Generate NATS coverage report
 	@cd pkg/drivers/nats && go tool cover -html=../../build/coverage/nats/coverage.out -o ../../build/coverage/nats/coverage.html
 	$(call print_green,NATS coverage: $(COVERAGE_DIR)/nats/coverage.html)
 
+coverage-kafka: ## Generate Kafka coverage report
+	$(call print_blue,Generating Kafka coverage...)
+	@mkdir -p $(COVERAGE_DIR)/kafka
+	@cd pkg/drivers/kafka && go test -coverprofile=../../build/coverage/kafka/coverage.out ./...
+	@cd pkg/drivers/kafka && go tool cover -func=../../build/coverage/kafka/coverage.out | grep total
+	@cd pkg/drivers/kafka && go tool cover -html=../../build/coverage/kafka/coverage.out -o ../../build/coverage/kafka/coverage.html
+	$(call print_green,Kafka coverage: $(COVERAGE_DIR)/kafka/coverage.html)
+
+coverage-postgres: ## Generate PostgreSQL coverage report
+	$(call print_blue,Generating PostgreSQL coverage...)
+	@mkdir -p $(COVERAGE_DIR)/postgres
+	@cd pkg/drivers/postgres && go test -coverprofile=../../build/coverage/postgres/coverage.out ./...
+	@cd pkg/drivers/postgres && go tool cover -func=../../build/coverage/postgres/coverage.out | grep total
+	@cd pkg/drivers/postgres && go tool cover -html=../../build/coverage/postgres/coverage.out -o ../../build/coverage/postgres/coverage.html
+	$(call print_green,PostgreSQL coverage: $(COVERAGE_DIR)/postgres/coverage.html)
+
 coverage-core: ## Generate Core SDK coverage report
 	$(call print_blue,Generating Core SDK coverage...)
 	@mkdir -p $(COVERAGE_DIR)/core
@@ -248,7 +284,7 @@ coverage-core: ## Generate Core SDK coverage report
 	@cd pkg/plugin && go tool cover -html=../../build/coverage/core/coverage.out -o ../../build/coverage/core/coverage.html
 	$(call print_green,Core SDK coverage: $(COVERAGE_DIR)/core/coverage.html)
 
-coverage-acceptance: coverage-acceptance-interfaces coverage-acceptance-redis coverage-acceptance-nats ## Generate coverage for acceptance tests
+coverage-acceptance: coverage-acceptance-interfaces coverage-acceptance-redis coverage-acceptance-nats coverage-acceptance-kafka coverage-acceptance-postgres ## Generate coverage for acceptance tests
 
 coverage-acceptance-interfaces: ## Generate interface-based acceptance test coverage
 	$(call print_blue,Generating interface-based acceptance test coverage...)
@@ -273,6 +309,22 @@ coverage-acceptance-nats: ## Generate NATS acceptance test coverage
 	@cd tests/acceptance/nats && go tool cover -func=../../../build/coverage/acceptance/nats/coverage.out | grep total
 	@cd tests/acceptance/nats && go tool cover -html=../../../build/coverage/acceptance/nats/coverage.out -o ../../../build/coverage/acceptance/nats/coverage.html
 	$(call print_green,NATS acceptance coverage: $(COVERAGE_DIR)/acceptance/nats/coverage.html)
+
+coverage-acceptance-kafka: ## Generate Kafka acceptance test coverage
+	$(call print_blue,Generating Kafka acceptance test coverage...)
+	@mkdir -p $(COVERAGE_DIR)/acceptance/kafka
+	@cd tests/acceptance && go test -coverprofile=../../build/coverage/acceptance/kafka/coverage.out -timeout 10m ./kafka/...
+	@cd tests/acceptance && go tool cover -func=../../build/coverage/acceptance/kafka/coverage.out | grep total
+	@cd tests/acceptance && go tool cover -html=../../build/coverage/acceptance/kafka/coverage.out -o ../../build/coverage/acceptance/kafka/coverage.html
+	$(call print_green,Kafka acceptance coverage: $(COVERAGE_DIR)/acceptance/kafka/coverage.html)
+
+coverage-acceptance-postgres: ## Generate PostgreSQL acceptance test coverage
+	$(call print_blue,Generating PostgreSQL acceptance test coverage...)
+	@mkdir -p $(COVERAGE_DIR)/acceptance/postgres
+	@cd tests/acceptance && go test -coverprofile=../../build/coverage/acceptance/postgres/coverage.out -timeout 10m ./postgres/...
+	@cd tests/acceptance && go tool cover -func=../../build/coverage/acceptance/postgres/coverage.out | grep total
+	@cd tests/acceptance && go tool cover -html=../../build/coverage/acceptance/postgres/coverage.out -o ../../build/coverage/acceptance/postgres/coverage.html
+	$(call print_green,PostgreSQL acceptance coverage: $(COVERAGE_DIR)/acceptance/postgres/coverage.html)
 
 coverage-integration: ## Generate Go integration test coverage
 	$(call print_blue,Generating Go integration test coverage...)
@@ -310,6 +362,8 @@ clean-legacy: ## Clean legacy in-source build artifacts (deprecated)
 	@rm -f pkg/drivers/memstore/memstore pkg/drivers/memstore/coverage.out pkg/drivers/memstore/coverage.html
 	@rm -f pkg/drivers/redis/redis pkg/drivers/redis/coverage.out pkg/drivers/redis/coverage.html
 	@rm -f pkg/drivers/nats/nats pkg/drivers/nats/coverage.out pkg/drivers/nats/coverage.html
+	@rm -f pkg/drivers/kafka/kafka pkg/drivers/kafka/coverage.out pkg/drivers/kafka/coverage.html
+	@rm -f pkg/drivers/postgres/postgres pkg/drivers/postgres/coverage.out pkg/drivers/postgres/coverage.html
 	@rm -f pkg/plugin/coverage.out pkg/plugin/coverage.html
 	@rm -f tests/acceptance/interfaces/coverage.out tests/acceptance/interfaces/coverage.html
 	@rm -f tests/acceptance/redis/coverage.out tests/acceptance/redis/coverage.html
@@ -343,6 +397,8 @@ fmt-go: ## Format Go code
 	@cd pkg/drivers/memstore && go fmt ./...
 	@cd pkg/drivers/redis && go fmt ./...
 	@cd pkg/drivers/nats && go fmt ./...
+	@cd pkg/drivers/kafka && go fmt ./...
+	@cd pkg/drivers/postgres && go fmt ./...
 	@cd pkg/plugin && go fmt ./...
 	@cd cmd/prismctl && go fmt ./...
 	@cd tests/acceptance/interfaces && go fmt ./...

@@ -1,0 +1,45 @@
+# Multicast Registry Pattern Configuration with Durability
+# Backend: Redis (registry) + NATS (messaging) + NATS (durability)
+# Use case: Critical device notifications with guaranteed delivery
+
+namespaces:
+  - name: critical-devices
+    pattern: multicast-registry
+    pattern_version: v1
+    description: "Critical device management with durable message queue"
+
+    # Slot configuration: registry + messaging + durability
+    slots:
+      registry:
+        backend: redis
+        interfaces:
+          - KeyValueBasicInterface
+        config:
+          address: localhost:6379
+          password: ""
+          db: 0
+          prefix: "critical:"
+
+      messaging:
+        backend: nats
+        interfaces:
+          - PubSubInterface
+        config:
+          servers:
+            - nats://localhost:4222
+
+      durability:
+        backend: nats
+        interfaces:
+          - QueueInterface
+        config:
+          servers:
+            - nats://localhost:4222
+          queue_prefix: "durable."
+
+    # Behavior configuration
+    behavior:
+      max_identities: 5000
+      topic_prefix: "prism.critical"
+      retry_attempts: 5
+      retry_delay_ms: 500
