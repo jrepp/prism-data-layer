@@ -215,6 +215,16 @@ test-integration-go: ## Run Go integration tests (proxy-pattern lifecycle)
 	@cd tests/integration && go test -v -timeout 5m ./...
 	$(call print_green,Go integration tests passed)
 
+test-acceptance-unified: ## Run unified acceptance tests (dynamic interface discovery)
+	$(call print_blue,Running unified acceptance tests...)
+	@cd tests/acceptance && go test -v -timeout 10m -run TestUnifiedPattern
+	$(call print_green,Unified acceptance tests passed)
+
+test-acceptance-discover: ## Discover interfaces supported by a pattern at PATTERN_ADDR
+	$(call print_blue,Discovering pattern interfaces at $(PATTERN_ADDR)...)
+	@cd tests/acceptance && go test -v -run TestDiscoverInterfaces
+	$(call print_green,Interface discovery complete)
+
 test-prismctl-integration: podman-start ## Run prismctl OIDC integration tests with Dex
 	$(call print_blue,Starting Dex test server...)
 	@cd cli/tests/integration && $(COMPOSE) -f docker-compose.dex.yml up -d
