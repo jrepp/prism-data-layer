@@ -12,6 +12,64 @@ Quick access to recently updated documentation. Changes listed in reverse chrono
 
 ### 2025-10-14
 
+#### RFC-031: Payload Encryption with Post-Quantum Support + Producer Pattern Implementation (MAJOR UPDATE)
+**Links**: [RFC-031](/rfc/rfc-031), [Producer Pattern](https://github.com/jrepp/prism-data-layer/tree/main/patterns/producer), [Unified Test](https://github.com/jrepp/prism-data-layer/tree/main/tests/acceptance/patterns/unified)
+
+**Summary**: Comprehensive encryption support and producer pattern implementation with end-to-end testing:
+
+**RFC-031 Encryption Enhancements**:
+- **EncryptionMetadata Expanded**: Added support for symmetric, asymmetric, post-quantum, and hybrid encryption schemes
+- **Encryption Types**: ENCRYPTION_TYPE_SYMMETRIC (AES-256-GCM, ChaCha20-Poly1305), ENCRYPTION_TYPE_ASYMMETRIC (RSA-OAEP-4096, X25519), ENCRYPTION_TYPE_POST_QUANTUM (Kyber1024, ML-KEM), ENCRYPTION_TYPE_HYBRID (X25519+Kyber)
+- **Key Management**: Keys NEVER stored in envelope - always referenced from configuration/secrets (Vault, AWS KMS, Kubernetes)
+- **FIPS 140-3 Compliance**: Comprehensive table of approved algorithms with key sizes and standards (AES-256-GCM, RSA-4096, ML-KEM, SHA-256, HKDF-SHA256)
+- **Deprecated Algorithm Warnings**: Explicit table marking weak algorithms (AES-128, RSA-2048, MD5, SHA-1, 3DES, RC4, DES) with replacements
+- **Four Encryption Patterns**: Complete Go implementation examples for symmetric, asymmetric, post-quantum, and hybrid encryption
+- **Key Rotation Best Practices**: 90-day rotation periods, 7-day overlap windows, per-namespace/topic key separation
+- **Security Best Practices**: Nonce/IV reuse prevention, timing attack prevention, payload size limits, audit logging requirements
+- **Vault/KMS Integration**: Configuration examples for HashiCorp Vault, AWS KMS, and Kubernetes secrets with production warnings
+- **Go FIPS Libraries**: Documentation of FIPS-validated crypto libraries with import recommendations and GOFIPS=1 environment setup
+
+**Producer Pattern Implementation**:
+- **Full Pattern Implementation**: `patterns/producer/producer.go` (557 lines) with batching, retries, deduplication, and metrics
+- **Configuration**: `patterns/producer/config.go` (139 lines) with comprehensive validation and duration parsing
+- **Pattern Runner**: `patterns/producer/cmd/producer-runner/main.go` executable with backend initialization for NATS, Redis, MemStore
+- **Slot Architecture**: MessageSink (PubSubInterface or QueueInterface) + StateStore (KeyValueBasicInterface for deduplication)
+- **Batching Support**: Configurable batch size and interval with automatic flushing
+- **Deduplication**: Content-based deduplication with configurable window (default 5 minutes)
+- **Retry Logic**: Exponential backoff with configurable max retries
+- **Metrics Tracking**: Messages published, failed, deduplicated, bytes published, batches published, publish latency
+- **State Management**: Producer state for deduplication cache using state store slot
+- **Health Checks**: Returns health status with metrics summary
+
+**Producer Acceptance Tests**:
+- **Test Suite**: 5 comprehensive tests (BasicPublish, BatchedPublish, PublishWithRetry, Deduplication, ProducerMetrics)
+- **Backend Support**: Tests run against MemStore, NATS, Redis with automatic backend discovery
+- **Capability-Aware**: Tests skip when state store not available (deduplication tests)
+- **Metrics Validation**: Verifies published count, failed count, deduplication count, bytes published
+- **Health Validation**: Ensures producer reports healthy status with correct metrics
+
+**Unified Producer+Consumer Test**:
+- **End-to-End Integration**: `tests/acceptance/patterns/unified/producer_consumer_test.go` (416 lines)
+- **Three Backend Configurations**: MemStore, NATS+MemStore, Redis (with testcontainers)
+- **Test Scenarios**: Single message, multiple messages (5+), metrics validation, state persistence
+- **Message Flow Verification**: Producer publishes → Consumer receives → Payload and metadata validated
+- **State Persistence**: Verifies consumer state saved correctly when state store available
+- **Performance Validation**: Ensures end-to-end latency within acceptable bounds
+
+**CI/CD Workflow Updates**:
+- Added `producer` to pattern acceptance test matrix
+- Updated summary report to include producer pattern results
+- Producer tests run in parallel with keyvalue and consumer patterns
+- Coverage tracking for producer pattern implementation
+
+**Key Innovation**: RFC-031 encryption now supports future-proof post-quantum algorithms (Kyber, ML-KEM) with FIPS compliance requirements enforced. Producer pattern provides symmetric counterpart to consumer pattern with batching, deduplication, and retry capabilities. Unified test demonstrates full end-to-end message flow from producer to consumer across multiple backend combinations.
+
+**Impact**: Encryption support addresses quantum computing threats while maintaining FIPS compliance. Keys never stored in messages - always referenced from secrets providers (Vault/KMS). Producer pattern completes pub/sub foundation alongside consumer pattern. Unified tests validate real-world scenarios where producers and consumers coordinate via shared backend. Pattern-based testing framework now covers both publishing and consuming workflows. Foundation for building reliable message-driven architectures with zero-downtime migrations between backends.
+
+---
+
+### 2025-10-14
+
 #### Pattern-Based Acceptance Testing Framework - CI Migration Complete (MAJOR UPDATE)
 **Links**: [MEMO-030](/memos/memo-030), [Pattern Acceptance Tests Workflow](https://github.com/jrepp/prism-data-layer/blob/main/.github/workflows/pattern-acceptance-tests.yml), [CI Workflow](https://github.com/jrepp/prism-data-layer/blob/main/.github/workflows/ci.yml)
 

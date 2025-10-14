@@ -201,18 +201,58 @@ message SecurityContext {
 }
 
 // Encryption metadata (payload encryption details)
+// Keys are NEVER stored in envelope - always referenced from configuration/secrets
 message EncryptionMetadata {
-  // Key ID (reference to key in Vault/KMS)
+  // Key ID (reference to key in Vault/KMS/configuration secrets)
+  // For symmetric: shared secret key ID
+  // For asymmetric: private key ID (for decryption)
+  // For post-quantum: private key ID (for decryption)
   string key_id = 1;
 
-  // Algorithm ("aes-256-gcm", "chacha20-poly1305")
-  string algorithm = 2;
+  // Encryption type
+  EncryptionType encryption_type = 2;
 
-  // Initialization vector (base64-encoded)
-  bytes iv = 3;
+  // Algorithm identifier (MUST be FIPS 140-3 compliant)
+  // Symmetric: "aes-256-gcm", "chacha20-poly1305"
+  // Asymmetric: "rsa-oaep-4096", "x25519-chacha20-poly1305", "ed25519"
+  // Post-Quantum: "kyber1024", "kyber768", "ml-kem-1024"
+  // Hybrid: "x25519-kyber1024", "rsa4096-kyber768"
+  string algorithm = 3;
 
-  // Additional authenticated data (base64-encoded)
-  bytes aad = 4;
+  // Public key ID (for asymmetric/post-quantum encryption)
+  // Producer encrypts with this public key
+  // Consumer decrypts with corresponding private key (from key_id)
+  // Not used for symmetric encryption
+  optional string public_key_id = 4;
+
+  // Initialization vector / nonce (algorithm-specific)
+  // Required for: AES-GCM, ChaCha20-Poly1305
+  // Not used for: RSA-OAEP (uses random padding)
+  optional bytes iv = 5;
+
+  // Additional authenticated data (for AEAD ciphers)
+  // Used by: AES-GCM, ChaCha20-Poly1305
+  // Contains metadata authenticated but not encrypted
+  optional bytes aad = 6;
+
+  // Encapsulated key (for hybrid/post-quantum encryption)
+  // Contains encrypted session key from KEM (Key Encapsulation Mechanism)
+  // Used by: Kyber, ML-KEM, hybrid schemes
+  optional bytes encapsulated_key = 7;
+
+  // Algorithm parameters (JSON-encoded)
+  // For extensibility without schema changes
+  // Example: {"kdf": "hkdf-sha256", "kdf_salt": "base64..."} for X25519
+  optional string algorithm_params = 8;
+}
+
+// Encryption type enumeration
+enum EncryptionType {
+  ENCRYPTION_TYPE_UNSPECIFIED = 0;  // Invalid/not encrypted
+  ENCRYPTION_TYPE_SYMMETRIC = 1;     // Shared secret (AES, ChaCha20)
+  ENCRYPTION_TYPE_ASYMMETRIC = 2;    // Public/private key (RSA, X25519)
+  ENCRYPTION_TYPE_POST_QUANTUM = 3;  // PQ algorithms (Kyber, ML-KEM)
+  ENCRYPTION_TYPE_HYBRID = 4;        // Classical + PQ (X25519+Kyber)
 }
 
 // Observability context (distributed tracing + metrics)
@@ -646,6 +686,420 @@ message SecurityContext {
 - High-classification messages require encryption
 - Consumers validate their compliance level matches message classification
 - Audit logs track access to restricted data
+
+### Payload Encryption Patterns
+
+**CRITICAL: All encryption implementations MUST use FIPS 140-3 validated cryptographic modules.**
+
+#### Pattern 1: Symmetric Encryption (Shared Secret)
+
+**Use Case:** High-throughput messaging where producer and consumer share a secret key
+
+**Configuration (Producer):**
+```yaml
+encryption:
+  enabled: true
+  type: symmetric
+  algorithm: aes-256-gcm
+  key_ref: "vault://secrets/messaging/order-events/encryption-key"
+```
+
+**Producer Code (Go):**
+```go
+import (
+    "crypto/aes"
+    "crypto/cipher"
+    "crypto/rand"
+    "prism.io/sdk/encryption"
+)
+
+// Load key from Vault (NOT from envelope!)
+key := loadKeyFromVault("vault://secrets/messaging/order-events/encryption-key")
+
+// Encrypt payload
+nonce := make([]byte, 12) // GCM standard nonce size
+rand.Read(nonce)
+
+block, _ := aes.NewCipher(key)
+aesgcm, _ := cipher.NewGCM(block)
+ciphertext := aesgcm.Seal(nil, nonce, payloadBytes, nil)
+
+// Populate envelope encryption metadata
+envelope.Security.Encryption = &EncryptionMetadata{
+    KeyId: "order-events-key-v2",  // Reference only, NOT the key itself
+    EncryptionType: ENCRYPTION_TYPE_SYMMETRIC,
+    Algorithm: "aes-256-gcm",
+    Iv: nonce,
+    Aad: nil, // Optional: can include message_id for binding
+}
+
+// Payload is now encrypted ciphertext
+envelope.Payload = &Any{Value: ciphertext}
+```
+
+**Consumer Code (Go):**
+```go
+// Load SAME key from Vault using key_id reference
+keyId := envelope.Security.Encryption.KeyId
+key := loadKeyFromVault("vault://secrets/messaging/" + keyId)
+
+// Decrypt payload
+nonce := envelope.Security.Encryption.Iv
+block, _ := aes.NewCipher(key)
+aesgcm, _ := cipher.NewGCM(block)
+plaintext, err := aesgcm.Open(nil, nonce, envelope.Payload.Value, nil)
+if err != nil {
+    return fmt.Errorf("decryption failed: %w", err)
+}
+```
+
+**FIPS Compliance:** Use `github.com/google/boringcrypto` or `crypto/aes` with FIPS mode enabled.
+
+#### Pattern 2: Asymmetric Encryption (Public/Private Key)
+
+**Use Case:** Producer doesn't trust consumer's key storage; only consumer can decrypt
+
+**Configuration (Producer):**
+```yaml
+encryption:
+  enabled: true
+  type: asymmetric
+  algorithm: rsa-oaep-4096
+  public_key_ref: "vault://secrets/consumers/order-processor/public-key"
+```
+
+**Configuration (Consumer):**
+```yaml
+encryption:
+  enabled: true
+  type: asymmetric
+  private_key_ref: "vault://secrets/consumers/order-processor/private-key"
+```
+
+**Producer Code (Go):**
+```go
+import (
+    "crypto/rand"
+    "crypto/rsa"
+    "crypto/sha256"
+)
+
+// Load consumer's PUBLIC key (producer can't decrypt)
+publicKey := loadPublicKeyFromVault("vault://secrets/consumers/order-processor/public-key")
+
+// Encrypt payload with consumer's public key
+ciphertext, err := rsa.EncryptOAEP(
+    sha256.New(),
+    rand.Reader,
+    publicKey,
+    payloadBytes,
+    nil, // label
+)
+
+envelope.Security.Encryption = &EncryptionMetadata{
+    KeyId: "order-processor-key-v1",  // Consumer's key ID
+    EncryptionType: ENCRYPTION_TYPE_ASYMMETRIC,
+    Algorithm: "rsa-oaep-4096",
+    PublicKeyId: "order-processor-public-v1",
+    // No IV needed for RSA-OAEP (uses random padding)
+}
+
+envelope.Payload = &Any{Value: ciphertext}
+```
+
+**Consumer Code (Go):**
+```go
+// Load consumer's PRIVATE key (only consumer has this)
+privateKey := loadPrivateKeyFromVault("vault://secrets/consumers/order-processor/private-key")
+
+// Decrypt payload
+plaintext, err := rsa.DecryptOAEP(
+    sha256.New(),
+    rand.Reader,
+    privateKey,
+    envelope.Payload.Value,
+    nil, // label
+)
+if err != nil {
+    return fmt.Errorf("asymmetric decryption failed: %w", err)
+}
+```
+
+**FIPS Compliance:** RSA key size MUST be ≥3072 bits (4096 recommended). Use FIPS-validated libraries.
+
+#### Pattern 3: Post-Quantum Encryption (Kyber/ML-KEM)
+
+**Use Case:** Future-proof encryption resistant to quantum computer attacks
+
+**Configuration (Producer):**
+```yaml
+encryption:
+  enabled: true
+  type: post_quantum
+  algorithm: kyber1024  # NIST ML-KEM Level 5
+  public_key_ref: "vault://secrets/consumers/pq/order-processor/public-key"
+```
+
+**Producer Code (Go):**
+```go
+import "github.com/cloudflare/circl/kem/kyber/kyber1024"
+
+// Load consumer's Kyber public key
+publicKey := loadKyberPublicKeyFromVault("vault://secrets/consumers/pq/order-processor/public-key")
+
+// Generate shared secret using KEM
+ct, ss, err := kyber1024.Encapsulate(publicKey)  // ct = ciphertext (encapsulated key), ss = shared secret
+if err != nil {
+    return err
+}
+
+// Use shared secret for symmetric encryption of payload
+block, _ := aes.NewCipher(ss[:32])  // First 32 bytes of shared secret
+aesgcm, _ := cipher.NewGCM(block)
+nonce := make([]byte, 12)
+rand.Read(nonce)
+ciphertext := aesgcm.Seal(nil, nonce, payloadBytes, nil)
+
+envelope.Security.Encryption = &EncryptionMetadata{
+    KeyId: "order-processor-kyber-v1",
+    EncryptionType: ENCRYPTION_TYPE_POST_QUANTUM,
+    Algorithm: "kyber1024",
+    PublicKeyId: "order-processor-kyber-public-v1",
+    EncapsulatedKey: ct,  // KEM ciphertext (consumer needs this to derive shared secret)
+    Iv: nonce,
+}
+
+envelope.Payload = &Any{Value: ciphertext}
+```
+
+**Consumer Code (Go):**
+```go
+// Load consumer's Kyber private key
+privateKey := loadKyberPrivateKeyFromVault("vault://secrets/consumers/pq/order-processor/private-key")
+
+// Decapsulate to recover shared secret
+ss, err := kyber1024.Decapsulate(privateKey, envelope.Security.Encryption.EncapsulatedKey)
+if err != nil {
+    return fmt.Errorf("KEM decapsulation failed: %w", err)
+}
+
+// Decrypt payload using shared secret
+block, _ := aes.NewCipher(ss[:32])
+aesgcm, _ := cipher.NewGCM(block)
+plaintext, err := aesgcm.Open(nil, envelope.Security.Encryption.Iv, envelope.Payload.Value, nil)
+if err != nil {
+    return fmt.Errorf("post-quantum decryption failed: %w", err)
+}
+```
+
+**FIPS Compliance:** ML-KEM (Kyber) is standardized in FIPS 203. Use NIST-approved implementations.
+
+#### Pattern 4: Hybrid Encryption (Classical + Post-Quantum)
+
+**Use Case:** Transition period; protect against both current and future threats
+
+**Configuration (Producer):**
+```yaml
+encryption:
+  enabled: true
+  type: hybrid
+  algorithm: x25519-kyber1024
+  public_key_ref: "vault://secrets/consumers/hybrid/order-processor/public-key"
+```
+
+**Producer Code (Go):**
+```go
+// Hybrid approach: X25519 (classical ECDH) + Kyber1024 (post-quantum KEM)
+// Shared secret = KDF(x25519_secret || kyber_secret)
+
+// 1. X25519 key exchange
+x25519Public := loadX25519PublicKey("vault://secrets/consumers/hybrid/order-processor/x25519-public")
+x25519Ephemeral := generateX25519EphemeralKey()
+x25519Secret := x25519ECDH(x25519Ephemeral.private, x25519Public)
+
+// 2. Kyber1024 KEM
+kyberPublic := loadKyberPublicKey("vault://secrets/consumers/hybrid/order-processor/kyber-public")
+kyberCt, kyberSecret, _ := kyber1024.Encapsulate(kyberPublic)
+
+// 3. Combine secrets with KDF
+combinedSecret := hkdf.Extract(sha256.New, append(x25519Secret, kyberSecret...))
+
+// 4. Encrypt payload with combined secret
+block, _ := aes.NewCipher(combinedSecret[:32])
+aesgcm, _ := cipher.NewGCM(block)
+nonce := make([]byte, 12)
+rand.Read(nonce)
+ciphertext := aesgcm.Seal(nil, nonce, payloadBytes, nil)
+
+envelope.Security.Encryption = &EncryptionMetadata{
+    KeyId: "order-processor-hybrid-v1",
+    EncryptionType: ENCRYPTION_TYPE_HYBRID,
+    Algorithm: "x25519-kyber1024",
+    PublicKeyId: "order-processor-hybrid-public-v1",
+    EncapsulatedKey: kyberCt,
+    Iv: nonce,
+    AlgorithmParams: fmt.Sprintf(`{"x25519_ephemeral_public":"%s"}`, base64.Encode(x25519Ephemeral.public)),
+}
+
+envelope.Payload = &Any{Value: ciphertext}
+```
+
+**Consumer Code (Go):**
+```go
+// Load consumer's hybrid private keys
+x25519Private := loadX25519PrivateKey("vault://secrets/consumers/hybrid/order-processor/x25519-private")
+kyberPrivate := loadKyberPrivateKey("vault://secrets/consumers/hybrid/order-processor/kyber-private")
+
+// 1. Recover X25519 secret
+params := parseAlgorithmParams(envelope.Security.Encryption.AlgorithmParams)
+x25519EphemeralPublic := base64.Decode(params["x25519_ephemeral_public"])
+x25519Secret := x25519ECDH(x25519Private, x25519EphemeralPublic)
+
+// 2. Recover Kyber secret
+kyberSecret, _ := kyber1024.Decapsulate(kyberPrivate, envelope.Security.Encryption.EncapsulatedKey)
+
+// 3. Derive combined secret
+combinedSecret := hkdf.Extract(sha256.New, append(x25519Secret, kyberSecret...))
+
+// 4. Decrypt payload
+block, _ := aes.NewCipher(combinedSecret[:32])
+aesgcm, _ := cipher.NewGCM(block)
+plaintext, err := aesgcm.Open(nil, envelope.Security.Encryption.Iv, envelope.Payload.Value, nil)
+if err != nil {
+    return fmt.Errorf("hybrid decryption failed: %w", err)
+}
+```
+
+**FIPS Compliance:** X25519 + Kyber1024 hybrid scheme provides both classical and post-quantum security.
+
+### FIPS 140-3 Compliance Requirements
+
+**Approved Algorithms (MUST USE):**
+
+| Type | Algorithm | FIPS Standard | Key Size | Notes |
+|------|-----------|--------------|----------|-------|
+| Symmetric | AES-256-GCM | FIPS 197 | 256-bit | AEAD cipher, preferred |
+| Symmetric | ChaCha20-Poly1305 | RFC 8439 | 256-bit | AEAD cipher, FIPS approved |
+| Asymmetric | RSA-OAEP | FIPS 186-5 | ≥3072-bit | 4096-bit recommended |
+| Asymmetric | ECDH (X25519) | FIPS 186-5 | 256-bit | Curve25519 |
+| Post-Quantum | ML-KEM (Kyber) | FIPS 203 | Level 3/5 | Kyber768/1024 |
+| Hash | SHA-256 | FIPS 180-4 | 256-bit | For KDF, HMAC |
+| Hash | SHA-384 | FIPS 180-4 | 384-bit | For RSA signatures |
+| KDF | HKDF-SHA256 | NIST SP 800-108 | Variable | Key derivation |
+
+**Deprecated/Weak Algorithms (MUST NOT USE):**
+
+| Algorithm | Reason | Replacement |
+|-----------|--------|-------------|
+| AES-128-GCM | Key size too small | AES-256-GCM |
+| RSA-2048 | Insufficient for 2025+ | RSA-4096 |
+| MD5 | Cryptographically broken | SHA-256 |
+| SHA-1 | Collision attacks | SHA-256 |
+| 3DES | Weak, slow | AES-256-GCM |
+| RC4 | Multiple vulnerabilities | ChaCha20-Poly1305 |
+| DES | Completely broken | AES-256-GCM |
+
+**Validation:**
+- Prism SDK MUST reject messages using deprecated algorithms
+- Prism proxy MUST log warnings for non-FIPS algorithms
+- Configuration validation MUST enforce FIPS compliance when `fips_mode: true`
+
+**Go FIPS Libraries:**
+```go
+// Use FIPS-validated crypto libraries
+import (
+    "crypto/aes"          // FIPS 140-3 validated
+    "crypto/cipher"       // FIPS 140-3 validated
+    "crypto/rsa"          // FIPS 140-3 validated
+    "crypto/sha256"       // FIPS 140-3 validated
+
+    // For Kyber/ML-KEM:
+    "github.com/cloudflare/circl/kem/kyber/kyber1024"  // NIST ML-KEM implementation
+
+    // Avoid these (not FIPS compliant):
+    // "golang.org/x/crypto/chacha20poly1305" - use crypto/cipher instead
+)
+```
+
+**Environment Setup:**
+```bash
+# Enable FIPS mode in Go runtime
+export GOFIPS=1
+export CGO_ENABLED=1
+
+# Build with FIPS tags
+go build -tags=fips ./...
+```
+
+### Encryption Security Best Practices
+
+**1. Key Rotation:**
+```yaml
+encryption:
+  key_rotation:
+    enabled: true
+    rotation_period: 90d  # Rotate every 90 days
+    overlap_period: 7d    # Support both old and new keys for 7 days
+```
+
+**2. Key Separation:**
+- ✅ **DO**: Use different keys per namespace/topic
+- ❌ **DON'T**: Share encryption keys across environments (dev/staging/prod)
+
+**3. Audit Logging:**
+- All encryption/decryption operations MUST be audited
+- Log: timestamp, key_id, algorithm, success/failure, message_id
+
+**4. Payload Size Limits:**
+- RSA-OAEP: Max payload = (key_size / 8) - 66 bytes
+  - RSA-4096: Max 446 bytes direct encryption
+  - For larger payloads, use hybrid encryption (RSA for session key, AES for data)
+
+**5. Nonce/IV Reuse Prevention:**
+- NEVER reuse nonce with same key
+- Use cryptographically random nonces (`crypto/rand`)
+- For high-throughput: use counter-based nonces with sequence tracking
+
+**6. Timing Attack Prevention:**
+- Use constant-time comparison for MACs/signatures
+- Go's `crypto/subtle.ConstantTimeCompare()` for validation
+
+### Key Management Integration
+
+**Vault Integration (Recommended):**
+```yaml
+encryption:
+  key_provider: vault
+  vault:
+    address: https://vault.example.com
+    namespace: prism/messaging
+    auth_method: kubernetes  # Or: approle, token, etc.
+    secret_path: secret/data/encryption-keys
+```
+
+**AWS KMS Integration:**
+```yaml
+encryption:
+  key_provider: aws_kms
+  aws_kms:
+    region: us-west-2
+    key_id: arn:aws:kms:us-west-2:123456789:key/abc-def-123
+    encryption_context:
+      namespace: order-events
+      environment: production
+```
+
+**Kubernetes Secrets (For Development Only):**
+```yaml
+encryption:
+  key_provider: kubernetes_secret
+  kubernetes_secret:
+    name: prism-encryption-keys
+    namespace: prism-system
+    key_field: encryption_key
+```
+
+⚠️ **WARNING**: Kubernetes secrets are NOT suitable for production (base64-encoded, not encrypted at rest by default). Use Vault or KMS.
 
 ### Observability Integration
 

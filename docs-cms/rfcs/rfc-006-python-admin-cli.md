@@ -851,7 +851,7 @@ Query Compatibility:
 
 Plugin commands manage backend plugins (installation, updates, health monitoring, hot-reload).
 
-For complete plugin development guide, see [RFC-008: Plugin Development Experience](/rfc/rfc-008.md#plugin-development-experience).
+For complete plugin development guide, see [RFC-008: Plugin Development Experience](/rfc/rfc-008).
 
 #### List Plugins
 
@@ -1094,7 +1094,7 @@ prismctl plugin build
 prismctl plugin publish --registry https://plugins.prism.io
 ```
 
-See [RFC-008: Plugin Development Experience](/rfc/rfc-008#plugin-development-experience) for complete development guide.
+See [RFC-008: Plugin Development Experience](/rfc/rfc-008) for complete development guide.
 
 ## Protobuf Integration
 

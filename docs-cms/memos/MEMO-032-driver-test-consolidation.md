@@ -1,9 +1,11 @@
 ---
-title: "Driver Test Consolidation Strategy"
+title: "MEMO-032: Driver Test Consolidation Strategy"
 author: "Claude Code"
 created: 2025-10-14
 updated: 2025-10-14
 tags: [testing, drivers, coverage, refactoring, dx]
+id: memo-032
+project_id: prism-data-layer
 doc_uuid: 8c3d9f21-4a5b-4c2d-9f3e-1d2c3b4a5f6e
 ---
 
@@ -403,7 +405,7 @@ tests/acceptance/patterns/keyvalue/basic_test.go  # Interface compliance tests
 - [ ] Verify coverage metrics
   - [ ] Run full test suite
   - [ ] Generate coverage report
-  - [ ] Validate >85% driver coverage
+  - [ ] Validate &gt;85% driver coverage
 
 ### Post-Migration
 
@@ -475,10 +477,10 @@ git push origin main
 
 ### Quantitative
 
-- [ ] **Test execution time**: Reduced by >15% (60s → 50s)
-- [ ] **Driver coverage**: Maintained at >85%
+- [ ] **Test execution time**: Reduced by &gt;15% (60s → 50s)
+- [ ] **Driver coverage**: Maintained at &gt;85%
 - [ ] **Test code lines**: Reduced by ~400 lines (30% reduction)
-- [ ] **CI build time**: Reduced by >2 minutes
+- [ ] **CI build time**: Reduced by &gt;2 minutes
 
 ### Qualitative
 

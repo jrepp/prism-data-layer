@@ -84,6 +84,7 @@ jobs:
         pattern:
           - keyvalue
           - consumer
+          - producer
           # Add new patterns here as they are implemented:
           # - multicast-registry
           # - timeseries
@@ -200,6 +201,17 @@ jobs:
             ALL_SUCCESS=false
           fi
           echo "| Consumer | $CONSUMER_STATUS | $CONSUMER_COVERAGE | NATS+MemStore, NATS+Redis, Kafka+PostgreSQL |" >> summary.md
+
+          # Producer pattern
+          if [ -f build/coverage-reports/coverage-pattern-producer/coverage.out ]; then
+            PRODUCER_COVERAGE=$(go tool cover -func=build/coverage-reports/coverage-pattern-producer/coverage.out | grep total | awk '{print $3}')
+            PRODUCER_STATUS="✅ Pass"
+          else
+            PRODUCER_COVERAGE="N/A"
+            PRODUCER_STATUS="❌ Fail"
+            ALL_SUCCESS=false
+          fi
+          echo "| Producer | $PRODUCER_STATUS | $PRODUCER_COVERAGE | MemStore, NATS, Redis |" >> summary.md
 
           # Add overall status
           {
