@@ -4,12 +4,16 @@ go 1.24.0
 
 require (
 	github.com/jrepp/prism-data-layer/patterns/consumer v0.0.0
+	github.com/jrepp/prism-data-layer/patterns/producer v0.0.0
 	github.com/jrepp/prism-data-layer/pkg/drivers/kafka v0.0.0
+	github.com/jrepp/prism-data-layer/pkg/drivers/memstore v0.0.0
 	github.com/jrepp/prism-data-layer/pkg/drivers/nats v0.0.0
+	github.com/jrepp/prism-data-layer/pkg/drivers/postgres v0.0.0-00010101000000-000000000000
 	github.com/jrepp/prism-data-layer/pkg/drivers/redis v0.0.0
 	github.com/jrepp/prism-data-layer/pkg/plugin v0.0.0
 	github.com/jrepp/prism-data-layer/tests/testing v0.0.0
 	github.com/stretchr/testify v1.11.1
+	github.com/testcontainers/testcontainers-go v0.39.0
 	github.com/testcontainers/testcontainers-go/modules/nats v0.34.0
 	google.golang.org/grpc v1.76.0
 	google.golang.org/protobuf v1.36.6
@@ -45,8 +49,6 @@ require (
 	github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761 // indirect
 	github.com/jackc/pgx/v5 v5.7.3 // indirect
 	github.com/jackc/puddle/v2 v2.2.2 // indirect
-	github.com/jrepp/prism-data-layer/pkg/drivers/memstore v0.0.0 // indirect
-	github.com/jrepp/prism-data-layer/pkg/drivers/postgres v0.0.0-00010101000000-000000000000 // indirect
 	github.com/klauspost/compress v1.18.0 // indirect
 	github.com/lufia/plan9stats v0.0.0-20211012122336-39d0f177ccd0 // indirect
 	github.com/magiconair/properties v1.8.10 // indirect
@@ -69,7 +71,6 @@ require (
 	github.com/redis/go-redis/v9 v9.14.0 // indirect
 	github.com/shirou/gopsutil/v4 v4.25.6 // indirect
 	github.com/sirupsen/logrus v1.9.3 // indirect
-	github.com/testcontainers/testcontainers-go v0.39.0 // indirect
 	github.com/testcontainers/testcontainers-go/modules/kafka v0.34.0 // indirect
 	github.com/testcontainers/testcontainers-go/modules/postgres v0.39.0 // indirect
 	github.com/testcontainers/testcontainers-go/modules/redis v0.34.0 // indirect
@@ -94,6 +95,7 @@ require (
 
 replace (
 	github.com/jrepp/prism-data-layer/patterns/consumer => ../../patterns/consumer
+	github.com/jrepp/prism-data-layer/patterns/producer => ../../patterns/producer
 	github.com/jrepp/prism-data-layer/pkg/drivers/kafka => ../../pkg/drivers/kafka
 	github.com/jrepp/prism-data-layer/pkg/drivers/memstore => ../../pkg/drivers/memstore
 	github.com/jrepp/prism-data-layer/pkg/drivers/nats => ../../pkg/drivers/nats

@@ -1,6 +1,7 @@
 package framework
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -52,7 +53,9 @@ func WriteGitHubActionsArtifact(report *ComplianceReport, filename string) error
 	defer f.Close()
 
 	// Write JSON report
-	if err := report.WriteJSON(f); err != nil {
+	encoder := json.NewEncoder(f)
+	encoder.SetIndent("", "  ")
+	if err := encoder.Encode(report); err != nil {
 		return fmt.Errorf("failed to write JSON report: %w", err)
 	}
 

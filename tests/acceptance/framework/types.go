@@ -23,6 +23,10 @@ const (
 
 	// Queue patterns (future)
 	PatternQueueBasic Pattern = "QueueBasic"
+
+	// High-level patterns (composites)
+	PatternProducer Pattern = "Producer"
+	PatternConsumer Pattern = "Consumer"
 )
 
 // Backend represents a testable backend implementation
@@ -130,6 +134,35 @@ type PatternTest struct {
 //   - driver: Backend driver (cast to appropriate interface)
 //   - caps: Backend capabilities (for conditional logic)
 type TestFunc func(t *testing.T, driver interface{}, caps Capabilities)
+
+// MultiPatternTestFunc is the signature for multi-pattern test functions
+// Parameters:
+//   - t: Standard Go testing.T
+//   - drivers: Map of pattern name to driver instances
+//   - caps: Backend capabilities (for conditional logic)
+type MultiPatternTestFunc func(t *testing.T, drivers map[string]interface{}, caps Capabilities)
+
+// MultiPatternTest represents a test case that coordinates multiple patterns
+type MultiPatternTest struct {
+	// Name is the test name (shown in test output)
+	Name string
+
+	// Func is the multi-pattern test function to execute
+	Func MultiPatternTestFunc
+
+	// RequiredPatterns maps pattern names to their setup requirements
+	// Example: {"producer": "Producer", "consumer": "Consumer"}
+	RequiredPatterns map[string]Pattern
+
+	// RequiresCapability is an optional capability name that must be supported
+	RequiresCapability string
+
+	// Timeout is the maximum duration for this test (optional)
+	Timeout time.Duration
+
+	// Tags allow grouping tests (e.g., "slow", "integration", "end-to-end")
+	Tags []string
+}
 
 // TestResult captures the outcome of a single test execution
 type TestResult struct {

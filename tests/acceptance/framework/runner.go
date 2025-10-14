@@ -248,3 +248,103 @@ func RunSingleBackendTests(t *testing.T, backendName string, pattern Pattern, te
 		})
 	}
 }
+
+// RunMultiPatternTests executes tests that coordinate multiple patterns
+// This enables testing scenarios like producer → consumer integration
+// where one pattern validates another pattern's behavior
+func RunMultiPatternTests(t *testing.T, tests []MultiPatternTest) {
+	// Collect all required patterns across all tests
+	requiredPatterns := make(map[Pattern]bool)
+	for _, test := range tests {
+		for _, pattern := range test.RequiredPatterns {
+			requiredPatterns[pattern] = true
+		}
+	}
+
+	// Find backends that support ALL required patterns
+	var compatibleBackends []Backend
+	allBackends := GetAllBackends()
+
+	for _, backend := range allBackends {
+		supportsAll := true
+		for pattern := range requiredPatterns {
+			if !backend.SupportsPattern(pattern) {
+				supportsAll = false
+				break
+			}
+		}
+		if supportsAll {
+			compatibleBackends = append(compatibleBackends, backend)
+		}
+	}
+
+	if len(compatibleBackends) == 0 {
+		patternList := make([]Pattern, 0, len(requiredPatterns))
+		for p := range requiredPatterns {
+			patternList = append(patternList, p)
+		}
+		t.Skipf("No backends support all required patterns: %v", patternList)
+		return
+	}
+
+	// Run tests against each compatible backend
+	for _, backend := range compatibleBackends {
+		backend := backend // Capture
+
+		t.Run(backend.Name, func(t *testing.T) {
+			t.Parallel()
+
+			// Setup backend
+			ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+			defer cancel()
+
+			driver, cleanup := backend.SetupFunc(t, ctx)
+			if cleanup != nil {
+				defer cleanup()
+			}
+
+			// Run all multi-pattern tests
+			for _, test := range tests {
+				test := test // Capture
+
+				t.Run(test.Name, func(t *testing.T) {
+					// Check capability requirements
+					if test.RequiresCapability != "" && !backend.HasCapability(test.RequiresCapability) {
+						t.Skipf("Backend %s doesn't support capability: %s", backend.Name, test.RequiresCapability)
+						return
+					}
+
+					// Create drivers map for the test
+					// All patterns share the same backend driver instance
+					drivers := make(map[string]interface{})
+					for patternName := range test.RequiredPatterns {
+						drivers[patternName] = driver
+					}
+
+					// Apply test timeout if specified
+					if test.Timeout > 0 {
+						testCtx, testCancel := context.WithTimeout(ctx, test.Timeout)
+						defer testCancel()
+
+						// Run test with timeout monitoring
+						done := make(chan bool, 1)
+						go func() {
+							test.Func(t, drivers, backend.Capabilities)
+							done <- true
+						}()
+
+						select {
+						case <-done:
+							// Test completed
+						case <-testCtx.Done():
+							t.Fatalf("Test timed out after %v", test.Timeout)
+						}
+					} else {
+						// Run test without timeout
+						test.Func(t, drivers, backend.Capabilities)
+					}
+				})
+			}
+		})
+	}
+}

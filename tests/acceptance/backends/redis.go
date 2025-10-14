@@ -22,7 +22,11 @@ func init() {
 			framework.PatternKeyValueBasic,
 			framework.PatternKeyValueTTL,
 			framework.PatternKeyValueScan,
-			// Redis also supports PubSub, but we'll add that separately
+			// TODO: Add PubSub patterns when Redis driver implements PubSubInterface
+			// framework.PatternPubSubBasic,
+			// framework.PatternPubSubFanout,
+			// framework.PatternProducer,
+			// framework.PatternConsumer,
 		},
 
 		Capabilities: framework.Capabilities{

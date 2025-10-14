@@ -17,6 +17,7 @@ func init() {
 		SupportedPatterns: []framework.Pattern{
 			framework.PatternKeyValueBasic,
 			framework.PatternKeyValueTTL,
+			// Note: MemStore only implements KeyValue, not PubSub
 		},
 
 		Capabilities: framework.Capabilities{

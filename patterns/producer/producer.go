@@ -268,10 +268,9 @@ func (p *Producer) PublishBatch(ctx context.Context, messages []*Message) error 
 	startTime := time.Now()
 
 	// Publish based on sink type
-	var err error
 	if pubsub, ok := p.messageSink.(plugin.PubSubInterface); ok {
 		for _, msg := range messages {
-			if err := pubsub.Publish(ctx, msg.Topic, msg.Payload, msg.Metadata); err != nil {
+			if _, err := pubsub.Publish(ctx, msg.Topic, msg.Payload, msg.Metadata); err != nil {
 				slog.Error("failed to publish message in batch",
 					"message_id", msg.ID,
 					"topic", msg.Topic,
@@ -347,7 +346,7 @@ func (p *Producer) publishMessage(ctx context.Context, msg *Message) error {
 
 		// Publish based on sink type
 		if pubsub, ok := p.messageSink.(plugin.PubSubInterface); ok {
-			err = pubsub.Publish(ctx, msg.Topic, msg.Payload, msg.Metadata)
+			_, err = pubsub.Publish(ctx, msg.Topic, msg.Payload, msg.Metadata)
 		} else if queue, ok := p.messageSink.(plugin.QueueInterface); ok {
 			_, err = queue.Enqueue(ctx, msg.Topic, msg.Payload, msg.Metadata)
 		}

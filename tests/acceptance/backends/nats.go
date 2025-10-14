@@ -21,6 +21,8 @@ func init() {
 		SupportedPatterns: []framework.Pattern{
 			framework.PatternPubSubBasic,
 			framework.PatternPubSubFanout,
+			framework.PatternProducer,
+			framework.PatternConsumer,
 			// Note: Core NATS doesn't guarantee ordering. Use JetStream for that.
 		},
 
