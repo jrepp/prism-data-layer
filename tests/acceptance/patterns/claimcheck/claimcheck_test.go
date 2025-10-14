@@ -2,7 +2,6 @@ package claimcheck_test
 
 import (
 	"context"
-	"fmt"
 	"sync"
 	"testing"
 	"time"
