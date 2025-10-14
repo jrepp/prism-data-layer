@@ -10,10 +10,9 @@ web:
   http: 0.0.0.0:5556
 
 # Enable gRPC API (optional, for advanced use cases)
-grpc:
-  addr: 0.0.0.0:5557
-  tlsCert: /dev/null
-  tlsKey: /dev/null
+# Disabled for local dev to avoid TLS configuration issues
+# grpc:
+#   addr: 0.0.0.0:5557
 
 # Telemetry configuration
 telemetry:

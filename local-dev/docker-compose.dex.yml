@@ -16,9 +16,8 @@ services:
     image: ghcr.io/dexidp/dex:v2.37.0
     container_name: prism-dex
     ports:
-      - "5556:5556"  # HTTP
-      - "5557:5557"  # gRPC
-      - "5558:5558"  # Telemetry
+      - "5556:5556"  # HTTP (OIDC endpoints)
+      - "5558:5558"  # Telemetry (healthcheck)
     volumes:
       - ./dex/config.yaml:/etc/dex/config.yaml:ro
     command: ["dex", "serve", "/etc/dex/config.yaml"]
