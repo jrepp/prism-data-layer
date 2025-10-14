@@ -34,7 +34,9 @@ staticClients:
     redirectURIs:
       - http://localhost:8080/callback
       - http://localhost:5556/dex/callback
+      - http://localhost:5556/dex/device/callback
       - http://127.0.0.1:8080/callback
+      - urn:ietf:wg:oauth:2.0:oob  # Out-of-band for device code flow
     public: false  # Confidential client for CLI
 
   # prism-admin web UI client

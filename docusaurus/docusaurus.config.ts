@@ -38,6 +38,45 @@ const config: Config = {
   // For GitHub pages deployment, it is often '/<projectName>/'
   baseUrl: '/prism-data-layer/',
 
+  // Mobile-friendly viewport configuration
+  headTags: [
+    {
+      tagName: 'meta',
+      attributes: {
+        name: 'viewport',
+        content: 'width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes',
+      },
+    },
+    {
+      tagName: 'meta',
+      attributes: {
+        name: 'theme-color',
+        content: '#6366f1',
+      },
+    },
+    {
+      tagName: 'meta',
+      attributes: {
+        name: 'mobile-web-app-capable',
+        content: 'yes',
+      },
+    },
+    {
+      tagName: 'meta',
+      attributes: {
+        name: 'apple-mobile-web-app-capable',
+        content: 'yes',
+      },
+    },
+    {
+      tagName: 'meta',
+      attributes: {
+        name: 'apple-mobile-web-app-status-bar-style',
+        content: 'black-translucent',
+      },
+    },
+  ],
+
   // Set custom build output directory and metadata
   customFields: {
     buildOutputDir: '../docs',
@@ -74,6 +113,9 @@ const config: Config = {
           // Uses ./docs directory (default)
           routeBasePath: 'docs',
           editUrl: 'https://github.com/jrepp/prism-data-layer/tree/main/docusaurus/',
+          // Mobile-friendly sidebar configuration
+          sidebarCollapsible: true,
+          sidebarCollapsed: true,
         },
         blog: false, // Disable blog
         theme: {
@@ -93,6 +135,8 @@ const config: Config = {
         sidebarPath: './sidebars-adr.ts',
         editUrl: 'https://github.com/jrepp/prism-data-layer/tree/main/docs-cms/',
         exclude: ['**/README.md', '**/000-template.md'],
+        sidebarCollapsible: true,
+        sidebarCollapsed: true,
       },
     ],
     [
@@ -104,6 +148,8 @@ const config: Config = {
         sidebarPath: './sidebars-rfc.ts',
         editUrl: 'https://github.com/jrepp/prism-data-layer/tree/main/docs-cms/',
         exclude: ['**/README.md', '**/000-template.md'],
+        sidebarCollapsible: true,
+        sidebarCollapsed: true,
       },
     ],
     [
@@ -115,6 +161,8 @@ const config: Config = {
         sidebarPath: './sidebars-memos.ts',
         editUrl: 'https://github.com/jrepp/prism-data-layer/tree/main/docs-cms/',
         exclude: ['**/README.md', '**/000-template.md'],
+        sidebarCollapsible: true,
+        sidebarCollapsed: true,
       },
     ],
     [
@@ -125,6 +173,8 @@ const config: Config = {
         routeBasePath: 'netflix',
         sidebarPath: './sidebars-netflix.ts',
         editUrl: 'https://github.com/jrepp/prism-data-layer/tree/main/docs-cms/',
+        sidebarCollapsible: true,
+        sidebarCollapsed: true,
       },
     ],
     [
@@ -135,6 +185,8 @@ const config: Config = {
         routeBasePath: 'prds',
         sidebarPath: './sidebars-prds.ts',
         editUrl: 'https://github.com/jrepp/prism-data-layer/tree/main/docs-cms/',
+        sidebarCollapsible: true,
+        sidebarCollapsed: true,
       },
     ],
   ],
@@ -184,6 +236,12 @@ const config: Config = {
     colorMode: {
       respectPrefersColorScheme: true,
     },
+    docs: {
+      sidebar: {
+        hideable: true,
+        autoCollapseCategories: true,
+      },
+    },
     navbar: {
       title: 'Prism',
       logo: {
@@ -193,6 +251,7 @@ const config: Config = {
         height: 32,
       },
       items: navItems,
+      hideOnScroll: false,
     },
     footer: {
       style: 'dark',
