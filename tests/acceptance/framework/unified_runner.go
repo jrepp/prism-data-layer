@@ -265,6 +265,13 @@ func RunUnifiedPatternTestsWithOptions(t *testing.T, opts UnifiedTestOptions) *C
 		})
 	}
 
+	// Automatically write GitHub Actions summary if report was collected
+	if opts.CollectResults && report != nil {
+		if err := WriteGitHubActionsSummary(report); err != nil {
+			t.Logf("Warning: Failed to write GitHub Actions summary: %v", err)
+		}
+	}
+
 	return report
 }
 
