@@ -12,12 +12,12 @@ func TestMemStore_SetGet(t *testing.T) {
 	m := New()
 
 	// Initialize with test config
-	config := &core.Config{
+	config := &plugin.Config{
 		Plugin: plugin.PluginConfig{
 			Name:    "memstore",
 			Version: "0.1.0",
 		},
-		ControlPlane: core.ControlPlaneConfig{
+		ControlPlane: plugin.ControlPlaneConfig{
 			Port: 9090,
 		},
 		Backend: map[string]any{
@@ -54,12 +54,12 @@ func TestMemStore_SetGet(t *testing.T) {
 func TestMemStore_Delete(t *testing.T) {
 	m := New()
 
-	config := &core.Config{
+	config := &plugin.Config{
 		Plugin: plugin.PluginConfig{
 			Name:    "memstore",
 			Version: "0.1.0",
 		},
-		ControlPlane: core.ControlPlaneConfig{
+		ControlPlane: plugin.ControlPlaneConfig{
 			Port: 9090,
 		},
 		Backend: map[string]any{
@@ -100,12 +100,12 @@ func TestMemStore_Delete(t *testing.T) {
 func TestMemStore_TTL(t *testing.T) {
 	m := New()
 
-	config := &core.Config{
+	config := &plugin.Config{
 		Plugin: plugin.PluginConfig{
 			Name:    "memstore",
 			Version: "0.1.0",
 		},
-		ControlPlane: core.ControlPlaneConfig{
+		ControlPlane: plugin.ControlPlaneConfig{
 			Port: 9090,
 		},
 		Backend: map[string]any{
@@ -144,12 +144,12 @@ func TestMemStore_TTL(t *testing.T) {
 func TestMemStore_CapacityLimit(t *testing.T) {
 	m := New()
 
-	config := &core.Config{
+	config := &plugin.Config{
 		Plugin: plugin.PluginConfig{
 			Name:    "memstore",
 			Version: "0.1.0",
 		},
-		ControlPlane: core.ControlPlaneConfig{
+		ControlPlane: plugin.ControlPlaneConfig{
 			Port: 9090,
 		},
 		Backend: map[string]any{
@@ -185,12 +185,12 @@ func TestMemStore_CapacityLimit(t *testing.T) {
 func TestMemStore_Health(t *testing.T) {
 	m := New()
 
-	config := &core.Config{
+	config := &plugin.Config{
 		Plugin: plugin.PluginConfig{
 			Name:    "memstore",
 			Version: "0.1.0",
 		},
-		ControlPlane: core.ControlPlaneConfig{
+		ControlPlane: plugin.ControlPlaneConfig{
 			Port: 9090,
 		},
 		Backend: map[string]any{

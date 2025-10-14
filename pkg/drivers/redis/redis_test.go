@@ -20,12 +20,12 @@ func setupTestRedis(t *testing.T) (*RedisPattern, *miniredis.Miniredis) {
 	}
 
 	// Create config pointing to miniredis
-	config := &core.Config{
+	config := &plugin.Config{
 		Plugin: plugin.PluginConfig{
 			Name:    "redis",
 			Version: "0.1.0",
 		},
-		ControlPlane: core.ControlPlaneConfig{
+		ControlPlane: plugin.ControlPlaneConfig{
 			Port: 9091,
 		},
 		Backend: map[string]any{
@@ -34,24 +34,24 @@ func setupTestRedis(t *testing.T) (*RedisPattern, *miniredis.Miniredis) {
 	}
 
 	// Initialize plugin
-	plugin := New()
+	p := New()
 	ctx := context.Background()
-	if err := plugin.Initialize(ctx, config); err != nil {
+	if err := p.Initialize(ctx, config); err != nil {
 		mr.Close()
 		t.Fatalf("failed to initialize plugin: %v", err)
 	}
 
-	return plugin, mr
+	return p, mr
 }
 
 func TestRedisPattern_New(t *testing.T) {
-	plugin := New()
+	p := New()
 
-	if plugin.Name() != "redis" {
-		t.Errorf("expected name 'redis', got '%s'", plugin.Name())
+	if p.Name() != "redis" {
+		t.Errorf("expected name 'redis', got '%s'", p.Name())
 	}
-	if plugin.Version() != "0.1.0" {
-		t.Errorf("expected version '0.1.0', got '%s'", plugin.Version())
+	if p.Version() != "0.1.0" {
+		t.Errorf("expected version '0.1.0', got '%s'", p.Version())
 	}
 }
 
@@ -69,9 +69,9 @@ func TestRedisPattern_Initialize(t *testing.T) {
 	}{
 		{
 			name: "valid config",
-			config: &core.Config{
+			config: &plugin.Config{
 				Plugin:       plugin.PluginConfig{Name: "redis", Version: "0.1.0"},
-				ControlPlane: core.ControlPlaneConfig{Port: 9091},
+				ControlPlane: plugin.ControlPlaneConfig{Port: 9091},
 				Backend: map[string]any{
 					"address": mr.Addr(),
 				},
@@ -82,9 +82,9 @@ func TestRedisPattern_Initialize(t *testing.T) {
 		// Redis is actually running on localhost:6379. Use invalid address test instead.
 		{
 			name: "invalid address",
-			config: &core.Config{
+			config: &plugin.Config{
 				Plugin:       plugin.PluginConfig{Name: "redis", Version: "0.1.0"},
-				ControlPlane: core.ControlPlaneConfig{Port: 9091},
+				ControlPlane: plugin.ControlPlaneConfig{Port: 9091},
 				Backend: map[string]any{
 					"address": "localhost:9999", // Invalid port that's unlikely to have Redis
 				},
@@ -95,15 +95,15 @@ func TestRedisPattern_Initialize(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			plugin := New()
+			p := New()
 			ctx := context.Background()
-			err := plugin.Initialize(ctx, tt.config)
+			err := p.Initialize(ctx, tt.config)
 
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Initialize() error = %v, wantErr %v", err, tt.wantErr)
 			}
 
-			if err == nil && plugin.client == nil {
+			if err == nil && p.client == nil {
 				t.Error("Initialize() succeeded but client is nil")
 			}
 		})
@@ -111,9 +111,9 @@ func TestRedisPattern_Initialize(t *testing.T) {
 }
 
 func TestRedisPattern_SetGet(t *testing.T) {
-	plugin, mr := setupTestRedis(t)
+	p, mr := setupTestRedis(t)
 	defer mr.Close()
-	defer plugin.Stop(context.Background())
+	defer p.Stop(context.Background())
 
 	tests := []struct {
 		name  string
@@ -128,12 +128,12 @@ func TestRedisPattern_SetGet(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// Set value
-			if err := plugin.Set(tt.key, tt.value, 0); err != nil {
+			if err := p.Set(tt.key, tt.value, 0); err != nil {
 				t.Fatalf("Set() error = %v", err)
 			}
 
 			// Get value
-			value, found, err := plugin.Get(tt.key)
+			value, found, err := p.Get(tt.key)
 			if err != nil {
 				t.Fatalf("Get() error = %v", err)
 			}
@@ -148,21 +148,21 @@ func TestRedisPattern_SetGet(t *testing.T) {
 }
 
 func TestRedisPattern_SetWithTTL(t *testing.T) {
-	plugin, mr := setupTestRedis(t)
+	p, mr := setupTestRedis(t)
 	defer mr.Close()
-	defer plugin.Stop(context.Background())
+	defer p.Stop(context.Background())
 
 	key := "ttl-key"
 	value := []byte("ttl-value")
 	ttl := int64(1) // 1 second
 
 	// Set value with TTL
-	if err := plugin.Set(key, value, ttl); err != nil {
+	if err := p.Set(key, value, ttl); err != nil {
 		t.Fatalf("Set() error = %v", err)
 	}
 
 	// Key should exist immediately
-	val, found, err := plugin.Get(key)
+	val, found, err := p.Get(key)
 	if err != nil {
 		t.Fatalf("Get() error = %v", err)
 	}
@@ -177,7 +177,7 @@ func TestRedisPattern_SetWithTTL(t *testing.T) {
 	mr.FastForward(2 * time.Second)
 
 	// Key should be expired
-	_, found, err = plugin.Get(key)
+	_, found, err = p.Get(key)
 	if err != nil {
 		t.Fatalf("Get() error = %v", err)
 	}
@@ -187,11 +187,11 @@ func TestRedisPattern_SetWithTTL(t *testing.T) {
 }
 
 func TestRedisPattern_GetNonExistent(t *testing.T) {
-	plugin, mr := setupTestRedis(t)
+	p, mr := setupTestRedis(t)
 	defer mr.Close()
-	defer plugin.Stop(context.Background())
+	defer p.Stop(context.Background())
 
-	_, found, err := plugin.Get("nonexistent")
+	_, found, err := p.Get("nonexistent")
 	if err != nil {
 		t.Fatalf("Get() error = %v", err)
 	}
@@ -201,20 +201,20 @@ func TestRedisPattern_GetNonExistent(t *testing.T) {
 }
 
 func TestRedisPattern_Delete(t *testing.T) {
-	plugin, mr := setupTestRedis(t)
+	p, mr := setupTestRedis(t)
 	defer mr.Close()
-	defer plugin.Stop(context.Background())
+	defer p.Stop(context.Background())
 
 	key := "delete-me"
 	value := []byte("data")
 
 	// Set value
-	if err := plugin.Set(key, value, 0); err != nil {
+	if err := p.Set(key, value, 0); err != nil {
 		t.Fatalf("Set() error = %v", err)
 	}
 
 	// Verify it exists
-	_, found, err := plugin.Get(key)
+	_, found, err := p.Get(key)
 	if err != nil {
 		t.Fatalf("Get() error = %v", err)
 	}
@@ -223,12 +223,12 @@ func TestRedisPattern_Delete(t *testing.T) {
 	}
 
 	// Delete key
-	if err := plugin.Delete(key); err != nil {
+	if err := p.Delete(key); err != nil {
 		t.Fatalf("Delete() error = %v", err)
 	}
 
 	// Verify it's gone
-	_, found, err = plugin.Get(key)
+	_, found, err = p.Get(key)
 	if err != nil {
 		t.Fatalf("Get() error = %v", err)
 	}
@@ -238,15 +238,15 @@ func TestRedisPattern_Delete(t *testing.T) {
 }
 
 func TestRedisPattern_Exists(t *testing.T) {
-	plugin, mr := setupTestRedis(t)
+	p, mr := setupTestRedis(t)
 	defer mr.Close()
-	defer plugin.Stop(context.Background())
+	defer p.Stop(context.Background())
 
 	key := "exists-key"
 	value := []byte("data")
 
 	// Check nonexistent key
-	exists, err := plugin.Exists(key)
+	exists, err := p.Exists(key)
 	if err != nil {
 		t.Fatalf("Exists() error = %v", err)
 	}
@@ -255,12 +255,12 @@ func TestRedisPattern_Exists(t *testing.T) {
 	}
 
 	// Set value
-	if err := plugin.Set(key, value, 0); err != nil {
+	if err := p.Set(key, value, 0); err != nil {
 		t.Fatalf("Set() error = %v", err)
 	}
 
 	// Check existing key
-	exists, err = plugin.Exists(key)
+	exists, err = p.Exists(key)
 	if err != nil {
 		t.Fatalf("Exists() error = %v", err)
 	}
@@ -269,12 +269,12 @@ func TestRedisPattern_Exists(t *testing.T) {
 	}
 
 	// Delete key
-	if err := plugin.Delete(key); err != nil {
+	if err := p.Delete(key); err != nil {
 		t.Fatalf("Delete() error = %v", err)
 	}
 
 	// Check deleted key
-	exists, err = plugin.Exists(key)
+	exists, err = p.Exists(key)
 	if err != nil {
 		t.Fatalf("Exists() error = %v", err)
 	}
@@ -284,12 +284,12 @@ func TestRedisPattern_Exists(t *testing.T) {
 }
 
 func TestRedisPattern_Health(t *testing.T) {
-	plugin, mr := setupTestRedis(t)
+	p, mr := setupTestRedis(t)
 	defer mr.Close()
-	defer plugin.Stop(context.Background())
+	defer p.Stop(context.Background())
 
 	ctx := context.Background()
-	health, err := plugin.Health(ctx)
+	health, err := p.Health(ctx)
 	if err != nil {
 		t.Fatalf("Health() error = %v", err)
 	}
@@ -308,12 +308,12 @@ func TestRedisPattern_Health(t *testing.T) {
 }
 
 func TestRedisPattern_HealthUnhealthy(t *testing.T) {
-	plugin, mr := setupTestRedis(t)
+	p, mr := setupTestRedis(t)
 	// Close Redis to simulate connection failure
 	mr.Close()
 
 	ctx := context.Background()
-	health, err := plugin.Health(ctx)
+	health, err := p.Health(ctx)
 	if err != nil {
 		t.Fatalf("Health() error = %v", err)
 	}
@@ -324,16 +324,16 @@ func TestRedisPattern_HealthUnhealthy(t *testing.T) {
 }
 
 func TestRedisPattern_Stop(t *testing.T) {
-	plugin, mr := setupTestRedis(t)
+	p, mr := setupTestRedis(t)
 	defer mr.Close()
 
 	ctx := context.Background()
-	if err := plugin.Stop(ctx); err != nil {
+	if err := p.Stop(ctx); err != nil {
 		t.Fatalf("Stop() error = %v", err)
 	}
 
 	// Verify client is closed by attempting an operation
-	err := plugin.Set("key", []byte("value"), 0)
+	err := p.Set("key", []byte("value"), 0)
 	if err == nil {
 		t.Error("Set() succeeded after Stop(), expected error")
 	}
