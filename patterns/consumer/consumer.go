@@ -8,6 +8,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/jrepp/prism-data-layer/pkg/patterns/common"
 	"github.com/jrepp/prism-data-layer/pkg/plugin"
 )
 
@@ -21,6 +22,7 @@ type Consumer struct {
 	messageSource interface{} // PubSubInterface or QueueInterface
 	stateStore    plugin.KeyValueBasicInterface
 	deadLetter    interface{} // QueueInterface (optional)
+	objectStore   plugin.ObjectStoreInterface // Optional: for claim check pattern
 
 	// Runtime state
 	mu        sync.RWMutex
@@ -41,6 +43,9 @@ type ConsumerState struct {
 	RetryCount    int       `json:"retry_count"`
 }
 
+// ClaimCheckMessage is an alias to the shared common package implementation.
+type ClaimCheckMessage = common.ClaimCheckMessage
+
 // New creates a new Consumer instance.
 // Backend slots must be bound via BindSlots() before starting.
 func New(config Config) (*Consumer, error) {
@@ -60,6 +65,7 @@ func (c *Consumer) BindSlots(
 	messageSource interface{},
 	stateStore plugin.KeyValueBasicInterface,
 	deadLetter interface{},
+	objectStore plugin.ObjectStoreInterface,
 ) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -86,6 +92,9 @@ func (c *Consumer) BindSlots(
 		}
 		c.deadLetter = deadLetter
 	}
+
+	// Object store is optional (for claim check pattern)
+	c.objectStore = objectStore
 
 	return nil
 }
@@ -227,10 +236,94 @@ func (c *Consumer) consume() {
 
 // processMessage processes a single message.
 func (c *Consumer) processMessage(msg *plugin.PubSubMessage, state *ConsumerState) error {
+	// Check if message is a claim check
+	if msg.Metadata["prism-claim-check"] == "true" {
+		if err := c.resolveClaimCheck(msg); err != nil {
+			return fmt.Errorf("failed to resolve claim check: %w", err)
+		}
+	}
+
 	processingCtx, cancel := context.WithTimeout(c.ctx, 30*time.Second)
 	defer cancel()
 
 	return c.processor(processingCtx, msg)
+}
+
+// resolveClaimCheck retrieves the actual payload from object store.
+func (c *Consumer) resolveClaimCheck(msg *plugin.PubSubMessage) error {
+	if c.objectStore == nil {
+		return fmt.Errorf("object store not configured for claim check")
+	}
+
+	// Deserialize claim check
+	var claim ClaimCheckMessage
+	if err := json.Unmarshal(msg.Payload, &claim); err != nil {
+		return fmt.Errorf("invalid claim check message: %w", err)
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	// Download from object store
+	data, err := c.objectStore.Get(ctx, claim.Bucket, claim.ObjectKey)
+	if err != nil {
+		return fmt.Errorf("failed to retrieve object: %w", err)
+	}
+
+	// Decompress if needed
+	if claim.Compression != "none" && claim.Compression != "" {
+		data, err = c.decompressPayload(data, claim.Compression)
+		if err != nil {
+			return fmt.Errorf("failed to decompress payload: %w", err)
+		}
+	}
+
+	// Verify checksum
+	checksum := common.CalculateSHA256(data)
+	if checksum != claim.Checksum {
+		return fmt.Errorf("checksum mismatch: expected %s, got %s", claim.Checksum, checksum)
+	}
+
+	// Replace payload with actual data
+	msg.Payload = data
+	if claim.ContentType != "" {
+		msg.Metadata["content-type"] = claim.ContentType
+	}
+	delete(msg.Metadata, "prism-claim-check")
+
+	slog.Info("resolved claim check",
+		"claim_id", claim.ClaimID,
+		"original_size", claim.OriginalSize,
+		"retrieved_size", len(data),
+		"compression", claim.Compression)
+
+	// Delete claim after successful retrieval if configured
+	if c.config.Behavior.ClaimCheck != nil && c.config.Behavior.ClaimCheck.DeleteAfterRead {
+		go func() {
+			deleteCtx, deleteCancel := context.WithTimeout(context.Background(), 10*time.Second)
+			defer deleteCancel()
+
+			if err := c.objectStore.Delete(deleteCtx, claim.Bucket, claim.ObjectKey); err != nil {
+				slog.Warn("failed to delete claim after read",
+					"claim_id", claim.ClaimID,
+					"error", err)
+			} else {
+				slog.Debug("deleted claim after read", "claim_id", claim.ClaimID)
+			}
+		}()
+	}
+
+	return nil
+}
+
+// decompressPayload decompresses the payload using the specified algorithm.
+func (c *Consumer) decompressPayload(data []byte, algorithm string) ([]byte, error) {
+	switch algorithm {
+	case "gzip":
+		return common.DecompressGzip(data)
+	default:
+		return nil, fmt.Errorf("unsupported compression algorithm: %s", algorithm)
+	}
 }
 
 // shouldRetry determines if a message should be retried.

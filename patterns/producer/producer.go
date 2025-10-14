@@ -2,14 +2,14 @@ package producer
 
 import (
 	"context"
-	"crypto/sha256"
-	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"log/slog"
 	"sync"
 	"time"
 
+	"github.com/google/uuid"
+	"github.com/jrepp/prism-data-layer/pkg/patterns/common"
 	"github.com/jrepp/prism-data-layer/pkg/plugin"
 )
 
@@ -22,6 +22,7 @@ type Producer struct {
 	// Backend interfaces (slots)
 	messageSink interface{} // PubSubInterface or QueueInterface
 	stateStore  plugin.KeyValueBasicInterface
+	objectStore plugin.ObjectStoreInterface // Optional: for claim check pattern
 
 	// Runtime state
 	mu      sync.RWMutex
@@ -71,6 +72,9 @@ type ProducerState struct {
 	LastPublished time.Time            `json:"last_published"` // Last successful publish
 }
 
+// ClaimCheckMessage is an alias to the shared common package implementation.
+type ClaimCheckMessage = common.ClaimCheckMessage
+
 // New creates a new Producer instance.
 // Backend slots must be bound via BindSlots() before publishing.
 func New(config Config) (*Producer, error) {
@@ -91,6 +95,7 @@ func New(config Config) (*Producer, error) {
 func (p *Producer) BindSlots(
 	messageSink interface{},
 	stateStore plugin.KeyValueBasicInterface,
+	objectStore plugin.ObjectStoreInterface,
 ) error {
 	p.mu.Lock()
 	defer p.mu.Unlock()
@@ -109,6 +114,9 @@ func (p *Producer) BindSlots(
 
 	// State store is optional (producer will run stateless if nil)
 	p.stateStore = stateStore
+
+	// Object store is optional (for claim check pattern)
+	p.objectStore = objectStore
 
 	return nil
 }
@@ -335,6 +343,22 @@ func (p *Producer) Flush(ctx context.Context) error {
 func (p *Producer) publishMessage(ctx context.Context, msg *Message) error {
 	startTime := time.Now()
 
+	// Check if claim check should be used
+	payload := msg.Payload
+	metadata := msg.Metadata
+	if metadata == nil {
+		metadata = make(map[string]string)
+	}
+
+	if p.shouldUseClaimCheck(msg.Payload) {
+		claimPayload, claimMetadata, err := p.createClaimCheck(ctx, msg)
+		if err != nil {
+			return fmt.Errorf("failed to create claim check: %w", err)
+		}
+		payload = claimPayload
+		metadata = claimMetadata
+	}
+
 	// Retry logic
 	var err error
 	for attempt := 0; attempt <= p.config.Behavior.MaxRetries; attempt++ {
@@ -346,9 +370,9 @@ func (p *Producer) publishMessage(ctx context.Context, msg *Message) error {
 
 		// Publish based on sink type
 		if pubsub, ok := p.messageSink.(plugin.PubSubInterface); ok {
-			_, err = pubsub.Publish(ctx, msg.Topic, msg.Payload, msg.Metadata)
+			_, err = pubsub.Publish(ctx, msg.Topic, payload, metadata)
 		} else if queue, ok := p.messageSink.(plugin.QueueInterface); ok {
-			_, err = queue.Enqueue(ctx, msg.Topic, msg.Payload, msg.Metadata)
+			_, err = queue.Enqueue(ctx, msg.Topic, payload, metadata)
 		}
 
 		if err == nil {
@@ -393,6 +417,107 @@ func (p *Producer) publishMessage(ctx context.Context, msg *Message) error {
 		"bytes", len(msg.Payload))
 
 	return nil
+}
+
+// shouldUseClaimCheck determines if claim check should be used for this payload.
+func (p *Producer) shouldUseClaimCheck(payload []byte) bool {
+	if p.config.Behavior.ClaimCheck == nil || !p.config.Behavior.ClaimCheck.Enabled {
+		return false
+	}
+
+	if p.objectStore == nil {
+		return false
+	}
+
+	return int64(len(payload)) > p.config.Behavior.ClaimCheck.Threshold
+}
+
+// createClaimCheck uploads payload to object store and returns claim check message.
+func (p *Producer) createClaimCheck(ctx context.Context, msg *Message) ([]byte, map[string]string, error) {
+	if p.objectStore == nil {
+		return nil, nil, fmt.Errorf("object store not configured")
+	}
+
+	cfg := p.config.Behavior.ClaimCheck
+
+	// Compress if configured
+	data := msg.Payload
+	compression := "none"
+	if cfg.Compression != "" && cfg.Compression != "none" {
+		compressed, err := p.compressPayload(msg.Payload, cfg.Compression)
+		if err != nil {
+			slog.Warn("compression failed, using uncompressed payload", "error", err)
+		} else {
+			data = compressed
+			compression = cfg.Compression
+		}
+	}
+
+	// Generate claim ID and object key
+	claimID := uuid.New().String()
+	objectKey := fmt.Sprintf("%s/%s/%s", p.name, msg.Topic, claimID)
+
+	// Upload to object store
+	if err := p.objectStore.Put(ctx, cfg.Bucket, objectKey, data); err != nil {
+		return nil, nil, fmt.Errorf("failed to upload to object store: %w", err)
+	}
+
+	// Set TTL if configured
+	if cfg.TTL > 0 {
+		if err := p.objectStore.SetTTL(ctx, cfg.Bucket, objectKey, cfg.TTL); err != nil {
+			slog.Warn("failed to set object TTL", "error", err)
+		}
+	}
+
+	// Calculate checksum
+	checksum := common.CalculateSHA256(msg.Payload)
+
+	// Create claim check message
+	claim := ClaimCheckMessage{
+		ClaimID:      claimID,
+		Bucket:       cfg.Bucket,
+		ObjectKey:    objectKey,
+		OriginalSize: len(msg.Payload),
+		Compression:  compression,
+		ContentType:  msg.Metadata["content-type"],
+		Checksum:     checksum,
+	}
+
+	if cfg.TTL > 0 {
+		claim.ExpiresAt = time.Now().Add(time.Duration(cfg.TTL) * time.Second).Unix()
+	}
+
+	claimPayload, err := json.Marshal(claim)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to marshal claim check: %w", err)
+	}
+
+	// Add claim check metadata
+	metadata := make(map[string]string)
+	for k, v := range msg.Metadata {
+		metadata[k] = v
+	}
+	metadata["prism-claim-check"] = "true"
+
+	slog.Info("created claim check",
+		"claim_id", claimID,
+		"original_size", len(msg.Payload),
+		"compressed_size", len(data),
+		"compression", compression,
+		"bucket", cfg.Bucket,
+		"object_key", objectKey)
+
+	return claimPayload, metadata, nil
+}
+
+// compressPayload compresses the payload using the specified algorithm.
+func (p *Producer) compressPayload(payload []byte, algorithm string) ([]byte, error) {
+	switch algorithm {
+	case "gzip":
+		return common.CompressGzip(payload)
+	default:
+		return nil, fmt.Errorf("unsupported compression algorithm: %s", algorithm)
+	}
 }
 
 // addToBatch adds a message to the current batch.
@@ -455,8 +580,7 @@ func (p *Producer) flushBatchLocked() error {
 
 // generateMessageID generates a deterministic message ID based on topic and payload.
 func (p *Producer) generateMessageID(topic string, payload []byte) string {
-	hash := sha256.Sum256(append([]byte(topic), payload...))
-	return hex.EncodeToString(hash[:])
+	return common.CalculateSHA256(append([]byte(topic), payload...))
 }
 
 // isDuplicate checks if a message ID has been seen recently.

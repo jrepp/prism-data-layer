@@ -85,6 +85,8 @@ jobs:
           - keyvalue
           - consumer
           - producer
+          - claimcheck
+          - unified  # Producer/Consumer integration tests
           # Add new patterns here as they are implemented:
           # - multicast-registry
           # - timeseries
@@ -153,9 +155,9 @@ jobs:
             echo "| ${{ matrix.pattern }} | $STATUS | ${{ env.COVERAGE }} |"
           } >> $GITHUB_STEP_SUMMARY
 
-  # Generate comprehensive summary for all pattern tests
-  pattern-acceptance-summary:
-    name: Pattern Acceptance Summary
+  # Generate comprehensive compliance report
+  generate-compliance-report:
+    name: Generate Compliance Report
     runs-on: ubuntu-latest
     needs: test-patterns
     if: always()
@@ -169,11 +171,53 @@ jobs:
         with:
           go-version: '1.21'
 
+      - name: Download generated proto code
+        uses: actions/download-artifact@v4
+        with:
+          name: proto-generated
+          path: pkg/plugin/gen/
+
       - name: Download all coverage reports
         uses: actions/download-artifact@v4
         with:
           pattern: coverage-pattern-*
           path: build/coverage-reports
+
+      - name: Run tests with compliance reporting
+        run: |
+          cd tests/acceptance
+          go test -v -json ./patterns/... > test-results.json 2>&1 || true
+        env:
+          PRISM_TEST_COLLECT_RESULTS: "1"
+          PRISM_TEST_QUIET: "1"
+
+      - name: Build compliance report tool
+        run: |
+          cd tests/acceptance/cmd/compliance-report
+          go build -o compliance-report .
+
+      - name: Generate compliance reports
+        run: |
+          # Check if test results exist
+          if [ -f tests/acceptance/test-logs/compliance-report.json ]; then
+            tests/acceptance/cmd/compliance-report/compliance-report \
+              --input tests/acceptance/test-logs/compliance-report.json \
+              --output test-logs \
+              --format all \
+              --details
+          else
+            echo "⚠️ No compliance report JSON found, generating from test results"
+            # Fallback to generating basic summary
+          fi
+
+      - name: Upload compliance artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: pattern-compliance-report
+          path: |
+            test-logs/pattern-compliance.md
+            test-logs/pattern-compliance.json
+          retention-days: 30
 
       - name: Generate summary report
         run: |
@@ -196,18 +240,7 @@ jobs:
             KEYVALUE_STATUS="❌ Fail"
             ALL_SUCCESS=false
           fi
-          echo "| KeyValue | $KEYVALUE_STATUS | $KEYVALUE_COVERAGE | MemStore, Redis |" >> summary.md
-
-          # Consumer pattern
-          if [ -f build/coverage-reports/coverage-pattern-consumer/coverage.out ]; then
-            CONSUMER_COVERAGE=$(go tool cover -func=build/coverage-reports/coverage-pattern-consumer/coverage.out | grep total | awk '{print $3}')
-            CONSUMER_STATUS="✅ Pass"
-          else
-            CONSUMER_COVERAGE="N/A"
-            CONSUMER_STATUS="❌ Fail"
-            ALL_SUCCESS=false
-          fi
-          echo "| Consumer | $CONSUMER_STATUS | $CONSUMER_COVERAGE | NATS+MemStore, NATS+Redis, Kafka+PostgreSQL |" >> summary.md
+          echo "| KeyValue | $KEYVALUE_STATUS | $KEYVALUE_COVERAGE | MemStore, Redis, PostgreSQL |" >> summary.md
 
           # Producer pattern
           if [ -f build/coverage-reports/coverage-pattern-producer/coverage.out ]; then
@@ -218,7 +251,40 @@ jobs:
             PRODUCER_STATUS="❌ Fail"
             ALL_SUCCESS=false
           fi
-          echo "| Producer | $PRODUCER_STATUS | $PRODUCER_COVERAGE | MemStore, NATS, Redis |" >> summary.md
+          echo "| Producer | $PRODUCER_STATUS | $PRODUCER_COVERAGE | NATS |" >> summary.md
+
+          # Consumer pattern
+          if [ -f build/coverage-reports/coverage-pattern-consumer/coverage.out ]; then
+            CONSUMER_COVERAGE=$(go tool cover -func=build/coverage-reports/coverage-pattern-consumer/coverage.out | grep total | awk '{print $3}')
+            CONSUMER_STATUS="✅ Pass"
+          else
+            CONSUMER_COVERAGE="N/A"
+            CONSUMER_STATUS="❌ Fail"
+            ALL_SUCCESS=false
+          fi
+          echo "| Consumer | $CONSUMER_STATUS | $CONSUMER_COVERAGE | NATS |" >> summary.md
+
+          # Claim Check pattern
+          if [ -f build/coverage-reports/coverage-pattern-claimcheck/coverage.out ]; then
+            CLAIMCHECK_COVERAGE=$(go tool cover -func=build/coverage-reports/coverage-pattern-claimcheck/coverage.out | grep total | awk '{print $3}')
+            CLAIMCHECK_STATUS="✅ Pass"
+          else
+            CLAIMCHECK_COVERAGE="N/A"
+            CLAIMCHECK_STATUS="❌ Fail"
+            ALL_SUCCESS=false
+          fi
+          echo "| ClaimCheck | $CLAIMCHECK_STATUS | $CLAIMCHECK_COVERAGE | NATS (messaging) + MinIO (storage) |" >> summary.md
+
+          # Unified (Producer/Consumer Integration)
+          if [ -f build/coverage-reports/coverage-pattern-unified/coverage.out ]; then
+            UNIFIED_COVERAGE=$(go tool cover -func=build/coverage-reports/coverage-pattern-unified/coverage.out | grep total | awk '{print $3}')
+            UNIFIED_STATUS="✅ Pass"
+          else
+            UNIFIED_COVERAGE="N/A"
+            UNIFIED_STATUS="❌ Fail"
+            ALL_SUCCESS=false
+          fi
+          echo "| Unified (Producer+Consumer) | $UNIFIED_STATUS | $UNIFIED_COVERAGE | NATS |" >> summary.md
 
           # Add overall status
           {

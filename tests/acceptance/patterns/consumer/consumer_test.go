@@ -67,7 +67,7 @@ func testStatelessConsumer(t *testing.T, driver interface{}, caps framework.Capa
 	require.NoError(t, err, "Failed to create consumer")
 
 	// Bind slots (no state store for stateless)
-	err = c.BindSlots(backends.MessageSource, nil, nil)
+	err = c.BindSlots(backends.MessageSource, nil, nil, nil)
 	require.NoError(t, err, "Failed to bind slots")
 
 	// Track processed messages
@@ -134,7 +134,7 @@ func testStatefulConsumer(t *testing.T, driver interface{}, caps framework.Capab
 	require.NoError(t, err, "Failed to create consumer")
 
 	// Bind slots with state store
-	err = c.BindSlots(backends.MessageSource, backends.StateStore, nil)
+	err = c.BindSlots(backends.MessageSource, backends.StateStore, nil, nil)
 	require.NoError(t, err, "Failed to bind slots")
 
 	processedCount := 0
@@ -194,7 +194,7 @@ func testConsumerWithRetry(t *testing.T, driver interface{}, caps framework.Capa
 	c, err := consumer.New(config)
 	require.NoError(t, err, "Failed to create consumer")
 
-	err = c.BindSlots(backends.MessageSource, nil, nil)
+	err = c.BindSlots(backends.MessageSource, nil, nil, nil)
 	require.NoError(t, err, "Failed to bind slots")
 
 	attemptCount := 0
@@ -251,7 +251,7 @@ func testConsumerStateRecovery(t *testing.T, driver interface{}, caps framework.
 	c1, err := consumer.New(config)
 	require.NoError(t, err, "Failed to create first consumer")
 
-	err = c1.BindSlots(backends.MessageSource, backends.StateStore, nil)
+	err = c1.BindSlots(backends.MessageSource, backends.StateStore, nil, nil)
 	require.NoError(t, err, "Failed to bind slots")
 
 	firstProcessed := 0
@@ -284,7 +284,7 @@ func testConsumerStateRecovery(t *testing.T, driver interface{}, caps framework.
 	c2, err := consumer.New(config)
 	require.NoError(t, err, "Failed to create second consumer")
 
-	err = c2.BindSlots(backends.MessageSource, backends.StateStore, nil)
+	err = c2.BindSlots(backends.MessageSource, backends.StateStore, nil, nil)
 	require.NoError(t, err, "Failed to bind slots for second consumer")
 
 	secondProcessed := 0

@@ -250,7 +250,7 @@ func setupProducerConsumer(
 		prodStateStore = kvInterface
 	}
 
-	err = prod.BindSlots(producerDriver, prodStateStore)
+	err = prod.BindSlots(producerDriver, prodStateStore, nil) // nil = no object store for basic tests
 	require.NoError(t, err, "Failed to bind producer slots")
 
 	err = prod.Start(ctx)
@@ -277,7 +277,7 @@ func setupProducerConsumer(
 		consStateStore = kvInterface
 	}
 
-	err = cons.BindSlots(consumerDriver, consStateStore, nil)
+	err = cons.BindSlots(consumerDriver, consStateStore, nil, nil) // nil, nil = no DLQ, no object store for basic tests
 	require.NoError(t, err, "Failed to bind consumer slots")
 
 	// Track received messages

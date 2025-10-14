@@ -66,7 +66,7 @@ func testBasicPublish(t *testing.T, driver interface{}, caps framework.Capabilit
 	prod, err := producer.New(config)
 	require.NoError(t, err, "Failed to create producer")
 
-	err = prod.BindSlots(backends.MessageSink, nil)
+	err = prod.BindSlots(backends.MessageSink, nil, nil)
 	require.NoError(t, err, "Failed to bind slots")
 
 	err = prod.Start(ctx)
@@ -109,7 +109,7 @@ func testBatchedPublish(t *testing.T, driver interface{}, caps framework.Capabil
 	prod, err := producer.New(config)
 	require.NoError(t, err, "Failed to create producer")
 
-	err = prod.BindSlots(backends.MessageSink, nil)
+	err = prod.BindSlots(backends.MessageSink, nil, nil)
 	require.NoError(t, err, "Failed to bind slots")
 
 	err = prod.Start(ctx)
@@ -150,7 +150,7 @@ func testPublishWithRetry(t *testing.T, driver interface{}, caps framework.Capab
 	prod, err := producer.New(config)
 	require.NoError(t, err, "Failed to create producer")
 
-	err = prod.BindSlots(backends.MessageSink, nil)
+	err = prod.BindSlots(backends.MessageSink, nil, nil)
 	require.NoError(t, err, "Failed to bind slots")
 
 	err = prod.Start(ctx)
@@ -190,7 +190,7 @@ func testDeduplication(t *testing.T, driver interface{}, caps framework.Capabili
 	prod, err := producer.New(config)
 	require.NoError(t, err, "Failed to create producer")
 
-	err = prod.BindSlots(backends.MessageSink, backends.StateStore)
+	err = prod.BindSlots(backends.MessageSink, backends.StateStore, nil)
 	require.NoError(t, err, "Failed to bind slots")
 
 	err = prod.Start(ctx)
@@ -229,7 +229,7 @@ func testProducerMetrics(t *testing.T, driver interface{}, caps framework.Capabi
 	prod, err := producer.New(config)
 	require.NoError(t, err, "Failed to create producer")
 
-	err = prod.BindSlots(backends.MessageSink, nil)
+	err = prod.BindSlots(backends.MessageSink, nil, nil)
 	require.NoError(t, err, "Failed to bind slots")
 
 	err = prod.Start(ctx)

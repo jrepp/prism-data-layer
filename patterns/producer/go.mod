@@ -3,9 +3,11 @@ module github.com/jrepp/prism-data-layer/patterns/producer
 go 1.24.0
 
 require (
+	github.com/google/uuid v1.6.0
 	github.com/jrepp/prism-data-layer/pkg/drivers/memstore v0.0.0
 	github.com/jrepp/prism-data-layer/pkg/drivers/nats v0.0.0
 	github.com/jrepp/prism-data-layer/pkg/drivers/redis v0.0.0-20251014161646-c7322ff385ad
+	github.com/jrepp/prism-data-layer/pkg/patterns/common v0.0.0
 	github.com/jrepp/prism-data-layer/pkg/plugin v0.0.0
 )
 
@@ -14,7 +16,6 @@ require (
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
 	github.com/go-logr/logr v1.4.3 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
-	github.com/google/uuid v1.6.0 // indirect
 	github.com/klauspost/compress v1.18.0 // indirect
 	github.com/nats-io/nats.go v1.45.0 // indirect
 	github.com/nats-io/nkeys v0.4.11 // indirect
@@ -39,5 +40,6 @@ require (
 replace (
 	github.com/jrepp/prism-data-layer/pkg/drivers/memstore => ../../pkg/drivers/memstore
 	github.com/jrepp/prism-data-layer/pkg/drivers/nats => ../../pkg/drivers/nats
+	github.com/jrepp/prism-data-layer/pkg/patterns/common => ../../pkg/patterns/common
 	github.com/jrepp/prism-data-layer/pkg/plugin => ../../pkg/plugin
 )

@@ -97,7 +97,7 @@ func testDLQAfterRetries(t *testing.T, driver interface{}, caps framework.Capabi
 	require.NoError(t, err, "Failed to create consumer")
 
 	// Bind backends (all 3 slots filled)
-	err = c.BindSlots(backends.MessageSource, backends.StateStore, backends.DeadLetter)
+	err = c.BindSlots(backends.MessageSource, backends.StateStore, backends.DeadLetter, nil)
 	require.NoError(t, err, "Failed to bind all 3 slots")
 
 	// Set processor that always fails
@@ -191,7 +191,7 @@ func testDLQVerifyMessages(t *testing.T, driver interface{}, caps framework.Capa
 	c, err := consumer.New(consumerConfig)
 	require.NoError(t, err)
 
-	err = c.BindSlots(backends.MessageSource, backends.StateStore, backends.DeadLetter)
+	err = c.BindSlots(backends.MessageSource, backends.StateStore, backends.DeadLetter, nil)
 	require.NoError(t, err)
 
 	// Processor that always fails
@@ -280,7 +280,7 @@ func testDLQMixedSuccessFailure(t *testing.T, driver interface{}, caps framework
 	c, err := consumer.New(consumerConfig)
 	require.NoError(t, err)
 
-	err = c.BindSlots(backends.MessageSource, backends.StateStore, backends.DeadLetter)
+	err = c.BindSlots(backends.MessageSource, backends.StateStore, backends.DeadLetter, nil)
 	require.NoError(t, err)
 
 	// Processor that fails on "fail-" prefix, succeeds otherwise

@@ -68,6 +68,36 @@ type PubSubMessage struct {
 	Timestamp int64
 }
 
+// ObjectStoreInterface defines operations for object/blob storage
+// Used by claim check pattern to store large payloads
+type ObjectStoreInterface interface {
+	// Put stores an object
+	Put(ctx context.Context, bucket, key string, data []byte) error
+
+	// Get retrieves an object
+	Get(ctx context.Context, bucket, key string) ([]byte, error)
+
+	// Delete removes an object
+	Delete(ctx context.Context, bucket, key string) error
+
+	// SetTTL sets object expiration
+	SetTTL(ctx context.Context, bucket, key string, ttlSeconds int) error
+
+	// Exists checks if object exists
+	Exists(ctx context.Context, bucket, key string) (bool, error)
+
+	// GetMetadata retrieves object metadata without downloading
+	GetMetadata(ctx context.Context, bucket, key string) (*ObjectMetadata, error)
+}
+
+// ObjectMetadata represents metadata about an object in storage
+type ObjectMetadata struct {
+	Size         int64
+	ContentType  string
+	LastModified int64 // Unix timestamp
+	ETag         string
+}
+
 // NOTE: InterfaceSupport interface removed - interfaces are now declared
 // at registration time via InterfaceDeclaration in the lifecycle protocol.
 // See proto/prism/interfaces/lifecycle.proto for the new declaration format.
