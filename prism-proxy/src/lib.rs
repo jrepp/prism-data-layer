@@ -23,9 +23,5 @@ pub type Result<T> = anyhow::Result<T>;
 
 #[cfg(test)]
 mod tests {
-    #[test]
-    fn test_library_compiles() {
-        // Basic smoke test to ensure library compiles
-        assert!(true);
-    }
+    // Library compilation is verified by running any test
 }

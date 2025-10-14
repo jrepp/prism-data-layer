@@ -54,6 +54,8 @@ pub struct Pattern {
     client: Option<PatternClient>,
     /// Pattern configuration
     config: serde_json::Value,
+    /// Interface declarations (received during initialization)
+    interfaces: Vec<crate::proto::interfaces::InterfaceDeclaration>,
 }
 
 impl Pattern {
@@ -68,6 +70,7 @@ impl Pattern {
             grpc_endpoint: None,
             client: None,
             config: serde_json::json!({}),
+            interfaces: Vec::new(),
         }
     }
 
@@ -88,6 +91,11 @@ impl Pattern {
             self.status,
             PatternStatus::Running | PatternStatus::Degraded
         )
+    }
+
+    /// Get interface declarations for this pattern
+    pub fn interfaces(&self) -> &[crate::proto::interfaces::InterfaceDeclaration] {
+        &self.interfaces
     }
 
     /// Spawn the pattern process
@@ -224,7 +232,7 @@ impl Pattern {
                 "initializing pattern via gRPC"
             );
 
-            client
+            let metadata = client
                 .initialize(self.name.clone(), self.version.clone(), self.config.clone())
                 .await
                 .map_err(|e| {
@@ -236,10 +244,34 @@ impl Pattern {
                     e
                 })?;
 
-            tracing::info!(
-                pattern = %self.name,
-                "pattern initialized successfully"
-            );
+            // Capture interface declarations from metadata
+            if let Some(metadata) = metadata {
+                self.version = metadata.version;
+                self.interfaces = metadata.interfaces;
+
+                tracing::info!(
+                    pattern = %self.name,
+                    version = %self.version,
+                    interface_count = self.interfaces.len(),
+                    "pattern initialized successfully with interface declarations"
+                );
+
+                // Log each interface declaration for debugging
+                for interface in &self.interfaces {
+                    tracing::debug!(
+                        pattern = %self.name,
+                        interface = %interface.name,
+                        proto_file = %interface.proto_file,
+                        version = %interface.version,
+                        "registered interface"
+                    );
+                }
+            } else {
+                tracing::warn!(
+                    pattern = %self.name,
+                    "pattern initialized but returned no metadata"
+                );
+            }
 
             Ok(())
         } else {

@@ -29,12 +29,13 @@ impl PatternClient {
     }
 
     /// Initialize the pattern
+    /// Returns pattern metadata including interface declarations
     pub async fn initialize(
         &mut self,
         name: String,
         version: String,
         config: serde_json::Value,
-    ) -> crate::Result<()> {
+    ) -> crate::Result<Option<crate::proto::interfaces::PatternMetadata>> {
         // Convert serde_json::Value to prost_types::Struct
         let config_struct = json_value_to_prost_struct(config)?;
 
@@ -51,7 +52,7 @@ impl PatternClient {
             anyhow::bail!("Initialize failed: {}", init_response.error);
         }
 
-        Ok(())
+        Ok(init_response.metadata)
     }
 
     /// Start the pattern

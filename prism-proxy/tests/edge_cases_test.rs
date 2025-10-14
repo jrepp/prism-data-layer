@@ -11,7 +11,7 @@ use prism_proxy::{PatternManager, PatternStatus};
 use std::path::PathBuf;
 use std::sync::Arc;
 use std::time::Duration;
-use tokio::time::{sleep, timeout};
+use tokio::time::timeout;
 
 // Helper to create a non-existent binary path
 fn nonexistent_binary() -> PathBuf {
