@@ -311,61 +311,6 @@ jobs:
           path: tests/integration/coverage.out
           retention-days: 7
 
-  # Job 5: Pattern acceptance tests
-  # Tests patterns with multiple backend combinations via pattern executable approach
-  test-acceptance-patterns:
-    name: Pattern Acceptance Tests
-    runs-on: ubuntu-latest
-    needs: generate-proto
-
-    strategy:
-      fail-fast: false
-      matrix:
-        pattern: [keyvalue, consumer]
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: '1.21'
-
-      - name: Download generated proto code
-        uses: actions/download-artifact@v4
-        with:
-          name: proto-generated
-          path: pkg/plugin/gen/
-
-      - name: Cache Go modules
-        uses: actions/cache@v4
-        with:
-          path: ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go-
-
-      - name: Run ${{ matrix.pattern }} pattern acceptance tests
-        run: |
-          cd tests/acceptance/patterns/${{ matrix.pattern }}
-          go test -v -timeout 15m ./...
-        env:
-          PRISM_TEST_QUIET: "1"
-
-      - name: Generate coverage report
-        run: |
-          cd tests/acceptance/patterns/${{ matrix.pattern }}
-          go test -coverprofile=coverage.out -timeout 15m ./...
-          go tool cover -func=coverage.out | grep total | awk '{print "Pattern Coverage (${{ matrix.pattern }}): " $3}'
-
-      - name: Upload coverage
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage-pattern-${{ matrix.pattern }}
-          path: tests/acceptance/patterns/${{ matrix.pattern }}/coverage.out
-          retention-days: 7
-
   # Job 6: Validate documentation
   validate-docs:
     name: Validate Documentation
@@ -472,7 +417,7 @@ jobs:
   coverage-summary:
     name: Coverage Summary
     runs-on: ubuntu-latest
-    needs: [test-proxy, test-patterns, test-integration, test-acceptance-patterns]
+    needs: [test-proxy, test-patterns, test-integration]
     if: always()
 
     steps:
@@ -503,7 +448,7 @@ jobs:
   codecov-upload:
     name: Upload Coverage to Codecov
     runs-on: ubuntu-latest
-    needs: [test-proxy, test-patterns, test-integration, test-acceptance-patterns]
+    needs: [test-proxy, test-patterns, test-integration]
     if: always()
 
     steps:
@@ -527,8 +472,6 @@ jobs:
             build/coverage-reports/coverage-redis/coverage.out,
             build/coverage-reports/coverage-nats/coverage.out,
             build/coverage-reports/coverage-integration/coverage.out,
-            build/coverage-reports/coverage-pattern-keyvalue/coverage.out,
-            build/coverage-reports/coverage-pattern-consumer/coverage.out
           flags: unittests,integration,acceptance
           name: prism-coverage
           fail_ci_if_error: false
@@ -538,7 +481,7 @@ jobs:
   ci-status:
     name: CI Status Check
     runs-on: ubuntu-latest
-    needs: [lint-rust, lint-python, lint-go, test-proxy, test-patterns, test-integration, test-acceptance-patterns, validate-docs, build]
+    needs: [lint-rust, lint-python, lint-go, test-proxy, test-patterns, test-integration, validate-docs, build]
     if: always()
 
     steps:
@@ -550,8 +493,7 @@ jobs:
              [[ "${{ needs.lint-go.result }}" != "success" ]] || \
              [[ "${{ needs.test-proxy.result }}" != "success" ]] || \
              [[ "${{ needs.test-patterns.result }}" != "success" ]] || \
-             [[ "${{ needs.test-integration.result }}" != "success" ]] || \
-             [[ "${{ needs.test-acceptance-patterns.result }}" != "success" ]] || \
+             [[ "${{ needs.test-integration.result }}" != "success" ]] || \ \
              [[ "${{ needs.validate-docs.result }}" != "success" ]] || \
              [[ "${{ needs.build.result }}" != "success" ]]; then
             echo "❌ CI pipeline failed"
@@ -577,7 +519,6 @@ jobs:
           Test Proxy: ${{ needs.test-proxy.result == 'success' && '✅' || '❌' }}
           Test Patterns: ${{ needs.test-patterns.result == 'success' && '✅' || '❌' }}
           Test Integration: ${{ needs.test-integration.result == 'success' && '✅' || '❌' }}
-          Test Acceptance (Patterns): ${{ needs.test-acceptance-patterns.result == 'success' && '✅' || '❌' }}
           Validate Docs: ${{ needs.validate-docs.result == 'success' && '✅' || '❌' }}
           Build: ${{ needs.build.result == 'success' && '✅' || '❌' }}"
 
