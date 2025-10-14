@@ -15,6 +15,10 @@ type SlotConfig struct {
 	// StateStore stores producer state (deduplication, sequence numbers).
 	// Required interface: KeyValueBasicInterface
 	StateStore SlotBinding `json:"state_store" yaml:"state_store"`
+
+	// ObjectStore stores large payloads for claim check pattern (optional).
+	// Required interface: ObjectStoreInterface
+	ObjectStore SlotBinding `json:"object_store,omitempty" yaml:"object_store,omitempty"`
 }
 
 // SlotBinding connects a pattern slot to a backend driver.
@@ -67,6 +71,27 @@ type BehaviorConfig struct {
 
 	// OrderingKey field name for maintaining message order (Kafka partition key, etc.).
 	OrderingKey string `json:"ordering_key,omitempty" yaml:"ordering_key,omitempty"`
+
+	// ClaimCheck configuration for large payload handling.
+	ClaimCheck *ClaimCheckConfig `json:"claim_check,omitempty" yaml:"claim_check,omitempty"`
+}
+
+// ClaimCheckConfig controls claim check pattern behavior for large payloads.
+type ClaimCheckConfig struct {
+	// Enabled turns on claim check pattern.
+	Enabled bool `json:"enabled" yaml:"enabled"`
+
+	// Threshold in bytes - payloads larger than this use claim check.
+	Threshold int64 `json:"threshold" yaml:"threshold"`
+
+	// Bucket is the object store bucket name.
+	Bucket string `json:"bucket" yaml:"bucket"`
+
+	// TTL in seconds - how long claim is valid (0 = no expiration).
+	TTL int `json:"ttl,omitempty" yaml:"ttl,omitempty"`
+
+	// Compression algorithm ("none", "gzip", "zstd").
+	Compression string `json:"compression,omitempty" yaml:"compression,omitempty"`
 }
 
 // Validate checks if the configuration is valid.

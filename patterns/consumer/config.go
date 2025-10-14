@@ -16,6 +16,10 @@ type SlotConfig struct {
 	// DeadLetterQueue (optional) stores messages that fail processing.
 	// Required interface: QueueInterface
 	DeadLetterQueue *SlotBinding `json:"dead_letter_queue,omitempty" yaml:"dead_letter_queue,omitempty"`
+
+	// ObjectStore retrieves large payloads for claim check pattern (optional).
+	// Required interface: ObjectStoreInterface
+	ObjectStore *SlotBinding `json:"object_store,omitempty" yaml:"object_store,omitempty"`
 }
 
 // SlotBinding connects a pattern slot to a backend driver.
@@ -59,6 +63,18 @@ type BehaviorConfig struct {
 
 	// CommitInterval for automatic commits (if AutoCommit=true).
 	CommitInterval string `json:"commit_interval,omitempty" yaml:"commit_interval,omitempty"`
+
+	// ClaimCheck configuration for large payload handling.
+	ClaimCheck *ClaimCheckConfig `json:"claim_check,omitempty" yaml:"claim_check,omitempty"`
+}
+
+// ClaimCheckConfig controls claim check pattern behavior for large payloads.
+type ClaimCheckConfig struct {
+	// Enabled turns on claim check pattern.
+	Enabled bool `json:"enabled" yaml:"enabled"`
+
+	// DeleteAfterRead removes claim from object store after successful retrieval.
+	DeleteAfterRead bool `json:"delete_after_read,omitempty" yaml:"delete_after_read,omitempty"`
 }
 
 // Validate checks if the configuration is valid.

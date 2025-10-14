@@ -68,6 +68,7 @@ require (
 	github.com/jackc/pgx/v5 v5.7.3 // indirect
 	github.com/jackc/puddle/v2 v2.2.2 // indirect
 	github.com/jrepp/prism-data-layer/pkg/drivers/memstore v0.0.0 // indirect
+	github.com/jrepp/prism-data-layer/pkg/patterns/common v0.0.0 // indirect
 	github.com/klauspost/compress v1.18.0 // indirect
 	github.com/lufia/plan9stats v0.0.0-20211012122336-39d0f177ccd0 // indirect
 	github.com/magiconair/properties v1.8.10 // indirect
@@ -121,6 +122,7 @@ replace (
 	github.com/jrepp/prism-data-layer/pkg/drivers/postgres => ../../pkg/drivers/postgres
 	github.com/jrepp/prism-data-layer/pkg/drivers/redis => ../../pkg/drivers/redis
 	github.com/jrepp/prism-data-layer/pkg/drivers/s3 => ../../pkg/drivers/s3
+	github.com/jrepp/prism-data-layer/pkg/patterns/common => ../../pkg/patterns/common
 	github.com/jrepp/prism-data-layer/pkg/plugin => ../../pkg/plugin
 	github.com/jrepp/prism-data-layer/tests/testing => ../testing
 )
