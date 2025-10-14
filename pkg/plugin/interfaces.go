@@ -1,5 +1,7 @@
 package plugin
 
+import "context"
+
 // KeyValueBasicInterface defines the basic KeyValue operations
 // Maps to prism.interfaces.keyvalue.KeyValueBasicInterface proto service
 type KeyValueBasicInterface interface {
@@ -40,7 +42,24 @@ type PubSubBasicInterface interface {
 	Unsubscribe(topic string, subscriberID string) error
 }
 
-// PubSubMessage represents a pub/sub message
+// PubSubInterface defines full pub/sub operations with context support
+// Extends PubSubBasicInterface with cancellation and timeout support
+type PubSubInterface interface {
+	Publish(ctx context.Context, topic string, payload []byte, metadata map[string]string) (string, error)
+	Subscribe(ctx context.Context, topic string, subscriberID string) (<-chan *PubSubMessage, error)
+	Unsubscribe(ctx context.Context, topic string, subscriberID string) error
+}
+
+// QueueInterface defines message queue operations
+// For durable queues with explicit acknowledgment
+type QueueInterface interface {
+	Enqueue(ctx context.Context, queue string, payload []byte, metadata map[string]string) (string, error)
+	Receive(ctx context.Context, queue string) (<-chan *PubSubMessage, error)
+	Acknowledge(ctx context.Context, queue string, messageID string) error
+	Reject(ctx context.Context, queue string, messageID string, requeue bool) error
+}
+
+// PubSubMessage represents a pub/sub or queue message
 type PubSubMessage struct {
 	Topic     string
 	Payload   []byte

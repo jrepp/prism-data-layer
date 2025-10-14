@@ -1,0 +1,35 @@
+# Example configuration for NATS+Redis consumer plugin
+
+name: "order-processor"
+description: "Processes order events from NATS, stores state in Redis"
+
+slots:
+  message_source:
+    driver: "nats"
+    config:
+      url: "nats://localhost:4222"
+      max_reconnects: 10
+      reconnect_wait: "1s"
+      timeout: "5s"
+
+  state_store:
+    driver: "redis"
+    config:
+      address: "localhost:6379"
+      password: ""
+      db: 0
+      pool_size: 10
+
+  # Optional: Dead letter queue (uses same NATS connection)
+  dead_letter_queue:
+    driver: "nats"
+    config:
+      url: "nats://localhost:4222"
+
+behavior:
+  consumer_group: "order-processor-group"
+  topic: "orders.created"
+  max_retries: 3
+  batch_size: 0          # 0 = single message processing
+  auto_commit: true
+  commit_interval: "5s"

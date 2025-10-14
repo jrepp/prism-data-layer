@@ -1,0 +1,40 @@
+# Example configuration for Kafka+PostgreSQL consumer plugin
+
+name: "payment-processor"
+description: "Processes payment events from Kafka, stores state in PostgreSQL"
+
+slots:
+  message_source:
+    driver: "kafka"
+    config:
+      brokers:
+        - "localhost:9092"
+      group_id: "payment-processor-group"
+      auto_offset_reset: "earliest"
+      enable_auto_commit: false
+
+  state_store:
+    driver: "postgres"
+    config:
+      host: "localhost"
+      port: 5432
+      database: "prism"
+      user: "prism"
+      password: "prism"
+      sslmode: "disable"
+      max_connections: 20
+
+  # Optional: Dead letter queue (uses same Kafka connection)
+  dead_letter_queue:
+    driver: "kafka"
+    config:
+      brokers:
+        - "localhost:9092"
+
+behavior:
+  consumer_group: "payment-processor-group"
+  topic: "payments.pending"
+  max_retries: 5
+  batch_size: 10         # Process 10 messages at a time
+  auto_commit: false     # Manual commits for exactly-once semantics
+  commit_interval: "10s"
