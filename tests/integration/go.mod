@@ -3,8 +3,8 @@ module github.com/jrepp/prism-data-layer/tests/integration
 go 1.24.0
 
 require (
-	github.com/jrepp/prism-data-layer/patterns/core v0.0.0
-	github.com/jrepp/prism-data-layer/patterns/memstore v0.0.0
+	github.com/jrepp/prism-data-layer/pkg/drivers/memstore v0.0.0
+	github.com/jrepp/prism-data-layer/pkg/plugin v0.0.0
 	github.com/stretchr/testify v1.11.1
 	google.golang.org/grpc v1.76.0
 )
@@ -30,6 +30,6 @@ require (
 )
 
 replace (
-	github.com/jrepp/prism-data-layer/patterns/core => ../../patterns/core
-	github.com/jrepp/prism-data-layer/patterns/memstore => ../../patterns/memstore
+	github.com/jrepp/prism-data-layer/pkg/drivers/memstore => ../../pkg/drivers/memstore
+	github.com/jrepp/prism-data-layer/pkg/plugin => ../../pkg/plugin
 )
