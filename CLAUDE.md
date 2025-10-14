@@ -106,15 +106,15 @@ prism/
 │       ├── redis/         # Redis driver
 │       ├── nats/          # NATS driver
 │       ├── kafka/         # Kafka driver
-│       ├── postgres/      # PostgreSQL driver
-│       └── multicast_registry/  # Multicast registry driver
-├── backends/              # Backend pattern servers (containers)
-│   ├── memstore/          # MemStore pattern server
-│   ├── redis/             # Redis pattern server
-│   ├── nats/              # NATS pattern server
-│   ├── kafka/             # Kafka pattern server
-│   ├── postgres/          # PostgreSQL pattern server
-│   └── multicast_registry/  # Multicast registry server
+│       └── postgres/      # PostgreSQL driver
+├── backends/              # Backend servers (containers for data stores)
+│   ├── memstore/          # MemStore backend server
+│   ├── redis/             # Redis backend server
+│   ├── nats/              # NATS backend server
+│   ├── kafka/             # Kafka backend server
+│   └── postgres/          # PostgreSQL backend server
+├── patterns/              # Composite patterns (use multiple backends)
+│   └── multicast_registry/  # Multicast registry pattern (Redis + NATS)
 ├── proto/                 # Protobuf definitions (source of truth)
 ├── tooling/               # Python utilities for repo management
 ├── tests/                 # Integration and load tests

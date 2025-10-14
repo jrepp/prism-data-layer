@@ -1,4 +1,4 @@
-module github.com/prism/patterns/multicast_registry
+module github.com/jrepp/prism-data-layer/patterns/multicast_registry
 
 go 1.21
 
@@ -7,6 +7,7 @@ require (
 	github.com/nats-io/nats-server/v2 v2.10.7
 	github.com/nats-io/nats.go v1.31.0
 	github.com/redis/go-redis/v9 v9.3.0
+	github.com/jrepp/prism-data-layer/pkg/plugin v0.0.0
 )
 
 require (
@@ -24,6 +25,4 @@ require (
 	golang.org/x/time v0.5.0 // indirect
 )
 
-replace github.com/prism/patterns/core => ../core
-
-replace github.com/prism/proto/go => ../../proto/go
+replace github.com/jrepp/prism-data-layer/pkg/plugin => ../../pkg/plugin
