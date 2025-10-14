@@ -21,8 +21,8 @@ func init() {
 		SupportedPatterns: []framework.Pattern{
 			framework.PatternPubSubBasic,
 			framework.PatternPubSubFanout,
-			framework.PatternProducer,
-			framework.PatternConsumer,
+			// Note: PatternProducer and PatternConsumer are registered in their respective
+			// pattern test directories with proper backend wrappers (ProducerBackends, ConsumerBackends)
 			// Note: Core NATS doesn't guarantee ordering. Use JetStream for that.
 		},
 
