@@ -25,12 +25,12 @@ func SetupMemStore(t *testing.T, ctx context.Context) *MemStoreBackend {
 	driver := memstore.New()
 
 	// Configure with defaults (no external connection needed)
-	config := &core.Config{
-		Plugin: core.PluginConfig{
+	config := &plugin.Config{
+		Plugin: plugin.PluginConfig{
 			Name:    "memstore-test",
 			Version: "0.1.0",
 		},
-		ControlPlane: core.ControlPlaneConfig{
+		ControlPlane: plugin.ControlPlaneConfig{
 			Port: 9091, // Test port
 		},
 		Backend: map[string]any{
