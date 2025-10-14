@@ -67,11 +67,8 @@ func (c *Config) Validate() error {
 		return fmt.Errorf("consumer name is required")
 	}
 
-	if c.Slots.MessageSource.Driver == "" {
-		return fmt.Errorf("message_source slot requires a driver")
-	}
-
-	// StateStore is optional - if not provided, consumer runs in stateless mode
+	// Slots.MessageSource.Driver is optional when using direct slot binding via BindSlots()
+	// It's only required when using configuration-based initialization
 
 	if c.Behavior.ConsumerGroup == "" {
 		return fmt.Errorf("behavior.consumer_group is required")
