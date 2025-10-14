@@ -105,10 +105,14 @@ class ConsumerMatrixTester:
 
         try:
             # Load configuration
+            if self.verbose:
+                print(f"\n🔍 [VERBOSE] Loading configuration from {config.config_file}")
+
             with open(config.config_file) as f:
                 config_data = yaml.safe_load(f)
 
             if self.verbose:
+                print("🔍 [VERBOSE] Configuration loaded successfully")
                 print("\n📋 Configuration:")
                 print(yaml.dump(config_data, default_flow_style=False))
 
@@ -158,7 +162,15 @@ class ConsumerMatrixTester:
         For now, this validates the configuration structure.
         TODO: Implement actual pattern invocation via gRPC as proxy would do.
         """
+        if self.verbose:
+            print("\n🔍 [VERBOSE] Starting consumer pattern test")
+            print(f"🔍 [VERBOSE] Test mode: {config.mode}")
+            print(f"🔍 [VERBOSE] Expected backends: {', '.join(config.backends)}")
+
         # Validate configuration structure
+        if self.verbose:
+            print("\n🔍 [VERBOSE] Step 1: Validating configuration structure")
+
         if "namespaces" not in config_data:
             return {
                 "success": False,
@@ -167,7 +179,13 @@ class ConsumerMatrixTester:
 
         namespace = config_data["namespaces"][0]
 
+        if self.verbose:
+            print(f"🔍 [VERBOSE] Found namespace: {namespace.get('name', 'unnamed')}")
+
         # Validate required fields
+        if self.verbose:
+            print("🔍 [VERBOSE] Checking required fields: name, pattern, slots, behavior")
+
         required_fields = ["name", "pattern", "slots", "behavior"]
         for field in required_fields:
             if field not in namespace:
@@ -186,6 +204,14 @@ class ConsumerMatrixTester:
         # Validate slots based on mode
         slots = namespace["slots"]
 
+        if self.verbose:
+            print("\n🔍 [VERBOSE] Step 2: Validating slot configuration")
+            print(f"🔍 [VERBOSE] Slots found: {', '.join(slots.keys())}")
+            for slot_name, slot_config in slots.items():
+                backend = slot_config.get("backend", "unknown")
+                interfaces = slot_config.get("interfaces", [])
+                print(f"🔍 [VERBOSE]   - {slot_name}: backend={backend}, interfaces={interfaces}")
+
         # message_source is always required
         if "message_source" not in slots:
             return {
@@ -194,7 +220,12 @@ class ConsumerMatrixTester:
             }
 
         # Validate mode-specific requirements
+        if self.verbose:
+            print(f"\n🔍 [VERBOSE] Step 3: Validating mode-specific requirements for '{config.mode}' mode")
+
         if config.mode == "stateless":
+            if self.verbose:
+                print("🔍 [VERBOSE] Stateless mode: verifying NO state_store slot")
             # Should NOT have state_store
             if slots.get("state_store"):
                 return {
@@ -202,6 +233,8 @@ class ConsumerMatrixTester:
                     "error": "Stateless mode should not have state_store slot"
                 }
         elif config.mode == "stateful":
+            if self.verbose:
+                print("🔍 [VERBOSE] Stateful mode: verifying state_store slot exists")
             # MUST have state_store
             if "state_store" not in slots:
                 return {
@@ -209,6 +242,8 @@ class ConsumerMatrixTester:
                     "error": "Stateful mode requires state_store slot"
                 }
         elif config.mode == "full_durability":
+            if self.verbose:
+                print("🔍 [VERBOSE] Full durability mode: verifying state_store AND dead_letter_queue slots")
             # MUST have state_store and dead_letter_queue
             if "state_store" not in slots:
                 return {
@@ -222,6 +257,9 @@ class ConsumerMatrixTester:
                 }
 
         # Validate behavior configuration
+        if self.verbose:
+            print("\n🔍 [VERBOSE] Step 4: Validating behavior configuration")
+
         behavior = namespace["behavior"]
         required_behavior_fields = ["consumer_group", "topic", "max_retries"]
         for field in required_behavior_fields:
@@ -238,6 +276,59 @@ class ConsumerMatrixTester:
             print(f"  - Consumer group: {behavior['consumer_group']}")
             print(f"  - Topic: {behavior['topic']}")
 
+            # Detailed diagnostic output about what WOULD happen
+            print("\n🔍 [VERBOSE] Step 5: Consumer executable invocation (NOT YET IMPLEMENTED)")
+            print("🔍 [VERBOSE] The following steps would occur when fully implemented:")
+
+            print("\n🔍 [VERBOSE] 5.1: Check backend service availability")
+            for backend in config.backends:
+                print(f"🔍 [VERBOSE]   - Would check if {backend} service is running")
+                print(f"🔍 [VERBOSE]   - Would start {backend} if not available (via testcontainers)")
+
+            print("\n🔍 [VERBOSE] 5.2: Start consumer pattern executable")
+            print("🔍 [VERBOSE]   - Would execute: patterns/consumer/consumer")
+            print(f"🔍 [VERBOSE]   - Would pass config via stdin or file: {config.config_file}")
+            print("🔍 [VERBOSE]   - Consumer would initialize and bind slots:")
+
+            for slot_name, slot_config in slots.items():
+                backend = slot_config.get("backend", "unknown")
+                interfaces = slot_config.get("interfaces", [])
+                print(f"🔍 [VERBOSE]     * {slot_name}: {backend} driver implementing {', '.join(interfaces)}")
+
+            print("\n🔍 [VERBOSE] 5.3: Verify consumer is ready via gRPC health check")
+            print("🔍 [VERBOSE]   - Would call: grpc.Health.Check()")
+            print("🔍 [VERBOSE]   - Expected response: SERVING")
+
+            print("\n🔍 [VERBOSE] 5.4: Publish test messages to message source")
+            topic = behavior["topic"]
+            num_messages = 10
+            print(f"🔍 [VERBOSE]   - Would publish {num_messages} test messages to topic: {topic}")
+            print("🔍 [VERBOSE]   - Message format: {'id': <uuid>, 'payload': 'test-message-N', 'timestamp': <unix>}")
+
+            print("\n🔍 [VERBOSE] 5.5: Verify message consumption")
+            print(f"🔍 [VERBOSE]   - Would monitor consumer for {num_messages} consumed messages")
+            print("🔍 [VERBOSE]   - Would call: grpc.Consumer.GetMetrics()")
+            print(f"🔍 [VERBOSE]   - Expected metrics: messages_consumed={num_messages}, errors=0")
+
+            if config.mode in ["stateful", "full_durability"]:
+                print("\n🔍 [VERBOSE] 5.6: Verify state persistence (stateful mode)")
+                state_backend = slots["state_store"]["backend"]
+                print(f"🔍 [VERBOSE]   - Would check state stored in {state_backend}")
+                print(f"🔍 [VERBOSE]   - Would verify checkpoint offset: {num_messages}")
+                print("🔍 [VERBOSE]   - Would restart consumer and verify resume from checkpoint")
+
+            if config.mode == "full_durability":
+                print("\n🔍 [VERBOSE] 5.7: Test dead letter queue behavior")
+                dlq_backend = slots["dead_letter_queue"]["backend"]
+                print("🔍 [VERBOSE]   - Would publish message that triggers max retries")
+                print(f"🔍 [VERBOSE]   - Would verify message appears in DLQ ({dlq_backend})")
+                print(f"🔍 [VERBOSE]   - Max retries configured: {behavior['max_retries']}")
+
+            print("\n🔍 [VERBOSE] 5.8: Cleanup")
+            print("🔍 [VERBOSE]   - Would call: grpc.Consumer.Stop()")
+            print("🔍 [VERBOSE]   - Would verify graceful shutdown")
+            print("🔍 [VERBOSE]   - Would cleanup test resources")
+
         # TODO: Actually run the consumer pattern
         # This would involve:
         # 1. Starting backend services (NATS, Redis, etc.) if not already running
@@ -248,6 +339,9 @@ class ConsumerMatrixTester:
         # 6. Testing DLQ behavior (for full_durability mode)
 
         # For now, return success with simulated message count
+        if self.verbose:
+            print("\n🔍 [VERBOSE] Test completed (configuration validation only)")
+
         return {
             "success": True,
             "messages_processed": 10,  # Simulated
