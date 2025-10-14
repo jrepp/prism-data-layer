@@ -107,25 +107,12 @@ func (s *ProxyControlPlaneServer) ManagePattern(stream pb.ProxyControlPlane_Mana
 	// Generate instance ID
 	instanceID := fmt.Sprintf("%s-%d", register.PatternName, register.ProcessId)
 
-	// Log consumer protocol specification (RFC-030)
-	protocol := register.ConsumerProtocol
-	if protocol != nil && protocol.Metadata != nil {
-		slog.Info("[PROXY] Pattern registered with protocol",
-			"pattern", register.PatternName,
-			"instance_id", instanceID,
-			"version", register.PatternVersion,
-			"team", protocol.Metadata.Team,
-			"purpose", protocol.Metadata.Purpose,
-			"data_usage", protocol.Metadata.DataUsage.String(),
-			"pii_access", protocol.Metadata.PiiAccess.String(),
-			"retention_days", protocol.Metadata.RetentionDays,
-			"compliance", protocol.Metadata.ComplianceFrameworks)
-	} else {
-		slog.Info("[PROXY] Pattern registered",
-			"pattern", register.PatternName,
-			"instance_id", instanceID,
-			"version", register.PatternVersion)
-	}
+	// Log pattern registration
+	slog.Info("[PROXY] Pattern registered",
+		"pattern", register.PatternName,
+		"instance_id", instanceID,
+		"version", register.PatternVersion,
+		"interfaces", len(register.Metadata.Interfaces))
 
 	// Create pattern connection
 	conn := &PatternConnection{

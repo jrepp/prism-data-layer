@@ -64,7 +64,7 @@ func (c *PatternControlPlaneClient) Connect(ctx context.Context) error {
 	}
 	c.stream = stream
 
-	// Send registration with protocol specification (RFC-030)
+	// Send registration
 	registerMsg := &pb.PatternMessage{
 		CorrelationId: "register-1",
 		Message: &pb.PatternMessage_Register{
@@ -76,23 +76,6 @@ func (c *PatternControlPlaneClient) Connect(ctx context.Context) error {
 					Name:       c.plugin.Name(),
 					Version:    c.plugin.Version(),
 					Interfaces: c.plugin.GetInterfaceDeclarations(),
-				},
-				// Consumer protocol specification (RFC-030)
-				ConsumerProtocol: &pb.ConsumerProtocol{
-					Topics: []string{}, // Will be populated from config
-					SchemaExpectations: make(map[string]*pb.SchemaExpectation),
-					Metadata: &pb.ConsumerMetadata{
-						Team:                   "default-team",      // TODO: get from config
-						Purpose:                "pattern execution", // TODO: get from config
-						DataUsage:              pb.DataUsage_DATA_USAGE_OPERATIONAL,
-						PiiAccess:              pb.PIIAccess_PII_ACCESS_NOT_NEEDED, // TODO: get from config
-						RetentionDays:          30,                                 // TODO: get from config
-						ComplianceFrameworks:   []string{},                         // TODO: get from config
-						ApprovedBy:             "",                                 // TODO: get from config
-						ApprovalDate:           "",                                 // TODO: get from config
-						AccessPattern:          pb.AccessPattern_ACCESS_PATTERN_READ_ONLY,
-						RateLimit:              &pb.RateLimit{MaxMessagesPerSecond: 1000, MaxConsumers: 5},
-					},
 				},
 			},
 		},
