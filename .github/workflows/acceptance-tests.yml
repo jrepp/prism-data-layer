@@ -63,195 +63,122 @@ jobs:
           path: patterns/core/gen/
           retention-days: 1
 
-  # Parallel acceptance tests using GitHub matrix
-  acceptance-tests-matrix:
-    name: Acceptance Tests (${{ matrix.pattern }})
-    runs-on: ubuntu-latest
+  # Interfaces acceptance tests (tests all backends via framework)
+  test-interfaces:
+    uses: ./.github/workflows/acceptance-test-backend.yml
     needs: generate-proto
-    timeout-minutes: 15
+    with:
+      backend: interfaces
+      timeout-minutes: 15
 
-    strategy:
-      fail-fast: false
-      matrix:
-        pattern: [interfaces, redis, nats]
+  # Redis acceptance tests
+  test-redis:
+    uses: ./.github/workflows/acceptance-test-backend.yml
+    needs: generate-proto
+    with:
+      backend: redis
+      timeout-minutes: 15
 
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: '1.21'
-
-      - name: Download generated proto code
-        uses: actions/download-artifact@v4
-        with:
-          name: proto-generated
-          path: patterns/core/gen/
-
-      - name: Install uv
-        uses: astral-sh/setup-uv@v5
-        with:
-          version: "latest"
-
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-
-      - name: Cache Go modules
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/go/pkg/mod
-            ~/.cache/go-build
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go-
-
-      - name: Run acceptance tests for ${{ matrix.pattern }}
-        id: acceptance_tests
-        continue-on-error: true
-        run: |
-          cd tests/acceptance/${{ matrix.pattern }}
-
-          # Run tests and capture output
-          set +e
-          go test -v -timeout 10m ./... 2>&1 | tee test-output.txt
-          TEST_EXIT_CODE=$?
-          set -e
-
-          # Count passed/failed tests from output
-          TESTS_PASSED=$(grep -c "^--- PASS:" test-output.txt || echo "0")
-          TESTS_FAILED=$(grep -c "^--- FAIL:" test-output.txt || echo "0")
-
-          # Determine status
-          if [ $TEST_EXIT_CODE -eq 0 ]; then
-            STATUS="passed"
-          else
-            STATUS="failed"
-          fi
-
-          # Save results as JSON
-          mkdir -p ../../../build/acceptance-results
-
-          # Escape output for JSON (use jq with fallback)
-          if [ -f test-output.txt ]; then
-            OUTPUT_JSON=$(jq -Rs . < test-output.txt || echo '""')
-          else
-            OUTPUT_JSON='""'
-          fi
-
-          cat > ../../../build/acceptance-results/acceptance-${{ matrix.pattern }}.json <<EOF
-          {
-            "pattern": "${{ matrix.pattern }}",
-            "status": "$STATUS",
-            "exit_code": $TEST_EXIT_CODE,
-            "tests_passed": $TESTS_PASSED,
-            "tests_failed": $TESTS_FAILED,
-            "duration": 0,
-            "output": $OUTPUT_JSON
-          }
-          EOF
-
-          # Exit with test result
-          exit $TEST_EXIT_CODE
-        env:
-          PRISM_TEST_QUIET: "1"
-
-      - name: Generate coverage report
-        if: always()
-        run: |
-          cd tests/acceptance/${{ matrix.pattern }}
-          go test -coverprofile=coverage.out -timeout 10m ./...
-          go tool cover -func=coverage.out | grep total | awk '{print "Coverage: " $3}'
-
-      - name: Upload test results
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: results-acceptance-${{ matrix.pattern }}
-          path: build/acceptance-results/acceptance-${{ matrix.pattern }}.json
-          retention-days: 7
-
-      - name: Upload coverage
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage-acceptance-${{ matrix.pattern }}
-          path: tests/acceptance/${{ matrix.pattern }}/coverage.out
-          retention-days: 7
-
+  # NATS acceptance tests
+  test-nats:
+    uses: ./.github/workflows/acceptance-test-backend.yml
+    needs: generate-proto
+    with:
+      backend: nats
+      timeout-minutes: 15
 
   # Generate comprehensive summary report
   acceptance-summary:
-    name: Generate Acceptance Summary
+    name: Acceptance Summary
     runs-on: ubuntu-latest
-    needs: [acceptance-tests-matrix]
+    needs: [test-interfaces, test-redis, test-nats]
     if: always()
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install uv
-        uses: astral-sh/setup-uv@v5
-        with:
-          version: "latest"
-
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
           go-version: '1.21'
 
-      - name: Download test results
+      - name: Download all test results
         uses: actions/download-artifact@v4
         with:
-          pattern: results-acceptance-*
-          path: build/acceptance-results
+          pattern: results-*
+          path: build/test-results
 
-      - name: Download coverage reports
+      - name: Download all coverage reports
         uses: actions/download-artifact@v4
         with:
-          pattern: coverage-acceptance-*
+          pattern: coverage-*
           path: build/coverage-reports
-
-      - name: Flatten artifact directories
-        run: |
-          # Flatten nested artifact directories (GitHub Actions creates subdirs)
-          cd build/acceptance-results
-          for dir in results-acceptance-*/; do
-            if [ -d "$dir" ]; then
-              mv "$dir"*.json . || true
-              rmdir "$dir" || true
-            fi
-          done
-
-          cd ../coverage-reports
-          for dir in coverage-acceptance-*/; do
-            if [ -d "$dir" ]; then
-              # Keep directory structure for coverage files
-              backend=$(echo "$dir" | sed 's/coverage-acceptance-//' | sed 's#/##')
-              mkdir -p "coverage-acceptance-$backend"
-              mv "$dir"coverage.out "coverage-acceptance-$backend/" || true
-              rmdir "$dir" || true
-            fi
-          done
 
       - name: Generate summary report
         run: |
-          uv run tooling/acceptance_summary.py \
-            --results-dir build/acceptance-results \
-            --coverage-dir build/coverage-reports \
-            --output-file $GITHUB_STEP_SUMMARY
+          echo "# 📊 Acceptance Test Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
 
-      - name: Display summary in logs
+          # Overall status
+          INTERFACES_STATUS="${{ needs.test-interfaces.result }}"
+          REDIS_STATUS="${{ needs.test-redis.result }}"
+          NATS_STATUS="${{ needs.test-nats.result }}"
+
+          if [[ "$INTERFACES_STATUS" == "success" && "$REDIS_STATUS" == "success" && "$NATS_STATUS" == "success" ]]; then
+            echo "## ✅ All Tests Passed" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "## ❌ Some Tests Failed" >> $GITHUB_STEP_SUMMARY
+          fi
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          # Test results table
+          echo "| Backend | Status | Coverage |" >> $GITHUB_STEP_SUMMARY
+          echo "|---------|--------|----------|" >> $GITHUB_STEP_SUMMARY
+
+          # Interfaces
+          if [[ "$INTERFACES_STATUS" == "success" ]]; then
+            STATUS="✅ Pass"
+          else
+            STATUS="❌ Fail"
+          fi
+          if [ -f build/coverage-reports/coverage-interfaces/coverage.out ]; then
+            COVERAGE=$(go tool cover -func=build/coverage-reports/coverage-interfaces/coverage.out | grep total | awk '{print $3}')
+          else
+            COVERAGE="N/A"
+          fi
+          echo "| Interfaces | $STATUS | $COVERAGE |" >> $GITHUB_STEP_SUMMARY
+
+          # Redis
+          if [[ "$REDIS_STATUS" == "success" ]]; then
+            STATUS="✅ Pass"
+          else
+            STATUS="❌ Fail"
+          fi
+          if [ -f build/coverage-reports/coverage-redis/coverage.out ]; then
+            COVERAGE=$(go tool cover -func=build/coverage-reports/coverage-redis/coverage.out | grep total | awk '{print $3}')
+          else
+            COVERAGE="N/A"
+          fi
+          echo "| Redis | $STATUS | $COVERAGE |" >> $GITHUB_STEP_SUMMARY
+
+          # NATS
+          if [[ "$NATS_STATUS" == "success" ]]; then
+            STATUS="✅ Pass"
+          else
+            STATUS="❌ Fail"
+          fi
+          if [ -f build/coverage-reports/coverage-nats/coverage.out ]; then
+            COVERAGE=$(go tool cover -func=build/coverage-reports/coverage-nats/coverage.out | grep total | awk '{print $3}')
+          else
+            COVERAGE="N/A"
+          fi
+          echo "| NATS | $STATUS | $COVERAGE |" >> $GITHUB_STEP_SUMMARY
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "View detailed results in the artifacts for each job." >> $GITHUB_STEP_SUMMARY
+
+      - name: Display summary
         run: |
           echo "📊 Acceptance Test Summary:"
           cat $GITHUB_STEP_SUMMARY
@@ -260,15 +187,24 @@ jobs:
   acceptance-status:
     name: Acceptance Status Check
     runs-on: ubuntu-latest
-    needs: [acceptance-tests-matrix]
+    needs: [test-interfaces, test-redis, test-nats]
     if: always()
 
     steps:
       - name: Check acceptance test status
         run: |
-          if [[ "${{ needs.acceptance-tests-matrix.result }}" != "success" ]]; then
+          INTERFACES="${{ needs.test-interfaces.result }}"
+          REDIS="${{ needs.test-redis.result }}"
+          NATS="${{ needs.test-nats.result }}"
+
+          echo "Test Results:"
+          echo "  Interfaces: $INTERFACES"
+          echo "  Redis: $REDIS"
+          echo "  NATS: $NATS"
+
+          if [[ "$INTERFACES" != "success" || "$REDIS" != "success" || "$NATS" != "success" ]]; then
             echo "❌ Acceptance tests failed"
             exit 1
           else
-            echo "✅ Acceptance tests passed"
+            echo "✅ All acceptance tests passed"
           fi

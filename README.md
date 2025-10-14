@@ -9,9 +9,9 @@
 
 | Language Quality | Acceptance Tests (Backends) |
 |------------------|----------------------------|
-| [![Rust Clippy](https://img.shields.io/badge/rust-clippy%20checked-green?logo=rust)](https://github.com/jrepp/prism-data-layer/tree/main/proxy) | [![Interfaces Tests](https://img.shields.io/badge/interfaces-passing-green)](https://github.com/jrepp/prism-data-layer/actions/workflows/acceptance-tests.yml) |
-| [![Go Lint](https://img.shields.io/badge/go-golangci--lint%20checked-green?logo=go)](https://github.com/jrepp/prism-data-layer/tree/main/patterns) | [![Redis Tests](https://img.shields.io/badge/redis-passing-green)](https://github.com/jrepp/prism-data-layer/actions/workflows/acceptance-tests.yml) |
-|  | [![NATS Tests](https://img.shields.io/badge/nats-passing-green)](https://github.com/jrepp/prism-data-layer/actions/workflows/acceptance-tests.yml) |
+| [![Rust Clippy](https://img.shields.io/badge/rust-clippy%20checked-green?logo=rust)](https://github.com/jrepp/prism-data-layer/tree/main/proxy) | [![Test: Interfaces](https://img.shields.io/github/actions/workflow/status/jrepp/prism-data-layer/acceptance-tests.yml?label=interfaces&logo=testing-library)](https://github.com/jrepp/prism-data-layer/actions/workflows/acceptance-tests.yml) |
+| [![Go Lint](https://img.shields.io/badge/go-golangci--lint%20checked-green?logo=go)](https://github.com/jrepp/prism-data-layer/tree/main/patterns) | [![Test: Redis](https://img.shields.io/github/actions/workflow/status/jrepp/prism-data-layer/acceptance-tests.yml?label=redis&logo=redis)](https://github.com/jrepp/prism-data-layer/actions/workflows/acceptance-tests.yml) |
+|  | [![Test: NATS](https://img.shields.io/github/actions/workflow/status/jrepp/prism-data-layer/acceptance-tests.yml?label=nats&logo=nats)](https://github.com/jrepp/prism-data-layer/actions/workflows/acceptance-tests.yml) |
 
 **[📖 Documentation](https://jrepp.github.io/prism-data-layer/)** | [Architecture](https://jrepp.github.io/prism-data-layer/docs/intro) | [ADRs](https://jrepp.github.io/prism-data-layer/adr) | [RFCs](https://jrepp.github.io/prism-data-layer/rfc)
 
