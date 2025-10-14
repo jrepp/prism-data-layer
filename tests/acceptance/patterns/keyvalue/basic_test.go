@@ -64,7 +64,7 @@ func TestKeyValueBasicPattern(t *testing.T) {
 
 // testSetAndGet verifies basic Set and Get operations
 func testSetAndGet(t *testing.T, driver interface{}, caps framework.Capabilities) {
-	kv := driver.(core.KeyValueBasicInterface)
+	kv := driver.(plugin.KeyValueBasicInterface)
 
 	key := fmt.Sprintf("%s:test-key", t.Name())
 	value := []byte("test-value")
@@ -82,7 +82,7 @@ func testSetAndGet(t *testing.T, driver interface{}, caps framework.Capabilities
 
 // testGetNonExistent verifies Get behavior for non-existent keys
 func testGetNonExistent(t *testing.T, driver interface{}, caps framework.Capabilities) {
-	kv := driver.(core.KeyValueBasicInterface)
+	kv := driver.(plugin.KeyValueBasicInterface)
 
 	key := fmt.Sprintf("%s:non-existent", t.Name())
 
@@ -94,7 +94,7 @@ func testGetNonExistent(t *testing.T, driver interface{}, caps framework.Capabil
 
 // testOverwrite verifies that Set can overwrite existing keys
 func testOverwrite(t *testing.T, driver interface{}, caps framework.Capabilities) {
-	kv := driver.(core.KeyValueBasicInterface)
+	kv := driver.(plugin.KeyValueBasicInterface)
 
 	key := fmt.Sprintf("%s:overwrite", t.Name())
 
@@ -115,7 +115,7 @@ func testOverwrite(t *testing.T, driver interface{}, caps framework.Capabilities
 
 // testBinaryData verifies that binary data is stored correctly
 func testBinaryData(t *testing.T, driver interface{}, caps framework.Capabilities) {
-	kv := driver.(core.KeyValueBasicInterface)
+	kv := driver.(plugin.KeyValueBasicInterface)
 
 	key := fmt.Sprintf("%s:binary", t.Name())
 	binaryData := []byte{0x00, 0x01, 0x02, 0xFF, 0xFE, 0xFD}
@@ -131,7 +131,7 @@ func testBinaryData(t *testing.T, driver interface{}, caps framework.Capabilitie
 
 // testEmptyValue verifies that empty values can be stored
 func testEmptyValue(t *testing.T, driver interface{}, caps framework.Capabilities) {
-	kv := driver.(core.KeyValueBasicInterface)
+	kv := driver.(plugin.KeyValueBasicInterface)
 
 	key := fmt.Sprintf("%s:empty", t.Name())
 	emptyValue := []byte{}
@@ -147,7 +147,7 @@ func testEmptyValue(t *testing.T, driver interface{}, caps framework.Capabilitie
 
 // testLargeValue verifies that large values can be stored
 func testLargeValue(t *testing.T, driver interface{}, caps framework.Capabilities) {
-	kv := driver.(core.KeyValueBasicInterface)
+	kv := driver.(plugin.KeyValueBasicInterface)
 
 	key := fmt.Sprintf("%s:large", t.Name())
 
@@ -174,7 +174,7 @@ func testLargeValue(t *testing.T, driver interface{}, caps framework.Capabilitie
 
 // testDeleteExisting verifies that existing keys can be deleted
 func testDeleteExisting(t *testing.T, driver interface{}, caps framework.Capabilities) {
-	kv := driver.(core.KeyValueBasicInterface)
+	kv := driver.(plugin.KeyValueBasicInterface)
 
 	key := fmt.Sprintf("%s:to-delete", t.Name())
 
@@ -194,7 +194,7 @@ func testDeleteExisting(t *testing.T, driver interface{}, caps framework.Capabil
 
 // testDeleteNonExistent verifies that deleting non-existent keys doesn't error
 func testDeleteNonExistent(t *testing.T, driver interface{}, caps framework.Capabilities) {
-	kv := driver.(core.KeyValueBasicInterface)
+	kv := driver.(plugin.KeyValueBasicInterface)
 
 	key := fmt.Sprintf("%s:never-existed", t.Name())
 
@@ -205,7 +205,7 @@ func testDeleteNonExistent(t *testing.T, driver interface{}, caps framework.Capa
 
 // testExistsTrue verifies that Exists returns true for existing keys
 func testExistsTrue(t *testing.T, driver interface{}, caps framework.Capabilities) {
-	kv := driver.(core.KeyValueBasicInterface)
+	kv := driver.(plugin.KeyValueBasicInterface)
 
 	key := fmt.Sprintf("%s:exists", t.Name())
 
@@ -221,7 +221,7 @@ func testExistsTrue(t *testing.T, driver interface{}, caps framework.Capabilitie
 
 // testExistsFalse verifies that Exists returns false for non-existent keys
 func testExistsFalse(t *testing.T, driver interface{}, caps framework.Capabilities) {
-	kv := driver.(core.KeyValueBasicInterface)
+	kv := driver.(plugin.KeyValueBasicInterface)
 
 	key := fmt.Sprintf("%s:does-not-exist", t.Name())
 

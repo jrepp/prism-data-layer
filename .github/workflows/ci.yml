@@ -311,15 +311,17 @@ jobs:
           path: tests/integration/coverage.out
           retention-days: 7
 
-  # Job 5: Acceptance tests (with Docker containers)
-  test-acceptance:
-    name: Acceptance Tests
+  # Job 5: Pattern acceptance tests
+  # Tests patterns with multiple backend combinations via pattern executable approach
+  test-acceptance-patterns:
+    name: Pattern Acceptance Tests
     runs-on: ubuntu-latest
     needs: generate-proto
 
     strategy:
+      fail-fast: false
       matrix:
-        suite: [interfaces, redis, nats]
+        pattern: [keyvalue, consumer]
 
     steps:
       - name: Checkout
@@ -334,24 +336,34 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: proto-generated
-          path: patterns/core/gen/
+          path: pkg/plugin/gen/
 
-      - name: Run ${{ matrix.suite }} acceptance tests
-        run: cd tests/acceptance/${{ matrix.suite }} && go test -v -timeout 10m ./...
+      - name: Cache Go modules
+        uses: actions/cache@v4
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
+      - name: Run ${{ matrix.pattern }} pattern acceptance tests
+        run: |
+          cd tests/acceptance/patterns/${{ matrix.pattern }}
+          go test -v -timeout 15m ./...
         env:
           PRISM_TEST_QUIET: "1"
 
       - name: Generate coverage report
         run: |
-          cd tests/acceptance/${{ matrix.suite }}
-          go test -coverprofile=coverage.out -timeout 10m ./...
-          go tool cover -func=coverage.out | grep total | awk '{print "Acceptance Coverage (${{ matrix.suite }}): " $3}'
+          cd tests/acceptance/patterns/${{ matrix.pattern }}
+          go test -coverprofile=coverage.out -timeout 15m ./...
+          go tool cover -func=coverage.out | grep total | awk '{print "Pattern Coverage (${{ matrix.pattern }}): " $3}'
 
       - name: Upload coverage
         uses: actions/upload-artifact@v4
         with:
-          name: coverage-acceptance-${{ matrix.suite }}
-          path: tests/acceptance/${{ matrix.suite }}/coverage.out
+          name: coverage-pattern-${{ matrix.pattern }}
+          path: tests/acceptance/patterns/${{ matrix.pattern }}/coverage.out
           retention-days: 7
 
   # Job 6: Validate documentation
@@ -460,7 +472,7 @@ jobs:
   coverage-summary:
     name: Coverage Summary
     runs-on: ubuntu-latest
-    needs: [test-proxy, test-patterns, test-integration, test-acceptance]
+    needs: [test-proxy, test-patterns, test-integration, test-acceptance-patterns]
     if: always()
 
     steps:
@@ -491,7 +503,7 @@ jobs:
   codecov-upload:
     name: Upload Coverage to Codecov
     runs-on: ubuntu-latest
-    needs: [test-proxy, test-patterns, test-integration, test-acceptance]
+    needs: [test-proxy, test-patterns, test-integration, test-acceptance-patterns]
     if: always()
 
     steps:
@@ -515,19 +527,18 @@ jobs:
             build/coverage-reports/coverage-redis/coverage.out,
             build/coverage-reports/coverage-nats/coverage.out,
             build/coverage-reports/coverage-integration/coverage.out,
-            build/coverage-reports/coverage-acceptance-interfaces/coverage.out,
-            build/coverage-reports/coverage-acceptance-redis/coverage.out,
-            build/coverage-reports/coverage-acceptance-nats/coverage.out
+            build/coverage-reports/coverage-pattern-keyvalue/coverage.out,
+            build/coverage-reports/coverage-pattern-consumer/coverage.out
           flags: unittests,integration,acceptance
           name: prism-coverage
           fail_ci_if_error: false
           verbose: true
 
-  # Job 9: CI status check (required for merge)
+  # Job 10: CI status check (required for merge)
   ci-status:
     name: CI Status Check
     runs-on: ubuntu-latest
-    needs: [lint-rust, lint-python, lint-go, test-proxy, test-patterns, test-integration, test-acceptance, validate-docs, build]
+    needs: [lint-rust, lint-python, lint-go, test-proxy, test-patterns, test-integration, test-acceptance-patterns, validate-docs, build]
     if: always()
 
     steps:
@@ -540,7 +551,7 @@ jobs:
              [[ "${{ needs.test-proxy.result }}" != "success" ]] || \
              [[ "${{ needs.test-patterns.result }}" != "success" ]] || \
              [[ "${{ needs.test-integration.result }}" != "success" ]] || \
-             [[ "${{ needs.test-acceptance.result }}" != "success" ]] || \
+             [[ "${{ needs.test-acceptance-patterns.result }}" != "success" ]] || \
              [[ "${{ needs.validate-docs.result }}" != "success" ]] || \
              [[ "${{ needs.build.result }}" != "success" ]]; then
             echo "❌ CI pipeline failed"
@@ -566,7 +577,7 @@ jobs:
           Test Proxy: ${{ needs.test-proxy.result == 'success' && '✅' || '❌' }}
           Test Patterns: ${{ needs.test-patterns.result == 'success' && '✅' || '❌' }}
           Test Integration: ${{ needs.test-integration.result == 'success' && '✅' || '❌' }}
-          Test Acceptance: ${{ needs.test-acceptance.result == 'success' && '✅' || '❌' }}
+          Test Acceptance (Patterns): ${{ needs.test-acceptance-patterns.result == 'success' && '✅' || '❌' }}
           Validate Docs: ${{ needs.validate-docs.result == 'success' && '✅' || '❌' }}
           Build: ${{ needs.build.result == 'success' && '✅' || '❌' }}"
 

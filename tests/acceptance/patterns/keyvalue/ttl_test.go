@@ -44,7 +44,7 @@ func TestKeyValueTTLPattern(t *testing.T) {
 
 // testSetWithTTL verifies that keys can be set with expiration
 func testSetWithTTL(t *testing.T, driver interface{}, caps framework.Capabilities) {
-	kv := driver.(core.KeyValueBasicInterface)
+	kv := driver.(plugin.KeyValueBasicInterface)
 
 	key := fmt.Sprintf("%s:with-ttl", t.Name())
 	value := []byte("expiring-value")
@@ -67,7 +67,7 @@ func testSetWithTTL(t *testing.T, driver interface{}, caps framework.Capabilitie
 
 // testTTLExpiration verifies that keys expire after TTL
 func testTTLExpiration(t *testing.T, driver interface{}, caps framework.Capabilities) {
-	kv := driver.(core.KeyValueBasicInterface)
+	kv := driver.(plugin.KeyValueBasicInterface)
 
 	key := fmt.Sprintf("%s:expires", t.Name())
 	value := []byte("short-lived")
@@ -98,7 +98,7 @@ func testTTLExpiration(t *testing.T, driver interface{}, caps framework.Capabili
 
 // testZeroTTLNoExpiration verifies that TTL=0 means no expiration
 func testZeroTTLNoExpiration(t *testing.T, driver interface{}, caps framework.Capabilities) {
-	kv := driver.(core.KeyValueBasicInterface)
+	kv := driver.(plugin.KeyValueBasicInterface)
 
 	key := fmt.Sprintf("%s:no-expiration", t.Name())
 	value := []byte("permanent")
@@ -123,7 +123,7 @@ func testZeroTTLNoExpiration(t *testing.T, driver interface{}, caps framework.Ca
 
 // testOverwriteResetsExpiration verifies that overwriting a key resets its TTL
 func testOverwriteResetsExpiration(t *testing.T, driver interface{}, caps framework.Capabilities) {
-	kv := driver.(core.KeyValueBasicInterface)
+	kv := driver.(plugin.KeyValueBasicInterface)
 
 	key := fmt.Sprintf("%s:reset-ttl", t.Name())
 

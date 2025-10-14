@@ -40,7 +40,7 @@ func TestKeyValueConcurrency(t *testing.T) {
 
 // testConcurrentWrites verifies that concurrent writes to different keys don't corrupt data
 func testConcurrentWrites(t *testing.T, driver interface{}, caps framework.Capabilities) {
-	kv := driver.(core.KeyValueBasicInterface)
+	kv := driver.(plugin.KeyValueBasicInterface)
 
 	const numWorkers = 10
 	const opsPerWorker = 10
@@ -92,7 +92,7 @@ func testConcurrentWrites(t *testing.T, driver interface{}, caps framework.Capab
 
 // testConcurrentReads verifies that concurrent reads of the same key work correctly
 func testConcurrentReads(t *testing.T, driver interface{}, caps framework.Capabilities) {
-	kv := driver.(core.KeyValueBasicInterface)
+	kv := driver.(plugin.KeyValueBasicInterface)
 
 	key := fmt.Sprintf("%s:shared", t.Name())
 	expectedValue := []byte("shared-value")
@@ -140,7 +140,7 @@ func testConcurrentReads(t *testing.T, driver interface{}, caps framework.Capabi
 
 // testConcurrentReadWrite verifies that concurrent reads and writes don't cause data corruption
 func testConcurrentReadWrite(t *testing.T, driver interface{}, caps framework.Capabilities) {
-	kv := driver.(core.KeyValueBasicInterface)
+	kv := driver.(plugin.KeyValueBasicInterface)
 
 	key := fmt.Sprintf("%s:rw", t.Name())
 
@@ -217,7 +217,7 @@ func testConcurrentReadWrite(t *testing.T, driver interface{}, caps framework.Ca
 
 // testConcurrentDeleteNoRace verifies that concurrent deletes don't cause race conditions
 func testConcurrentDeleteNoRace(t *testing.T, driver interface{}, caps framework.Capabilities) {
-	kv := driver.(core.KeyValueBasicInterface)
+	kv := driver.(plugin.KeyValueBasicInterface)
 
 	key := fmt.Sprintf("%s:delete-race", t.Name())
 

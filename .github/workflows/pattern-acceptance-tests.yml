@@ -1,0 +1,306 @@
+name: Pattern Acceptance Tests
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'patterns/**'
+      - 'pkg/drivers/**'
+      - 'pkg/plugin/**'
+      - 'tests/acceptance/patterns/**'
+      - 'tests/acceptance/framework/**'
+      - 'tests/acceptance/suites/**'
+      - '.github/workflows/pattern-acceptance-tests.yml'
+      - '.github/workflows/acceptance-test-pattern.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'patterns/**'
+      - 'pkg/drivers/**'
+      - 'pkg/plugin/**'
+      - 'tests/acceptance/patterns/**'
+      - 'tests/acceptance/framework/**'
+      - 'tests/acceptance/suites/**'
+      - '.github/workflows/pattern-acceptance-tests.yml'
+      - '.github/workflows/acceptance-test-pattern.yml'
+  workflow_dispatch:  # Allow manual trigger
+
+# Cancel in-progress runs for the same PR/branch
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # Generate protobuf code (required for all patterns)
+  generate-proto:
+    name: Generate Protobuf Code
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+
+      - name: Setup protoc
+        uses: arduino/setup-protoc@v3
+        with:
+          version: '25.x'
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install protoc-gen-go
+        run: |
+          go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
+          go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
+
+      - name: Install buf
+        uses: bufbuild/buf-setup-action@v1
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Generate protobuf code
+        run: make proto-go
+
+      - name: Upload generated proto code
+        uses: actions/upload-artifact@v4
+        with:
+          name: proto-generated
+          path: pkg/plugin/gen/
+          retention-days: 1
+
+  # Test KeyValue pattern with multiple backends
+  test-keyvalue-pattern:
+    name: KeyValue Pattern
+    needs: generate-proto
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+
+      - name: Download generated proto code
+        uses: actions/download-artifact@v4
+        with:
+          name: proto-generated
+          path: pkg/plugin/gen/
+
+      - name: Cache Go modules
+        uses: actions/cache@v4
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
+      - name: Run KeyValue pattern tests
+        run: |
+          cd tests/acceptance/patterns/keyvalue
+          go test -v -timeout 15m ./...
+        env:
+          PRISM_TEST_QUIET: "1"
+
+      - name: Generate coverage
+        run: |
+          cd tests/acceptance/patterns/keyvalue
+          go test -coverprofile=coverage.out -timeout 15m ./...
+          go tool cover -func=coverage.out | tee coverage.txt
+          COVERAGE=$(grep total coverage.txt | awk '{print $3}')
+          echo "KEYVALUE_COVERAGE=$COVERAGE" >> $GITHUB_ENV
+
+      - name: Upload coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-pattern-keyvalue
+          path: tests/acceptance/patterns/keyvalue/coverage.out
+          retention-days: 7
+
+      - name: Add test summary
+        if: always()
+        run: |
+          STATUS="${{ job.status == 'success' && '✅ Pass' || '❌ Fail' }}"
+          {
+            echo "## KeyValue Pattern Tests"
+            echo "| Backend | Status | Coverage |"
+            echo "|---------|--------|----------|"
+            echo "| MemStore | $STATUS | ${{ env.KEYVALUE_COVERAGE }} |"
+            echo "| Redis | $STATUS | ${{ env.KEYVALUE_COVERAGE }} |"
+          } >> $GITHUB_STEP_SUMMARY
+
+  # Test Consumer pattern with multiple backends
+  test-consumer-pattern:
+    name: Consumer Pattern
+    needs: generate-proto
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+
+      - name: Download generated proto code
+        uses: actions/download-artifact@v4
+        with:
+          name: proto-generated
+          path: pkg/plugin/gen/
+
+      - name: Cache Go modules
+        uses: actions/cache@v4
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
+      - name: Run Consumer pattern tests
+        run: |
+          cd tests/acceptance/patterns/consumer
+          go test -v -timeout 15m ./...
+        env:
+          PRISM_TEST_QUIET: "1"
+
+      - name: Generate coverage
+        run: |
+          cd tests/acceptance/patterns/consumer
+          go test -coverprofile=coverage.out -timeout 15m ./...
+          go tool cover -func=coverage.out | tee coverage.txt
+          COVERAGE=$(grep total coverage.txt | awk '{print $3}')
+          echo "CONSUMER_COVERAGE=$COVERAGE" >> $GITHUB_ENV
+
+      - name: Upload coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-pattern-consumer
+          path: tests/acceptance/patterns/consumer/coverage.out
+          retention-days: 7
+
+      - name: Add test summary
+        if: always()
+        run: |
+          STATUS="${{ job.status == 'success' && '✅ Pass' || '❌ Fail' }}"
+          {
+            echo "## Consumer Pattern Tests"
+            echo "| Backend Combination | Status | Coverage |"
+            echo "|---------------------|--------|----------|"
+            echo "| NATS + MemStore | $STATUS | ${{ env.CONSUMER_COVERAGE }} |"
+            echo "| NATS + Redis | $STATUS | ${{ env.CONSUMER_COVERAGE }} |"
+          } >> $GITHUB_STEP_SUMMARY
+
+  # Generate comprehensive summary for all pattern tests
+  pattern-acceptance-summary:
+    name: Pattern Acceptance Summary
+    runs-on: ubuntu-latest
+    needs: [test-keyvalue-pattern, test-consumer-pattern]
+    if: always()
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+
+      - name: Download all coverage reports
+        uses: actions/download-artifact@v4
+        with:
+          pattern: coverage-pattern-*
+          path: build/coverage-reports
+
+      - name: Generate summary report
+        run: |
+          KEYVALUE_STATUS="${{ needs.test-keyvalue-pattern.result }}"
+          CONSUMER_STATUS="${{ needs.test-consumer-pattern.result }}"
+
+          # KeyValue
+          if [[ "$KEYVALUE_STATUS" == "success" ]]; then
+            KEYVALUE_STATUS_TEXT="✅ Pass"
+          else
+            KEYVALUE_STATUS_TEXT="❌ Fail"
+          fi
+          if [ -f build/coverage-reports/coverage-pattern-keyvalue/coverage.out ]; then
+            KEYVALUE_COVERAGE=$(go tool cover -func=build/coverage-reports/coverage-pattern-keyvalue/coverage.out | grep total | awk '{print $3}')
+          else
+            KEYVALUE_COVERAGE="N/A"
+          fi
+
+          # Consumer
+          if [[ "$CONSUMER_STATUS" == "success" ]]; then
+            CONSUMER_STATUS_TEXT="✅ Pass"
+          else
+            CONSUMER_STATUS_TEXT="❌ Fail"
+          fi
+          if [ -f build/coverage-reports/coverage-pattern-consumer/coverage.out ]; then
+            CONSUMER_COVERAGE=$(go tool cover -func=build/coverage-reports/coverage-pattern-consumer/coverage.out | grep total | awk '{print $3}')
+          else
+            CONSUMER_COVERAGE="N/A"
+          fi
+
+          # Write summary
+          {
+            echo "# 📊 Pattern Acceptance Test Summary"
+            echo ""
+            if [[ "$KEYVALUE_STATUS" == "success" && "$CONSUMER_STATUS" == "success" ]]; then
+              echo "## ✅ All Pattern Tests Passed"
+            else
+              echo "## ❌ Some Pattern Tests Failed"
+            fi
+            echo ""
+            echo "| Pattern | Status | Coverage | Backends Tested |"
+            echo "|---------|--------|----------|-----------------|"
+            echo "| KeyValue | $KEYVALUE_STATUS_TEXT | $KEYVALUE_COVERAGE | MemStore, Redis |"
+            echo "| Consumer | $CONSUMER_STATUS_TEXT | $CONSUMER_COVERAGE | NATS+MemStore, NATS+Redis |"
+            echo ""
+            echo "## Architecture"
+            echo ""
+            echo "Pattern acceptance tests use the **pattern executable approach**:"
+            echo "- Each pattern implements standard interfaces (KeyValueBasicInterface, PubSubBasicInterface, etc.)"
+            echo "- Pattern tests run against ALL registered backends that support the required interfaces"
+            echo "- Tests are written once and run automatically against multiple backend combinations"
+            echo "- This ensures pattern behavior is consistent across all supported backends"
+            echo ""
+            echo "View detailed results in the artifacts for each job."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Display summary
+        run: |
+          echo "📊 Pattern Acceptance Test Summary:"
+          cat "$GITHUB_STEP_SUMMARY"
+
+  # Status check for pattern acceptance tests (required for merge)
+  pattern-acceptance-status:
+    name: Pattern Acceptance Status
+    runs-on: ubuntu-latest
+    needs: [test-keyvalue-pattern, test-consumer-pattern]
+    if: always()
+
+    steps:
+      - name: Check pattern test status
+        run: |
+          KEYVALUE="${{ needs.test-keyvalue-pattern.result }}"
+          CONSUMER="${{ needs.test-consumer-pattern.result }}"
+
+          echo "Pattern Test Results:"
+          echo "  KeyValue: $KEYVALUE"
+          echo "  Consumer: $CONSUMER"
+
+          if [[ "$KEYVALUE" != "success" || "$CONSUMER" != "success" ]]; then
+            echo "❌ Pattern acceptance tests failed"
+            exit 1
+          else
+            echo "✅ All pattern acceptance tests passed"
+          fi

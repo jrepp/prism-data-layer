@@ -1,21 +1,11 @@
-name: Acceptance Tests
+# DEPRECATED: This workflow uses backend-specific acceptance tests
+# Use pattern-acceptance-tests.yml instead for pattern-based testing
+# See MEMO-030 for details on the new pattern-based testing approach
+
+name: Acceptance Tests (DEPRECATED)
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - 'patterns/**'
-      - 'tests/acceptance/**'
-      - 'tooling/parallel_acceptance_test.py'
-      - '.github/workflows/acceptance-tests.yml'
-  pull_request:
-    branches: [main]
-    paths:
-      - 'patterns/**'
-      - 'tests/acceptance/**'
-      - 'tooling/parallel_acceptance_test.py'
-      - '.github/workflows/acceptance-tests.yml'
-  workflow_dispatch:  # Allow manual trigger
+  workflow_dispatch:  # Manual trigger only
 
 # Cancel in-progress runs for the same PR/branch
 concurrency:
