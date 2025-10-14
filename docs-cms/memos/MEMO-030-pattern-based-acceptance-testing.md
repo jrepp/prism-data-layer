@@ -1,7 +1,7 @@
 ---
 author: System
 created: 2025-10-14
-doc_uuid: 8a9f2b3c-5d6e-7f8a-9b0c-1d2e3f4g5h6i
+doc_uuid: 8a9f2b3c-5d6e-4f8a-9b0c-1d2e3f4a5b6c
 id: memo-030
 project_id: prism-data-layer
 tags:
@@ -25,7 +25,7 @@ We've transitioned from backend-specific acceptance tests to a **pattern-based a
 ### Problems with Backend-Specific Tests
 
 **Before** (MEMO-015 approach):
-```
+```text
 tests/acceptance/
 ├── interfaces/
 │   └── table_driven_test.go     # 400 lines
@@ -47,7 +47,7 @@ Issues:
 ### Pattern-Based Solution
 
 **After** (current approach):
-```
+```text
 tests/acceptance/
 ├── framework/
 │   ├── backend_registry.go      # Backend registration
@@ -531,7 +531,7 @@ t.Run(backend.Name, func(t *testing.T) {
 
 ### 6. Clear Test Organization
 
-```
+```text
 patterns/
 ├── keyvalue/         # All KeyValue tests
 │   ├── basic_test.go
@@ -591,7 +591,7 @@ go test -v -run TestKeyValueBasicPattern/MemStore/SetAndGet
 
 ### Old Approach (MEMO-015)
 
-```
+```text
 tests/acceptance/redis/redis_integration_test.go
 tests/acceptance/nats/nats_integration_test.go
 tests/acceptance/postgres/postgres_integration_test.go
@@ -601,7 +601,7 @@ Each file: 200-415 lines of duplicated test logic
 
 ### New Approach (Current)
 
-```
+```text
 tests/acceptance/patterns/keyvalue/basic_test.go       # 232 lines
 tests/acceptance/patterns/keyvalue/ttl_test.go         # 150 lines
 tests/acceptance/patterns/consumer/consumer_test.go    # 200 lines
