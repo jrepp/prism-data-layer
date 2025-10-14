@@ -93,10 +93,10 @@ prism/
 │   └── docs/              # Docusaurus-specific docs (changelog, etc.)
 │       └── changelog.md   # 📝 CANONICAL CHANGELOG
 ├── docs/                  # Built docs (GitHub Pages output)
-├── admin/                 # FastAPI-based admin UI
 ├── prism-proxy/           # Rust high-performance gateway
 ├── cmd/                   # Command-line tools (Go)
-│   ├── prismctl/          # Go CLI for Prism (OIDC auth, namespace management)
+│   ├── prismctl/          # CLI for Prism (OIDC auth, namespace management)
+│   ├── prism-admin/       # Admin tool for namespace/backend management via gRPC API
 │   ├── prism-loadtest/    # Load testing tool
 │   └── plugin-watcher/    # File watcher for hot reload
 ├── pkg/                   # Importable Go libraries
@@ -125,9 +125,10 @@ prism/
 - **Backend Drivers** (`pkg/drivers/`): Importable Go libraries that implement connections to specific backends (Redis, NATS, Kafka, PostgreSQL, MemStore)
 - **Patterns** (`patterns/`): Composite implementations that use multiple drivers to provide higher-level abstractions
 - **Commands** (`cmd/`): Executable tools that interact with the proxy or manage the system
-  - `prismctl`: CLI for authentication, namespace management
-  - `plugin-watcher`: Hot-reload watcher for development
+  - `prismctl`: CLI for authentication, namespace management (OIDC)
+  - `prism-admin`: Admin tool for namespace/backend management via gRPC API (port 8981)
   - `prism-loadtest`: Load testing tool
+  - `plugin-watcher`: Hot-reload watcher for development
 
 **Key Architectural Points**:
 - Drivers are **libraries only** - no main() functions, just importable packages
@@ -333,6 +334,11 @@ build/binaries/prismctl health
 cd cmd/prismctl && make install
 prismctl --help
 
+# Run prism-admin (namespace/backend management)
+cd cmd/prism-admin && go run . --help
+cd cmd/prism-admin && go run . health
+cd cmd/prism-admin && go run . namespace list
+
 # Run proxy locally (the main server)
 cd prism-proxy && cargo run --release
 
@@ -341,9 +347,6 @@ cd cmd/plugin-watcher && go run .
 
 # Run load tests
 cd cmd/prism-loadtest && go run .
-
-# Run admin UI
-cd admin && npm run dev
 
 # Deploy to staging
 uv run tooling/deploy.py --env staging
