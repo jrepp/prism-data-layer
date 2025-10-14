@@ -204,18 +204,18 @@ func (n *NATSPattern) Publish(ctx context.Context, topic string, payload []byte,
 }
 
 // Subscribe subscribes to a topic and returns a channel for messages
-func (n *NATSPattern) Subscribe(ctx context.Context, topic string, subscriberID string) (<-chan *Message, error) {
+func (n *NATSPattern) Subscribe(ctx context.Context, topic string, subscriberID string) (<-chan *plugin.PubSubMessage, error) {
 	if n.conn == nil {
 		return nil, fmt.Errorf("NATS connection not established")
 	}
 
 	// Create message channel
-	msgChan := make(chan *Message, n.config.MaxPendingMsgs)
+	msgChan := make(chan *plugin.PubSubMessage, n.config.MaxPendingMsgs)
 
 	// Create NATS subscription
 	sub, err := n.conn.Subscribe(topic, func(msg *nats.Msg) {
 		select {
-		case msgChan <- &Message{
+		case msgChan <- &plugin.PubSubMessage{
 			Topic:     msg.Subject, // Use actual message subject, not subscription pattern
 			Payload:   msg.Data,
 			MessageID: fmt.Sprintf("%s-%d", msg.Subject, time.Now().UnixNano()),
@@ -262,28 +262,20 @@ func (n *NATSPattern) Unsubscribe(ctx context.Context, topic string, subscriberI
 	return nil
 }
 
-// Message represents a pub/sub message
-type Message struct {
-	Topic     string
-	Payload   []byte
-	Metadata  map[string]string
-	MessageID string
-	Timestamp int64
-}
-
 // Compile-time interface compliance checks
 // These ensure that NATSPattern implements the expected interfaces
 var (
 	_ plugin.Plugin           = (*NATSPattern)(nil) // Core plugin interface
 	_ plugin.InterfaceSupport = (*NATSPattern)(nil) // Interface introspection
-	// TODO: Add core.PubSubBasicInterface once signature is aligned (context param, message type)
+	_ plugin.PubSubInterface  = (*NATSPattern)(nil) // PubSub interface
 )
 
 // SupportsInterface returns true if NATSPattern implements the named interface
 func (n *NATSPattern) SupportsInterface(interfaceName string) bool {
 	supported := map[string]bool{
 		"Plugin":               true,
-		"PubSubBasicInterface": true, // Functional support, but signature differs slightly
+		"PubSubBasicInterface": true,
+		"PubSubInterface":      true,
 		"InterfaceSupport":     true,
 	}
 	return supported[interfaceName]
@@ -294,6 +286,7 @@ func (n *NATSPattern) ListInterfaces() []string {
 	return []string{
 		"Plugin",
 		"PubSubBasicInterface",
+		"PubSubInterface",
 		"InterfaceSupport",
 	}
 }

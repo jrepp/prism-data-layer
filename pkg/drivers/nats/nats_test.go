@@ -21,7 +21,7 @@ func setupTestNATS(t *testing.T) (*NATSPattern, *natsserver.Server) {
 	server := natstest.RunServer(&opts)
 
 	// Create pattern config pointing to test server
-	config := &core.Config{
+	config := &plugin.Config{
 		Plugin: plugin.PluginConfig{
 			Name:    "nats-test",
 			Version: "0.1.0",
@@ -38,42 +38,42 @@ func setupTestNATS(t *testing.T) (*NATSPattern, *natsserver.Server) {
 	}
 
 	// Initialize pattern
-	plugin := New()
+	p := New()
 	ctx := context.Background()
-	if err := plugin.Initialize(ctx, config); err != nil {
+	if err := p.Initialize(ctx, config); err != nil {
 		server.Shutdown()
 		t.Fatalf("failed to initialize plugin: %v", err)
 	}
 
-	if err := plugin.Start(ctx); err != nil {
+	if err := p.Start(ctx); err != nil {
 		server.Shutdown()
 		t.Fatalf("failed to start plugin: %v", err)
 	}
 
-	return plugin, server
+	return p, server
 }
 
 func TestNATSPattern_Initialize(t *testing.T) {
-	plugin, server := setupTestNATS(t)
+	p, server := setupTestNATS(t)
 	defer server.Shutdown()
-	defer plugin.Stop(context.Background())
+	defer p.Stop(context.Background())
 
-	if plugin.name != "nats-test" {
-		t.Errorf("Expected name 'nats-test', got '%s'", plugin.name)
+	if p.name != "nats-test" {
+		t.Errorf("Expected name 'nats-test', got '%s'", p.name)
 	}
 
-	if plugin.conn == nil {
+	if p.conn == nil {
 		t.Error("Connection should be established")
 	}
 }
 
 func TestNATSPattern_Health(t *testing.T) {
-	plugin, server := setupTestNATS(t)
+	p, server := setupTestNATS(t)
 	defer server.Shutdown()
-	defer plugin.Stop(context.Background())
+	defer p.Stop(context.Background())
 
 	ctx := context.Background()
-	health, err := plugin.Health(ctx)
+	health, err := p.Health(ctx)
 	if err != nil {
 		t.Fatalf("Health() error = %v", err)
 	}
@@ -88,9 +88,9 @@ func TestNATSPattern_Health(t *testing.T) {
 }
 
 func TestNATSPattern_PublishSubscribe(t *testing.T) {
-	plugin, server := setupTestNATS(t)
+	p, server := setupTestNATS(t)
 	defer server.Shutdown()
-	defer plugin.Stop(context.Background())
+	defer p.Stop(context.Background())
 
 	ctx := context.Background()
 	topic := "test.topic"
@@ -98,7 +98,7 @@ func TestNATSPattern_PublishSubscribe(t *testing.T) {
 	payload := []byte("test message")
 
 	// Subscribe first
-	msgChan, err := plugin.Subscribe(ctx, topic, subscriberID)
+	msgChan, err := p.Subscribe(ctx, topic, subscriberID)
 	if err != nil {
 		t.Fatalf("Subscribe() error = %v", err)
 	}
@@ -107,7 +107,7 @@ func TestNATSPattern_PublishSubscribe(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 
 	// Publish message
-	messageID, err := plugin.Publish(ctx, topic, payload, nil)
+	messageID, err := p.Publish(ctx, topic, payload, nil)
 	if err != nil {
 		t.Fatalf("Publish() error = %v", err)
 	}
@@ -136,15 +136,15 @@ func TestNATSPattern_PublishSubscribe(t *testing.T) {
 	}
 
 	// Unsubscribe
-	if err := plugin.Unsubscribe(ctx, topic, subscriberID); err != nil {
+	if err := p.Unsubscribe(ctx, topic, subscriberID); err != nil {
 		t.Fatalf("Unsubscribe() error = %v", err)
 	}
 }
 
 func TestNATSPattern_MultiplePubSub(t *testing.T) {
-	plugin, server := setupTestNATS(t)
+	p, server := setupTestNATS(t)
 	defer server.Shutdown()
-	defer plugin.Stop(context.Background())
+	defer p.Stop(context.Background())
 
 	ctx := context.Background()
 	topic := "test.multi"
@@ -152,7 +152,7 @@ func TestNATSPattern_MultiplePubSub(t *testing.T) {
 	// Publish multiple messages without subscribers (fire and forget)
 	for i := 0; i < 5; i++ {
 		payload := []byte("message-" + string(rune('A'+i)))
-		if _, err := plugin.Publish(ctx, topic, payload, nil); err != nil {
+		if _, err := p.Publish(ctx, topic, payload, nil); err != nil {
 			t.Fatalf("Publish() error = %v", err)
 		}
 	}
@@ -162,9 +162,9 @@ func TestNATSPattern_MultiplePubSub(t *testing.T) {
 }
 
 func TestNATSPattern_Fanout(t *testing.T) {
-	plugin, server := setupTestNATS(t)
+	p, server := setupTestNATS(t)
 	defer server.Shutdown()
-	defer plugin.Stop(context.Background())
+	defer p.Stop(context.Background())
 
 	ctx := context.Background()
 	topic := "test.fanout"
@@ -175,7 +175,7 @@ func TestNATSPattern_Fanout(t *testing.T) {
 	var channels []<-chan *Message
 	for i := 0; i < numSubscribers; i++ {
 		subscriberID := "subscriber-" + string(rune('1'+i))
-		msgChan, err := plugin.Subscribe(ctx, topic, subscriberID)
+		msgChan, err := p.Subscribe(ctx, topic, subscriberID)
 		if err != nil {
 			t.Fatalf("Subscribe() error = %v", err)
 		}
@@ -186,7 +186,7 @@ func TestNATSPattern_Fanout(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 
 	// Publish one message
-	if _, err := plugin.Publish(ctx, topic, payload, nil); err != nil {
+	if _, err := p.Publish(ctx, topic, payload, nil); err != nil {
 		t.Fatalf("Publish() error = %v", err)
 	}
 
@@ -213,16 +213,16 @@ func TestNATSPattern_Fanout(t *testing.T) {
 	// Cleanup - unsubscribe all
 	for i := 0; i < numSubscribers; i++ {
 		subscriberID := "subscriber-" + string(rune('1'+i))
-		if err := plugin.Unsubscribe(ctx, topic, subscriberID); err != nil {
+		if err := p.Unsubscribe(ctx, topic, subscriberID); err != nil {
 			t.Fatalf("Unsubscribe() error = %v", err)
 		}
 	}
 }
 
 func TestNATSPattern_MessageOrdering(t *testing.T) {
-	plugin, server := setupTestNATS(t)
+	p, server := setupTestNATS(t)
 	defer server.Shutdown()
-	defer plugin.Stop(context.Background())
+	defer p.Stop(context.Background())
 
 	ctx := context.Background()
 	topic := "test.ordering"
@@ -230,7 +230,7 @@ func TestNATSPattern_MessageOrdering(t *testing.T) {
 	numMessages := 10
 
 	// Subscribe
-	msgChan, err := plugin.Subscribe(ctx, topic, subscriberID)
+	msgChan, err := p.Subscribe(ctx, topic, subscriberID)
 	if err != nil {
 		t.Fatalf("Subscribe() error = %v", err)
 	}
@@ -240,7 +240,7 @@ func TestNATSPattern_MessageOrdering(t *testing.T) {
 	// Publish messages in order
 	for i := 0; i < numMessages; i++ {
 		payload := []byte("message-" + string(rune('0'+i)))
-		if _, err := plugin.Publish(ctx, topic, payload, nil); err != nil {
+		if _, err := p.Publish(ctx, topic, payload, nil); err != nil {
 			t.Fatalf("Publish() error = %v", err)
 		}
 		// Small delay to ensure ordering
@@ -261,22 +261,22 @@ func TestNATSPattern_MessageOrdering(t *testing.T) {
 	}
 
 	// Unsubscribe
-	if err := plugin.Unsubscribe(ctx, topic, subscriberID); err != nil {
+	if err := p.Unsubscribe(ctx, topic, subscriberID); err != nil {
 		t.Fatalf("Unsubscribe() error = %v", err)
 	}
 }
 
 func TestNATSPattern_UnsubscribeStopsMessages(t *testing.T) {
-	plugin, server := setupTestNATS(t)
+	p, server := setupTestNATS(t)
 	defer server.Shutdown()
-	defer plugin.Stop(context.Background())
+	defer p.Stop(context.Background())
 
 	ctx := context.Background()
 	topic := "test.unsubscribe"
 	subscriberID := "subscriber-1"
 
 	// Subscribe
-	msgChan, err := plugin.Subscribe(ctx, topic, subscriberID)
+	msgChan, err := p.Subscribe(ctx, topic, subscriberID)
 	if err != nil {
 		t.Fatalf("Subscribe() error = %v", err)
 	}
@@ -284,7 +284,7 @@ func TestNATSPattern_UnsubscribeStopsMessages(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 
 	// Publish first message
-	if _, err := plugin.Publish(ctx, topic, []byte("message-1"), nil); err != nil {
+	if _, err := p.Publish(ctx, topic, []byte("message-1"), nil); err != nil {
 		t.Fatalf("Publish() error = %v", err)
 	}
 
@@ -299,14 +299,14 @@ func TestNATSPattern_UnsubscribeStopsMessages(t *testing.T) {
 	}
 
 	// Unsubscribe
-	if err := plugin.Unsubscribe(ctx, topic, subscriberID); err != nil {
+	if err := p.Unsubscribe(ctx, topic, subscriberID); err != nil {
 		t.Fatalf("Unsubscribe() error = %v", err)
 	}
 
 	time.Sleep(100 * time.Millisecond)
 
 	// Publish second message after unsubscribe
-	if _, err := plugin.Publish(ctx, topic, []byte("message-2"), nil); err != nil {
+	if _, err := p.Publish(ctx, topic, []byte("message-2"), nil); err != nil {
 		t.Fatalf("Publish() error = %v", err)
 	}
 
@@ -321,9 +321,9 @@ func TestNATSPattern_UnsubscribeStopsMessages(t *testing.T) {
 }
 
 func TestNATSPattern_ConcurrentPublish(t *testing.T) {
-	plugin, server := setupTestNATS(t)
+	p, server := setupTestNATS(t)
 	defer server.Shutdown()
-	defer plugin.Stop(context.Background())
+	defer p.Stop(context.Background())
 
 	ctx := context.Background()
 	topic := "test.concurrent"
@@ -339,7 +339,7 @@ func TestNATSPattern_ConcurrentPublish(t *testing.T) {
 			defer wg.Done()
 			for j := 0; j < messagesPerGoroutine; j++ {
 				payload := []byte("goroutine-" + string(rune('0'+goroutineID)) + "-msg-" + string(rune('0'+j)))
-				if _, err := plugin.Publish(ctx, topic, payload, nil); err != nil {
+				if _, err := p.Publish(ctx, topic, payload, nil); err != nil {
 					t.Errorf("Publish() error = %v", err)
 				}
 			}
@@ -352,9 +352,9 @@ func TestNATSPattern_ConcurrentPublish(t *testing.T) {
 }
 
 func TestNATSPattern_PublishWithMetadata(t *testing.T) {
-	plugin, server := setupTestNATS(t)
+	p, server := setupTestNATS(t)
 	defer server.Shutdown()
-	defer plugin.Stop(context.Background())
+	defer p.Stop(context.Background())
 
 	ctx := context.Background()
 	topic := "test.metadata"
@@ -367,7 +367,7 @@ func TestNATSPattern_PublishWithMetadata(t *testing.T) {
 	}
 
 	// Subscribe
-	msgChan, err := plugin.Subscribe(ctx, topic, subscriberID)
+	msgChan, err := p.Subscribe(ctx, topic, subscriberID)
 	if err != nil {
 		t.Fatalf("Subscribe() error = %v", err)
 	}
@@ -375,7 +375,7 @@ func TestNATSPattern_PublishWithMetadata(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 
 	// Publish with metadata (note: core NATS doesn't preserve headers, but shouldn't error)
-	messageID, err := plugin.Publish(ctx, topic, payload, metadata)
+	messageID, err := p.Publish(ctx, topic, payload, metadata)
 	if err != nil {
 		t.Fatalf("Publish() error = %v", err)
 	}
@@ -395,19 +395,19 @@ func TestNATSPattern_PublishWithMetadata(t *testing.T) {
 	}
 
 	// Cleanup
-	if err := plugin.Unsubscribe(ctx, topic, subscriberID); err != nil {
+	if err := p.Unsubscribe(ctx, topic, subscriberID); err != nil {
 		t.Fatalf("Unsubscribe() error = %v", err)
 	}
 }
 
 func TestNATSPattern_HealthAfterDisconnect(t *testing.T) {
-	plugin, server := setupTestNATS(t)
+	p, server := setupTestNATS(t)
 	defer server.Shutdown()
 
 	ctx := context.Background()
 
 	// Initial health check should be healthy
-	health1, err := plugin.Health(ctx)
+	health1, err := p.Health(ctx)
 	if err != nil {
 		t.Fatalf("Health() error = %v", err)
 	}
@@ -416,12 +416,12 @@ func TestNATSPattern_HealthAfterDisconnect(t *testing.T) {
 	}
 
 	// Stop the pattern (closes connection)
-	if err := plugin.Stop(ctx); err != nil {
+	if err := p.Stop(ctx); err != nil {
 		t.Fatalf("Stop() error = %v", err)
 	}
 
 	// Health check after stop should be unhealthy
-	health2, err := plugin.Health(ctx)
+	health2, err := p.Health(ctx)
 	if err != nil {
 		t.Fatalf("Health() error = %v", err)
 	}
@@ -431,54 +431,54 @@ func TestNATSPattern_HealthAfterDisconnect(t *testing.T) {
 }
 
 func TestNATSPattern_UnsubscribeNonExistent(t *testing.T) {
-	plugin, server := setupTestNATS(t)
+	p, server := setupTestNATS(t)
 	defer server.Shutdown()
-	defer plugin.Stop(context.Background())
+	defer p.Stop(context.Background())
 
 	ctx := context.Background()
 
 	// Try to unsubscribe from non-existent subscription
-	err := plugin.Unsubscribe(ctx, "nonexistent.topic", "nonexistent-subscriber")
+	err := p.Unsubscribe(ctx, "nonexistent.topic", "nonexistent-subscriber")
 	if err == nil {
 		t.Error("Expected error when unsubscribing from non-existent subscription")
 	}
 }
 
 func TestNATSPattern_PublishWithoutConnection(t *testing.T) {
-	plugin := New()
-	plugin.name = "test"
-	plugin.version = "0.1.0"
+	p := New()
+	p.name = "test"
+	p.version = "0.1.0"
 	// Don't initialize (no connection)
 
 	ctx := context.Background()
-	_, err := plugin.Publish(ctx, "test.topic", []byte("payload"), nil)
+	_, err := p.Publish(ctx, "test.topic", []byte("payload"), nil)
 	if err == nil {
 		t.Error("Expected error when publishing without connection")
 	}
 }
 
 func TestNATSPattern_SubscribeWithoutConnection(t *testing.T) {
-	plugin := New()
-	plugin.name = "test"
-	plugin.version = "0.1.0"
+	p := New()
+	p.name = "test"
+	p.version = "0.1.0"
 	// Don't initialize (no connection)
 
 	ctx := context.Background()
-	_, err := plugin.Subscribe(ctx, "test.topic", "subscriber-1")
+	_, err := p.Subscribe(ctx, "test.topic", "subscriber-1")
 	if err == nil {
 		t.Error("Expected error when subscribing without connection")
 	}
 }
 
 func TestNATSPattern_NameAndVersion(t *testing.T) {
-	plugin := New()
+	p := New()
 
-	if plugin.Name() != "nats" {
-		t.Errorf("Expected name 'nats', got '%s'", plugin.Name())
+	if p.Name() != "nats" {
+		t.Errorf("Expected name 'nats', got '%s'", p.Name())
 	}
 
-	if plugin.Version() != "0.1.0" {
-		t.Errorf("Expected version '0.1.0', got '%s'", plugin.Version())
+	if p.Version() != "0.1.0" {
+		t.Errorf("Expected version '0.1.0', got '%s'", p.Version())
 	}
 }
 
@@ -490,7 +490,7 @@ func TestNATSPattern_InitializeWithDefaults(t *testing.T) {
 	defer server.Shutdown()
 
 	// Create pattern with minimal config (tests default values)
-	config := &core.Config{
+	config := &plugin.Config{
 		Plugin: plugin.PluginConfig{
 			Name:    "nats-minimal",
 			Version: "0.1.0",
@@ -500,26 +500,26 @@ func TestNATSPattern_InitializeWithDefaults(t *testing.T) {
 		},
 	}
 
-	plugin := New()
+	p := New()
 	ctx := context.Background()
 
-	if err := plugin.Initialize(ctx, config); err != nil {
+	if err := p.Initialize(ctx, config); err != nil {
 		t.Fatalf("Initialize() with defaults error = %v", err)
 	}
-	defer plugin.Stop(ctx)
+	defer p.Stop(ctx)
 
 	// Verify defaults were applied
-	if plugin.config.MaxReconnects == 0 {
+	if p.config.MaxReconnects == 0 {
 		t.Error("Expected non-zero MaxReconnects default")
 	}
-	if plugin.config.Timeout == 0 {
+	if p.config.Timeout == 0 {
 		t.Error("Expected non-zero Timeout default")
 	}
 }
 
 func TestNATSPattern_InitializeFailure(t *testing.T) {
 	// Create pattern with invalid NATS URL
-	config := &core.Config{
+	config := &plugin.Config{
 		Plugin: plugin.PluginConfig{
 			Name:    "nats-fail",
 			Version: "0.1.0",
@@ -530,17 +530,17 @@ func TestNATSPattern_InitializeFailure(t *testing.T) {
 		},
 	}
 
-	plugin := New()
+	p := New()
 	ctx := context.Background()
 
-	err := plugin.Initialize(ctx, config)
+	err := p.Initialize(ctx, config)
 	if err == nil {
 		t.Error("Expected error when connecting to invalid NATS URL")
 	}
 }
 
 func TestNATSPattern_StopWithActiveSubscriptions(t *testing.T) {
-	plugin, server := setupTestNATS(t)
+	p, server := setupTestNATS(t)
 	defer server.Shutdown()
 
 	ctx := context.Background()
@@ -549,21 +549,21 @@ func TestNATSPattern_StopWithActiveSubscriptions(t *testing.T) {
 	for i := 0; i < 3; i++ {
 		topic := "test.cleanup." + string(rune('A'+i))
 		subscriberID := "subscriber-" + string(rune('1'+i))
-		_, err := plugin.Subscribe(ctx, topic, subscriberID)
+		_, err := p.Subscribe(ctx, topic, subscriberID)
 		if err != nil {
 			t.Fatalf("Subscribe() error = %v", err)
 		}
 	}
 
 	// Stop should cleanup all subscriptions
-	if err := plugin.Stop(ctx); err != nil {
+	if err := p.Stop(ctx); err != nil {
 		t.Fatalf("Stop() error = %v", err)
 	}
 
 	// Verify all subscriptions were cleaned up
-	plugin.subsMu.RLock()
-	subCount := len(plugin.subs)
-	plugin.subsMu.RUnlock()
+	p.subsMu.RLock()
+	subCount := len(p.subs)
+	p.subsMu.RUnlock()
 
 	if subCount != 0 {
 		t.Errorf("Expected 0 subscriptions after stop, got %d", subCount)
