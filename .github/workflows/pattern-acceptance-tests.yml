@@ -113,6 +113,13 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-go-
 
+      - name: Build pattern module
+        run: |
+          if [ -d "patterns/${{ matrix.pattern }}" ]; then
+            cd patterns/${{ matrix.pattern }}
+            go build ./...
+          fi
+
       - name: Run ${{ matrix.pattern }} pattern tests
         run: |
           cd tests/acceptance/patterns/${{ matrix.pattern }}
