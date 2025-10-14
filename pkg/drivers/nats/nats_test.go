@@ -172,7 +172,7 @@ func TestNATSPattern_Fanout(t *testing.T) {
 	payload := []byte("fanout message")
 
 	// Create multiple subscribers
-	var channels []<-chan *Message
+	var channels []<-chan *plugin.PubSubMessage
 	for i := 0; i < numSubscribers; i++ {
 		subscriberID := "subscriber-" + string(rune('1'+i))
 		msgChan, err := p.Subscribe(ctx, topic, subscriberID)
@@ -195,7 +195,7 @@ func TestNATSPattern_Fanout(t *testing.T) {
 	wg.Add(numSubscribers)
 
 	for i, ch := range channels {
-		go func(idx int, msgChan <-chan *Message) {
+		go func(idx int, msgChan <-chan *plugin.PubSubMessage) {
 			defer wg.Done()
 			select {
 			case msg := <-msgChan:

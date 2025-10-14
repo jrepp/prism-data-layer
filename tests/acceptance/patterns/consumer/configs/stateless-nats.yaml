@@ -1,0 +1,42 @@
+# Example: Stateless Consumer with NATS Only
+# Use case: Real-time alerting, ephemeral processing
+
+namespaces:
+  - name: alert-processor
+    pattern: consumer
+    pattern_version: v1
+    description: "Processes alert events without state persistence"
+
+    # Client-provided slot configuration (minimal - only message source)
+    slots:
+      message_source:
+        backend: nats
+        # NATS implements: pubsub_basic, pubsub_wildcards
+        interfaces:
+          - pubsub_basic
+        config:
+          connection: "nats://localhost:4222"
+          subject: "alerts.critical"
+          max_reconnects: 10
+          reconnect_wait: "2s"
+
+      # No state_store configured - runs in stateless mode
+      # Consumer processes from latest messages, no checkpoint resume
+
+      # No DLQ configured - failed alerts logged only
+
+    # Consumer behavior parameters
+    behavior:
+      consumer_group: "alert-processor-group"
+      topic: "alerts.critical"
+      max_retries: 1  # Quick retries only
+      auto_commit: false  # No state to commit in stateless mode
+      batch_size: 0
+      commit_interval: "0s"  # Not used in stateless mode
+
+# Expected pattern executor startup:
+#   1. Pattern executor reads this config
+#   2. Initializes NATS driver with pubsub_basic interface
+#   3. Binds slots: consumer.BindSlots(nats, nil, nil)  # No state store!
+#   4. Starts consuming in stateless mode (no checkpoint resume)
+#   5. Processes messages from latest offset
