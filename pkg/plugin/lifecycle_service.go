@@ -2,6 +2,7 @@ package plugin
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 
 	pb "github.com/jrepp/prism-data-layer/pkg/plugin/gen/prism/interfaces"
@@ -25,13 +26,29 @@ func NewLifecycleService(plugin Plugin) *LifecycleService {
 func (s *LifecycleService) Initialize(ctx context.Context, req *pb.InitializeRequest) (*pb.InitializeResponse, error) {
 	slog.Info("lifecycle: Initialize called",
 		"name", req.Name,
-		"version", req.Version)
+		"version", req.Version,
+		"has_config", req.Config != nil)
 
-	// Convert protobuf Struct to Config
-	// For now, we'll use an empty config since conversion is complex
-	// In production, this would properly parse the config from req.Config
-	if s.config == nil {
-		s.config = &Config{
+	// Parse configuration from protobuf Struct
+	var config *Config
+	var err error
+
+	if req.Config != nil {
+		// Convert protobuf Struct to Config
+		config, err = ParseConfigFromStruct(req.Name, req.Version, req.Config)
+		if err != nil {
+			slog.Error("lifecycle: failed to parse config", "error", err)
+			return &pb.InitializeResponse{
+				Success: false,
+				Error:   fmt.Sprintf("failed to parse config: %v", err),
+			}, nil
+		}
+		slog.Info("lifecycle: parsed config successfully",
+			"backend_keys", len(config.Backend))
+	} else {
+		// No config provided - use minimal config
+		slog.Warn("lifecycle: no config provided, using minimal config")
+		config = &Config{
 			Plugin: PluginConfig{
 				Name:    req.Name,
 				Version: req.Version,
@@ -42,6 +59,8 @@ func (s *LifecycleService) Initialize(ctx context.Context, req *pb.InitializeReq
 			Backend: make(map[string]any),
 		}
 	}
+
+	s.config = config
 
 	// Call plugin Initialize
 	if err := s.plugin.Initialize(ctx, s.config); err != nil {
@@ -62,7 +81,7 @@ func (s *LifecycleService) Initialize(ctx context.Context, req *pb.InitializeReq
 		Metadata: &pb.PatternMetadata{
 			Name:       s.plugin.Name(),
 			Version:    s.plugin.Version(),
-			Interfaces: []string{"keyvalue"}, // TODO: Make this configurable
+			Interfaces: s.plugin.GetInterfaceDeclarations(),
 		},
 	}, nil
 }
@@ -71,16 +90,21 @@ func (s *LifecycleService) Initialize(ctx context.Context, req *pb.InitializeReq
 func (s *LifecycleService) Start(ctx context.Context, req *pb.StartRequest) (*pb.StartResponse, error) {
 	slog.Info("lifecycle: Start called", "plugin", s.plugin.Name())
 
-	// Call plugin Start (non-blocking - it runs in a goroutine in Bootstrap)
-	// For now, we'll just acknowledge the start request
-	// The actual Start() is called in Bootstrap and runs in a goroutine
+	// Call plugin Start
+	if err := s.plugin.Start(ctx); err != nil {
+		slog.Error("lifecycle: Start failed", "error", err)
+		return &pb.StartResponse{
+			Success: false,
+			Error:   err.Error(),
+		}, nil
+	}
 
 	slog.Info("lifecycle: Start succeeded", "plugin", s.plugin.Name())
 
 	return &pb.StartResponse{
 		Success:      true,
 		Error:        "",
-		DataEndpoint: "", // MemStore doesn't have a separate data endpoint
+		DataEndpoint: "", // Can be used for data plane endpoint if pattern exposes one
 	}, nil
 }
 

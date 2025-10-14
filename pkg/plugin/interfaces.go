@@ -68,11 +68,6 @@ type PubSubMessage struct {
 	Timestamp int64
 }
 
-// InterfaceSupport provides a way to query which interfaces a backend supports
-type InterfaceSupport interface {
-	// SupportsInterface returns true if the backend implements the named interface
-	SupportsInterface(interfaceName string) bool
-
-	// ListInterfaces returns all interface names this backend implements
-	ListInterfaces() []string
-}
+// NOTE: InterfaceSupport interface removed - interfaces are now declared
+// at registration time via InterfaceDeclaration in the lifecycle protocol.
+// See proto/prism/interfaces/lifecycle.proto for the new declaration format.

@@ -60,11 +60,31 @@ message PatternMetadata {
   // Pattern version
   string version = 2;
 
-  // Interfaces implemented by this pattern
-  repeated string interfaces = 3;
+  // Interfaces implemented by this pattern (with proto metadata)
+  repeated InterfaceDeclaration interfaces = 3;
 
   // Additional metadata
   map<string, string> extra = 4;
+}
+
+// InterfaceDeclaration describes an interface implementation with its proto source
+// This replaces runtime introspection with compile-time declaration
+message InterfaceDeclaration {
+  // Interface name (e.g., "PubSubInterface", "KeyValueBasicInterface")
+  string name = 1;
+
+  // Proto file path relative to proto root (e.g., "prism/interfaces/pubsub/pubsub_basic.proto")
+  string proto_file = 2;
+
+  // Optional interface version (e.g., "v1", "v2", "1.0.0")
+  string version = 3;
+
+  // Optional SHA-256 hash of the proto file content for verification
+  // Format: hex string (64 characters)
+  string proto_hash = 4;
+
+  // Additional interface-specific metadata
+  map<string, string> metadata = 5;
 }
 
 // Start request

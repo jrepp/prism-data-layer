@@ -7,6 +7,8 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+
+	pb "github.com/jrepp/prism-data-layer/pkg/plugin/gen/prism/interfaces"
 )
 
 // PluginConfig contains plugin metadata
@@ -39,6 +41,10 @@ type Plugin interface {
 
 	// Health returns the backend driver health status
 	Health(ctx context.Context) (*HealthStatus, error)
+
+	// GetInterfaceDeclarations returns the interfaces this plugin implements
+	// This replaces runtime introspection with compile-time declarations
+	GetInterfaceDeclarations() []*pb.InterfaceDeclaration
 }
 
 // BackendDriver is a type alias for Plugin to make terminology clearer
