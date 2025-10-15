@@ -250,7 +250,9 @@ func (r *ConsumerRunner) Initialize(ctx context.Context) error {
 
 	// Bind slots to consumer
 	log.Println("[CONSUMER-RUNNER] Binding slots to consumer...")
-	if err := r.consumer.BindSlots(messageSource, stateStore, nil); err != nil {
+	// BindSlots(messageSource, stateStore, deadLetter, objectStore)
+	// deadLetter and objectStore are not yet implemented in consumer-runner
+	if err := r.consumer.BindSlots(messageSource, stateStore, nil, nil); err != nil {
 		return fmt.Errorf("failed to bind slots: %w", err)
 	}
 
