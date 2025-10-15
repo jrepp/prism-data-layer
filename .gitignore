@@ -31,12 +31,13 @@ patterns/*/coverage.html
 tests/**/coverage.out
 tests/**/coverage.html
 
-# Pattern executables (should be built to ./build/binaries instead)
+# Pattern runner executables (should be built to ./build/binaries instead)
 # Only ignore the binary executables, not the directories
 patterns/consumer/cmd/consumer-runner/consumer-runner
 patterns/producer/cmd/producer-runner/producer-runner
 patterns/multicast_registry/cmd/multicast-registry-runner/multicast-registry-runner
 tests/acceptance/pattern-runner/pattern-runner
+tests/acceptance/pattern-launcher
 
 # CLI binaries in cmd/ (should be built to ./build/binaries instead)
 cmd/prismctl/prismctl

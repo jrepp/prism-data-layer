@@ -61,7 +61,7 @@ all: proto build ## Build all components (default target)
 
 ##@ Build
 
-build: build-proxy build-prismctl build-prism-admin build-pattern-launcher build-plugin-watcher ## Build all components (excludes prism-loadtest due to module path issues)
+build: build-proxy build-prismctl build-prism-admin build-pattern-launcher build-plugin-watcher build-patterns ## Build all components (excludes prism-loadtest due to module path issues)
 
 build-proxy: ## Build Rust proxy
 	$(call print_blue,Building Rust proxy...)
@@ -99,6 +99,26 @@ build-plugin-watcher: ## Build plugin-watcher utility
 	@mkdir -p $(BINARIES_DIR)
 	@cd cmd/plugin-watcher && go build -o $(BINARIES_DIR)/plugin-watcher .
 	$(call print_green,plugin-watcher built: $(BINARIES_DIR)/plugin-watcher)
+
+build-consumer-runner: ## Build consumer pattern runner
+	$(call print_blue,Building consumer-runner...)
+	@mkdir -p $(BINARIES_DIR)
+	@cd patterns/consumer/cmd/consumer-runner && go build -o $(BINARIES_DIR)/consumer-runner .
+	$(call print_green,consumer-runner built: $(BINARIES_DIR)/consumer-runner)
+
+build-producer-runner: ## Build producer pattern runner
+	$(call print_blue,Building producer-runner...)
+	@mkdir -p $(BINARIES_DIR)
+	@cd patterns/producer/cmd/producer-runner && go build -o $(BINARIES_DIR)/producer-runner .
+	$(call print_green,producer-runner built: $(BINARIES_DIR)/producer-runner)
+
+build-multicast-registry-runner: ## Build multicast registry pattern runner
+	$(call print_blue,Building multicast-registry-runner...)
+	@mkdir -p $(BINARIES_DIR)
+	@cd patterns/multicast_registry/cmd/multicast-registry-runner && go build -o $(BINARIES_DIR)/multicast-registry-runner .
+	$(call print_green,multicast-registry-runner built: $(BINARIES_DIR)/multicast-registry-runner)
+
+build-patterns: build-consumer-runner build-producer-runner build-multicast-registry-runner ## Build all pattern runners
 
 build-dev: ## Build all components in debug mode (faster)
 	$(call print_blue,Building in debug mode...)
