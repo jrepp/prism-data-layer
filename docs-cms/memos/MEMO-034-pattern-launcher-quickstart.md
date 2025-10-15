@@ -1,13 +1,15 @@
 ---
-title: "MEMO-008: Pattern Launcher Quick Start for Developers"
+title: "MEMO-034: Pattern Launcher Quick Start for Developers"
 author: Claude Code
 created: 2025-10-15
 updated: 2025-10-15
-tags: [patterns, launcher, quickstart, developer-guide]
-id: memo-008
+tags: [patterns, launcher, quickstart, developer-guide, go, testing]
+id: memo-034
+project_id: prism-data-access
+doc_uuid: f8e4d2c9-5a7b-4d1e-9c6f-3e8a7b2d5c9f
 ---
 
-# MEMO-008: Pattern Launcher Quick Start for Developers
+# MEMO-034: Pattern Launcher Quick Start for Developers
 
 **TL;DR**: Get a pattern running in 3 commands. Test all isolation levels in 5 minutes.
 
@@ -117,7 +119,7 @@ go run cmd/pattern-launcher/main.go \
 ```
 
 **Expected output**:
-```
+```text
 Discovering patterns in directory: ./patterns
 Discovered pattern: hello-pattern (version: 1.0.0, isolation: namespace)
 Pattern launcher service created with 1 patterns

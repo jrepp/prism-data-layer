@@ -42,6 +42,241 @@ uv run tooling/validate_docs.py
 2. Re-run validation with `uv run tooling/validate_docs.py` until it passes
 3. Only then proceed with git commit/push
 
+### Documentation Best Practices (Common Errors to Avoid)
+
+Based on real validation failures, follow these guidelines when creating or modifying documentation:
+
+#### 1. **Frontmatter Requirements**
+
+All documentation files MUST include complete frontmatter. Missing fields cause validation failures.
+
+**ADR Frontmatter** (Architecture Decision Records):
+```yaml
+---
+title: "ADR-XXX: Descriptive Title"
+status: Accepted
+date: 2025-10-15
+deciders: Core Team
+tags: [architecture, backend, security]
+id: adr-xxx
+---
+```
+
+**RFC Frontmatter** (Request for Comments):
+```yaml
+---
+title: "RFC-XXX: Descriptive Title"
+status: Draft
+author: Your Name
+created: 2025-10-15
+updated: 2025-10-15
+tags: [architecture, performance, backend]
+id: rfc-xxx
+---
+```
+
+**MEMO Frontmatter** (Technical Memos):
+```yaml
+---
+title: "MEMO-XXX: Descriptive Title"
+author: Your Name
+created: 2025-10-15
+updated: 2025-10-15
+tags: [patterns, testing, developer-guide]
+id: memo-xxx
+project_id: prism-data-access
+doc_uuid: <generate-unique-uuid>
+---
+```
+
+**Common Errors**:
+- ❌ Missing `project_id` or `doc_uuid` in MEMOs
+- ❌ Missing `author`, `created`, or `updated` in RFCs/MEMOs
+- ❌ Incorrect ID format (use lowercase: `memo-034`, not `MEMO-034`)
+- ❌ Title doesn't match ID (title should be `MEMO-034: ...`, id should be `memo-034`)
+
+**How to fix**:
+```bash
+# Check which MEMO/RFC/ADR numbers are already used
+ls docs-cms/memos/ | grep -oE '[0-9]+' | sort -n | tail -1
+ls docs-cms/rfcs/ | grep -oE '[0-9]+' | sort -n | tail -1
+ls docs-cms/adr/ | grep -oE '[0-9]+' | sort -n | tail -1
+
+# Generate UUID for MEMO doc_uuid field (macOS)
+uuidgen | tr '[:upper:]' '[:lower:]'
+
+# Generate UUID on Linux
+uuid -v4  # or: cat /proc/sys/kernel/random/uuid
+```
+
+#### 2. **Code Block Language Labels**
+
+ALL code blocks MUST have language labels. Unlabeled code blocks cause MDX compilation errors.
+
+**Common Errors**:
+```markdown
+❌ WRONG - No language label:
+**Expected output**:
+```
+Discovering patterns...
+```
+
+✅ CORRECT - Use 'text' for plain text output:
+**Expected output**:
+```text
+Discovering patterns...
+```
+
+✅ CORRECT - Use appropriate language labels:
+```bash
+make test
+```
+
+```go
+func main() { ... }
+```
+
+```yaml
+name: my-service
+```
+```
+
+**Supported language labels**: bash, go, python, rust, yaml, json, toml, proto, sql, text, shell
+
+**Why this matters**: MDX tries to parse unlabeled code blocks as JavaScript, causing `Unexpected FunctionDeclaration` errors that break GitHub Pages builds.
+
+#### 3. **Unique Document IDs**
+
+Every ADR/RFC/MEMO must have a unique ID. Duplicate IDs cause validation failures.
+
+**Common Error**:
+```
+✗ Duplicate document ID 'memo-008' found in:
+  - docs-cms/memos/memo-008-vault-token-exchange.md (existing)
+  - docs-cms/memos/MEMO-008-pattern-launcher-quickstart.md (new, WRONG)
+```
+
+**How to prevent**:
+1. Always check existing document numbers before creating new files
+2. Use sequential numbering (MEMO-033 → MEMO-034)
+3. Never reuse IDs from deleted documents
+4. Run validation after creating new docs to catch conflicts early
+
+```bash
+# Find next available MEMO number
+ls docs-cms/memos/MEMO-*.md | grep -oE '[0-9]+' | sort -n | tail -1
+# Output: 033 → next is 034
+
+# Find next available RFC number
+ls docs-cms/rfcs/RFC-*.md | grep -oE '[0-9]+' | sort -n | tail -1
+
+# Find next available ADR number
+ls docs-cms/adr/ADR-*.md | grep -oE '[0-9]+' | sort -n | tail -1
+```
+
+#### 4. **Escaping Special Characters in MDX**
+
+MDX requires escaping `<` and `>` characters outside of code blocks.
+
+**Common Errors**:
+```markdown
+❌ WRONG - Unescaped comparison operators:
+- Tests run in <5 seconds
+- Coverage >85% required
+- Items <100 bytes are cached
+
+✅ CORRECT - Escape with backslash or use HTML entities:
+- Tests run in \<5 seconds
+- Tests run in &lt;5 seconds
+- Coverage \>85% required
+- Items \<100 bytes are cached
+```
+
+**When escaping is needed**:
+- Comparisons: `<5`, `>100`, `<=10`, `>=50`
+- Angle brackets in prose: `<component>`, `<placeholder>`
+- HTML-like syntax: `<Type>`, `<Value>`
+
+**When escaping is NOT needed**:
+- Inside code blocks (backticks or fenced code blocks)
+- In HTML/JSX tags: `<div>`, `<MyComponent />`
+- In markdown links: `[text](url)`
+
+#### 5. **Development Workflow for Documentation**
+
+Follow this workflow to avoid validation errors:
+
+```bash
+# 1. Create new document with proper frontmatter
+cat > docs-cms/memos/MEMO-035-my-feature.md <<'EOF'
+---
+title: "MEMO-035: My Feature Documentation"
+author: Your Name
+created: 2025-10-15
+updated: 2025-10-15
+tags: [feature-tag, category]
+id: memo-035
+project_id: prism-data-access
+doc_uuid: <run uuidgen>
+---
+
+# MEMO-035: My Feature Documentation
+
+Content here...
+EOF
+
+# 2. Label ALL code blocks (never leave unlabeled)
+# Use ```text for plain output, ```bash for commands, etc.
+
+# 3. Escape special characters in prose
+# Replace <5 with \<5, >100 with \>100
+
+# 4. Run validation (MANDATORY before commit)
+uv run tooling/validate_docs.py
+
+# 5. Fix any errors reported by validation
+
+# 6. Re-run validation until it passes
+uv run tooling/validate_docs.py
+# Should see: ✅ SUCCESS: All documents valid!
+
+# 7. Commit changes
+git add docs-cms/memos/MEMO-035-my-feature.md
+git commit -m "Add MEMO-035 for my feature documentation"
+```
+
+#### 6. **Quick Reference: Common Validation Errors**
+
+| Error | Cause | Fix |
+|-------|-------|-----|
+| `Field required` | Missing frontmatter field | Add required field (project_id, doc_uuid, author, etc.) |
+| `Opening code fence missing language` | Unlabeled code block (` ``` ` without language) | Add language label: ` ```text ` or ` ```bash ` |
+| `Duplicate document ID` | Two files with same `id:` in frontmatter | Use next sequential number (check existing files) |
+| `Unexpected FunctionDeclaration` | Unescaped `<` or `>` in prose | Escape with backslash: `\<5` or use `&lt;` |
+| `Unknown link` | Relative path or wrong case in link | Use absolute lowercase: `[RFC-015](/rfc/rfc-015)` |
+
+#### 7. **Validation Command Reference**
+
+```bash
+# Full validation (includes Docusaurus build)
+uv run tooling/validate_docs.py
+
+# Fast validation (skip build, useful during iteration)
+uv run tooling/validate_docs.py --skip-build
+
+# Verbose output (debug validation issues)
+uv run tooling/validate_docs.py --verbose
+
+# Fix common link issues automatically
+uv run tooling/fix_doc_links.py
+
+# Migrate all docs to correct format
+uv run tooling/migrate_docs_format.py --dry-run
+uv run tooling/migrate_docs_format.py  # Apply fixes
+```
+
+**Remember**: `uv run` is mandatory - direct `python3` execution will fail.
+
 ---
 
 ## Project Purpose
