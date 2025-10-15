@@ -116,6 +116,20 @@ func (s *patternProcessSyncer) SyncProcess(ctx context.Context, updateType procm
 			// Process is dead, need to restart
 			log.Printf("Process %s is dead (signal check failed: %v), will restart", processID, err)
 			handle.RestartCount++
+			// Record restart metric (use isolation from ProcessConfig)
+			isolationLevel := s.service.config.DefaultIsolation
+			if handle.Config != nil && handle.Config.Manifest != nil {
+				// Parse isolation from manifest
+				switch handle.Config.Manifest.IsolationLevel {
+				case "none":
+					isolationLevel = isolation.IsolationNone
+				case "namespace":
+					isolationLevel = isolation.IsolationNamespace
+				case "session":
+					isolationLevel = isolation.IsolationSession
+				}
+			}
+			s.service.metricsCollector.RecordProcessRestart(processConfig.PatternName, isolationLevel)
 		}
 	}
 
@@ -287,11 +301,22 @@ func (s *patternProcessSyncer) checkHealth(handle *processHandle) bool {
 
 	resp, err := client.Get(handle.HealthURL)
 	if err != nil {
+		// Record health check failure
+		s.service.metricsCollector.RecordHealthCheckFailure(handle.Config.PatternName)
 		return false
 	}
 	defer resp.Body.Close()
 
-	return resp.StatusCode == http.StatusOK
+	success := resp.StatusCode == http.StatusOK
+
+	// Record health check result
+	if success {
+		s.service.metricsCollector.RecordHealthCheckSuccess(handle.Config.PatternName)
+	} else {
+		s.service.metricsCollector.RecordHealthCheckFailure(handle.Config.PatternName)
+	}
+
+	return success
 }
 
 // SyncTerminatingProcess implements procmgr.ProcessSyncer.SyncTerminatingProcess

@@ -37,6 +37,9 @@ type Service struct {
 	orphanDetector   *OrphanDetector
 	healthMonitor    *HealthCheckMonitor
 
+	// Metrics
+	metricsCollector *MetricsCollector
+
 	// Lifecycle
 	startTime      time.Time
 	shutdownCtx    context.Context
@@ -106,6 +109,9 @@ func NewService(config *Config) (*Service, error) {
 	svc.cleanupManager = NewCleanupManager(svc)
 	svc.orphanDetector = NewOrphanDetector(svc, 60*time.Second) // Check every minute
 	svc.healthMonitor = NewHealthCheckMonitor(svc, 30*time.Second) // Check every 30 seconds
+
+	// Initialize metrics collector
+	svc.metricsCollector = NewMetricsCollector(svc)
 
 	// Initialize isolation managers for each level
 	svc.initIsolationManagers()
@@ -215,11 +221,21 @@ func (s *Service) LaunchPattern(ctx context.Context, req *pb.LaunchRequest) (*pb
 		GracePeriodSec: req.GracePeriodSecs,
 	}
 
+	// Track launch start time for metrics
+	launchStart := time.Now()
+
 	// Get or create process
 	handle, err := mgr.GetOrCreateProcess(ctx, key, isoConfig)
 	if err != nil {
+		// Record failed launch
+		s.metricsCollector.RecordProcessFailure(req.PatternName, isolationLevel)
+		s.metricsCollector.RecordLaunchDuration(req.PatternName, isolationLevel, time.Since(launchStart), false)
 		return nil, status.Errorf(codes.Internal, "failed to launch process: %v", err)
 	}
+
+	// Record successful launch
+	s.metricsCollector.RecordProcessStart(req.PatternName, isolationLevel)
+	s.metricsCollector.RecordLaunchDuration(req.PatternName, isolationLevel, time.Since(launchStart), true)
 
 	// Store process info (will be updated with PID/address by syncer)
 	s.processesMu.Lock()
@@ -340,6 +356,9 @@ func (s *Service) TerminatePattern(ctx context.Context, req *pb.TerminateRequest
 			Error:   err.Error(),
 		}, nil
 	}
+
+	// Record process stop
+	s.metricsCollector.RecordProcessStop(info.PatternName, info.Isolation)
 
 	// Remove from tracking
 	s.processesMu.Lock()
@@ -463,6 +482,23 @@ func (s *Service) Shutdown(ctx context.Context) error {
 
 	log.Printf("Pattern launcher service shutdown complete")
 	return nil
+}
+
+// GetMetrics returns current metrics snapshot
+func (s *Service) GetMetrics() *MetricsSnapshot {
+	return s.metricsCollector.GetMetrics()
+}
+
+// ExportPrometheusMetrics exports metrics in Prometheus text format
+func (s *Service) ExportPrometheusMetrics() string {
+	metrics := s.GetMetrics()
+	return metrics.ExportPrometheus()
+}
+
+// ExportJSONMetrics exports metrics in JSON format
+func (s *Service) ExportJSONMetrics() string {
+	metrics := s.GetMetrics()
+	return metrics.ExportJSON()
 }
 
 // protoToIsolationLevel converts protobuf enum to isolation.IsolationLevel
