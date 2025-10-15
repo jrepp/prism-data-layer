@@ -71,8 +71,8 @@ func main() {
 		}
 	}
 
-	// Bind slots
-	if err := prod.BindSlots(messageSink, stateStore); err != nil {
+	// Bind slots (objectStore is nil for now - claim check pattern not yet implemented in runner)
+	if err := prod.BindSlots(messageSink, stateStore, nil); err != nil {
 		log.Fatalf("Failed to bind slots: %v", err)
 	}
 
@@ -152,54 +152,78 @@ func initializeStateStore(binding producer.SlotBinding) (plugin.KeyValueBasicInt
 	}
 }
 
-func initializeNATS(config map[string]interface{}) (*nats.Driver, error) {
+func initializeNATS(config map[string]interface{}) (*nats.NATSPattern, error) {
 	url, _ := config["url"].(string)
 	if url == "" {
 		url = "nats://localhost:4222"
 	}
 
-	driver := nats.NewDriver()
-	cfg := map[string]interface{}{
-		"url": url,
+	driver := nats.New()
+
+	// Create plugin config
+	pluginCfg := &plugin.Config{
+		Plugin: plugin.PluginConfig{
+			Name:    "nats",
+			Version: "0.1.0",
+		},
+		Backend: map[string]interface{}{
+			"url": url,
+		},
 	}
 
-	if err := driver.Init(context.Background(), cfg); err != nil {
+	if err := driver.Initialize(context.Background(), pluginCfg); err != nil {
 		return nil, err
 	}
 
 	return driver, nil
 }
 
-func initializeRedis(config map[string]interface{}) (*redis.Driver, error) {
+func initializeRedis(config map[string]interface{}) (*redis.RedisPattern, error) {
 	addr, _ := config["address"].(string)
 	if addr == "" {
 		addr = "localhost:6379"
 	}
 
-	driver := redis.NewDriver()
-	cfg := map[string]interface{}{
-		"address": addr,
+	driver := redis.New()
+
+	// Create plugin config
+	pluginCfg := &plugin.Config{
+		Plugin: plugin.PluginConfig{
+			Name:    "redis",
+			Version: "0.1.0",
+		},
+		Backend: map[string]interface{}{
+			"address": addr,
+		},
 	}
 
-	if err := driver.Init(context.Background(), cfg); err != nil {
+	if err := driver.Initialize(context.Background(), pluginCfg); err != nil {
 		return nil, err
 	}
 
 	return driver, nil
 }
 
-func initializeMemStore(config map[string]interface{}) (*memstore.Driver, error) {
-	capacity, _ := config["capacity"].(float64)
-	if capacity == 0 {
-		capacity = 10000
+func initializeMemStore(config map[string]interface{}) (*memstore.MemStore, error) {
+	maxKeys, _ := config["max_keys"].(float64)
+	if maxKeys == 0 {
+		maxKeys = 10000
 	}
 
-	driver := memstore.NewDriver()
-	cfg := map[string]interface{}{
-		"capacity": int(capacity),
+	driver := memstore.New()
+
+	// Create plugin config
+	pluginCfg := &plugin.Config{
+		Plugin: plugin.PluginConfig{
+			Name:    "memstore",
+			Version: "0.1.0",
+		},
+		Backend: map[string]interface{}{
+			"max_keys": int(maxKeys),
+		},
 	}
 
-	if err := driver.Init(context.Background(), cfg); err != nil {
+	if err := driver.Initialize(context.Background(), pluginCfg); err != nil {
 		return nil, err
 	}
 
