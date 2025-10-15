@@ -5,7 +5,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/jrepp/prism/pkg/isolation"
+	"github.com/jrepp/prism-data-layer/pkg/isolation"
 )
 
 // MetricsCollector collects and exports Prometheus-compatible metrics

@@ -3,7 +3,7 @@ package isolation
 import (
 	"context"
 
-	"github.com/jrepp/prism/pkg/procmgr"
+	"github.com/jrepp/prism-data-layer/pkg/procmgr"
 )
 
 // IsolationLevel defines how requests are isolated into processes

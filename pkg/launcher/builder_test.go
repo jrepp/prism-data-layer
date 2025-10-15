@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/jrepp/prism/pkg/isolation"
+	"github.com/jrepp/prism-data-layer/pkg/isolation"
 )
 
 func TestNewBuilder(t *testing.T) {

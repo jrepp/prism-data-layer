@@ -12,8 +12,8 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/jrepp/prism/pkg/isolation"
-	"github.com/jrepp/prism/pkg/launcher"
+	"github.com/jrepp/prism-data-layer/pkg/isolation"
+	"github.com/jrepp/prism-data-layer/pkg/launcher"
 	pb "github.com/jrepp/prism-data-layer/pkg/plugin/gen/prism/launcher"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"

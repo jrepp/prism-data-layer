@@ -11,7 +11,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/jrepp/prism/pkg/procmgr"
+	"github.com/jrepp/prism-data-layer/pkg/procmgr"
 )
 
 // OrphanDetector finds and cleans up orphaned pattern processes

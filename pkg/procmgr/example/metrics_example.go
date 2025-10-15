@@ -9,7 +9,7 @@ import (
 
 	"github.com/jrepp/prism-data-layer/pkg/drivers/memstore"
 	"github.com/jrepp/prism-data-layer/pkg/plugin"
-	"github.com/jrepp/prism/pkg/procmgr"
+	"github.com/jrepp/prism-data-layer/pkg/procmgr"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 

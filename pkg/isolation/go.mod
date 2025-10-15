@@ -1,11 +1,11 @@
-module github.com/jrepp/prism/pkg/isolation
+module github.com/jrepp/prism-data-layer/pkg/isolation
 
 go 1.24.0
 
-replace github.com/jrepp/prism/pkg/procmgr => ../procmgr
+replace github.com/jrepp/prism-data-layer/pkg/procmgr => ../procmgr
 
 require (
-	github.com/jrepp/prism/pkg/procmgr v0.0.0
+	github.com/jrepp/prism-data-layer/pkg/procmgr v0.0.0
 	github.com/stretchr/testify v1.11.1
 )
 

@@ -11,8 +11,8 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/jrepp/prism/pkg/isolation"
-	"github.com/jrepp/prism/pkg/procmgr"
+	"github.com/jrepp/prism-data-layer/pkg/isolation"
+	"github.com/jrepp/prism-data-layer/pkg/procmgr"
 )
 
 // patternProcessSyncer implements ProcessSyncer for actual process launching

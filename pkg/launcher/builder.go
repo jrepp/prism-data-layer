@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/jrepp/prism/pkg/isolation"
+	"github.com/jrepp/prism-data-layer/pkg/isolation"
 )
 
 // ServiceBuilder provides a fluent interface for constructing a launcher Service.

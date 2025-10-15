@@ -1,13 +1,13 @@
-module github.com/jrepp/prism/pkg/procmgr/example
+module github.com/jrepp/prism-data-layer/pkg/procmgr/example
 
 go 1.24.0
 
-replace github.com/jrepp/prism/pkg/procmgr => ../
+replace github.com/jrepp/prism-data-layer/pkg/procmgr => ../
 
 require (
 	github.com/jrepp/prism-data-layer/pkg/drivers/memstore v0.0.0
 	github.com/jrepp/prism-data-layer/pkg/plugin v0.0.0
-	github.com/jrepp/prism/pkg/procmgr v0.0.0
+	github.com/jrepp/prism-data-layer/pkg/procmgr v0.0.0
 	github.com/prometheus/client_golang v1.23.2
 )
 

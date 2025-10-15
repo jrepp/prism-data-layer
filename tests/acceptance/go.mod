@@ -12,7 +12,9 @@ require (
 	github.com/jrepp/prism-data-layer/pkg/drivers/postgres v0.0.0-00010101000000-000000000000
 	github.com/jrepp/prism-data-layer/pkg/drivers/redis v0.0.0
 	github.com/jrepp/prism-data-layer/pkg/drivers/s3 v0.0.0
+	github.com/jrepp/prism-data-layer/pkg/isolation v0.0.0-00010101000000-000000000000
 	github.com/jrepp/prism-data-layer/pkg/plugin v0.0.0
+	github.com/jrepp/prism-data-layer/pkg/procmgr v0.0.0
 	github.com/jrepp/prism-data-layer/tests/testing v0.0.0
 	github.com/stretchr/testify v1.11.1
 	github.com/testcontainers/testcontainers-go v0.39.0
@@ -42,6 +44,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.28.12 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sts v1.33.11 // indirect
 	github.com/aws/smithy-go v1.22.2 // indirect
+	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/confluentinc/confluent-kafka-go/v2 v2.6.1 // indirect
@@ -80,6 +83,7 @@ require (
 	github.com/moby/sys/userns v0.1.0 // indirect
 	github.com/moby/term v0.5.0 // indirect
 	github.com/morikuni/aec v1.0.0 // indirect
+	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/nats-io/nats.go v1.45.0 // indirect
 	github.com/nats-io/nkeys v0.4.11 // indirect
 	github.com/nats-io/nuid v1.0.1 // indirect
@@ -88,6 +92,10 @@ require (
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/power-devops/perfstat v0.0.0-20210106213030-5aafc221ea8c // indirect
+	github.com/prometheus/client_golang v1.23.2 // indirect
+	github.com/prometheus/client_model v0.6.2 // indirect
+	github.com/prometheus/common v0.66.1 // indirect
+	github.com/prometheus/procfs v0.16.1 // indirect
 	github.com/redis/go-redis/v9 v9.14.0 // indirect
 	github.com/shirou/gopsutil/v4 v4.25.6 // indirect
 	github.com/sirupsen/logrus v1.9.3 // indirect
@@ -104,6 +112,7 @@ require (
 	go.opentelemetry.io/otel/metric v1.38.0 // indirect
 	go.opentelemetry.io/otel/sdk v1.38.0 // indirect
 	go.opentelemetry.io/otel/trace v1.38.0 // indirect
+	go.yaml.in/yaml/v2 v2.4.2 // indirect
 	golang.org/x/crypto v0.42.0 // indirect
 	golang.org/x/mod v0.27.0 // indirect
 	golang.org/x/net v0.43.0 // indirect
@@ -122,7 +131,9 @@ replace (
 	github.com/jrepp/prism-data-layer/pkg/drivers/postgres => ../../pkg/drivers/postgres
 	github.com/jrepp/prism-data-layer/pkg/drivers/redis => ../../pkg/drivers/redis
 	github.com/jrepp/prism-data-layer/pkg/drivers/s3 => ../../pkg/drivers/s3
+	github.com/jrepp/prism-data-layer/pkg/isolation => ../../pkg/isolation
 	github.com/jrepp/prism-data-layer/pkg/patterns/common => ../../pkg/patterns/common
 	github.com/jrepp/prism-data-layer/pkg/plugin => ../../pkg/plugin
+	github.com/jrepp/prism-data-layer/pkg/procmgr => ../../pkg/procmgr
 	github.com/jrepp/prism-data-layer/tests/testing => ../testing
 )

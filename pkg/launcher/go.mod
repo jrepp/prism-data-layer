@@ -1,11 +1,11 @@
-module github.com/jrepp/prism/pkg/launcher
+module github.com/jrepp/prism-data-layer/pkg/launcher
 
 go 1.24.0
 
 require (
+	github.com/jrepp/prism-data-layer/pkg/isolation v0.0.0
 	github.com/jrepp/prism-data-layer/pkg/plugin v0.0.0
-	github.com/jrepp/prism/pkg/isolation v0.0.0
-	github.com/jrepp/prism/pkg/procmgr v0.0.0
+	github.com/jrepp/prism-data-layer/pkg/procmgr v0.0.0
 	google.golang.org/grpc v1.68.1
 	gopkg.in/yaml.v3 v3.0.1
 )
@@ -27,7 +27,7 @@ require (
 )
 
 replace (
+	github.com/jrepp/prism-data-layer/pkg/isolation => ../isolation
 	github.com/jrepp/prism-data-layer/pkg/plugin => ../plugin
-	github.com/jrepp/prism/pkg/isolation => ../isolation
-	github.com/jrepp/prism/pkg/procmgr => ../procmgr
+	github.com/jrepp/prism-data-layer/pkg/procmgr => ../procmgr
 )

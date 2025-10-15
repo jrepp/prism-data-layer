@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/jrepp/prism/pkg/isolation"
-	"github.com/jrepp/prism/pkg/procmgr"
+	"github.com/jrepp/prism-data-layer/pkg/isolation"
+	"github.com/jrepp/prism-data-layer/pkg/procmgr"
 )
 
 // IsolationConfig defines isolation requirements for pattern tests

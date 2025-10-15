@@ -6,7 +6,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/jrepp/prism/pkg/procmgr"
+	"github.com/jrepp/prism-data-layer/pkg/procmgr"
 )
 
 // IsolationManager manages process isolation using procmgr

@@ -7,8 +7,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/jrepp/prism/pkg/isolation"
-	"github.com/jrepp/prism/pkg/procmgr"
+	"github.com/jrepp/prism-data-layer/pkg/isolation"
+	"github.com/jrepp/prism-data-layer/pkg/procmgr"
 	pb "github.com/jrepp/prism-data-layer/pkg/plugin/gen/prism/launcher"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"

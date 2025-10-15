@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/jrepp/prism/pkg/isolation"
+	"github.com/jrepp/prism-data-layer/pkg/isolation"
 	pb "github.com/jrepp/prism-data-layer/pkg/plugin/gen/prism/launcher"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"

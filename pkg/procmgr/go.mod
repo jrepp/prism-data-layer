@@ -1,4 +1,4 @@
-module github.com/jrepp/prism/pkg/procmgr
+module github.com/jrepp/prism-data-layer/pkg/procmgr
 
 go 1.23.0
 
