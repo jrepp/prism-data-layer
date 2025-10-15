@@ -61,7 +61,7 @@ all: proto build ## Build all components (default target)
 
 ##@ Build
 
-build: build-proxy build-prismctl ## Build all components
+build: build-proxy build-prismctl build-prism-admin build-pattern-launcher build-plugin-watcher ## Build all components (excludes prism-loadtest due to module path issues)
 
 build-proxy: ## Build Rust proxy
 	$(call print_blue,Building Rust proxy...)
@@ -76,12 +76,40 @@ build-prismctl: ## Build prismctl CLI
 	@cd cmd/prismctl && go build -o $(BINARIES_DIR)/prismctl .
 	$(call print_green,prismctl built: $(BINARIES_DIR)/prismctl)
 
+build-prism-admin: ## Build prism-admin CLI
+	$(call print_blue,Building prism-admin CLI...)
+	@mkdir -p $(BINARIES_DIR)
+	@cd cmd/prism-admin && go build -o $(BINARIES_DIR)/prism-admin .
+	$(call print_green,prism-admin built: $(BINARIES_DIR)/prism-admin)
+
+build-prism-loadtest: ## Build prism-loadtest CLI
+	$(call print_blue,Building prism-loadtest CLI...)
+	@mkdir -p $(BINARIES_DIR)
+	@cd cmd/prism-loadtest && go build -o $(BINARIES_DIR)/prism-loadtest .
+	$(call print_green,prism-loadtest built: $(BINARIES_DIR)/prism-loadtest)
+
+build-pattern-launcher: ## Build pattern-launcher utility
+	$(call print_blue,Building pattern-launcher...)
+	@mkdir -p $(BINARIES_DIR)
+	@cd cmd/pattern-launcher && go build -o $(BINARIES_DIR)/pattern-launcher .
+	$(call print_green,pattern-launcher built: $(BINARIES_DIR)/pattern-launcher)
+
+build-plugin-watcher: ## Build plugin-watcher utility
+	$(call print_blue,Building plugin-watcher...)
+	@mkdir -p $(BINARIES_DIR)
+	@cd cmd/plugin-watcher && go build -o $(BINARIES_DIR)/plugin-watcher .
+	$(call print_green,plugin-watcher built: $(BINARIES_DIR)/plugin-watcher)
+
 build-dev: ## Build all components in debug mode (faster)
 	$(call print_blue,Building in debug mode...)
 	@mkdir -p $(BINARIES_DIR)
 	@cd prism-proxy && CARGO_TARGET_DIR=$(RUST_TARGET_DIR) cargo build
 	@cp $(RUST_TARGET_DIR)/debug/prism-proxy $(BINARIES_DIR)/prism-proxy-debug
 	@cd cmd/prismctl && go build -o $(BINARIES_DIR)/prismctl-debug .
+	@cd cmd/prism-admin && go build -o $(BINARIES_DIR)/prism-admin-debug .
+	@cd cmd/prism-loadtest && go build -o $(BINARIES_DIR)/prism-loadtest-debug .
+	@cd cmd/pattern-launcher && go build -o $(BINARIES_DIR)/pattern-launcher-debug .
+	@cd cmd/plugin-watcher && go build -o $(BINARIES_DIR)/plugin-watcher-debug .
 	$(call print_green,Debug builds complete: $(BINARIES_DIR)/*-debug)
 
 ##@ Testing

@@ -403,30 +403,14 @@ jobs:
             ${{ runner.os }}-cargo-build-
             ${{ runner.os }}-cargo-
 
-      - name: Build Rust proxy
-        run: cd prism-proxy && cargo build --release
+      - name: Build all components
+        run: make build
 
-      - name: Build Go pattern runners
-        run: |
-          cd patterns/consumer/cmd/consumer-runner && go build -o consumer-runner .
-          cd ../../../producer/cmd/producer-runner && go build -o producer-runner .
-          cd ../../../multicast_registry/cmd/multicast-registry-runner && go build -o multicast-registry-runner .
-
-      - name: Upload proxy binary
+      - name: Upload all binaries
         uses: actions/upload-artifact@v4
         with:
-          name: proxy-binary
-          path: prism-proxy/target/release/prism-proxy
-          retention-days: 7
-
-      - name: Upload pattern runner binaries
-        uses: actions/upload-artifact@v4
-        with:
-          name: pattern-binaries
-          path: |
-            patterns/consumer/cmd/consumer-runner/consumer-runner
-            patterns/producer/cmd/producer-runner/producer-runner
-            patterns/multicast_registry/cmd/multicast-registry-runner/multicast-registry-runner
+          name: prism-binaries
+          path: build/binaries/
           retention-days: 7
 
   # Job 8: Coverage summary
