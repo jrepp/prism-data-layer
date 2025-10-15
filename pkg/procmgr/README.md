@@ -8,7 +8,7 @@ A Kubernetes Kubelet-inspired process management package for managing 0 or more 
 
 ## Features
 
-✅ **Implemented (Phase 1 - Complete)**:
+✅ **Implemented (Phase 1 & 2 - Complete)**:
 - Per-process goroutine with channel communication
 - State machine with immutable transitions (Starting → Syncing → Terminating → Terminated → Finished)
 - Pending + active update model (prevents lost updates)
@@ -18,9 +18,14 @@ A Kubernetes Kubelet-inspired process management package for managing 0 or more 
 - Orphan detection and cleanup via `SyncKnownProcesses`
 - Concurrent process management (tested with 100+ processes)
 - Race-free implementation (tested with `-race` detector)
+- **Priority work queue with min-heap** (Phase 2)
+- **Exponential backoff with jitter** (Phase 2)
+- **Automatic retry on failure** with intelligent backoff (Phase 2)
+- **Phase transition optimization** (immediate requeue for state changes) (Phase 2)
 
 🚧 **TODO (Future Phases)**:
-- Work queue with exponential backoff (Phase 2)
+- Grace period timeout enforcement (Phase 3)
+- Force kill after grace period expires (Phase 3)
 - Prometheus metrics integration (Phase 4)
 - Health check endpoints (Phase 4)
 - Process dependencies and DAG execution (Open Question)
@@ -303,7 +308,7 @@ Key test scenarios:
 
 ## Implementation Status
 
-**Phase 1 Complete** ✅ (Target: Week 1)
+**Phase 1 Complete** ✅ (Week 1)
 - Core process manager with state tracking
 - Per-process goroutine with channel communication
 - State machine with immutable transitions
@@ -311,18 +316,21 @@ Key test scenarios:
 - Context cancellation support
 - Comprehensive test suite (15+ tests, 85%+ coverage)
 
-**Phase 2 TODO** (Target: Week 2)
-- Priority work queue implementation
-- Exponential backoff on errors
-- Jitter to prevent thundering herd
-- Immediate requeue on phase transitions
+**Phase 2 Complete** ✅ (Week 1)
+- ✅ Priority work queue implementation (min-heap with container/heap)
+- ✅ Exponential backoff on errors (base 1s, max 60s configurable)
+- ✅ Jitter to prevent thundering herd (±25% by default)
+- ✅ Immediate requeue on phase transitions (0 delay)
+- ✅ Transient error detection (context.Canceled, DeadlineExceeded)
+- ✅ Consecutive failure tracking for intelligent backoff
+- ✅ 10 additional work queue tests (100% pass rate)
 
-**Phase 3 TODO** (Target: Week 3)
+**Phase 3 TODO** (Target: Week 2)
 - Refine graceful termination edge cases
 - Grace period timeout enforcement
 - Force kill after grace period expires
 
-**Phase 4 TODO** (Target: Week 4)
+**Phase 4 TODO** (Target: Week 3)
 - Prometheus metrics integration
 - Health check endpoints
 - Finished process purging with TTL

@@ -16,6 +16,7 @@ func NewProcessManager(opts ...Option) *ProcessManager {
 		processStatuses: make(map[ProcessID]*processStatus),
 		resyncInterval:  30 * time.Second,
 		backOffPeriod:   5 * time.Second,
+		workQueue:       NewWorkQueue(),
 		shutdownCtx:     ctx,
 		shutdownCancel:  cancel,
 	}
@@ -356,14 +357,51 @@ func (pm *ProcessManager) completeWork(id ProcessID, syncErr error) {
 		return
 	}
 
-	// Requeue with backoff if error
+	// Determine requeue delay based on error and state
+	var delay time.Duration
+	phaseTransition := false
+
 	if syncErr != nil {
-		// TODO: Implement work queue with backoff
-		// For now, just log
-		log.Printf("Process %s: sync error, would requeue with backoff: %v", id, syncErr)
+		// Error occurred - apply backoff
+		status.consecutiveFails++
+
+		// Check if transient error (context cancelled, deadline exceeded)
+		isTransient := syncErr == context.Canceled || syncErr == context.DeadlineExceeded
+
+		if isTransient {
+			// Retry quickly for transient errors
+			delay = Jitter(1*time.Second, 0.5)
+			log.Printf("Process %s: transient error, retrying in %v: %v", id, delay, syncErr)
+		} else {
+			// Exponential backoff for persistent errors
+			delay = ExponentialBackoff(status.consecutiveFails, 1*time.Second, pm.backOffPeriod)
+			log.Printf("Process %s: error (attempt %d), retrying in %v: %v",
+				id, status.consecutiveFails, delay, syncErr)
+		}
+	} else {
+		// Success - reset failure counter
+		status.consecutiveFails = 0
+
+		// Check for phase transition
+		state := status.State()
+		if state == ProcessStateTerminated {
+			// Just completed terminating, need to run terminated phase
+			phaseTransition = true
+		}
+
+		if phaseTransition {
+			// Immediate requeue for phase transitions
+			delay = 0
+		} else {
+			// Normal resync interval
+			delay = Jitter(pm.resyncInterval, 0.1)
+		}
 	}
 
-	// If there's a pending update, signal worker
+	// Enqueue for retry/resync
+	pm.workQueue.Enqueue(id, delay)
+
+	// If there's a pending update, signal worker immediately
 	hasPending := status.pending != nil
 	updateCh := pm.processUpdates[id]
 

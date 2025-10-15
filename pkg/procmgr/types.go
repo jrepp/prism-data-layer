@@ -128,6 +128,7 @@ type ProcessManager struct {
 	syncer         ProcessSyncer
 	resyncInterval time.Duration
 	backOffPeriod  time.Duration
+	workQueue      WorkQueue
 
 	// Lifecycle
 	shutdownCtx    context.Context
@@ -157,9 +158,10 @@ type processStatus struct {
 	finished    bool
 
 	// Health tracking
-	errorCount   int
-	lastError    error
-	restartCount int
+	errorCount       int
+	lastError        error
+	restartCount     int
+	consecutiveFails int // Track consecutive failures for backoff
 }
 
 // State returns the current state of the process
