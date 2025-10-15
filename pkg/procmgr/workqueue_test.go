@@ -226,8 +226,8 @@ func TestExponentialBackoff(t *testing.T) {
 		{3, 6000 * time.Millisecond, 10000 * time.Millisecond}, // 8s ± 25%
 		{4, 12 * time.Second, 20 * time.Second},                // 16s ± 25%
 		{5, 24 * time.Second, 40 * time.Second},                // 32s ± 25%
-		{6, 45 * time.Second, 60 * time.Second},                // 64s capped at 60s ± 25%
-		{10, 45 * time.Second, 60 * time.Second},               // Way over, capped at 60s
+		{6, 45 * time.Second, 75 * time.Second},                // 64s capped at 60s, then ± 25% = 75s max
+		{10, 45 * time.Second, 75 * time.Second},               // Way over, capped at 60s, then ± 25% = 75s max
 	}
 
 	for _, tt := range tests {

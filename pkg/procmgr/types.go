@@ -129,6 +129,7 @@ type ProcessManager struct {
 	resyncInterval time.Duration
 	backOffPeriod  time.Duration
 	workQueue      WorkQueue
+	metrics        MetricsCollector
 
 	// Lifecycle
 	shutdownCtx    context.Context

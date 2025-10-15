@@ -687,3 +687,292 @@ func BenchmarkProcessManager_CreateTerminate(b *testing.B) {
 		})
 	}
 }
+
+// TestProcessManager_WorkQueueRetry tests that failed syncs are automatically retried via work queue
+func TestProcessManager_WorkQueueRetry(t *testing.T) {
+	syncer := &mockSyncer{
+		syncErr: errors.New("sync failed"),
+	}
+	pm := NewProcessManager(
+		WithSyncer(syncer),
+		WithBackOffPeriod(2*time.Second),
+	)
+	defer pm.Shutdown(context.Background())
+
+	// Create process (will fail)
+	pm.UpdateProcess(ProcessUpdate{
+		ID:         "test-1",
+		UpdateType: UpdateTypeCreate,
+		Config:     &struct{}{},
+	})
+
+	// Wait for initial sync attempt
+	require.Eventually(t, func() bool {
+		return syncer.getSyncCalled() >= 1
+	}, 2*time.Second, 50*time.Millisecond, "Initial sync should be attempted")
+
+	initialCalls := syncer.getSyncCalled()
+
+	// Clear error so next retry succeeds
+	syncer.mu.Lock()
+	syncer.syncErr = nil
+	syncer.mu.Unlock()
+
+	// Wait for automatic retry via work queue
+	require.Eventually(t, func() bool {
+		return syncer.getSyncCalled() > initialCalls
+	}, 5*time.Second, 100*time.Millisecond, "Work queue should trigger retry after backoff")
+
+	// Process should eventually reach syncing state
+	require.Eventually(t, func() bool {
+		status, ok := pm.GetProcessStatus("test-1")
+		return ok && status.State == ProcessStateSyncing
+	}, 3*time.Second, 50*time.Millisecond, "Process should reach syncing state after retry")
+}
+
+// TestProcessManager_WorkQueuePeriodicResync tests periodic resync via work queue
+func TestProcessManager_WorkQueuePeriodicResync(t *testing.T) {
+	syncer := &mockSyncer{}
+	pm := NewProcessManager(
+		WithSyncer(syncer),
+		WithResyncInterval(500*time.Millisecond), // Short interval for testing
+	)
+	defer pm.Shutdown(context.Background())
+
+	// Create process
+	pm.UpdateProcess(ProcessUpdate{
+		ID:         "test-1",
+		UpdateType: UpdateTypeCreate,
+		Config:     &struct{}{},
+	})
+
+	// Wait for initial sync
+	require.Eventually(t, func() bool {
+		return syncer.getSyncCalled() >= 1
+	}, 2*time.Second, 50*time.Millisecond)
+
+	initialCalls := syncer.getSyncCalled()
+
+	// Wait for at least 2 periodic resyncs
+	require.Eventually(t, func() bool {
+		return syncer.getSyncCalled() >= initialCalls+2
+	}, 3*time.Second, 100*time.Millisecond, "Work queue should trigger periodic resyncs")
+}
+
+// TestProcessManager_WorkQueueExponentialBackoff tests exponential backoff behavior
+func TestProcessManager_WorkQueueExponentialBackoff(t *testing.T) {
+	backoffSyncer := &backoffTrackingSyncer{
+		retryTimes: make([]time.Time, 0),
+	}
+
+	pm := NewProcessManager(
+		WithSyncer(backoffSyncer),
+		WithBackOffPeriod(5*time.Second),
+	)
+	defer pm.Shutdown(context.Background())
+
+	// Create process (will keep failing)
+	pm.UpdateProcess(ProcessUpdate{
+		ID:         "test-1",
+		UpdateType: UpdateTypeCreate,
+		Config:     &struct{}{},
+	})
+
+	// Wait for at least 3 retry attempts (initial + 2 retries)
+	// First retry ~1s, second retry ~2s, third retry ~4s = ~7s total
+	require.Eventually(t, func() bool {
+		return backoffSyncer.getRetryCount() >= 3
+	}, 12*time.Second, 100*time.Millisecond, "Should have at least 3 retry attempts")
+
+	// Get copy of retry times
+	times := backoffSyncer.getRetryTimes()
+
+	// Calculate intervals between retries
+	require.GreaterOrEqual(t, len(times), 3, "Should have at least 3 retry attempts")
+
+	interval1 := times[1].Sub(times[0])
+	interval2 := times[2].Sub(times[1])
+
+	// Second interval should be longer than first (exponential backoff)
+	// Allow some tolerance due to jitter
+	assert.Greater(t, interval2, interval1*9/10,
+		"Second retry interval (%v) should be longer than first (%v)", interval2, interval1)
+}
+
+// TestProcessManager_WorkQueueImmediatePhaseTransition tests immediate requeue on phase transitions
+func TestProcessManager_WorkQueueImmediatePhaseTransition(t *testing.T) {
+	syncer := &mockSyncer{}
+	pm := NewProcessManager(
+		WithSyncer(syncer),
+		WithResyncInterval(30*time.Second), // Long interval
+	)
+	defer pm.Shutdown(context.Background())
+
+	// Create process
+	pm.UpdateProcess(ProcessUpdate{
+		ID:         "test-1",
+		UpdateType: UpdateTypeCreate,
+		Config:     &struct{}{},
+	})
+
+	// Wait for sync
+	require.Eventually(t, func() bool {
+		return syncer.getSyncCalled() > 0
+	}, 2*time.Second, 50*time.Millisecond)
+
+	// Terminate
+	gracePeriod := int64(1)
+	pm.UpdateProcess(ProcessUpdate{
+		ID:         "test-1",
+		UpdateType: UpdateTypeTerminate,
+		TerminateOptions: &TerminateOptions{
+			GracePeriodSecs: &gracePeriod,
+		},
+	})
+
+	// Terminating phase should execute quickly (not wait 30s for resync)
+	require.Eventually(t, func() bool {
+		return syncer.getSyncTerminatingCalled() > 0
+	}, 2*time.Second, 50*time.Millisecond, "Terminating phase should execute immediately")
+
+	// Terminated phase should also execute quickly
+	require.Eventually(t, func() bool {
+		return syncer.getSyncTerminatedCalled() > 0
+	}, 2*time.Second, 50*time.Millisecond, "Terminated phase should execute immediately")
+}
+
+// TestProcessManager_WorkQueueTransientError tests quick retry on transient errors
+func TestProcessManager_WorkQueueTransientError(t *testing.T) {
+	syncer := &mockSyncer{
+		syncErr: context.Canceled, // Transient error
+	}
+	pm := NewProcessManager(
+		WithSyncer(syncer),
+		WithBackOffPeriod(10*time.Second), // Long backoff for persistent errors
+	)
+	defer pm.Shutdown(context.Background())
+
+	// Create process
+	pm.UpdateProcess(ProcessUpdate{
+		ID:         "test-1",
+		UpdateType: UpdateTypeCreate,
+		Config:     &struct{}{},
+	})
+
+	// Wait for initial attempt
+	require.Eventually(t, func() bool {
+		return syncer.getSyncCalled() >= 1
+	}, 2*time.Second, 50*time.Millisecond)
+
+	initialCalls := syncer.getSyncCalled()
+
+	// Clear error
+	syncer.mu.Lock()
+	syncer.syncErr = nil
+	syncer.mu.Unlock()
+
+	// Transient errors should retry quickly (within ~2s, not 10s)
+	require.Eventually(t, func() bool {
+		return syncer.getSyncCalled() > initialCalls
+	}, 3*time.Second, 100*time.Millisecond,
+		"Transient error should retry quickly (not wait for full backoff period)")
+}
+
+// TestProcessManager_WorkQueueConcurrentProcesses tests work queue with multiple concurrent processes
+func TestProcessManager_WorkQueueConcurrentProcesses(t *testing.T) {
+	// Track sync calls per process
+	processSyncCounts := &sync.Map{}
+
+	// Custom syncer that tracks per-process calls and fails first 2 attempts
+	customSyncer := &trackingSyncer{
+		syncCounts: processSyncCounts,
+	}
+
+	pm := NewProcessManager(
+		WithSyncer(customSyncer),
+		WithBackOffPeriod(2*time.Second),
+	)
+	defer pm.Shutdown(context.Background())
+
+	// Create 5 processes
+	numProcesses := 5
+	for i := 1; i <= numProcesses; i++ {
+		id := ProcessID(fmt.Sprintf("test-%d", i))
+		pm.UpdateProcess(ProcessUpdate{
+			ID:         id,
+			UpdateType: UpdateTypeCreate,
+			Config:     id, // Pass ID as config for tracking
+		})
+	}
+
+	// All processes should eventually reach syncing state (after retries)
+	for i := 1; i <= numProcesses; i++ {
+		id := ProcessID(fmt.Sprintf("test-%d", i))
+		require.Eventually(t, func() bool {
+			status, ok := pm.GetProcessStatus(id)
+			return ok && status.State == ProcessStateSyncing
+		}, 10*time.Second, 100*time.Millisecond,
+			"Process %s should reach syncing state after retries", id)
+	}
+}
+
+// trackingSyncer is a custom syncer for testing that tracks calls per process
+type trackingSyncer struct {
+	syncCounts *sync.Map
+}
+
+func (ts *trackingSyncer) SyncProcess(ctx context.Context, updateType UpdateType, config interface{}) (bool, error) {
+	processID := config.(ProcessID)
+	val, _ := ts.syncCounts.LoadOrStore(processID, &atomic.Int32{})
+	counter := val.(*atomic.Int32)
+	count := counter.Add(1)
+
+	// Fail first 2 attempts, then succeed
+	if count <= 2 {
+		return false, errors.New("temporary failure")
+	}
+	return false, nil
+}
+
+func (ts *trackingSyncer) SyncTerminatingProcess(ctx context.Context, config interface{}, gracePeriodSecs *int64, statusFn ProcessStatusFunc) error {
+	return nil
+}
+
+func (ts *trackingSyncer) SyncTerminatedProcess(ctx context.Context, config interface{}) error {
+	return nil
+}
+
+// backoffTrackingSyncer tracks retry timestamps for backoff testing
+type backoffTrackingSyncer struct {
+	mu         sync.Mutex
+	retryTimes []time.Time
+}
+
+func (bts *backoffTrackingSyncer) SyncProcess(ctx context.Context, updateType UpdateType, config interface{}) (bool, error) {
+	bts.mu.Lock()
+	bts.retryTimes = append(bts.retryTimes, time.Now())
+	bts.mu.Unlock()
+	return false, errors.New("persistent failure")
+}
+
+func (bts *backoffTrackingSyncer) SyncTerminatingProcess(ctx context.Context, config interface{}, gracePeriodSecs *int64, statusFn ProcessStatusFunc) error {
+	return nil
+}
+
+func (bts *backoffTrackingSyncer) SyncTerminatedProcess(ctx context.Context, config interface{}) error {
+	return nil
+}
+
+func (bts *backoffTrackingSyncer) getRetryCount() int {
+	bts.mu.Lock()
+	defer bts.mu.Unlock()
+	return len(bts.retryTimes)
+}
+
+func (bts *backoffTrackingSyncer) getRetryTimes() []time.Time {
+	bts.mu.Lock()
+	defer bts.mu.Unlock()
+	times := make([]time.Time, len(bts.retryTimes))
+	copy(times, bts.retryTimes)
+	return times
+}

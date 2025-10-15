@@ -27,3 +27,10 @@ func WithBackOffPeriod(d time.Duration) Option {
 		pm.backOffPeriod = d
 	}
 }
+
+// WithMetricsCollector sets the metrics collector
+func WithMetricsCollector(mc MetricsCollector) Option {
+	return func(pm *ProcessManager) {
+		pm.metrics = mc
+	}
+}

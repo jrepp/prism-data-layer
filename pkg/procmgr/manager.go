@@ -17,6 +17,7 @@ func NewProcessManager(opts ...Option) *ProcessManager {
 		resyncInterval:  30 * time.Second,
 		backOffPeriod:   5 * time.Second,
 		workQueue:       NewWorkQueue(),
+		metrics:         NewNoopMetricsCollector(),
 		shutdownCtx:     ctx,
 		shutdownCancel:  cancel,
 	}
@@ -24,6 +25,10 @@ func NewProcessManager(opts ...Option) *ProcessManager {
 	for _, opt := range opts {
 		opt(pm)
 	}
+
+	// Start work queue consumer goroutine
+	pm.wg.Add(1)
+	go pm.workQueueConsumer()
 
 	return pm
 }
@@ -118,6 +123,94 @@ func (pm *ProcessManager) handleTerminationRequest(id ProcessID, status *process
 	if !alreadyTerminating && status.cancelFn != nil {
 		log.Printf("Process %s: cancelling context due to termination", id)
 		status.cancelFn()
+	}
+}
+
+// workQueueConsumer runs in a goroutine, consuming the work queue and triggering process updates
+func (pm *ProcessManager) workQueueConsumer() {
+	defer pm.wg.Done()
+	defer log.Printf("Work queue consumer stopped")
+
+	log.Printf("Work queue consumer started")
+
+	// Create a ticker for periodic checks (in case of missed notifications)
+	ticker := time.NewTicker(1 * time.Second)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-pm.shutdownCtx.Done():
+			// Manager shutting down
+			return
+
+		case <-pm.workQueue.Wait():
+			// Work queue has items (or was notified)
+			pm.processWorkQueue()
+
+		case <-ticker.C:
+			// Periodic check to ensure we don't miss any ready items
+			pm.processWorkQueue()
+		}
+	}
+}
+
+// processWorkQueue dequeues all ready items and signals their workers
+func (pm *ProcessManager) processWorkQueue() {
+	for {
+		// Dequeue next ready item
+		id, ok := pm.workQueue.Dequeue()
+		if !ok {
+			// No more ready items
+			break
+		}
+
+		log.Printf("Work queue: processing ready item: %s", id)
+
+		// Record retry metric
+		pm.metrics.WorkQueueRetry(id)
+		pm.metrics.WorkQueueDepth(pm.workQueue.Len())
+
+		pm.mu.Lock()
+		status, exists := pm.processStatuses[id]
+		if !exists {
+			pm.mu.Unlock()
+			log.Printf("Work queue: process %s no longer exists", id)
+			continue
+		}
+
+		updateCh, chanExists := pm.processUpdates[id]
+		if !chanExists {
+			pm.mu.Unlock()
+			log.Printf("Work queue: process %s has no update channel (already cleaned up?)", id)
+			continue
+		}
+
+		// If no pending update, create a sync update for retry/resync
+		if status.pending == nil {
+			var config interface{}
+			if status.active != nil {
+				config = status.active.Config
+			}
+
+			status.pending = &ProcessUpdate{
+				ID:         id,
+				UpdateType: UpdateTypeSync,
+				StartTime:  time.Now(),
+				Config:     config,
+			}
+			log.Printf("Work queue: created synthetic sync update for %s", id)
+		}
+
+		pm.mu.Unlock()
+
+		// Signal worker (non-blocking)
+		select {
+		case updateCh <- struct{}{}:
+			// Signaled successfully
+		default:
+			// Channel already has pending signal, skip
+			log.Printf("Work queue: process %s already has pending signal", id)
+		}
 	}
 }
 
@@ -240,12 +333,18 @@ func (pm *ProcessManager) syncProcess(id ProcessID, status *processStatus, updat
 	duration := time.Since(startTime)
 	log.Printf("Process %s: sync completed in %v (terminal=%v, err=%v)", id, duration, terminal, err)
 
+	// Record metrics
+	pm.metrics.ProcessSyncDuration(id, update.UpdateType, duration, err)
+
 	pm.mu.Lock()
 	defer pm.mu.Unlock()
+
+	oldState := status.State()
 
 	if err != nil {
 		status.errorCount++
 		status.lastError = err
+		pm.metrics.ProcessError(id, "sync_error")
 	} else {
 		status.errorCount = 0
 		status.lastError = nil
@@ -263,6 +362,12 @@ func (pm *ProcessManager) syncProcess(id ProcessID, status *processStatus, updat
 		if status.gracePeriod == 0 {
 			status.gracePeriod = 10
 		}
+	}
+
+	// Record state transition if changed
+	newState := status.State()
+	if newState != oldState {
+		pm.metrics.ProcessStateTransition(id, oldState, newState)
 	}
 
 	return err
@@ -283,12 +388,18 @@ func (pm *ProcessManager) syncTerminating(id ProcessID, status *processStatus, u
 	duration := time.Since(startTime)
 	log.Printf("Process %s: terminating sync completed in %v (err=%v)", id, duration, err)
 
+	// Record termination duration
+	pm.metrics.ProcessTerminationDuration(id, duration)
+
 	pm.mu.Lock()
 	defer pm.mu.Unlock()
+
+	oldState := status.State()
 
 	if err != nil {
 		status.errorCount++
 		status.lastError = err
+		pm.metrics.ProcessError(id, "termination_error")
 	} else {
 		// Transition to terminated
 		status.terminatedAt = time.Now()
@@ -310,6 +421,12 @@ func (pm *ProcessManager) syncTerminating(id ProcessID, status *processStatus, u
 		}
 	}
 
+	// Record state transition
+	newState := status.State()
+	if newState != oldState {
+		pm.metrics.ProcessStateTransition(id, oldState, newState)
+	}
+
 	return err
 }
 
@@ -325,15 +442,24 @@ func (pm *ProcessManager) syncTerminated(id ProcessID, status *processStatus, up
 	pm.mu.Lock()
 	defer pm.mu.Unlock()
 
+	oldState := status.State()
+
 	if err != nil {
 		status.errorCount++
 		status.lastError = err
+		pm.metrics.ProcessError(id, "cleanup_error")
 	} else {
 		// Transition to finished
 		status.finishedAt = time.Now()
 		status.finished = true
 		status.errorCount = 0
 		status.lastError = nil
+	}
+
+	// Record state transition
+	newState := status.State()
+	if newState != oldState {
+		pm.metrics.ProcessStateTransition(id, oldState, newState)
 	}
 
 	return err
@@ -400,6 +526,12 @@ func (pm *ProcessManager) completeWork(id ProcessID, syncErr error) {
 
 	// Enqueue for retry/resync
 	pm.workQueue.Enqueue(id, delay)
+	pm.metrics.WorkQueueAdd(id, delay)
+	pm.metrics.WorkQueueDepth(pm.workQueue.Len())
+
+	if syncErr != nil {
+		pm.metrics.WorkQueueBackoffDuration(id, delay)
+	}
 
 	// If there's a pending update, signal worker immediately
 	hasPending := status.pending != nil
@@ -546,4 +678,71 @@ func (pm *ProcessManager) SyncKnownProcesses(desiredIDs []ProcessID) map[Process
 	}
 
 	return result
+}
+
+// HealthCheck represents the health status of the process manager
+type HealthCheck struct {
+	TotalProcesses        int
+	RunningProcesses      int
+	TerminatingProcesses  int
+	FailedProcesses       int
+	WorkQueueDepth        int
+	Processes             map[ProcessID]ProcessHealth
+}
+
+// ProcessHealth represents the health status of an individual process
+type ProcessHealth struct {
+	State        ProcessState
+	Healthy      bool
+	Uptime       time.Duration
+	LastSync     time.Time
+	ErrorCount   int
+	RestartCount int
+}
+
+// Health returns the current health status of the process manager
+func (pm *ProcessManager) Health() HealthCheck {
+	pm.mu.Lock()
+	defer pm.mu.Unlock()
+
+	health := HealthCheck{
+		Processes: make(map[ProcessID]ProcessHealth),
+	}
+
+	for id, status := range pm.processStatuses {
+		health.TotalProcesses++
+
+		state := status.State()
+		if state == ProcessStateSyncing {
+			health.RunningProcesses++
+		} else if state == ProcessStateTerminating {
+			health.TerminatingProcesses++
+		}
+
+		if status.errorCount > 5 {
+			health.FailedProcesses++
+		}
+
+		var uptime time.Duration
+		if !status.startedAt.IsZero() {
+			if status.finishedAt.IsZero() {
+				uptime = time.Since(status.startedAt)
+			} else {
+				uptime = status.finishedAt.Sub(status.startedAt)
+			}
+		}
+
+		health.Processes[id] = ProcessHealth{
+			State:        state,
+			Healthy:      status.Healthy(),
+			Uptime:       uptime,
+			LastSync:     status.syncedAt,
+			ErrorCount:   status.errorCount,
+			RestartCount: status.restartCount,
+		}
+	}
+
+	health.WorkQueueDepth = pm.workQueue.Len()
+
+	return health
 }
