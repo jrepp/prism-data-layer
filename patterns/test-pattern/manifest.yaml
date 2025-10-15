@@ -1,0 +1,28 @@
+name: test-pattern
+version: 1.0.0
+description: Test pattern for launcher development
+author: Claude Code
+executable: ./test-pattern
+isolation_level: namespace
+
+healthcheck:
+  port: 9090
+  path: /health
+  interval: 30s
+  timeout: 5s
+  failure_threshold: 3
+
+resources:
+  cpu_limit: 1.0
+  memory_limit: 512Mi
+  cpu_request: 0.5
+  memory_request: 256Mi
+
+backend_slots:
+  - name: storage
+    type: memstore
+    required: true
+
+environment:
+  LOG_LEVEL: info
+  METRICS_PORT: "9091"

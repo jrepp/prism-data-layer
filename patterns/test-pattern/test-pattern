@@ -1,0 +1,6 @@
+#!/bin/bash
+# Simple test pattern executable (mock)
+echo "Test pattern started"
+while true; do
+  sleep 30
+done

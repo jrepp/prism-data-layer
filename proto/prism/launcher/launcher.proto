@@ -1,0 +1,223 @@
+syntax = "proto3";
+
+package prism.launcher;
+
+option go_package = "github.com/jrepp/prism/gen/go/prism/launcher";
+
+// PatternLauncher service manages pattern process lifecycle
+service PatternLauncher {
+    // Launch or get existing pattern process
+    rpc LaunchPattern(LaunchRequest) returns (LaunchResponse);
+
+    // List all running pattern processes
+    rpc ListPatterns(ListPatternsRequest) returns (ListPatternsResponse);
+
+    // Terminate a pattern process
+    rpc TerminatePattern(TerminateRequest) returns (TerminateResponse);
+
+    // Health check for launcher and all processes
+    rpc Health(HealthRequest) returns (HealthResponse);
+
+    // Get detailed status of a specific process
+    rpc GetProcessStatus(GetProcessStatusRequest) returns (GetProcessStatusResponse);
+}
+
+// LaunchRequest initiates or retrieves a pattern process
+message LaunchRequest {
+    // Pattern name (e.g., "consumer", "producer")
+    string pattern_name = 1;
+
+    // Isolation level for this pattern
+    IsolationLevel isolation = 2;
+
+    // Namespace for NAMESPACE isolation
+    string namespace = 3;
+
+    // Session ID for SESSION isolation
+    string session_id = 4;
+
+    // Pattern-specific configuration
+    map<string, string> config = 5;
+
+    // Optional: override grace period (seconds)
+    int64 grace_period_secs = 6;
+}
+
+// LaunchResponse contains process details
+message LaunchResponse {
+    // Unique process ID
+    string process_id = 1;
+
+    // Current process state
+    ProcessState state = 2;
+
+    // gRPC address to connect to pattern
+    string address = 3;
+
+    // Health status
+    bool healthy = 4;
+
+    // Error message if launch failed
+    string error = 5;
+}
+
+// ListPatternsRequest filters pattern list
+message ListPatternsRequest {
+    // Optional: filter by pattern name
+    string pattern_name = 1;
+
+    // Optional: filter by namespace
+    string namespace = 2;
+
+    // Optional: filter by state
+    ProcessState state = 3;
+}
+
+// ListPatternsResponse returns all matching patterns
+message ListPatternsResponse {
+    repeated PatternInfo patterns = 1;
+
+    // Total count of all processes (before filtering)
+    int32 total_count = 2;
+}
+
+// PatternInfo describes a running pattern process
+message PatternInfo {
+    // Pattern name
+    string pattern_name = 1;
+
+    // Process ID
+    string process_id = 2;
+
+    // Current state
+    ProcessState state = 3;
+
+    // gRPC address
+    string address = 4;
+
+    // Health status
+    bool healthy = 5;
+
+    // Uptime in seconds
+    int64 uptime_seconds = 6;
+
+    // Namespace (for NAMESPACE isolation)
+    string namespace = 7;
+
+    // Session ID (for SESSION isolation)
+    string session_id = 8;
+
+    // Last error message
+    string last_error = 9;
+
+    // Error count
+    int32 error_count = 10;
+
+    // Restart count
+    int32 restart_count = 11;
+
+    // PID (process ID)
+    int32 pid = 12;
+}
+
+// TerminateRequest stops a pattern process
+message TerminateRequest {
+    // Process ID to terminate
+    string process_id = 1;
+
+    // Grace period in seconds (overrides default)
+    int64 grace_period_secs = 2;
+
+    // Force kill if true (SIGKILL)
+    bool force = 3;
+}
+
+// TerminateResponse confirms termination
+message TerminateResponse {
+    // Success status
+    bool success = 1;
+
+    // Error message if failed
+    string error = 2;
+}
+
+// HealthRequest checks launcher health
+message HealthRequest {
+    // Optional: include detailed process info
+    bool include_processes = 1;
+}
+
+// HealthResponse reports launcher health
+message HealthResponse {
+    // Overall health status
+    bool healthy = 1;
+
+    // Total processes
+    int32 total_processes = 2;
+
+    // Running processes
+    int32 running_processes = 3;
+
+    // Terminating processes
+    int32 terminating_processes = 4;
+
+    // Failed processes
+    int32 failed_processes = 5;
+
+    // Isolation level distribution
+    map<string, int32> isolation_distribution = 6;
+
+    // Detailed process list (if requested)
+    repeated PatternInfo processes = 7;
+
+    // Launcher uptime in seconds
+    int64 uptime_seconds = 8;
+}
+
+// GetProcessStatusRequest retrieves process details
+message GetProcessStatusRequest {
+    // Process ID to query
+    string process_id = 1;
+}
+
+// GetProcessStatusResponse returns process status
+message GetProcessStatusResponse {
+    // Process info (nil if not found)
+    PatternInfo process = 1;
+
+    // Not found flag
+    bool not_found = 2;
+}
+
+// IsolationLevel defines process isolation strategy
+enum IsolationLevel {
+    // All requests share the same process
+    ISOLATION_NONE = 0;
+
+    // Each namespace gets its own process
+    ISOLATION_NAMESPACE = 1;
+
+    // Each session gets its own process
+    ISOLATION_SESSION = 2;
+}
+
+// ProcessState represents lifecycle state
+enum ProcessState {
+    // Process is initializing
+    STATE_STARTING = 0;
+
+    // Process is running and healthy
+    STATE_RUNNING = 1;
+
+    // Process is shutting down
+    STATE_TERMINATING = 2;
+
+    // Process has stopped, awaiting cleanup
+    STATE_TERMINATED = 3;
+
+    // Process failed and needs restart
+    STATE_FAILED = 4;
+
+    // Process cleanup completed
+    STATE_FINISHED = 5;
+}
