@@ -510,7 +510,7 @@ jobs:
              [[ "${{ needs.lint-go.result }}" != "success" ]] || \
              [[ "${{ needs.test-proxy.result }}" != "success" ]] || \
              [[ "${{ needs.test-patterns.result }}" != "success" ]] || \
-             [[ "${{ needs.test-integration.result }}" != "success" ]] || \ \
+             [[ "${{ needs.test-integration.result }}" != "success" ]] || \
              [[ "${{ needs.validate-docs.result }}" != "success" ]] || \
              [[ "${{ needs.build.result }}" != "success" ]]; then
             echo "❌ CI pipeline failed"
