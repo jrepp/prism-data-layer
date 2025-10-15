@@ -9,10 +9,17 @@ import (
 	"github.com/jrepp/prism-data-layer/pkg/drivers/memstore"
 	"github.com/jrepp/prism-data-layer/pkg/drivers/nats"
 	"github.com/jrepp/prism-data-layer/pkg/plugin"
+	natstest "github.com/nats-io/nats-server/v2/test"
 )
 
 // ExampleProducer_simple demonstrates basic producer usage.
 func ExampleProducer_simple() {
+	// Start embedded NATS server for demo
+	opts := natstest.DefaultTestOptions
+	opts.Port = -1
+	server := natstest.RunServer(&opts)
+	defer server.Shutdown()
+
 	// Create configuration
 	config := producer.Config{
 		Name: "example-producer",
@@ -31,12 +38,22 @@ func ExampleProducer_simple() {
 
 	// Initialize NATS driver
 	natsDriver := nats.New()
-	cfg := map[string]interface{}{
-		"url": "nats://localhost:4222",
+	natsConfig := &plugin.Config{
+		Plugin: plugin.PluginConfig{
+			Name:    "nats",
+			Version: "0.1.0",
+		},
+		Backend: map[string]interface{}{
+			"url": server.ClientURL(),
+		},
 	}
-	if err := natsDriver.Init(context.Background(), cfg); err != nil {
+	if err := natsDriver.Initialize(context.Background(), natsConfig); err != nil {
 		panic(err)
 	}
+	if err := natsDriver.Start(context.Background()); err != nil {
+		panic(err)
+	}
+	defer natsDriver.Stop(context.Background())
 
 	// Bind message sink (messageSink, stateStore, objectStore)
 	if err := prod.BindSlots(natsDriver, nil, nil); err != nil {
@@ -75,7 +92,14 @@ func ExampleProducer_batching() {
 
 	// Initialize backend
 	memDriver := memstore.New()
-	memDriver.Init(context.Background(), map[string]interface{}{"capacity": 1000})
+	memConfig := &plugin.Config{
+		Plugin: plugin.PluginConfig{
+			Name:    "memstore",
+			Version: "0.1.0",
+		},
+		Backend: map[string]interface{}{"capacity": 1000},
+	}
+	memDriver.Initialize(context.Background(), memConfig)
 
 	prod.BindSlots(memDriver, nil, nil)
 
@@ -112,7 +136,14 @@ func ExampleProducer_deduplication() {
 
 	// Need state store for deduplication
 	memDriver := memstore.New()
-	memDriver.Init(context.Background(), map[string]interface{}{"capacity": 1000})
+	memConfig := &plugin.Config{
+		Plugin: plugin.PluginConfig{
+			Name:    "memstore",
+			Version: "0.1.0",
+		},
+		Backend: map[string]interface{}{"capacity": 1000},
+	}
+	memDriver.Initialize(context.Background(), memConfig)
 
 	prod.BindSlots(memDriver, memDriver, nil) // Use same memstore for both message sink and state
 
@@ -137,6 +168,12 @@ func ExampleProducer_deduplication() {
 
 // TestProducer_lifecycle tests the producer lifecycle.
 func TestProducer_lifecycle(t *testing.T) {
+	// Start embedded NATS server
+	opts := natstest.DefaultTestOptions
+	opts.Port = -1
+	server := natstest.RunServer(&opts)
+	defer server.Shutdown()
+
 	config := producer.Config{
 		Name: "test-producer",
 		Behavior: producer.BehaviorConfig{
@@ -151,18 +188,30 @@ func TestProducer_lifecycle(t *testing.T) {
 		t.Fatalf("Failed to create producer: %v", err)
 	}
 
-	// Initialize backend
-	memDriver := memstore.New()
-	if err := memDriver.Init(context.Background(), map[string]interface{}{"capacity": 100}); err != nil {
-		t.Fatalf("Failed to init memstore: %v", err)
+	// Initialize NATS driver
+	natsDriver := nats.New()
+	natsConfig := &plugin.Config{
+		Plugin: plugin.PluginConfig{
+			Name:    "nats",
+			Version: "0.1.0",
+		},
+		Backend: map[string]interface{}{
+			"url": server.ClientURL(),
+		},
 	}
+	ctx := context.Background()
+	if err := natsDriver.Initialize(ctx, natsConfig); err != nil {
+		t.Fatalf("Failed to init NATS: %v", err)
+	}
+	if err := natsDriver.Start(ctx); err != nil {
+		t.Fatalf("Failed to start NATS: %v", err)
+	}
+	defer natsDriver.Stop(ctx)
 
 	// Bind slots
-	if err := prod.BindSlots(memDriver, nil); err != nil {
+	if err := prod.BindSlots(natsDriver, nil, nil); err != nil {
 		t.Fatalf("Failed to bind slots: %v", err)
 	}
-
-	ctx := context.Background()
 
 	// Start producer
 	if err := prod.Start(ctx); err != nil {
@@ -185,7 +234,7 @@ func TestProducer_lifecycle(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to get health: %v", err)
 	}
-	if health.Status != plugin.HealthStateHealthy {
+	if health.Status != plugin.HealthHealthy {
 		t.Errorf("Expected healthy status, got %v", health.Status)
 	}
 
@@ -197,6 +246,12 @@ func TestProducer_lifecycle(t *testing.T) {
 
 // TestProducer_batching tests batching behavior.
 func TestProducer_batching(t *testing.T) {
+	// Start embedded NATS server
+	opts := natstest.DefaultTestOptions
+	opts.Port = -1
+	server := natstest.RunServer(&opts)
+	defer server.Shutdown()
+
 	config := producer.Config{
 		Name: "batch-test",
 		Behavior: producer.BehaviorConfig{
@@ -212,11 +267,27 @@ func TestProducer_batching(t *testing.T) {
 		t.Fatalf("Failed to create producer: %v", err)
 	}
 
-	memDriver := memstore.New()
-	memDriver.Init(context.Background(), map[string]interface{}{"capacity": 100})
-	prod.BindSlots(memDriver, nil, nil)
-
+	natsDriver := nats.New()
+	natsConfig := &plugin.Config{
+		Plugin: plugin.PluginConfig{
+			Name:    "nats",
+			Version: "0.1.0",
+		},
+		Backend: map[string]interface{}{
+			"url": server.ClientURL(),
+		},
+	}
 	ctx := context.Background()
+	if err := natsDriver.Initialize(ctx, natsConfig); err != nil {
+		t.Fatalf("Failed to init NATS: %v", err)
+	}
+	if err := natsDriver.Start(ctx); err != nil {
+		t.Fatalf("Failed to start NATS: %v", err)
+	}
+	defer natsDriver.Stop(ctx)
+
+	prod.BindSlots(natsDriver, nil, nil)
+
 	prod.Start(ctx)
 	defer prod.Stop(ctx)
 
@@ -242,6 +313,12 @@ func TestProducer_batching(t *testing.T) {
 
 // TestProducer_deduplication tests deduplication logic.
 func TestProducer_deduplication(t *testing.T) {
+	// Start embedded NATS server
+	opts := natstest.DefaultTestOptions
+	opts.Port = -1
+	server := natstest.RunServer(&opts)
+	defer server.Shutdown()
+
 	config := producer.Config{
 		Name: "dedup-test",
 		Behavior: producer.BehaviorConfig{
@@ -255,11 +332,36 @@ func TestProducer_deduplication(t *testing.T) {
 
 	prod, _ := producer.New(config)
 
-	memDriver := memstore.New()
-	memDriver.Init(context.Background(), map[string]interface{}{"capacity": 100})
-	prod.BindSlots(memDriver, memDriver, nil) // Same driver for both slots
-
+	// Initialize NATS for message sink
+	natsDriver := nats.New()
+	natsConfig := &plugin.Config{
+		Plugin: plugin.PluginConfig{
+			Name:    "nats",
+			Version: "0.1.0",
+		},
+		Backend: map[string]interface{}{
+			"url": server.ClientURL(),
+		},
+	}
 	ctx := context.Background()
+	natsDriver.Initialize(ctx, natsConfig)
+	natsDriver.Start(ctx)
+	defer natsDriver.Stop(ctx)
+
+	// Initialize MemStore for state tracking (deduplication)
+	memDriver := memstore.New()
+	memConfig := &plugin.Config{
+		Plugin: plugin.PluginConfig{
+			Name:    "memstore",
+			Version: "0.1.0",
+		},
+		Backend: map[string]interface{}{"capacity": 100},
+	}
+	memDriver.Initialize(ctx, memConfig)
+
+	// Bind: NATS for messages, MemStore for state, nil for object store
+	prod.BindSlots(natsDriver, memDriver, nil)
+
 	prod.Start(ctx)
 	defer prod.Stop(ctx)
 
