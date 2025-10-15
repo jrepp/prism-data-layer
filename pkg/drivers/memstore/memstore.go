@@ -12,12 +12,13 @@ import (
 
 // MemStore implements an in-memory key-value store plugin
 type MemStore struct {
-	name    string
-	version string
-	data    sync.Map
-	ttl     sync.Map // key -> expiration time
-	config  *Config
-	stopCh  chan struct{}
+	name       string
+	version    string
+	data       sync.Map
+	ttl        sync.Map // key -> expiration time
+	config     *Config
+	configLock sync.RWMutex // Protects config field
+	stopCh     chan struct{}
 }
 
 // Config holds memstore-specific configuration
@@ -61,7 +62,9 @@ func (m *MemStore) Initialize(ctx context.Context, config *plugin.Config) error 
 		backendConfig.CleanupPeriod = 60 * time.Second // Default: 1 minute
 	}
 
+	m.configLock.Lock()
 	m.config = &backendConfig
+	m.configLock.Unlock()
 
 	return nil
 }
@@ -71,9 +74,7 @@ func (m *MemStore) Start(ctx context.Context) error {
 	// Start TTL cleanup goroutine
 	go m.cleanupExpiredKeys(ctx)
 
-	// Block until context is cancelled
-	<-ctx.Done()
-	close(m.stopCh)
+	// Start returns immediately - the cleanup goroutine runs in background
 	return nil
 }
 
@@ -99,20 +100,24 @@ func (m *MemStore) Health(ctx context.Context) (*plugin.HealthStatus, error) {
 		return true
 	})
 
+	m.configLock.RLock()
+	config := m.config
+	m.configLock.RUnlock()
+
 	status := plugin.HealthHealthy
 	message := fmt.Sprintf("healthy, %d keys stored", keyCount)
 
-	if m.config != nil && keyCount >= m.config.MaxKeys {
+	if config != nil && keyCount >= config.MaxKeys {
 		status = plugin.HealthDegraded
-		message = fmt.Sprintf("at capacity: %d/%d keys", keyCount, m.config.MaxKeys)
+		message = fmt.Sprintf("at capacity: %d/%d keys", keyCount, config.MaxKeys)
 	}
 
 	details := map[string]string{
 		"keys": fmt.Sprintf("%d", keyCount),
 	}
 
-	if m.config != nil {
-		details["max_keys"] = fmt.Sprintf("%d", m.config.MaxKeys)
+	if config != nil {
+		details["max_keys"] = fmt.Sprintf("%d", config.MaxKeys)
 	}
 
 	return &plugin.HealthStatus{
@@ -125,17 +130,21 @@ func (m *MemStore) Health(ctx context.Context) (*plugin.HealthStatus, error) {
 // Set stores a value with optional TTL
 func (m *MemStore) Set(key string, value []byte, ttlSeconds int64) error {
 	// Check capacity
-	if m.config != nil {
+	m.configLock.RLock()
+	config := m.config
+	m.configLock.RUnlock()
+
+	if config != nil {
 		keyCount := 0
 		m.data.Range(func(k, v interface{}) bool {
 			keyCount++
 			return true
 		})
 
-		if keyCount >= m.config.MaxKeys {
+		if keyCount >= config.MaxKeys {
 			_, exists := m.data.Load(key)
 			if !exists {
-				return fmt.Errorf("capacity limit reached: %d keys", m.config.MaxKeys)
+				return fmt.Errorf("capacity limit reached: %d keys", config.MaxKeys)
 			}
 		}
 	}
@@ -195,7 +204,15 @@ func (m *MemStore) Exists(key string) (bool, error) {
 
 // cleanupExpiredKeys periodically removes expired keys
 func (m *MemStore) cleanupExpiredKeys(ctx context.Context) {
-	ticker := time.NewTicker(m.config.CleanupPeriod)
+	// Get cleanup period with lock, use default if not initialized
+	m.configLock.RLock()
+	cleanupPeriod := 60 * time.Second // Default
+	if m.config != nil {
+		cleanupPeriod = m.config.CleanupPeriod
+	}
+	m.configLock.RUnlock()
+
+	ticker := time.NewTicker(cleanupPeriod)
 	defer ticker.Stop()
 
 	for {
