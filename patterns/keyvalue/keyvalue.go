@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/jrepp/prism-data-layer/patterns/core"
+	"github.com/jrepp/prism-data-layer/pkg/plugin"
 )
 
 // KeyValueDriver defines the backend driver interface for KeyValue pattern.
@@ -16,7 +16,7 @@ import (
 // - drivers/redis (keyvalue_basic + keyvalue_ttl + keyvalue_scan interfaces)
 // - drivers/postgres (keyvalue_basic + keyvalue_scan interfaces, no TTL)
 type KeyValueDriver interface {
-	core.Plugin // Lifecycle methods
+	plugin.Plugin // Lifecycle methods
 
 	// KeyValue basic operations (keyvalue_basic interface)
 	Set(key string, value []byte, ttlSeconds int64) error
@@ -72,7 +72,7 @@ func (kv *KeyValue) Version() string {
 }
 
 // Initialize prepares the pattern and underlying driver
-func (kv *KeyValue) Initialize(ctx context.Context, config *core.Config) error {
+func (kv *KeyValue) Initialize(ctx context.Context, config *plugin.Config) error {
 	return kv.driver.Initialize(ctx, config)
 }
 
@@ -87,7 +87,7 @@ func (kv *KeyValue) Stop(ctx context.Context) error {
 }
 
 // Health returns the pattern health status
-func (kv *KeyValue) Health(ctx context.Context) (*core.HealthStatus, error) {
+func (kv *KeyValue) Health(ctx context.Context) (*plugin.HealthStatus, error) {
 	return kv.driver.Health(ctx)
 }
 
