@@ -40,7 +40,7 @@ func TestProxyPatternLifecycle(t *testing.T) {
 	require.NotNil(t, driver)
 
 	// Start control plane server
-	controlPlane := core.NewControlPlaneServer(driver, 0) // 0 for dynamic port
+	controlPlane := plugin.NewControlPlaneServer(driver, 0) // 0 for dynamic port
 	err := controlPlane.Start(ctx)
 	require.NoError(t, err)
 	defer controlPlane.Stop(ctx)
@@ -186,7 +186,7 @@ func TestProxyPatternDebugInfo(t *testing.T) {
 	// Start backend driver
 	driver := memstore.New()
 
-	controlPlane := core.NewControlPlaneServer(driver, 0)
+	controlPlane := plugin.NewControlPlaneServer(driver, 0)
 	err := controlPlane.Start(ctx)
 	require.NoError(t, err)
 	defer controlPlane.Stop(ctx)
@@ -252,7 +252,7 @@ func TestProxyPatternConcurrentClients(t *testing.T) {
 	// Start backend driver
 	driver := memstore.New()
 
-	controlPlane := core.NewControlPlaneServer(driver, 0)
+	controlPlane := plugin.NewControlPlaneServer(driver, 0)
 	err := controlPlane.Start(serverCtx)
 	require.NoError(t, err)
 
