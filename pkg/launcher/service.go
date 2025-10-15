@@ -116,11 +116,8 @@ func DefaultConfig() *Config {
 
 // initIsolationManagers creates isolation managers for each level
 func (s *Service) initIsolationManagers() {
-	// For Phase 1, we'll create mock isolation managers
-	// In Phase 2, we'll implement the actual process syncer
-
-	// Create a mock syncer for now
-	mockSyncer := &mockProcessSyncer{service: s}
+	// Create the real process syncer
+	syncer := newPatternProcessSyncer(s)
 
 	levels := []isolation.IsolationLevel{
 		isolation.IsolationNone,
@@ -128,15 +125,14 @@ func (s *Service) initIsolationManagers() {
 		isolation.IsolationSession,
 	}
 
+	opts := []procmgr.Option{
+		procmgr.WithResyncInterval(s.config.ResyncInterval),
+		procmgr.WithBackOffPeriod(s.config.BackOffPeriod),
+	}
+
 	for _, level := range levels {
-		opts := []procmgr.Option{
-			procmgr.WithResyncInterval(s.config.ResyncInterval),
-			procmgr.WithBackOffPeriod(s.config.BackOffPeriod),
-		}
-
-		mgr := isolation.NewIsolationManager(level, mockSyncer, opts...)
+		mgr := isolation.NewIsolationManager(level, syncer, opts...)
 		s.isolationManagers[level] = mgr
-
 		log.Printf("Initialized isolation manager for level: %s", level)
 	}
 }
@@ -187,20 +183,28 @@ func (s *Service) LaunchPattern(ctx context.Context, req *pb.LaunchRequest) (*pb
 		Session:   req.SessionId,
 	}
 
-	// Create process config
-	processConfig := &isolation.ProcessConfig{
+	// Create process config for syncer
+	processConfig := &processConfig{
+		PatternName: req.PatternName,
+		Manifest:    manifest,
+		Key:         key,
+		Config:      req.Config,
+	}
+
+	// Wrap in isolation.ProcessConfig
+	isoConfig := &isolation.ProcessConfig{
 		Key:            key,
-		BackendConfig:  req.Config,
+		BackendConfig:  processConfig,
 		GracePeriodSec: req.GracePeriodSecs,
 	}
 
 	// Get or create process
-	handle, err := mgr.GetOrCreateProcess(ctx, key, processConfig)
+	handle, err := mgr.GetOrCreateProcess(ctx, key, isoConfig)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to launch process: %v", err)
 	}
 
-	// Store process info
+	// Store process info (will be updated with PID/address by syncer)
 	s.processesMu.Lock()
 	processInfo := &ProcessInfo{
 		ProcessID:   string(handle.ID),
@@ -208,18 +212,26 @@ func (s *Service) LaunchPattern(ctx context.Context, req *pb.LaunchRequest) (*pb
 		Namespace:   req.Namespace,
 		SessionID:   req.SessionId,
 		Isolation:   isolationLevel,
-		Address:     fmt.Sprintf("localhost:%d", 50051), // Mock address for Phase 1
+		Address:     "", // Will be set by syncer
 		StartTime:   time.Now(),
 		Config:      req.Config,
 	}
 	s.processes[string(handle.ID)] = processInfo
 	s.processesMu.Unlock()
 
+	// Wait briefly for syncer to update address
+	time.Sleep(100 * time.Millisecond)
+
+	// Get updated info
+	s.processesMu.RLock()
+	info := s.processes[string(handle.ID)]
+	s.processesMu.RUnlock()
+
 	// Return response
 	return &pb.LaunchResponse{
 		ProcessId: string(handle.ID),
 		State:     pb.ProcessState_STATE_RUNNING,
-		Address:   processInfo.Address,
+		Address:   info.Address,
 		Healthy:   handle.Health,
 	}, nil
 }
@@ -448,27 +460,4 @@ func (s *Service) protoToIsolationLevel(level pb.IsolationLevel) isolation.Isola
 	default:
 		return s.config.DefaultIsolation
 	}
-}
-
-// mockProcessSyncer is a mock implementation for Phase 1
-type mockProcessSyncer struct {
-	service *Service
-}
-
-func (m *mockProcessSyncer) SyncProcess(ctx context.Context, updateType procmgr.UpdateType, config interface{}) (terminal bool, err error) {
-	log.Printf("Mock SyncProcess: updateType=%s", updateType)
-	// For Phase 1, just return success
-	return false, nil
-}
-
-func (m *mockProcessSyncer) SyncTerminatingProcess(ctx context.Context, config interface{}, gracePeriodSecs *int64, statusFn procmgr.ProcessStatusFunc) error {
-	log.Printf("Mock SyncTerminatingProcess: gracePeriod=%d", *gracePeriodSecs)
-	// For Phase 1, just return success
-	return nil
-}
-
-func (m *mockProcessSyncer) SyncTerminatedProcess(ctx context.Context, config interface{}) error {
-	log.Printf("Mock SyncTerminatedProcess")
-	// For Phase 1, just return success
-	return nil
 }
