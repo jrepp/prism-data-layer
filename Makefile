@@ -118,7 +118,13 @@ build-multicast-registry-runner: ## Build multicast registry pattern runner
 	@cd patterns/multicast_registry/cmd/multicast-registry-runner && go build -o $(BINARIES_DIR)/multicast-registry-runner .
 	$(call print_green,multicast-registry-runner built: $(BINARIES_DIR)/multicast-registry-runner)
 
-build-patterns: build-consumer-runner build-producer-runner build-multicast-registry-runner ## Build all pattern runners
+build-keyvalue-runner: ## Build keyvalue pattern runner
+	$(call print_blue,Building keyvalue-runner...)
+	@mkdir -p $(BINARIES_DIR)
+	@cd patterns/keyvalue/cmd/keyvalue-runner && go build -o $(BINARIES_DIR)/keyvalue-runner .
+	$(call print_green,keyvalue-runner built: $(BINARIES_DIR)/keyvalue-runner)
+
+build-patterns: build-consumer-runner build-producer-runner build-multicast-registry-runner build-keyvalue-runner ## Build all pattern runners
 
 build-dev: ## Build all components in debug mode (faster)
 	$(call print_blue,Building in debug mode...)
