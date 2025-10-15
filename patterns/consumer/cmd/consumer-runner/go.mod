@@ -14,6 +14,7 @@ require (
 	github.com/go-logr/logr v1.4.3 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/google/uuid v1.6.0 // indirect
+	github.com/jrepp/prism-data-layer/pkg/patterns/common v0.0.0 // indirect
 	github.com/klauspost/compress v1.18.0 // indirect
 	github.com/nats-io/nats.go v1.45.0 // indirect
 	github.com/nats-io/nkeys v0.4.11 // indirect
@@ -37,5 +38,6 @@ replace (
 	github.com/jrepp/prism-data-layer/patterns/consumer => ../..
 	github.com/jrepp/prism-data-layer/pkg/drivers/memstore => ../../../../pkg/drivers/memstore
 	github.com/jrepp/prism-data-layer/pkg/drivers/nats => ../../../../pkg/drivers/nats
+	github.com/jrepp/prism-data-layer/pkg/patterns/common => ../../../../pkg/patterns/common
 	github.com/jrepp/prism-data-layer/pkg/plugin => ../../../../pkg/plugin
 )
