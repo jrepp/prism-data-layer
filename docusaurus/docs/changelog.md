@@ -12,6 +12,54 @@ Quick access to recently updated documentation. Changes listed in reverse chrono
 
 ### 2025-10-15
 
+#### RFC-036: Minimalist Web Framework for Prism Admin UI with templ+htmx+Gin (NEW)
+**Link**: [RFC-036](/rfc/rfc-036)
+
+**Summary**: Comprehensive RFC proposing **templ + htmx + Gin** as an alternative to ADR-028's FastAPI + gRPC-Web + Vanilla JavaScript stack for the Prism Admin UI:
+
+**Core Proposal**:
+- **Language Consolidation**: Replace Python admin UI backend with Go (matches prismctl, plugins, and proxy ecosystem)
+- **Technology Stack**: templ (type-safe HTML templates), htmx (HTML over the wire), Gin (HTTP framework)
+- **Server-Side Rendering**: Progressive enhancement with HTML fragments (no JavaScript build step)
+- **Direct gRPC Access**: Native gRPC calls to Admin API (no gRPC-Web translation overhead)
+
+**Comparison with ADR-028**:
+- **Container Size**: 15-20MB (templ+htmx) vs 100-150MB (FastAPI) - 85-87% smaller
+- **Startup Time**: &lt;50ms vs 1-2 seconds - 20-40x faster
+- **Type Safety**: Compile-time validation (templ) vs runtime validation (Python)
+- **Language Consistency**: Go only vs Python + JavaScript
+- **Memory Usage**: 20-30MB vs 50-100MB - 50-60% reduction
+
+**Key Features**:
+- **templ Templates**: Compile-time type-safe HTML with IDE autocomplete and XSS protection
+- **htmx Patterns**: Declarative AJAX (no JavaScript required) with 5 common patterns documented
+- **OIDC Integration**: Reuses prismctl authentication infrastructure (RFC-010)
+- **Project Structure**: Clean separation of handlers, templates, middleware, and static assets
+- **Appendix Guide**: Complete implementation reference with patterns, gotchas, and best practices
+
+**Security**:
+- Automatic XSS escaping in templ (explicit `templ.Raw()` opt-in for trusted HTML)
+- CSRF protection via Gin middleware
+- OIDC session cookie validation
+
+**Migration Path**:
+- Phase 1-2: Parallel deployment (weeks 1-2), Feature parity (weeks 3-4)
+- Phase 3-4: Switch default and sunset FastAPI (weeks 5-8)
+- Optional: Embed admin UI in proxy binary (future optimization)
+
+**Testing Strategy**:
+- Unit tests: Template rendering with context validation
+- Integration tests: Full CRUD workflows with mock Admin API
+- Browser tests: End-to-end with chromedp (optional)
+
+**Key Innovation**: Server-side rendering with progressive enhancement eliminates JavaScript framework complexity while maintaining modern UX. templ provides React-like component model but server-side with compile-time safety. htmx enables rich interactions (live search, optimistic updates, confirmations) without writing JavaScript. Language consolidation reduces maintenance burden and aligns admin UI with Go ecosystem.
+
+**Impact**: Addresses ADR-028 complexity by eliminating Python dependency and reducing deployment footprint by 85%+. Go developers can contribute to both CLI and UI without learning Python. Faster startup enables better local development experience. Type-safe templates prevent entire class of XSS vulnerabilities. Foundation for maintainable admin UI that scales with project complexity. Demonstrates practical alternative to SPA frameworks for CRUD-focused applications.
+
+**Documentation Quality**: RFC includes comprehensive appendix with 5 htmx patterns, attribute reference, best practices, and common gotchas. Provides copy-paste examples for namespace CRUD operations. References existing ADRs (028, 040) and RFCs (003, 010) for context.
+
+---
+
 #### Pattern Process Launcher - Complete Implementation with Developer Ergonomics (RFC-035 COMPLETE)
 **Links**: [RFC-035](/rfc/rfc-035), [Launcher Package](https://github.com/jrepp/prism-data-layer/tree/main/pkg/launcher), [MEMO-034](/memos/memo-034), [Developer Ergonomics](https://github.com/jrepp/prism-data-layer/blob/main/pkg/launcher/DEVELOPER_ERGONOMICS.md)
 
