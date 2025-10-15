@@ -32,23 +32,31 @@ type Service struct {
 	processes   map[string]*ProcessInfo // process_id -> info
 	processesMu sync.RWMutex
 
+	// Lifecycle management
+	cleanupManager   *CleanupManager
+	orphanDetector   *OrphanDetector
+	healthMonitor    *HealthCheckMonitor
+
 	// Lifecycle
-	startTime time.Time
-	shutdownCtx context.Context
+	startTime      time.Time
+	shutdownCtx    context.Context
 	shutdownCancel context.CancelFunc
 }
 
 // ProcessInfo tracks information about a running process
 type ProcessInfo struct {
-	ProcessID   string
-	PatternName string
-	Namespace   string
-	SessionID   string
-	Isolation   isolation.IsolationLevel
-	Address     string
-	PID         int
-	StartTime   time.Time
-	Config      map[string]string
+	ProcessID    string
+	PatternName  string
+	Namespace    string
+	SessionID    string
+	Isolation    isolation.IsolationLevel
+	Address      string
+	PID          int
+	StartTime    time.Time
+	Config       map[string]string
+	RestartCount int    // Number of times restarted
+	ErrorCount   int    // Number of consecutive errors
+	LastError    string // Last error message
 }
 
 // Config holds launcher configuration
@@ -94,8 +102,17 @@ func NewService(config *Config) (*Service, error) {
 		shutdownCancel:    cancel,
 	}
 
+	// Initialize lifecycle management components
+	svc.cleanupManager = NewCleanupManager(svc)
+	svc.orphanDetector = NewOrphanDetector(svc, 60*time.Second) // Check every minute
+	svc.healthMonitor = NewHealthCheckMonitor(svc, 30*time.Second) // Check every 30 seconds
+
 	// Initialize isolation managers for each level
 	svc.initIsolationManagers()
+
+	// Start background monitoring (non-blocking)
+	go svc.orphanDetector.Start(ctx)
+	go svc.healthMonitor.Start(ctx)
 
 	log.Printf("Pattern launcher service created with %d patterns", registry.Count())
 

@@ -26,12 +26,16 @@ type patternProcessSyncer struct {
 
 // processHandle tracks OS-level process information
 type processHandle struct {
-	Process     *os.Process
-	Cmd         *exec.Cmd
-	Config      *processConfig
-	StartTime   time.Time
-	GRPCAddress string
-	HealthURL   string
+	Process      *os.Process
+	Cmd          *exec.Cmd
+	Config       *processConfig
+	StartTime    time.Time
+	GRPCAddress  string
+	HealthURL    string
+	RestartCount int       // Number of times this process has been restarted
+	LastError    error     // Last error that occurred
+	ErrorCount   int       // Number of consecutive errors
+	LastHealthy  time.Time // Last time health check succeeded
 }
 
 // processConfig contains pattern-specific launch configuration
@@ -81,33 +85,91 @@ func (s *patternProcessSyncer) SyncProcess(ctx context.Context, updateType procm
 			// Process is still alive, check health
 			if s.checkHealth(handle) {
 				log.Printf("Process %s is healthy, nothing to do", processID)
+				// Reset error count on successful health check
+				handle.ErrorCount = 0
+				handle.LastHealthy = time.Now()
 				return false, nil
 			}
-			log.Printf("Process %s is unhealthy, will restart", processID)
-			// Kill unhealthy process
-			handle.Process.Kill()
+			log.Printf("Process %s is unhealthy (errors: %d), will restart", processID, handle.ErrorCount+1)
+
+			// Increment error count
+			handle.ErrorCount++
+
+			// Check if we've exceeded max consecutive errors
+			maxErrors := 5
+			if handle.ErrorCount >= maxErrors {
+				log.Printf("Process %s has exceeded max errors (%d), marking as terminal", processID, maxErrors)
+				// Kill process and let it stay terminated
+				if handle.Process != nil {
+					handle.Process.Kill()
+				}
+				return true, fmt.Errorf("process exceeded max consecutive errors: %d", maxErrors)
+			}
+
+			// Kill unhealthy process for restart
+			if handle.Process != nil {
+				handle.Process.Kill()
+				// Wait for process to die
+				time.Sleep(500 * time.Millisecond)
+			}
+		} else {
+			// Process is dead, need to restart
+			log.Printf("Process %s is dead (signal check failed: %v), will restart", processID, err)
+			handle.RestartCount++
 		}
 	}
 
-	// Launch new process
-	handle, err = s.launchProcess(ctx, processID, processConfig)
-	if err != nil {
-		return false, fmt.Errorf("launch process: %w", err)
+	// Launch new process (or restart existing)
+	var newHandle *processHandle
+	if exists {
+		// Restarting existing process - preserve restart count and error tracking
+		newHandle, err = s.launchProcess(ctx, processID, processConfig)
+		if err != nil {
+			handle.LastError = err
+			handle.ErrorCount++
+			log.Printf("Failed to restart process %s (attempt %d): %v", processID, handle.RestartCount, err)
+			return false, fmt.Errorf("launch process: %w", err)
+		}
+		// Transfer error tracking to new handle
+		newHandle.RestartCount = handle.RestartCount
+		newHandle.ErrorCount = handle.ErrorCount
+		newHandle.LastError = handle.LastError
+	} else {
+		// Launching new process
+		newHandle, err = s.launchProcess(ctx, processID, processConfig)
+		if err != nil {
+			log.Printf("Failed to launch new process %s: %v", processID, err)
+			return false, fmt.Errorf("launch process: %w", err)
+		}
 	}
 
 	// Store handle
 	s.mu.Lock()
-	s.processes[processID] = handle
+	s.processes[processID] = newHandle
 	s.mu.Unlock()
 
 	// Wait for health check to pass
-	if err := s.waitForHealthy(ctx, handle); err != nil {
-		// Health check failed, kill process
-		if handle.Process != nil {
-			handle.Process.Kill()
+	if err := s.waitForHealthy(ctx, newHandle); err != nil {
+		// Health check failed, kill process and track error
+		if newHandle.Process != nil {
+			newHandle.Process.Kill()
 		}
+		newHandle.LastError = err
+		newHandle.ErrorCount++
+
+		// Check if this is a persistent failure
+		if newHandle.ErrorCount >= 3 {
+			log.Printf("Process %s failed health check %d times, may need manual intervention",
+				processID, newHandle.ErrorCount)
+		}
+
 		return false, fmt.Errorf("health check failed: %w", err)
 	}
+
+	// Health check passed - reset error count
+	newHandle.ErrorCount = 0
+	newHandle.LastHealthy = time.Now()
+	newHandle.LastError = nil
 
 	// Update service process tracking
 	s.service.processesMu.Lock()
@@ -169,12 +231,16 @@ func (s *patternProcessSyncer) launchProcess(ctx context.Context, processID proc
 
 	// Create handle
 	handle := &processHandle{
-		Process:     cmd.Process,
-		Cmd:         cmd,
-		Config:      config,
-		StartTime:   time.Now(),
-		GRPCAddress: fmt.Sprintf("localhost:%d", grpcPort),
-		HealthURL:   fmt.Sprintf("http://localhost:%d%s", healthPort, manifest.HealthCheck.Path),
+		Process:      cmd.Process,
+		Cmd:          cmd,
+		Config:       config,
+		StartTime:    time.Now(),
+		GRPCAddress:  fmt.Sprintf("localhost:%d", grpcPort),
+		HealthURL:    fmt.Sprintf("http://localhost:%d%s", healthPort, manifest.HealthCheck.Path),
+		RestartCount: 0,
+		ErrorCount:   0,
+		LastError:    nil,
+		LastHealthy:  time.Time{}, // Will be set after first successful health check
 	}
 
 	return handle, nil
