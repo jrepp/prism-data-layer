@@ -35,12 +35,12 @@ func TestDataPlaneKeyValueOperations(t *testing.T) {
 	require.NotNil(t, driver)
 
 	// Initialize driver with config
-	config := &core.Config{
-		Plugin: core.PluginConfig{
+	config := &plugin.Config{
+		Plugin: plugin.PluginConfig{
 			Name:    "memstore",
 			Version: "0.1.0",
 		},
-		ControlPlane: core.ControlPlaneConfig{
+		ControlPlane: plugin.ControlPlaneConfig{
 			Port: 0, // Dynamic port allocation
 		},
 		Backend: map[string]any{
@@ -53,7 +53,7 @@ func TestDataPlaneKeyValueOperations(t *testing.T) {
 	require.NoError(t, err, "Failed to initialize driver")
 
 	// Start data plane server (this is what the proxy would connect to)
-	dataPlane := core.NewDataPlaneServer(driver, 0) // 0 for dynamic port
+	dataPlane := plugin.NewDataPlaneServer(driver, 0) // 0 for dynamic port
 	err = dataPlane.Start(ctx)
 	require.NoError(t, err, "Failed to start data plane")
 	defer dataPlane.Stop(ctx)
@@ -167,12 +167,12 @@ func TestDataPlaneMultipleKeys(t *testing.T) {
 
 	// Start memstore backend
 	driver := memstore.New()
-	config := &core.Config{
-		Plugin: core.PluginConfig{
+	config := &plugin.Config{
+		Plugin: plugin.PluginConfig{
 			Name:    "memstore",
 			Version: "0.1.0",
 		},
-		ControlPlane: core.ControlPlaneConfig{
+		ControlPlane: plugin.ControlPlaneConfig{
 			Port: 0,
 		},
 		Backend: map[string]any{
@@ -185,7 +185,7 @@ func TestDataPlaneMultipleKeys(t *testing.T) {
 	require.NoError(t, err)
 
 	// Start data plane
-	dataPlane := core.NewDataPlaneServer(driver, 0)
+	dataPlane := plugin.NewDataPlaneServer(driver, 0)
 	err = dataPlane.Start(ctx)
 	require.NoError(t, err)
 	defer dataPlane.Stop(ctx)
@@ -267,12 +267,12 @@ func TestDataPlaneConcurrentOperations(t *testing.T) {
 
 	// Start memstore backend
 	driver := memstore.New()
-	config := &core.Config{
-		Plugin: core.PluginConfig{
+	config := &plugin.Config{
+		Plugin: plugin.PluginConfig{
 			Name:    "memstore",
 			Version: "0.1.0",
 		},
-		ControlPlane: core.ControlPlaneConfig{
+		ControlPlane: plugin.ControlPlaneConfig{
 			Port: 0,
 		},
 		Backend: map[string]any{
@@ -285,7 +285,7 @@ func TestDataPlaneConcurrentOperations(t *testing.T) {
 	require.NoError(t, err)
 
 	// Start data plane
-	dataPlane := core.NewDataPlaneServer(driver, 0)
+	dataPlane := plugin.NewDataPlaneServer(driver, 0)
 	err = dataPlane.Start(ctx)
 	require.NoError(t, err)
 	defer dataPlane.Stop(ctx)

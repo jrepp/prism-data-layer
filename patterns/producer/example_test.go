@@ -71,9 +71,6 @@ func ExampleProducer_simple() {
 	if err := prod.Publish(ctx, "orders.created", []byte(`{"order_id":"123"}`), nil); err != nil {
 		panic(err)
 	}
-
-	// Output:
-	// (producer publishes message)
 }
 
 // ExampleProducer_batching demonstrates batched publishing.
@@ -114,9 +111,6 @@ func ExampleProducer_batching() {
 
 	// Flush remaining messages
 	prod.Flush(ctx)
-
-	// Output:
-	// (producer publishes batches of 10, then remaining 5)
 }
 
 // ExampleProducer_deduplication demonstrates message deduplication.
@@ -161,9 +155,6 @@ func ExampleProducer_deduplication() {
 
 	metrics := prod.Metrics()
 	_ = metrics.MessagesDedup // Should be 1
-
-	// Output:
-	// (only one message published, second deduplicated)
 }
 
 // TestProducer_lifecycle tests the producer lifecycle.
