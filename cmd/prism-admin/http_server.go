@@ -23,8 +23,8 @@ func NewHTTPServer(storage *Storage, port int) *HTTPServer {
 
 	router := gin.Default()
 
-	// Serve static files
-	router.Static("/static", "./cmd/prism-admin/static")
+	// Serve static files (path relative to binary location)
+	router.Static("/static", "./static")
 
 	hs := &HTTPServer{
 		storage: storage,

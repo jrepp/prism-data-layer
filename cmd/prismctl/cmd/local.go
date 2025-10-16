@@ -66,13 +66,19 @@ var localStartCmd = &cobra.Command{
 	Long: `Start a complete local Prism development stack.
 
 This starts:
-1. prism-admin on :8080 (admin API)
-2. prism-proxy on :9090 (proxy 1 - control plane)
-3. prism-proxy on :9091 (proxy 2 - data plane)
-4. pattern-launcher on :7070 (connected to prism-admin)
-5. keyvalue-runner with memstore backend
+1. prism-admin with:
+   - gRPC API on :8981 (admin control plane)
+   - Web UI on :8080 (admin dashboard at http://localhost:8080)
+2. pattern-launcher on :7070 (connected to prism-admin)
+3. keyvalue-runner with memstore backend
 
-All processes run in the background and logs are captured.`,
+All processes run in the background and logs are captured.
+
+The Admin Web UI provides:
+  - Real-time dashboard with system metrics
+  - Proxy status and management
+  - Launcher status and capacity monitoring
+  - Namespace management`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		return startLocalStack()
 	},
@@ -224,7 +230,8 @@ func startLocalStack() error {
 
 	fmt.Printf("\n✅ Local Prism stack started successfully!\n\n")
 	fmt.Println("📊 Stack Overview:")
-	fmt.Println("  • Admin Control Plane: localhost:8981")
+	fmt.Println("  • Admin Control Plane: localhost:8981 (gRPC)")
+	fmt.Println("  • Admin Web UI:        http://localhost:8080 🌐")
 	fmt.Println("  • Pattern Launcher:    localhost:7070")
 	fmt.Println("  • KeyValue: Ready (MemStore backend)")
 	fmt.Println()
