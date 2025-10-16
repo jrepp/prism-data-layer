@@ -1,0 +1,145 @@
+name: mailbox
+version: 0.1.0
+description: Searchable event store pattern that consumes messages from queues and stores them in structured databases with indexed headers and blob bodies
+author: Prism Team
+pattern_type: consumer
+
+# Pattern slots define the backend interfaces required
+slots:
+  message_source:
+    description: Message queue or pub/sub backend for consuming events
+    required: true
+    interfaces:
+      - QueueInterface
+      - PubSubInterface
+    backends:
+      - nats
+      - kafka
+      - redis
+      - memstore
+
+  storage:
+    description: Table storage backend for persisting events with indexed headers
+    required: true
+    interfaces:
+      - TableWriterInterface
+    backends:
+      - sqlite
+      - postgresql
+      - clickhouse
+
+  query:
+    description: Query interface for retrieving stored messages
+    required: false
+    interfaces:
+      - TableReaderInterface
+    backends:
+      - sqlite
+      - postgresql
+      - clickhouse
+
+# Configuration schema
+config_schema:
+  name:
+    type: string
+    required: true
+    description: Unique name for this mailbox instance
+
+  behavior:
+    topic:
+      type: string
+      required: true
+      description: Topic or queue to consume messages from
+
+    consumer_group:
+      type: string
+      required: true
+      description: Consumer group ID for coordinated consumption
+
+    auto_commit:
+      type: boolean
+      default: true
+      description: Automatically acknowledge messages after successful storage
+
+  storage:
+    database_path:
+      type: string
+      required: true
+      description: Path to database file (SQLite) or connection string
+
+    table_name:
+      type: string
+      default: mailbox
+      description: Table name for storing events
+
+    retention_days:
+      type: integer
+      default: 90
+      description: Number of days to retain events before deletion
+
+    cleanup_interval:
+      type: duration
+      default: 24h
+      description: Interval between automatic cleanup runs
+
+# Metrics exported by this pattern
+metrics:
+  - name: mailbox_events_received_total
+    type: counter
+    description: Total number of events received from message source
+
+  - name: mailbox_events_stored_total
+    type: counter
+    description: Total number of events successfully stored
+
+  - name: mailbox_events_failed_total
+    type: counter
+    description: Total number of events that failed to store
+
+  - name: mailbox_bytes_stored_total
+    type: counter
+    description: Total bytes stored in mailbox
+
+  - name: mailbox_processing_latency_seconds
+    type: histogram
+    description: Time taken to process and store each event
+
+# Health checks
+health_checks:
+  - name: mailbox_running
+    description: Checks if mailbox consumer is running
+    critical: true
+
+  - name: failure_rate
+    description: Checks if failure rate is below 10%
+    critical: false
+
+# Use cases
+use_cases:
+  - name: audit_logging
+    description: Store all system events with searchable metadata and encrypted PII
+
+  - name: message_archives
+    description: Store communications with searchable headers and encrypted bodies
+
+  - name: event_sourcing
+    description: Capture all domain events with indexed event types and aggregates
+
+  - name: system_observability
+    description: Archive traces, logs, and metrics with searchable dimensions
+
+  - name: compliance_retention
+    description: Retain records with searchable metadata while protecting sensitive payloads
+
+# Example configuration
+example_config:
+  name: admin-mailbox
+  behavior:
+    topic: admin.events.>
+    consumer_group: mailbox-admin
+    auto_commit: true
+  storage:
+    database_path: /var/lib/prism/mailbox-admin.db
+    table_name: mailbox
+    retention_days: 90
+    cleanup_interval: 24h

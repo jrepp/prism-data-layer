@@ -1,0 +1,28 @@
+# Example mailbox pattern configuration
+# This configuration sets up a mailbox that consumes admin events
+# from NATS and stores them in a local SQLite database
+
+name: admin-mailbox
+
+behavior:
+  # Topic pattern to subscribe to (NATS wildcard syntax)
+  topic: "admin.events.>"
+
+  # Consumer group for coordinated consumption across multiple instances
+  consumer_group: "mailbox-admin"
+
+  # Automatically acknowledge messages after successful storage
+  auto_commit: true
+
+storage:
+  # Path to SQLite database file
+  database_path: "/Users/jrepp/.prism/mailbox-admin.db"
+
+  # Table name for storing events
+  table_name: "mailbox"
+
+  # Retention period in days (events older than this will be deleted)
+  retention_days: 90
+
+  # Interval between automatic cleanup runs
+  cleanup_interval: "24h"

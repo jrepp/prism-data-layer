@@ -12,6 +12,82 @@ Quick access to recently updated documentation. Changes listed in reverse chrono
 
 ### 2025-10-15
 
+#### RFC-037: Mailbox Pattern - Searchable Event Store (NEW)
+**Link**: [RFC-037](/rfc/rfc-037)
+
+**Summary**: Comprehensive mailbox pattern design for consuming messages from queues and storing them in searchable databases with indexed headers and encrypted bodies:
+
+**Core Concept**:
+- **Three-Slot Architecture**: Message source (queue consumer) + Storage backend (table writer) + Query interface (table reader)
+- **Header Indexing**: Extract metadata from PubSubMessage.Metadata map into indexed table columns
+- **Encrypted Body Support**: Store encrypted payloads as opaque blobs while maintaining header searchability
+- **Schema Evolution**: JSON custom headers for flexibility without schema migrations
+- **Pluggable Storage**: SQLite (default), PostgreSQL, ClickHouse via TableWriterInterface and TableReaderInterface
+
+**Use Cases**:
+- Audit logging with searchable metadata (user, action, resource) but encrypted PII
+- Email/message archives with searchable headers (from, to, subject) and encrypted bodies
+- Event sourcing with indexed event types, aggregates, timestamps
+- System observability (traces, logs, metrics) with searchable dimensions
+- Compliance retention with searchable metadata while protecting sensitive payloads
+
+**New Backend Interfaces**:
+
+**TableWriterInterface** (Storage Operations):
+```go
+type TableWriterInterface interface {
+    WriteEvent(ctx context.Context, event *MailboxEvent) error
+    DeleteOldEvents(ctx context.Context, olderThan int64) (int64, error)
+    GetTableStats(ctx context.Context) (*TableStats, error)
+}
+```
+
+**TableReaderInterface** (Query Operations):
+```go
+type TableReaderInterface interface {
+    QueryEvents(ctx context.Context, filter *EventFilter) ([]*MailboxEvent, error)
+    GetEvent(ctx context.Context, messageID string) (*MailboxEvent, error)
+    GetTableStats(ctx context.Context) (*TableStats, error)
+}
+```
+
+**Standard Indexed Headers**:
+- `prism-message-id`: Unique message identifier
+- `prism-timestamp`: Event timestamp
+- `prism-topic`: Topic/stream name
+- `prism-content-type`: Payload content type
+- `prism-schema-id`: Schema registry ID (RFC-030)
+- `prism-encryption`: Encryption algorithm (if encrypted)
+- `prism-correlation-id`: Request correlation ID
+- `prism-principal`: User/service identity
+- `prism-namespace`: Prism namespace
+
+**SQLite Table Schema**:
+- Indexed headers as table columns (message_id, timestamp, topic, principal, correlation_id)
+- Custom headers as JSON column (x-* headers)
+- Body as BLOB column (may be encrypted)
+- Automatic retention policy (90 days default)
+
+**Pattern Configuration**:
+- Message source slot: NATS, Kafka, Redis Streams
+- Storage slot: SQLite (local), PostgreSQL (distributed), ClickHouse (analytics)
+- Behavior: batch_size, auto_commit, retention_policy
+
+**Implementation Plan** (4 weeks):
+- Phase 1: TableWriterInterface definition in pkg/plugin/
+- Phase 2: SQLite backend with WAL mode and indexed columns
+- Phase 3: Mailbox pattern with header extraction and retention
+- Phase 4: Integration tests with NATS + SQLite
+- Phase 5: $admin namespace configuration
+
+**Key Innovation**: Decouples message indexing from storage backend using slot architecture. Headers extracted from metadata map and indexed for fast queries while encrypted bodies remain opaque. Automatic retention management prevents storage bloat. SQLite default provides instant local testing, PostgreSQL enables distributed deployments.
+
+**Impact**: Enables searchable event storage without external dependencies (no Elasticsearch required). Encrypted bodies protected while headers remain queryable. Automatic retention policy with TTL. Pluggable storage backends via TableWriterInterface. Foundation for audit logging, message archives, and event sourcing patterns. Complements Consumer pattern (RFC-033) and Producer pattern with durable storage tier.
+
+**$admin Namespace Goal**: Deploy mailbox pattern in `$admin` namespace consuming all admin.* topics for operational observability and audit trail.
+
+---
+
 #### CI Workflow Consolidation and GitHub Merge Queue Support (MAJOR UPDATE)
 **Links**: [CI Workflow](https://github.com/jrepp/prism-data-layer/blob/main/.github/workflows/ci.yml), [Merge Queue Workflow](https://github.com/jrepp/prism-data-layer/blob/main/.github/workflows/merge-queue.yml), [Merge Queue Setup Guide](https://github.com/jrepp/prism-data-layer/blob/main/.github/MERGE_QUEUE_SETUP.md)
 

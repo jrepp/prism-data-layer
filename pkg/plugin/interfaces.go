@@ -98,6 +98,67 @@ type ObjectMetadata struct {
 	ETag         string
 }
 
+// TableWriterInterface defines operations for writing structured events to table storage
+// Used by mailbox pattern storage slot to persist events with indexed headers
+type TableWriterInterface interface {
+	// WriteEvent stores an event with indexed headers and body
+	WriteEvent(ctx context.Context, event *MailboxEvent) error
+
+	// DeleteOldEvents removes events older than retention period
+	DeleteOldEvents(ctx context.Context, olderThan int64) (int64, error)
+
+	// GetTableStats returns storage statistics
+	GetTableStats(ctx context.Context) (*TableStats, error)
+}
+
+// TableReaderInterface defines operations for reading structured events from table storage
+// Used by mailbox pattern query slot to retrieve stored messages as array
+type TableReaderInterface interface {
+	// QueryEvents retrieves events matching filter criteria
+	// Returns messages as array of MailboxEvent (header + payload)
+	QueryEvents(ctx context.Context, filter *EventFilter) ([]*MailboxEvent, error)
+
+	// GetEvent retrieves a single event by message ID
+	GetEvent(ctx context.Context, messageID string) (*MailboxEvent, error)
+
+	// GetTableStats returns storage statistics
+	GetTableStats(ctx context.Context) (*TableStats, error)
+}
+
+// MailboxEvent represents a structured event for storage
+type MailboxEvent struct {
+	MessageID     string
+	Timestamp     int64
+	Topic         string
+	ContentType   string
+	SchemaID      string
+	Encryption    string
+	CorrelationID string
+	Principal     string
+	Namespace     string
+	CustomHeaders map[string]string // x-* headers
+	Body          []byte             // Opaque blob (may be encrypted)
+}
+
+// EventFilter defines query criteria for events
+type EventFilter struct {
+	StartTime     *int64
+	EndTime       *int64
+	Topics        []string
+	Principals    []string
+	CorrelationID *string
+	Limit         int
+	Offset        int
+}
+
+// TableStats provides storage metrics
+type TableStats struct {
+	TotalEvents    int64
+	TotalSizeBytes int64
+	OldestEvent    int64 // Unix timestamp
+	NewestEvent    int64 // Unix timestamp
+}
+
 // NOTE: InterfaceSupport interface removed - interfaces are now declared
 // at registration time via InterfaceDeclaration in the lifecycle protocol.
 // See proto/prism/interfaces/lifecycle.proto for the new declaration format.
