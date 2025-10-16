@@ -9,7 +9,10 @@ import (
 	"path/filepath"
 	"time"
 
+	pb "github.com/jrepp/prism-data-layer/pkg/plugin/gen/prism"
 	"github.com/spf13/cobra"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 var (
@@ -23,6 +26,21 @@ func init() {
 	localCmd.AddCommand(localStopCmd)
 	localCmd.AddCommand(localStatusCmd)
 	localCmd.AddCommand(localLogsCmd)
+	localCmd.AddCommand(localNamespaceCmd)
+}
+
+// localNamespaceCmd provisions a namespace via control plane
+var localNamespaceCmd = &cobra.Command{
+	Use:   "namespace [name]",
+	Short: "Provision a namespace via the control plane",
+	Long: `Provision a namespace by sending a CreateNamespace request through the control plane.
+
+Example:
+  prismctl local namespace $admin-logs`,
+	Args: cobra.ExactArgs(1),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		return provisionNamespace(args[0])
+	},
 }
 
 // localCmd represents the local command
@@ -130,28 +148,14 @@ func startLocalStack() error {
 		{
 			name:    "prism-admin",
 			binary:  filepath.Join(binDir, "prism-admin"),
-			args:    []string{"serve", "--port=8080"},
+			args:    []string{"serve", "--port=8981"},
 			logFile: filepath.Join(logsDir, "admin.log"),
-			delay:   2 * time.Second,
-		},
-		{
-			name:    "prism-proxy-1",
-			binary:  filepath.Join(binDir, "prism-proxy"),
-			args:    []string{"--admin-addr=localhost:8080", "--control-port=9090", "--data-port=19090"},
-			logFile: filepath.Join(logsDir, "proxy1.log"),
-			delay:   2 * time.Second,
-		},
-		{
-			name:    "prism-proxy-2",
-			binary:  filepath.Join(binDir, "prism-proxy"),
-			args:    []string{"--admin-addr=localhost:8080", "--control-port=9091", "--data-port=19091"},
-			logFile: filepath.Join(logsDir, "proxy2.log"),
 			delay:   2 * time.Second,
 		},
 		{
 			name:    "pattern-launcher",
 			binary:  filepath.Join(binDir, "pattern-launcher"),
-			args:    []string{"--admin-addr=localhost:8080", "--listen=:7070"},
+			args:    []string{"--admin-endpoint=localhost:8981", "--launcher-id=launcher-01", "--grpc-port=7070"},
 			logFile: filepath.Join(logsDir, "launcher.log"),
 			delay:   2 * time.Second,
 		},
@@ -207,10 +211,8 @@ func startLocalStack() error {
 
 	fmt.Printf("\n✅ Local Prism stack started successfully!\n\n")
 	fmt.Println("📊 Stack Overview:")
-	fmt.Println("  • Admin UI:       http://localhost:8080")
-	fmt.Println("  • Proxy 1 (CP):   localhost:9090")
-	fmt.Println("  • Proxy 2 (CP):   localhost:9091")
-	fmt.Println("  • Pattern Launcher: localhost:7070")
+	fmt.Println("  • Admin Control Plane: localhost:8981")
+	fmt.Println("  • Pattern Launcher:    localhost:7070")
 	fmt.Println("  • KeyValue: Ready (MemStore backend)")
 	fmt.Println()
 	fmt.Println("📝 View logs:  prismctl local logs [component]")
@@ -230,7 +232,7 @@ func stopLocalStack() error {
 
 	fmt.Println("🛑 Stopping local Prism stack...")
 
-	components := []string{"keyvalue-runner", "pattern-launcher", "prism-proxy-2", "prism-proxy-1", "prism-admin"}
+	components := []string{"keyvalue-runner", "pattern-launcher", "prism-admin"}
 
 	for _, comp := range components {
 		pidFile := filepath.Join(logsDir, fmt.Sprintf("%s.pid", comp))
@@ -281,7 +283,7 @@ func showLocalStackStatus() error {
 
 	fmt.Println("📊 Local Prism Stack Status")
 
-	components := []string{"prism-admin", "prism-proxy-1", "prism-proxy-2", "pattern-launcher", "keyvalue-runner"}
+	components := []string{"prism-admin", "pattern-launcher", "keyvalue-runner"}
 
 	for _, comp := range components {
 		pidFile := filepath.Join(logsDir, fmt.Sprintf("%s.pid", comp))
@@ -398,4 +400,66 @@ func isInBinariesDir(dir string) bool {
 		}
 	}
 	return true
+}
+
+// provisionNamespace creates a namespace via the control plane
+func provisionNamespace(namespace string) error {
+	fmt.Printf("📦 Provisioning namespace: %s\n", namespace)
+
+	// Connect to admin control plane
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	conn, err := grpc.NewClient(
+		"localhost:8981",
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+	)
+	if err != nil {
+		return fmt.Errorf("failed to connect to admin: %w", err)
+	}
+	defer conn.Close()
+
+	client := pb.NewControlPlaneClient(conn)
+
+	// Send CreateNamespace request
+	req := &pb.CreateNamespaceRequest{
+		Namespace:       namespace,
+		RequestingProxy: "prismctl-local",
+		Principal:       "local-user",
+		Config: &pb.NamespaceConfig{
+			Backends: map[string]*pb.BackendConfig{
+				"memstore": {
+					BackendType:      "memstore",
+					ConnectionString: "memory://local",
+					Credentials:      map[string]string{},
+					Options:          map[string]string{},
+				},
+			},
+			Patterns: map[string]*pb.PatternConfig{
+				"keyvalue": {
+					PatternName:         "keyvalue",
+					Settings:            map[string]string{},
+					RequiredInterfaces:  []string{"KeyValue"},
+				},
+			},
+			Auth:     &pb.AuthConfig{Enabled: false},
+			Metadata: map[string]string{"source": "prismctl-local"},
+		},
+	}
+
+	resp, err := client.CreateNamespace(ctx, req)
+	if err != nil {
+		return fmt.Errorf("failed to create namespace: %w", err)
+	}
+
+	if !resp.Success {
+		return fmt.Errorf("namespace creation rejected: %s", resp.Message)
+	}
+
+	fmt.Printf("✅ Namespace created successfully!\n")
+	fmt.Printf("   Partition: %d\n", resp.AssignedPartition)
+	fmt.Printf("   Proxy: %s\n", resp.AssignedProxy)
+	fmt.Printf("   Message: %s\n", resp.Message)
+
+	return nil
 }
