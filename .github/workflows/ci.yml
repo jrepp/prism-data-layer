@@ -161,7 +161,7 @@ jobs:
         if: github.event_name == 'pull_request'
         run: |
           cd proto
-          buf breaking --against ".git#branch=origin/main,subdir=proto"
+          buf breaking --against "../.git#branch=origin/main,subdir=proto"
 
   # Job 2c: Lint GitHub Actions workflows
   lint-github-actions:
