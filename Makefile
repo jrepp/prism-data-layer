@@ -61,7 +61,7 @@ all: proto build ## Build all components (default target)
 
 ##@ Build
 
-build: build-proxy build-prismctl build-prism-admin build-pattern-launcher build-plugin-watcher build-patterns ## Build all components (excludes prism-loadtest due to module path issues)
+build: build-proxy build-prismctl build-prism-admin build-prism-launcher build-plugin-watcher build-patterns ## Build all components (excludes prism-loadtest due to module path issues)
 
 build-proxy: ## Build Rust proxy
 	$(call print_blue,Building Rust proxy...)
@@ -88,11 +88,11 @@ build-prism-loadtest: ## Build prism-loadtest CLI
 	@cd cmd/prism-loadtest && go build -o $(BINARIES_DIR)/prism-loadtest .
 	$(call print_green,prism-loadtest built: $(BINARIES_DIR)/prism-loadtest)
 
-build-pattern-launcher: ## Build pattern-launcher utility
-	$(call print_blue,Building pattern-launcher...)
+build-prism-launcher: ## Build prism-launcher utility
+	$(call print_blue,Building prism-launcher...)
 	@mkdir -p $(BINARIES_DIR)
-	@cd cmd/pattern-launcher && go build -o $(BINARIES_DIR)/pattern-launcher .
-	$(call print_green,pattern-launcher built: $(BINARIES_DIR)/pattern-launcher)
+	@cd cmd/prism-launcher && go build -o $(BINARIES_DIR)/prism-launcher .
+	$(call print_green,prism-launcher built: $(BINARIES_DIR)/prism-launcher)
 
 build-plugin-watcher: ## Build plugin-watcher utility
 	$(call print_blue,Building plugin-watcher...)
@@ -134,7 +134,7 @@ build-dev: ## Build all components in debug mode (faster)
 	@cd cmd/prismctl && go build -o $(BINARIES_DIR)/prismctl-debug .
 	@cd cmd/prism-admin && go build -o $(BINARIES_DIR)/prism-admin-debug .
 	@cd cmd/prism-loadtest && go build -o $(BINARIES_DIR)/prism-loadtest-debug .
-	@cd cmd/pattern-launcher && go build -o $(BINARIES_DIR)/pattern-launcher-debug .
+	@cd cmd/prism-launcher && go build -o $(BINARIES_DIR)/prism-launcher-debug .
 	@cd cmd/plugin-watcher && go build -o $(BINARIES_DIR)/plugin-watcher-debug .
 	$(call print_green,Debug builds complete: $(BINARIES_DIR)/*-debug)
 

@@ -34,7 +34,7 @@ var (
 func main() {
 	flag.Parse()
 
-	log.Printf("Starting Pattern Launcher")
+	log.Printf("Starting Prism Launcher")
 	log.Printf("  Launcher ID: %s", *launcherID)
 	log.Printf("  Region: %s", *region)
 	log.Printf("  Admin endpoint: %s", *adminEndpoint)
@@ -143,7 +143,7 @@ func main() {
 		}
 	}()
 
-	log.Printf("Pattern Launcher started successfully")
+	log.Printf("Prism Launcher started successfully")
 
 	// Wait for interrupt signal
 	sigCh := make(chan os.Signal, 1)
@@ -164,7 +164,7 @@ func main() {
 		log.Printf("Service shutdown error: %v", err)
 	}
 
-	log.Printf("Pattern Launcher stopped")
+	log.Printf("Prism Launcher stopped")
 }
 
 func parseIsolationLevel(level string) isolation.IsolationLevel {
@@ -183,13 +183,13 @@ func parseIsolationLevel(level string) isolation.IsolationLevel {
 
 func metricsHandler(w http.ResponseWriter, r *http.Request) {
 	// For Phase 1, return mock metrics
-	fmt.Fprint(w, `# HELP pattern_launcher_processes_total Total number of pattern processes
-# TYPE pattern_launcher_processes_total gauge
-pattern_launcher_processes_total 0
+	fmt.Fprint(w, `# HELP prism_launcher_processes_total Total number of pattern processes
+# TYPE prism_launcher_processes_total gauge
+prism_launcher_processes_total 0
 
-# HELP pattern_launcher_uptime_seconds Launcher uptime in seconds
-# TYPE pattern_launcher_uptime_seconds counter
-pattern_launcher_uptime_seconds 0
+# HELP prism_launcher_uptime_seconds Launcher uptime in seconds
+# TYPE prism_launcher_uptime_seconds counter
+prism_launcher_uptime_seconds 0
 `)
 }
 

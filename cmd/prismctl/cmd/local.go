@@ -171,8 +171,8 @@ func startLocalStack() error {
 			delay:   2 * time.Second,
 		},
 		{
-			name:    "pattern-launcher",
-			binary:  filepath.Join(absBinDir, "pattern-launcher"),
+			name:    "prism-launcher",
+			binary:  filepath.Join(absBinDir, "prism-launcher"),
 			args:    []string{"--admin-endpoint=localhost:8981", "--launcher-id=launcher-01", "--grpc-port=7070", "--patterns-dir=" + patternsDir},
 			logFile: filepath.Join(logsDir, "launcher.log"),
 			delay:   2 * time.Second,
@@ -261,7 +261,7 @@ func stopLocalStack() error {
 
 	fmt.Println("🛑 Stopping local Prism stack...")
 
-	components := []string{"keyvalue-runner", "pattern-launcher", "prism-admin"}
+	components := []string{"keyvalue-runner", "prism-launcher", "prism-admin"}
 
 	for _, comp := range components {
 		pidFile := filepath.Join(logsDir, fmt.Sprintf("%s.pid", comp))
@@ -312,7 +312,7 @@ func showLocalStackStatus() error {
 
 	fmt.Println("📊 Local Prism Stack Status")
 
-	components := []string{"prism-admin", "pattern-launcher", "keyvalue-runner"}
+	components := []string{"prism-admin", "prism-launcher", "keyvalue-runner"}
 
 	for _, comp := range components {
 		pidFile := filepath.Join(logsDir, fmt.Sprintf("%s.pid", comp))
@@ -423,7 +423,7 @@ func findBinariesDir() (string, error) {
 
 // isInBinariesDir checks if a directory contains the expected binaries
 func isInBinariesDir(dir string) bool {
-	requiredBinaries := []string{"prism-proxy", "prism-admin", "pattern-launcher"}
+	requiredBinaries := []string{"prism-proxy", "prism-admin", "prism-launcher"}
 	for _, binary := range requiredBinaries {
 		path := filepath.Join(dir, binary)
 		if _, err := os.Stat(path); os.IsNotExist(err) {
