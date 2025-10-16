@@ -117,6 +117,13 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-go-
 
+      - name: Download dependencies
+        run: |
+          if [ -d "patterns/${{ matrix.pattern }}" ]; then
+            cd patterns/${{ matrix.pattern }}
+            go mod download
+          fi
+
       - name: Build pattern module
         run: |
           if [ -d "patterns/${{ matrix.pattern }}" ]; then
