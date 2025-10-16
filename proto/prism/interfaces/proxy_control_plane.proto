@@ -37,11 +37,12 @@ message PatternMessage {
     // Responses to proxy commands
     InitializeResponse initialize_response = 3;
     StartResponse start_response = 4;
-    StopResponse stop_response = 5;
-    HealthCheckResponse health_response = 6;
+    DrainResponse drain_response = 5;
+    StopResponse stop_response = 6;
+    HealthCheckResponse health_response = 7;
 
     // Periodic heartbeat to maintain connection
-    HeartbeatMessage heartbeat = 7;
+    HeartbeatMessage heartbeat = 8;
   }
 }
 
@@ -57,11 +58,12 @@ message ProxyCommand {
     // Lifecycle commands
     InitializeRequest initialize = 3;
     StartRequest start = 4;
-    StopRequest stop = 5;
-    HealthCheckRequest health_check = 6;
+    DrainRequest drain = 5;
+    StopRequest stop = 6;
+    HealthCheckRequest health_check = 7;
 
-    // Graceful shutdown initiated by proxy
-    ShutdownRequest shutdown = 7;
+    // Graceful shutdown initiated by proxy (equivalent to drain + stop)
+    ShutdownRequest shutdown = 8;
   }
 }
 

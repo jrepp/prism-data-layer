@@ -305,6 +305,21 @@ func (a *KeyValuePluginAdapter) Start(ctx context.Context) error {
 	return a.runner.Start(ctx)
 }
 
+// Drain implements plugin.Plugin.Drain
+func (a *KeyValuePluginAdapter) Drain(ctx context.Context, timeoutSeconds int32, reason string) (*plugin.DrainMetrics, error) {
+	log.Printf("[KEYVALUE-RUNNER] KeyValuePluginAdapter: Drain called (timeout=%ds, reason=%s)", timeoutSeconds, reason)
+
+	// Delegate drain to backend driver
+	if a.runner.backend != nil {
+		return a.runner.backend.Drain(ctx, timeoutSeconds, reason)
+	}
+
+	return &plugin.DrainMetrics{
+		DrainedOperations: 0,
+		AbortedOperations: 0,
+	}, nil
+}
+
 // Stop implements plugin.Plugin.Stop
 func (a *KeyValuePluginAdapter) Stop(ctx context.Context) error {
 	log.Println("[KEYVALUE-RUNNER] KeyValuePluginAdapter: Stop called")

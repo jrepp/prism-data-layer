@@ -539,6 +539,85 @@ impl PatternManager {
             anyhow::bail!("Pattern not found: {}", name)
         }
     }
+
+    /// Drain all patterns (prepare for shutdown)
+    pub async fn drain_all_patterns(&self, timeout_seconds: i32, reason: String) -> crate::Result<()> {
+        tracing::info!(
+            timeout_seconds = timeout_seconds,
+            reason = %reason,
+            "draining all patterns"
+        );
+
+        let patterns = self.patterns.read().await;
+        let pattern_names: Vec<String> = patterns.keys().cloned().collect();
+        drop(patterns);
+
+        for name in pattern_names {
+            if let Err(e) = self.drain_pattern(&name, timeout_seconds, reason.clone()).await {
+                tracing::warn!(
+                    pattern = %name,
+                    error = %e,
+                    "failed to drain pattern, continuing with others"
+                );
+            }
+        }
+
+        Ok(())
+    }
+
+    /// Drain a single pattern
+    async fn drain_pattern(&self, name: &str, timeout_seconds: i32, reason: String) -> crate::Result<()> {
+        tracing::info!(
+            pattern = %name,
+            timeout_seconds = timeout_seconds,
+            "draining pattern"
+        );
+
+        let mut patterns = self.patterns.write().await;
+        if let Some(pattern) = patterns.get_mut(name) {
+            // Send drain via gRPC
+            if let Some(ref mut client) = pattern.client {
+                if let Err(e) = client.drain(timeout_seconds, reason).await {
+                    tracing::warn!(
+                        pattern = %name,
+                        error = %e,
+                        "gRPC drain call failed"
+                    );
+                } else {
+                    tracing::info!(
+                        pattern = %name,
+                        "pattern drained successfully via gRPC"
+                    );
+                }
+            }
+
+            Ok(())
+        } else {
+            tracing::error!(pattern = %name, "pattern not found in registry");
+            anyhow::bail!("Pattern not found: {}", name)
+        }
+    }
+
+    /// Stop all patterns
+    pub async fn stop_all_patterns(&self) -> crate::Result<()> {
+        tracing::info!("stopping all patterns");
+
+        let patterns = self.patterns.read().await;
+        let pattern_names: Vec<String> = patterns.keys().cloned().collect();
+        drop(patterns);
+
+        for name in pattern_names {
+            if let Err(e) = self.stop_pattern(&name).await {
+                tracing::warn!(
+                    pattern = %name,
+                    error = %e,
+                    "failed to stop pattern, continuing with others"
+                );
+            }
+        }
+
+        Ok(())
+    }
 }
 
 impl Default for PatternManager {

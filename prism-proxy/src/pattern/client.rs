@@ -1,8 +1,8 @@
 //! gRPC client for pattern lifecycle communication
 
 use crate::proto::interfaces::{
-    lifecycle_interface_client::LifecycleInterfaceClient, HealthCheckRequest, InitializeRequest,
-    StartRequest, StopRequest,
+    lifecycle_interface_client::LifecycleInterfaceClient, DrainRequest, HealthCheckRequest,
+    InitializeRequest, StartRequest, StopRequest,
 };
 use tonic::transport::Channel;
 
@@ -67,6 +67,23 @@ impl PatternClient {
         }
 
         Ok(start_response.data_endpoint)
+    }
+
+    /// Drain the pattern (prepare for shutdown)
+    pub async fn drain(&mut self, timeout_seconds: i32, reason: String) -> crate::Result<()> {
+        let request = tonic::Request::new(DrainRequest {
+            timeout_seconds,
+            reason,
+        });
+
+        let response = self.client.drain(request).await?;
+        let drain_response = response.into_inner();
+
+        if !drain_response.success {
+            anyhow::bail!("Drain failed: {}", drain_response.error);
+        }
+
+        Ok(())
     }
 
     /// Stop the pattern

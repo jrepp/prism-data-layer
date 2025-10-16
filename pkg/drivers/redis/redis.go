@@ -117,6 +117,18 @@ func (r *RedisPattern) Start(ctx context.Context) error {
 	return nil
 }
 
+// Drain prepares the plugin for shutdown
+// For Redis with connection pooling, wait for in-flight commands to complete
+func (r *RedisPattern) Drain(ctx context.Context, timeoutSeconds int32, reason string) (*plugin.DrainMetrics, error) {
+	// Redis connection pool drains automatically
+	// All in-flight commands will complete before Stop() closes connections
+	// For now, this is a no-op - future enhancement could track active commands
+	return &plugin.DrainMetrics{
+		DrainedOperations: 0,
+		AbortedOperations: 0,
+	}, nil
+}
+
 // Stop gracefully shuts down the plugin
 func (r *RedisPattern) Stop(ctx context.Context) error {
 	if r.client != nil {
