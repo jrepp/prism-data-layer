@@ -2,6 +2,7 @@ package consumer_test
 
 import (
 	"context"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -197,10 +198,10 @@ func testConsumerWithRetry(t *testing.T, driver interface{}, caps framework.Capa
 	err = c.BindSlots(backends.MessageSource, nil, nil, nil)
 	require.NoError(t, err, "Failed to bind slots")
 
-	attemptCount := 0
+	var attemptCount atomic.Int32
 	c.SetProcessor(func(ctx context.Context, msg *plugin.PubSubMessage) error {
-		attemptCount++
-		if attemptCount <= 2 {
+		count := attemptCount.Add(1)
+		if count <= 2 {
 			return assert.AnError // Fail first 2 attempts
 		}
 		return nil // Succeed on 3rd attempt
@@ -221,7 +222,7 @@ func testConsumerWithRetry(t *testing.T, driver interface{}, caps framework.Capa
 	time.Sleep(1 * time.Second)
 
 	// Should have attempted 3 times (initial + 2 retries)
-	assert.GreaterOrEqual(t, attemptCount, 3, "Should have retried at least 2 times")
+	assert.GreaterOrEqual(t, int(attemptCount.Load()), 3, "Should have retried at least 2 times")
 }
 
 // testConsumerStateRecovery tests consumer state recovery after restart
