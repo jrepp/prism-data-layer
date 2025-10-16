@@ -241,8 +241,8 @@ admin:
 
 ---
 
-#### ADR-054: SQLite Storage for prism-admin Local State (NEW)
-**Link**: [ADR-054](/adr/adr-054)
+#### ADR-054: SQLite Storage for prism-admin Local State (PLANNED)
+**Link**: ADR-054 (planned)
 
 **Summary**: Complete SQLite-based local storage implementation for prism-admin providing operational state persistence:
 
