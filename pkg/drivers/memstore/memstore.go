@@ -78,6 +78,18 @@ func (m *MemStore) Start(ctx context.Context) error {
 	return nil
 }
 
+// Drain prepares the plugin for shutdown
+// For memstore (in-memory), there are no pending operations to wait for
+// This is a no-op that returns immediately
+func (m *MemStore) Drain(ctx context.Context, timeoutSeconds int32, reason string) (*plugin.DrainMetrics, error) {
+	// MemStore has no persistent connections or pending operations
+	// All operations are synchronous and complete immediately
+	return &plugin.DrainMetrics{
+		DrainedOperations: 0,
+		AbortedOperations: 0,
+	}, nil
+}
+
 // Stop gracefully shuts down the plugin
 func (m *MemStore) Stop(ctx context.Context) error {
 	// Clear all data

@@ -108,6 +108,37 @@ func (s *LifecycleService) Start(ctx context.Context, req *pb.StartRequest) (*pb
 	}, nil
 }
 
+// Drain implements the Drain RPC
+func (s *LifecycleService) Drain(ctx context.Context, req *pb.DrainRequest) (*pb.DrainResponse, error) {
+	slog.Info("lifecycle: Drain called",
+		"plugin", s.plugin.Name(),
+		"timeout", req.TimeoutSeconds,
+		"reason", req.Reason)
+
+	metrics, err := s.plugin.Drain(ctx, req.TimeoutSeconds, req.Reason)
+	if err != nil {
+		slog.Error("lifecycle: Drain failed", "error", err)
+		return &pb.DrainResponse{
+			Success:           false,
+			Error:             err.Error(),
+			DrainedOperations: 0,
+			AbortedOperations: 0,
+		}, nil
+	}
+
+	slog.Info("lifecycle: Drain succeeded",
+		"plugin", s.plugin.Name(),
+		"drained", metrics.DrainedOperations,
+		"aborted", metrics.AbortedOperations)
+
+	return &pb.DrainResponse{
+		Success:           true,
+		Error:             "",
+		DrainedOperations: metrics.DrainedOperations,
+		AbortedOperations: metrics.AbortedOperations,
+	}, nil
+}
+
 // Stop implements the Stop RPC
 func (s *LifecycleService) Stop(ctx context.Context, req *pb.StopRequest) (*pb.StopResponse, error) {
 	slog.Info("lifecycle: Stop called",

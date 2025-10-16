@@ -52,6 +52,8 @@ require (
 
 replace github.com/jrepp/prism-data-layer/pkg/plugin => ../../pkg/plugin
 
+replace github.com/jrepp/prism-data-layer/pkg/drivers/memstore => ../../pkg/drivers/memstore
+
 replace github.com/jrepp/prism-data-layer/pkg/drivers/nats => ../../pkg/drivers/nats
 
 replace github.com/jrepp/prism-data-layer/pkg/drivers/sqlite => ../../pkg/drivers/sqlite

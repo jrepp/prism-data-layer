@@ -55,15 +55,17 @@ async fn main() -> anyhow::Result<()> {
     // Wait for shutdown signal
     tokio::signal::ctrl_c().await?;
 
-    // Graceful shutdown
-    info!("Received shutdown signal, stopping patterns...");
-    for pattern_config in &config.patterns {
-        if let Err(e) = pattern_manager.stop_pattern(&pattern_config.name).await {
-            error!("Failed to stop pattern {}: {}", pattern_config.name, e);
-        }
+    // Graceful drain and shutdown
+    info!("Received shutdown signal, initiating drain-on-shutdown...");
+    let drain_timeout = std::time::Duration::from_secs(30); // Default 30s timeout
+    if let Err(e) = server
+        .drain_and_shutdown(drain_timeout, "SIGINT/SIGTERM received".to_string())
+        .await
+    {
+        error!("Error during drain-on-shutdown: {}", e);
+        return Err(e);
     }
 
-    server.shutdown().await?;
     info!("Proxy shutdown complete");
 
     Ok(())

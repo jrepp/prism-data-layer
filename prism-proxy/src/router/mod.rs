@@ -5,15 +5,14 @@ use std::sync::Arc;
 
 /// Router - routes requests to appropriate patterns
 pub struct Router {
-    _pattern_manager: Arc<PatternManager>,
+    /// Pattern manager for lifecycle operations
+    pub pattern_manager: Arc<PatternManager>,
 }
 
 impl Router {
     /// Create a new router
     pub fn new(pattern_manager: Arc<PatternManager>) -> Self {
-        Self {
-            _pattern_manager: pattern_manager,
-        }
+        Self { pattern_manager }
     }
 
     /// Route a request to a pattern

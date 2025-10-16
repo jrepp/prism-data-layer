@@ -46,6 +46,7 @@ require (
 replace (
 	github.com/jrepp/prism-data-layer/pkg/drivers/memstore => ../../pkg/drivers/memstore
 	github.com/jrepp/prism-data-layer/pkg/drivers/nats => ../../pkg/drivers/nats
+	github.com/jrepp/prism-data-layer/pkg/drivers/redis => ../../pkg/drivers/redis
 	github.com/jrepp/prism-data-layer/pkg/patterns/common => ../../pkg/patterns/common
 	github.com/jrepp/prism-data-layer/pkg/plugin => ../../pkg/plugin
 )

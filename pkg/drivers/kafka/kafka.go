@@ -193,6 +193,28 @@ func (p *KafkaPlugin) Start(ctx context.Context) error {
 	return nil
 }
 
+// Drain prepares the plugin for shutdown
+func (p *KafkaPlugin) Drain(ctx context.Context, timeoutSeconds int32, reason string) (*plugin.DrainMetrics, error) {
+	// For Kafka, drain means flushing pending producer messages
+	// and allowing in-flight consumer operations to complete
+	if p.producer != nil {
+		timeout := int(timeoutSeconds) * 1000 // Convert to milliseconds
+		remaining := p.producer.Flush(timeout)
+		if remaining > 0 {
+			slog.Warn("kafka drain: not all messages flushed", "remaining", remaining)
+			return &plugin.DrainMetrics{
+				DrainedOperations: 0,
+				AbortedOperations: int64(remaining),
+			}, nil
+		}
+	}
+
+	return &plugin.DrainMetrics{
+		DrainedOperations: 0,
+		AbortedOperations: 0,
+	}, nil
+}
+
 // Stop gracefully shuts down the plugin
 func (p *KafkaPlugin) Stop(ctx context.Context) error {
 	slog.Info("stopping kafka plugin")
