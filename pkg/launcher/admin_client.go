@@ -133,6 +133,30 @@ func (c *AdminClient) sendHeartbeat(ctx context.Context) error {
 	return nil
 }
 
+// ReportLifecycleEvent sends a lifecycle event to admin (implements EventPublisher)
+func (c *AdminClient) ReportLifecycleEvent(ctx context.Context, eventType, message string, metadata map[string]string) error {
+	req := &pb.LifecycleEventRequest{
+		ComponentId:   c.launcherID,
+		ComponentType: "launcher",
+		EventType:     eventType,
+		Message:       message,
+		Timestamp:     time.Now().Unix(),
+		Metadata:      metadata,
+	}
+
+	resp, err := c.client.ReportLifecycleEvent(ctx, req)
+	if err != nil {
+		return fmt.Errorf("lifecycle event RPC failed: %w", err)
+	}
+
+	if !resp.Success {
+		return fmt.Errorf("lifecycle event rejected: %s", resp.Message)
+	}
+
+	log.Printf("[AdminClient] Lifecycle event sent: %s - %s", eventType, message)
+	return nil
+}
+
 // Close closes the admin client connection
 func (c *AdminClient) Close() error {
 	if c.conn != nil {

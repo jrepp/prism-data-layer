@@ -304,6 +304,81 @@ func (s *ControlPlaneService) RevokeProcess(
 }
 
 // ====================================================================
+// Lifecycle Event RPCs
+// ====================================================================
+
+// ReportLifecycleEvent handles lifecycle event reports from launchers and proxies
+func (s *ControlPlaneService) ReportLifecycleEvent(
+	ctx context.Context,
+	req *pb.LifecycleEventRequest,
+) (*pb.LifecycleEventAck, error) {
+	// Format metadata for logging
+	metadataStr := ""
+	if len(req.Metadata) > 0 {
+		metadataJSON, _ := json.Marshal(req.Metadata)
+		metadataStr = fmt.Sprintf(" metadata=%s", string(metadataJSON))
+	}
+
+	fmt.Printf("[LifecycleEvent] %s/%s: %s - %s%s\n",
+		req.ComponentType,
+		req.ComponentId,
+		req.EventType,
+		req.Message,
+		metadataStr)
+
+	// Update component status based on event type
+	now := time.Now()
+
+	switch req.ComponentType {
+	case "launcher":
+		status := mapEventTypeToStatus(req.EventType)
+		launcher := &Launcher{
+			LauncherID: req.ComponentId,
+			Status:     status,
+			LastSeen:   &now,
+		}
+		if err := s.storage.UpsertLauncher(ctx, launcher); err != nil {
+			fmt.Printf("[LifecycleEvent] Warning: failed to update launcher status: %v\n", err)
+		}
+
+	case "proxy":
+		status := mapEventTypeToStatus(req.EventType)
+		proxy := &Proxy{
+			ProxyID:  req.ComponentId,
+			Status:   status,
+			LastSeen: &now,
+		}
+		if err := s.storage.UpsertProxy(ctx, proxy); err != nil {
+			fmt.Printf("[LifecycleEvent] Warning: failed to update proxy status: %v\n", err)
+		}
+	}
+
+	// TODO: Persist lifecycle events to audit log table for compliance/debugging
+
+	return &pb.LifecycleEventAck{
+		Success: true,
+		Message: "Event received",
+	}, nil
+}
+
+// mapEventTypeToStatus maps lifecycle event types to component status
+// Database constraint allows: 'healthy', 'unhealthy', 'unknown' only
+func mapEventTypeToStatus(eventType string) string {
+	switch eventType {
+	case "starting", "ready":
+		return "healthy"
+	case "stopping", "stopped":
+		return "unknown" // Component is intentionally down
+	case "crashed", "unhealthy", "degraded":
+		return "unhealthy"
+	case "restarting":
+		return "unhealthy" // Temporarily unhealthy during restart
+	default:
+		return "unknown"
+	}
+}
+
+// ====================================================================
 // Helper Methods
 // ====================================================================
 

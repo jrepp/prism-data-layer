@@ -250,7 +250,8 @@ func startLocalStack() error {
 	return nil
 }
 
-// stopLocalStack stops all components of the local stack
+// stopLocalStack stops all components of the local stack in proper order
+// Pattern runners → Launchers → Admin (last)
 func stopLocalStack() error {
 	binDir, err := findBinariesDir()
 	if err != nil {
@@ -259,45 +260,119 @@ func stopLocalStack() error {
 
 	logsDir := filepath.Join(binDir, "..", "logs")
 
-	fmt.Println("🛑 Stopping local Prism stack...")
+	fmt.Println("🛑 Stopping local Prism stack (graceful shutdown)...")
+	fmt.Println()
 
-	components := []string{"keyvalue-runner", "prism-launcher", "prism-admin"}
+	// Step 1: Check admin connectivity for coordinated shutdown
+	adminRunning := checkAdminConnectivity()
+	if adminRunning {
+		fmt.Println("  ✅ Admin control plane is running - coordinating graceful shutdown")
+	} else {
+		fmt.Println("  ⚠️  Admin not reachable - proceeding with direct shutdown")
+	}
+	fmt.Println()
 
-	for _, comp := range components {
-		pidFile := filepath.Join(logsDir, fmt.Sprintf("%s.pid", comp))
-		pidData, err := os.ReadFile(pidFile)
-		if err != nil {
-			fmt.Printf("  ⚠️  %s: No PID file found\n", comp)
-			continue
+	// Step 2: Stop pattern runners first (they depend on launchers/proxies)
+	fmt.Println("  Stopping pattern runners...")
+	patternRunners := []string{"keyvalue-runner"}
+	for _, comp := range patternRunners {
+		if err := stopComponent(logsDir, comp); err != nil {
+			fmt.Printf("    ⚠️  %s: %v\n", comp, err)
 		}
+	}
+	fmt.Println()
 
-		var pid int
-		if _, err := fmt.Sscanf(string(pidData), "%d", &pid); err != nil {
-			fmt.Printf("  ⚠️  %s: Invalid PID file\n", comp)
-			continue
+	// Step 3: Stop launchers (they depend on admin)
+	fmt.Println("  Stopping launchers...")
+	launchers := []string{"prism-launcher"}
+	for _, comp := range launchers {
+		if err := stopComponent(logsDir, comp); err != nil {
+			fmt.Printf("    ⚠️  %s: %v\n", comp, err)
 		}
+	}
+	fmt.Println()
 
-		fmt.Printf("  Stopping %s (PID: %d)...\n", comp, pid)
+	// Step 4: Wait a moment for graceful shutdown
+	fmt.Println("  Waiting for graceful shutdown...")
+	time.Sleep(1 * time.Second)
+	fmt.Println()
 
-		// Send SIGTERM to process
-		process, err := os.FindProcess(pid)
-		if err != nil {
-			fmt.Printf("    ⚠️  Process not found\n")
-			continue
-		}
-
-		if err := process.Signal(os.Interrupt); err != nil {
-			fmt.Printf("    ⚠️  Failed to stop: %v\n", err)
-			continue
-		}
-
-		fmt.Printf("    ✅ Stopped\n")
-
-		// Remove PID file
-		os.Remove(pidFile)
+	// Step 5: Finally, stop admin itself (no dependencies)
+	fmt.Println("  Stopping admin control plane...")
+	if err := stopComponent(logsDir, "prism-admin"); err != nil {
+		fmt.Printf("    ⚠️  prism-admin: %v\n", err)
 	}
 
-	fmt.Println("\n✅ Local Prism stack stopped")
+	fmt.Println()
+	fmt.Println("✅ Local Prism stack stopped cleanly")
+	return nil
+}
+
+// checkAdminConnectivity checks if admin is reachable
+func checkAdminConnectivity() bool {
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+
+	conn, err := grpc.DialContext(
+		ctx,
+		"localhost:8981",
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+		grpc.WithBlock(),
+	)
+	if err != nil {
+		return false
+	}
+	defer conn.Close()
+
+	return true
+}
+
+// stopComponent stops a single component by PID file
+func stopComponent(logsDir, component string) error {
+	pidFile := filepath.Join(logsDir, fmt.Sprintf("%s.pid", component))
+	pidData, err := os.ReadFile(pidFile)
+	if err != nil {
+		return fmt.Errorf("no PID file found")
+	}
+
+	var pid int
+	if _, err := fmt.Sscanf(string(pidData), "%d", &pid); err != nil {
+		return fmt.Errorf("invalid PID file")
+	}
+
+	// Check if process exists first
+	if err := syscall.Kill(pid, syscall.Signal(0)); err != nil {
+		os.Remove(pidFile)
+		return fmt.Errorf("not running (PID: %d)", pid)
+	}
+
+	fmt.Printf("    Stopping %s (PID: %d)...\n", component, pid)
+
+	// Send SIGTERM to process
+	process, err := os.FindProcess(pid)
+	if err != nil {
+		return fmt.Errorf("process not found")
+	}
+
+	if err := process.Signal(os.Interrupt); err != nil {
+		return fmt.Errorf("failed to send signal: %v", err)
+	}
+
+	// Wait for process to exit (up to 5 seconds)
+	for i := 0; i < 50; i++ {
+		if err := syscall.Kill(pid, syscall.Signal(0)); err != nil {
+			// Process has exited
+			os.Remove(pidFile)
+			fmt.Printf("    ✅ %s stopped\n", component)
+			return nil
+		}
+		time.Sleep(100 * time.Millisecond)
+	}
+
+	// If still running after 5 seconds, force kill
+	fmt.Printf("    ⚠️  %s did not stop gracefully, sending SIGKILL...\n", component)
+	process.Signal(syscall.SIGKILL)
+	os.Remove(pidFile)
 	return nil
 }
 

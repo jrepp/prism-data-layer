@@ -66,6 +66,8 @@ func main() {
 
 	// Connect to admin control plane if endpoint provided
 	var adminClient *launcher.AdminClient
+	var eventPublisher launcher.EventPublisher
+
 	if *adminEndpoint != "" {
 		adminCfg := &launcher.AdminClientConfig{
 			AdminEndpoint: *adminEndpoint,
@@ -81,9 +83,18 @@ func main() {
 		}
 		defer adminClient.Close()
 
+		// Use admin client as event publisher
+		eventPublisher = adminClient
+
+		// Report starting event
+		ctx := context.Background()
+		if err := eventPublisher.ReportLifecycleEvent(ctx, "starting", "Prism Launcher initializing", nil); err != nil {
+			log.Printf("Warning: Failed to report starting event: %v", err)
+		}
+
 		// Register with admin
-		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-		ack, err := adminClient.Register(ctx)
+		regCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		ack, err := adminClient.Register(regCtx)
 		cancel()
 
 		if err != nil {
@@ -97,6 +108,7 @@ func main() {
 		}
 	} else {
 		log.Printf("No admin endpoint configured, running standalone")
+		eventPublisher = &launcher.NoopEventPublisher{}
 	}
 
 	// Create gRPC server
@@ -145,12 +157,25 @@ func main() {
 
 	log.Printf("Prism Launcher started successfully")
 
+	// Report ready event
+	if err := eventPublisher.ReportLifecycleEvent(context.Background(), "ready", "Prism Launcher ready to accept work", nil); err != nil {
+		log.Printf("Warning: Failed to report ready event: %v", err)
+	}
+
 	// Wait for interrupt signal
 	sigCh := make(chan os.Signal, 1)
 	signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
-	<-sigCh
+	sig := <-sigCh
 
-	log.Printf("Shutdown signal received")
+	log.Printf("Shutdown signal received: %s", sig)
+
+	// Report stopping event with signal information
+	metadata := map[string]string{
+		"signal": sig.String(),
+	}
+	if err := eventPublisher.ReportLifecycleEvent(context.Background(), "stopping", fmt.Sprintf("Graceful shutdown initiated by signal %s", sig), metadata); err != nil {
+		log.Printf("Warning: Failed to report stopping event: %v", err)
+	}
 
 	// Graceful shutdown
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
@@ -162,6 +187,13 @@ func main() {
 	// Shutdown service
 	if err := service.Shutdown(ctx); err != nil {
 		log.Printf("Service shutdown error: %v", err)
+		// Report failed shutdown
+		eventPublisher.ReportLifecycleEvent(context.Background(), "unhealthy", fmt.Sprintf("Shutdown error: %v", err), map[string]string{"error": err.Error()})
+	}
+
+	// Report stopped event
+	if err := eventPublisher.ReportLifecycleEvent(context.Background(), "stopped", "Prism Launcher stopped cleanly", nil); err != nil {
+		log.Printf("Warning: Failed to report stopped event: %v", err)
 	}
 
 	log.Printf("Prism Launcher stopped")

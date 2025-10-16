@@ -81,6 +81,13 @@ service ControlPlane {
     option (idempotent) = true;
     option (timeout_ms) = 35000;  // 30s graceful + 5s overhead
   }
+
+  // ReportLifecycleEvent reports lifecycle events from launcher/proxy to admin.
+  // Events include: starting, stopping, crashed, restarting, healthy, unhealthy
+  rpc ReportLifecycleEvent(LifecycleEventRequest) returns (LifecycleEventAck) {
+    option (idempotent) = true;
+    option (timeout_ms) = 3000;
+  }
 }
 
 // ====================================================================
@@ -318,4 +325,22 @@ message HeartbeatAck {
   bool success = 1;
   string message = 2;
   int64 server_timestamp = 3;   // Server's current timestamp for clock sync
+}
+
+// ====================================================================
+// Lifecycle Event Messages
+// ====================================================================
+
+message LifecycleEventRequest {
+  string component_id = 1;       // launcher-01, proxy-01, etc.
+  string component_type = 2;     // launcher, proxy
+  string event_type = 3;         // starting, stopping, stopped, crashed, restarting, healthy, unhealthy
+  string message = 4;            // Optional human-readable message
+  int64 timestamp = 5;           // Unix timestamp
+  map<string, string> metadata = 6; // Additional context (signal_name, exit_code, etc.)
+}
+
+message LifecycleEventAck {
+  bool success = 1;
+  string message = 2;
 }
