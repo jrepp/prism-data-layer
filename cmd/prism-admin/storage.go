@@ -68,6 +68,22 @@ type Pattern struct {
 	UpdatedAt   time.Time
 }
 
+type Launcher struct {
+	ID             int64
+	LauncherID     string
+	Address        string
+	Region         string
+	Version        string
+	Status         string // "healthy", "unhealthy", "unknown"
+	MaxProcesses   int32
+	AvailableSlots int32
+	Capabilities   json.RawMessage // JSON array
+	LastSeen       *time.Time
+	CreatedAt      time.Time
+	UpdatedAt      time.Time
+	Metadata       json.RawMessage
+}
+
 type AuditLog struct {
 	ID           int64
 	Timestamp    time.Time
@@ -356,6 +372,92 @@ func (s *Storage) ListProxies(ctx context.Context) ([]*Proxy, error) {
 	}
 
 	return proxies, rows.Err()
+}
+
+// Launcher operations
+
+func (s *Storage) UpsertLauncher(ctx context.Context, l *Launcher) error {
+	metadataJSON, _ := json.Marshal(l.Metadata)
+	capabilitiesJSON, _ := json.Marshal(l.Capabilities)
+
+	_, err := s.db.ExecContext(ctx, `
+		INSERT INTO launchers (launcher_id, address, region, version, status, max_processes, available_slots, capabilities, last_seen, metadata, updated_at)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+		ON CONFLICT(launcher_id) DO UPDATE SET
+			address = excluded.address,
+			region = excluded.region,
+			version = excluded.version,
+			status = excluded.status,
+			max_processes = excluded.max_processes,
+			available_slots = excluded.available_slots,
+			capabilities = excluded.capabilities,
+			last_seen = excluded.last_seen,
+			metadata = excluded.metadata,
+			updated_at = CURRENT_TIMESTAMP
+	`, l.LauncherID, l.Address, l.Region, l.Version, l.Status, l.MaxProcesses, l.AvailableSlots, string(capabilitiesJSON), l.LastSeen, string(metadataJSON))
+
+	return err
+}
+
+func (s *Storage) GetLauncher(ctx context.Context, launcherID string) (*Launcher, error) {
+	var l Launcher
+	var metadataStr, capabilitiesStr string
+
+	err := s.db.QueryRowContext(ctx, `
+		SELECT id, launcher_id, address, region, version, status, max_processes, available_slots, capabilities, last_seen, created_at, updated_at, metadata
+		FROM launchers WHERE launcher_id = ?
+	`, launcherID).Scan(&l.ID, &l.LauncherID, &l.Address, &l.Region, &l.Version, &l.Status, &l.MaxProcesses, &l.AvailableSlots,
+		&capabilitiesStr, &l.LastSeen, &l.CreatedAt, &l.UpdatedAt, &metadataStr)
+
+	if err == sql.ErrNoRows {
+		return nil, fmt.Errorf("launcher not found: %s", launcherID)
+	}
+	if err != nil {
+		return nil, fmt.Errorf("failed to get launcher: %w", err)
+	}
+
+	if metadataStr != "" {
+		l.Metadata = json.RawMessage(metadataStr)
+	}
+	if capabilitiesStr != "" {
+		l.Capabilities = json.RawMessage(capabilitiesStr)
+	}
+
+	return &l, nil
+}
+
+func (s *Storage) ListLaunchers(ctx context.Context) ([]*Launcher, error) {
+	rows, err := s.db.QueryContext(ctx, `
+		SELECT id, launcher_id, address, region, version, status, max_processes, available_slots, capabilities, last_seen, created_at, updated_at, metadata
+		FROM launchers
+		ORDER BY last_seen DESC
+	`)
+	if err != nil {
+		return nil, fmt.Errorf("failed to list launchers: %w", err)
+	}
+	defer rows.Close()
+
+	var launchers []*Launcher
+	for rows.Next() {
+		var l Launcher
+		var metadataStr, capabilitiesStr string
+
+		if err := rows.Scan(&l.ID, &l.LauncherID, &l.Address, &l.Region, &l.Version, &l.Status, &l.MaxProcesses, &l.AvailableSlots,
+			&capabilitiesStr, &l.LastSeen, &l.CreatedAt, &l.UpdatedAt, &metadataStr); err != nil {
+			return nil, fmt.Errorf("failed to scan launcher: %w", err)
+		}
+
+		if metadataStr != "" {
+			l.Metadata = json.RawMessage(metadataStr)
+		}
+		if capabilitiesStr != "" {
+			l.Capabilities = json.RawMessage(capabilitiesStr)
+		}
+
+		launchers = append(launchers, &l)
+	}
+
+	return launchers, rows.Err()
 }
 
 // Pattern operations

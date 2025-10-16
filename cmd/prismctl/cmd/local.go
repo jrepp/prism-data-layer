@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 	"time"
 
 	pb "github.com/jrepp/prism-data-layer/pkg/plugin/gen/prism"
@@ -449,6 +450,23 @@ func provisionNamespace(namespace string) error {
 
 	resp, err := client.CreateNamespace(ctx, req)
 	if err != nil {
+		// Improve error messages for common issues
+		if strings.Contains(err.Error(), "no proxy assigned to partition") {
+			fmt.Printf("\n❌ Namespace creation failed\n")
+			fmt.Printf("   Error: No proxy is available to handle this namespace\n")
+			fmt.Printf("   Namespace: %s\n", namespace)
+			fmt.Printf("\n")
+			fmt.Printf("   This typically means:\n")
+			fmt.Printf("     • No prism-proxy instances are running\n")
+			fmt.Printf("     • No proxy has registered with the admin control plane\n")
+			fmt.Printf("\n")
+			fmt.Printf("   To fix:\n")
+			fmt.Printf("     1. Start a prism-proxy instance\n")
+			fmt.Printf("     2. Ensure it connects to admin at localhost:8981\n")
+			fmt.Printf("     3. Retry namespace creation\n")
+			fmt.Printf("\n")
+			return fmt.Errorf("no proxy available")
+		}
 		return fmt.Errorf("failed to create namespace: %w", err)
 	}
 
@@ -456,10 +474,14 @@ func provisionNamespace(namespace string) error {
 		return fmt.Errorf("namespace creation rejected: %s", resp.Message)
 	}
 
-	fmt.Printf("✅ Namespace created successfully!\n")
-	fmt.Printf("   Partition: %d\n", resp.AssignedPartition)
-	fmt.Printf("   Proxy: %s\n", resp.AssignedProxy)
-	fmt.Printf("   Message: %s\n", resp.Message)
+	fmt.Printf("\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n")
+	fmt.Printf("✅ Namespace Created Successfully\n")
+	fmt.Printf("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n")
+	fmt.Printf("  Namespace:  %s\n", namespace)
+	fmt.Printf("  Partition:  %d\n", resp.AssignedPartition)
+	fmt.Printf("  Proxy:      %s\n", resp.AssignedProxy)
+	fmt.Printf("  Message:    %s\n", resp.Message)
+	fmt.Printf("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n")
 
 	return nil
 }

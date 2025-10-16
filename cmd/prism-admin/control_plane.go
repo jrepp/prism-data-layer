@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"hash/crc32"
 	"sync"
@@ -203,8 +204,24 @@ func (s *ControlPlaneService) RegisterLauncher(
 	fmt.Printf("[ControlPlane] RegisterLauncher: launcher_id=%s, address=%s, region=%s, max_processes=%d, capabilities=%v\n",
 		req.LauncherId, req.Address, req.Region, req.MaxProcesses, req.Capabilities)
 
-	// TODO: Persist launcher in storage (requires launcher table from ADR-056)
-	// For now, just acknowledge registration
+	// Persist launcher in storage
+	now := time.Now()
+	capabilitiesJSON, _ := json.Marshal(req.Capabilities)
+	launcher := &Launcher{
+		LauncherID:     req.LauncherId,
+		Address:        req.Address,
+		Region:         req.Region,
+		Version:        req.Version,
+		Status:         "healthy",
+		MaxProcesses:   req.MaxProcesses,
+		AvailableSlots: req.MaxProcesses, // Initially all slots available
+		Capabilities:   capabilitiesJSON,
+		LastSeen:       &now,
+	}
+
+	if err := s.storage.UpsertLauncher(ctx, launcher); err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to register launcher: %v", err)
+	}
 
 	// TODO: Get initial process assignments for this launcher
 
@@ -239,12 +256,26 @@ func (s *ControlPlaneService) LauncherHeartbeat(
 	ctx context.Context,
 	req *pb.LauncherHeartbeatRequest,
 ) (*pb.HeartbeatAck, error) {
-	fmt.Printf("[ControlPlane] LauncherHeartbeat from %s: %d processes, available_slots=%d\n",
+	fmt.Printf("[ControlPlane] LauncherHeartbeat from %s: %d processes, available_slots=%d, cpu=%.1f%%, mem=%dMB\n",
 		req.LauncherId,
 		req.Resources.ProcessCount,
-		req.Resources.AvailableSlots)
+		req.Resources.AvailableSlots,
+		req.Resources.CpuPercent,
+		req.Resources.TotalMemoryMb)
 
-	// TODO: Update launcher last_seen timestamp in storage
+	// Update launcher last_seen timestamp and resource info in storage
+	now := time.Now()
+	launcher := &Launcher{
+		LauncherID:     req.LauncherId,
+		LastSeen:       &now,
+		Status:         "healthy",
+		AvailableSlots: req.Resources.AvailableSlots,
+	}
+
+	if err := s.storage.UpsertLauncher(ctx, launcher); err != nil {
+		fmt.Printf("[ControlPlane] Warning: failed to update launcher heartbeat: %v\n", err)
+	}
+
 	// TODO: Update process health metrics in storage
 
 	return &pb.HeartbeatAck{

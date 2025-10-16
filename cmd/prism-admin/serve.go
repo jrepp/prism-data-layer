@@ -48,15 +48,17 @@ func runServe(cmd *cobra.Command, args []string) error {
 	}
 
 	// Initialize storage
-	fmt.Printf("Initializing storage: %s (%s)\n", dbCfg.Type, dbCfg.Path)
+	fmt.Printf("[INFO] Initializing storage: %s (%s)\n", dbCfg.Type, dbCfg.Path)
 	storage, err := NewStorage(ctx, dbCfg)
 	if err != nil {
 		return fmt.Errorf("failed to initialize storage: %w", err)
 	}
 	defer storage.Close()
+	fmt.Printf("[INFO] Storage initialized successfully\n")
 
 	// Create control plane service
 	controlPlane := NewControlPlaneService(storage)
+	fmt.Printf("[INFO] Control plane service created\n")
 
 	// Start gRPC server
 	listenAddr := viper.GetString("server.listen")
@@ -70,10 +72,20 @@ func runServe(cmd *cobra.Command, args []string) error {
 
 	grpcServer := grpc.NewServer()
 	pb.RegisterControlPlaneServer(grpcServer, controlPlane)
+	fmt.Printf("[INFO] gRPC server configured\n\n")
 
-	fmt.Printf("🚀 prism-admin control plane server listening on %s\n", address)
-	fmt.Printf("   Database: %s (%s)\n", dbCfg.Type, dbCfg.Path)
-	fmt.Printf("   Ready to accept proxy and launcher connections\n")
+	fmt.Printf("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n")
+	fmt.Printf("🚀 Prism Admin Control Plane Server\n")
+	fmt.Printf("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n")
+	fmt.Printf("  Listening:  %s\n", address)
+	fmt.Printf("  Database:   %s (%s)\n", dbCfg.Type, dbCfg.Path)
+	fmt.Printf("  Status:     ✅ Ready\n")
+	fmt.Printf("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n")
+	fmt.Printf("  Accepting connections from:\n")
+	fmt.Printf("    • Proxies (registration, heartbeats, namespace mgmt)\n")
+	fmt.Printf("    • Launchers (registration, heartbeats, process mgmt)\n")
+	fmt.Printf("    • Clients (namespace provisioning via proxy)\n")
+	fmt.Printf("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n")
 
 	// Handle graceful shutdown
 	sigChan := make(chan os.Signal, 1)

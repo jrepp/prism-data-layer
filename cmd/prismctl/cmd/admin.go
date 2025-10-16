@@ -118,9 +118,40 @@ func showAdminStatus(endpoint string) error {
 	}
 	fmt.Println()
 
-	// Display Launchers (for now, we'll show this is coming)
+	// Display Launchers
 	fmt.Println("🚀 Launcher Connections")
-	fmt.Println("   (launcher storage table not yet added to schema)")
+	launchers, err := storage.ListLaunchers(ctx)
+	if err != nil {
+		fmt.Printf("   ⚠️  Error listing launchers: %v\n", err)
+	} else if len(launchers) == 0 {
+		fmt.Println("   (none)")
+	} else {
+		for _, launcher := range launchers {
+			statusIcon := "✅"
+			if launcher.Status != "healthy" {
+				statusIcon = "❌"
+			}
+
+			lastSeenStr := "never"
+			if launcher.LastSeen != nil {
+				elapsed := time.Since(*launcher.LastSeen)
+				if elapsed < time.Minute {
+					lastSeenStr = fmt.Sprintf("%ds ago", int(elapsed.Seconds()))
+				} else if elapsed < time.Hour {
+					lastSeenStr = fmt.Sprintf("%dm ago", int(elapsed.Minutes()))
+				} else {
+					lastSeenStr = launcher.LastSeen.Format("2006-01-02 15:04:05")
+				}
+			}
+
+			fmt.Printf("   %s %s (%s)\n", statusIcon, launcher.LauncherID, launcher.Status)
+			fmt.Printf("     Address: %s\n", launcher.Address)
+			fmt.Printf("     Region: %s\n", launcher.Region)
+			fmt.Printf("     Version: %s\n", launcher.Version)
+			fmt.Printf("     Capacity: %d/%d slots available\n", launcher.AvailableSlots, launcher.MaxProcesses)
+			fmt.Printf("     Last Seen: %s\n", lastSeenStr)
+		}
+	}
 	fmt.Println()
 
 	// Display Recent Audit Logs
@@ -152,6 +183,46 @@ func showAdminStatus(endpoint string) error {
 			}
 			fmt.Printf("     Duration: %dms\n", log.DurationMs)
 		}
+	}
+	fmt.Println()
+
+	// Display Summary
+	fmt.Println("📊 Summary Statistics")
+	totalNamespaces := len(namespaces)
+	totalProxies := len(proxies)
+	totalLaunchers := len(launchers)
+	healthyProxies := 0
+	unhealthyProxies := 0
+	healthyLaunchers := 0
+	unhealthyLaunchers := 0
+	totalLauncherSlots := int32(0)
+	availableLauncherSlots := int32(0)
+
+	for _, p := range proxies {
+		if p.Status == "healthy" {
+			healthyProxies++
+		} else {
+			unhealthyProxies++
+		}
+	}
+
+	for _, l := range launchers {
+		if l.Status == "healthy" {
+			healthyLaunchers++
+		} else {
+			unhealthyLaunchers++
+		}
+		totalLauncherSlots += l.MaxProcesses
+		availableLauncherSlots += l.AvailableSlots
+	}
+
+	fmt.Printf("   Namespaces:  %d\n", totalNamespaces)
+	fmt.Printf("   Proxies:     %d total (%d healthy, %d unhealthy)\n", totalProxies, healthyProxies, unhealthyProxies)
+	fmt.Printf("   Launchers:   %d total (%d healthy, %d unhealthy)\n", totalLaunchers, healthyLaunchers, unhealthyLaunchers)
+	if totalLaunchers > 0 {
+		utilizationPct := float64(totalLauncherSlots-availableLauncherSlots) / float64(totalLauncherSlots) * 100
+		fmt.Printf("   Capacity:    %d/%d slots used (%.1f%% utilization)\n",
+			totalLauncherSlots-availableLauncherSlots, totalLauncherSlots, utilizationPct)
 	}
 	fmt.Println()
 
