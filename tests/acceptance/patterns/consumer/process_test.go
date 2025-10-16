@@ -251,8 +251,18 @@ func createConsumerConfig(t *testing.T, cfg ConsumerTestConfig) (string, error) 
 func buildConsumerRunner(t *testing.T) (string, error) {
 	t.Helper()
 
+	// Get current working directory and navigate to patterns/consumer/cmd/consumer-runner
+	cwd, err := os.Getwd()
+	if err != nil {
+		return "", fmt.Errorf("failed to get working directory: %w", err)
+	}
+
+	// Navigate up to repo root (from tests/acceptance/patterns/consumer to repo root)
+	repoRoot := filepath.Join(cwd, "..", "..", "..", "..")
+	consumerRunnerDir := filepath.Join(repoRoot, "patterns", "consumer", "cmd", "consumer-runner")
+	exe := filepath.Join(consumerRunnerDir, "consumer-runner")
+
 	// Check if already built
-	exe := filepath.Join("/Users/jrepp/dev/data-access/patterns/consumer/cmd/consumer-runner/consumer-runner")
 	if _, err := os.Stat(exe); err == nil {
 		return exe, nil
 	}
@@ -260,7 +270,7 @@ func buildConsumerRunner(t *testing.T) (string, error) {
 	// Build it
 	t.Log("Building consumer-runner...")
 	cmd := exec.Command("go", "build", "-o", "consumer-runner", ".")
-	cmd.Dir = "/Users/jrepp/dev/data-access/patterns/consumer/cmd/consumer-runner"
+	cmd.Dir = consumerRunnerDir
 
 	output, err := cmd.CombinedOutput()
 	if err != nil {
