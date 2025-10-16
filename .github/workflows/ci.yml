@@ -134,7 +134,36 @@ jobs:
           uv run ruff check tooling/
           uv run ruff format --check tooling/
 
-  # Job 2b: Lint GitHub Actions workflows
+  # Job 2b: Lint Protobuf files
+  lint-proto:
+    name: Lint Protobuf
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Need full history for breaking change detection
+
+      - name: Install buf
+        uses: bufbuild/buf-setup-action@v1
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Lint protobuf files
+        run: cd proto && buf lint
+
+      - name: Check protobuf formatting
+        run: cd proto && buf format --diff --exit-code
+
+      - name: Check for breaking changes
+        if: github.event_name == 'pull_request'
+        run: |
+          cd proto
+          buf breaking --against "../.git#branch=origin/main,subdir=proto"
+
+  # Job 2c: Lint GitHub Actions workflows
   lint-github-actions:
     name: Lint GitHub Actions
     runs-on: ubuntu-latest
@@ -445,7 +474,7 @@ jobs:
     name: Build All Components
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    needs: [generate-proto, lint-rust, lint-python, lint-github-actions, lint-go, test-proxy, test-patterns, test-integration]
+    needs: [generate-proto, lint-rust, lint-python, lint-proto, lint-github-actions, lint-go, test-proxy, test-patterns, test-integration]
 
     steps:
       - name: Checkout
@@ -573,7 +602,7 @@ jobs:
     name: CI Status Check
     runs-on: ubuntu-latest
     timeout-minutes: 5
-    needs: [lint-rust, lint-python, lint-github-actions, lint-go, test-proxy, test-patterns, test-integration, validate-docs, build]
+    needs: [lint-rust, lint-python, lint-proto, lint-github-actions, lint-go, test-proxy, test-patterns, test-integration, validate-docs, build]
     if: always()
 
     steps:
@@ -582,6 +611,7 @@ jobs:
         run: |
           if [[ "${{ needs.lint-rust.result }}" != "success" ]] || \
              [[ "${{ needs.lint-python.result }}" != "success" ]] || \
+             [[ "${{ needs.lint-proto.result }}" != "success" ]] || \
              [[ "${{ needs.lint-github-actions.result }}" != "success" ]] || \
              [[ "${{ needs.lint-go.result }}" != "success" ]] || \
              [[ "${{ needs.test-proxy.result }}" != "success" ]] || \
@@ -608,6 +638,7 @@ jobs:
           # Build job results summary
           JOBS="Lint Rust: ${{ needs.lint-rust.result == 'success' && '✅' || '❌' }}
           Lint Python: ${{ needs.lint-python.result == 'success' && '✅' || '❌' }}
+          Lint Protobuf: ${{ needs.lint-proto.result == 'success' && '✅' || '❌' }}
           Lint GitHub Actions: ${{ needs.lint-github-actions.result == 'success' && '✅' || '❌' }}
           Lint Go: ${{ needs.lint-go.result == 'success' && '✅' || '❌' }}
           Test Proxy: ${{ needs.test-proxy.result == 'success' && '✅' || '❌' }}

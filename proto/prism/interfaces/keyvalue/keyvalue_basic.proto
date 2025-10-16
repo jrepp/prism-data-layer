@@ -2,9 +2,9 @@ syntax = "proto3";
 
 package prism.interfaces.keyvalue;
 
-option go_package = "github.com/jrepp/prism-data-layer/proto/gen/prism/interfaces/keyvalue";
-
 import "prism/common/types.proto";
+
+option go_package = "github.com/jrepp/prism-data-layer/proto/gen/prism/interfaces/keyvalue";
 
 // KeyValueBasicInterface defines core key-value operations.
 // ALL backends implementing key-value storage MUST support this interface.

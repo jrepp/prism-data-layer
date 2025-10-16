@@ -2,9 +2,9 @@ syntax = "proto3";
 
 package prism;
 
-option go_package = "github.com/jrepp/prism-data-layer/proto/gen/prism";
-
 import "prism/options.proto";
+
+option go_package = "github.com/jrepp/prism-data-layer/proto/gen/prism";
 
 // ControlPlane service provides bidirectional gRPC protocol between
 // prism-admin and managed components (prism-proxy, prism-launcher).
@@ -79,7 +79,7 @@ service ControlPlane {
   // RevokeProcess removes process assignment from launcher with graceful timeout.
   rpc RevokeProcess(ProcessRevocation) returns (ProcessRevocationAck) {
     option (idempotent) = true;
-    option (timeout_ms) = 35000;  // 30s graceful + 5s overhead
+    option (timeout_ms) = 35000; // 30s graceful + 5s overhead
   }
 }
 
@@ -88,10 +88,10 @@ service ControlPlane {
 // ====================================================================
 
 message ProxyRegistration {
-  string proxy_id = 1;              // Unique proxy identifier (proxy-01)
-  string address = 2;               // Proxy gRPC address (proxy-01.prism.local:8980)
-  string region = 3;                // Deployment region (us-west-2)
-  string version = 4;               // Proxy version (0.1.0)
+  string proxy_id = 1; // Unique proxy identifier (proxy-01)
+  string address = 2; // Proxy gRPC address (proxy-01.prism.local:8980)
+  string region = 3; // Deployment region (us-west-2)
+  string version = 4; // Proxy version (0.1.0)
   repeated string capabilities = 5; // Supported patterns (keyvalue, pubsub)
   map<string, string> metadata = 6; // Custom labels
 }
@@ -100,14 +100,14 @@ message ProxyRegistrationAck {
   bool success = 1;
   string message = 2;
   repeated NamespaceAssignment initial_namespaces = 3; // Pre-assigned namespaces
-  repeated PartitionRange partition_ranges = 4;        // Assigned partition ranges
+  repeated PartitionRange partition_ranges = 4; // Assigned partition ranges
 }
 
 message NamespaceAssignment {
   string namespace = 1;
-  int32 partition_id = 2;       // Partition ID (0-255)
-  NamespaceConfig config = 3;   // Full namespace configuration
-  int64 version = 4;            // Config version for idempotency
+  int32 partition_id = 2; // Partition ID (0-255)
+  NamespaceConfig config = 3; // Full namespace configuration
+  int64 version = 4; // Config version for idempotency
 }
 
 message NamespaceConfig {
@@ -118,36 +118,36 @@ message NamespaceConfig {
 }
 
 message BackendConfig {
-  string backend_type = 1;      // redis, kafka, nats, postgres, memstore
+  string backend_type = 1; // redis, kafka, nats, postgres, memstore
   string connection_string = 2;
   map<string, string> credentials = 3;
   map<string, string> options = 4;
 }
 
 message PatternConfig {
-  string pattern_name = 1;      // keyvalue, pubsub, multicast_registry
+  string pattern_name = 1; // keyvalue, pubsub, multicast_registry
   map<string, string> settings = 2;
   repeated string required_interfaces = 3; // Interfaces this pattern requires
 }
 
 message AuthConfig {
   bool enabled = 1;
-  string provider = 2;          // oidc, jwt, mtls
+  string provider = 2; // oidc, jwt, mtls
   map<string, string> options = 3;
 }
 
 message CreateNamespaceRequest {
   string namespace = 1;
-  string requesting_proxy = 2;  // Proxy ID handling client request
+  string requesting_proxy = 2; // Proxy ID handling client request
   NamespaceConfig config = 3;
-  string principal = 4;         // Authenticated user creating namespace
+  string principal = 4; // Authenticated user creating namespace
 }
 
 message CreateNamespaceResponse {
   bool success = 1;
   string message = 2;
   int32 assigned_partition = 3;
-  string assigned_proxy = 4;    // Proxy that will handle this namespace
+  string assigned_proxy = 4; // Proxy that will handle this namespace
 }
 
 message ProxyHeartbeat {
@@ -160,7 +160,7 @@ message ProxyHeartbeat {
 message NamespaceHealth {
   int32 active_sessions = 1;
   int64 requests_per_second = 2;
-  string status = 3;            // healthy, degraded, unhealthy
+  string status = 3; // healthy, degraded, unhealthy
 }
 
 message ResourceUsage {
@@ -184,12 +184,12 @@ message NamespaceRevocation {
 message NamespaceRevocationAck {
   bool success = 1;
   string message = 2;
-  int64 revoked_at = 3;         // Unix timestamp when namespace removed
+  int64 revoked_at = 3; // Unix timestamp when namespace removed
 }
 
 message PartitionRange {
-  int32 start = 1;              // Inclusive
-  int32 end = 2;                // Inclusive
+  int32 start = 1; // Inclusive
+  int32 end = 2; // Inclusive
 }
 
 // ====================================================================
@@ -197,12 +197,12 @@ message PartitionRange {
 // ====================================================================
 
 message LauncherRegistration {
-  string launcher_id = 1;           // Unique launcher identifier (launcher-01)
-  string address = 2;               // Launcher gRPC address (launcher-01.prism.local:7070)
-  string region = 3;                // Deployment region (us-west-2)
-  string version = 4;               // Launcher version (0.1.0)
+  string launcher_id = 1; // Unique launcher identifier (launcher-01)
+  string address = 2; // Launcher gRPC address (launcher-01.prism.local:7070)
+  string region = 3; // Deployment region (us-west-2)
+  string version = 4; // Launcher version (0.1.0)
   repeated string capabilities = 5; // Supported process types (pattern, proxy, backend, utility)
-  int32 max_processes = 6;          // Maximum concurrent processes
+  int32 max_processes = 6; // Maximum concurrent processes
   repeated string process_types = 7; // Process types this launcher supports
   map<string, string> metadata = 8; // Custom labels
 }
@@ -211,15 +211,15 @@ message LauncherRegistrationAck {
   bool success = 1;
   string message = 2;
   repeated ProcessAssignment initial_processes = 3; // Pre-assigned processes
-  int32 assigned_capacity = 4;                      // Number of process slots assigned
+  int32 assigned_capacity = 4; // Number of process slots assigned
 }
 
 message ProcessAssignment {
-  string process_id = 1;            // Unique process identifier
-  string process_type = 2;          // pattern, proxy, backend, utility
-  string namespace = 3;             // Target namespace (if applicable)
-  ProcessConfig config = 4;         // Process-specific configuration
-  int64 version = 5;                // Config version for idempotency
+  string process_id = 1; // Unique process identifier
+  string process_type = 2; // pattern, proxy, backend, utility
+  string namespace = 3; // Target namespace (if applicable)
+  ProcessConfig config = 4; // Process-specific configuration
+  int64 version = 5; // Config version for idempotency
 }
 
 message ProcessAssignmentAck {
@@ -244,10 +244,10 @@ message ProcessConfig {
 }
 
 message PatternProcessConfig {
-  string pattern_type = 1;           // keyvalue, pubsub, multicast_registry
-  string isolation_level = 2;        // none, namespace, session
+  string pattern_type = 1; // keyvalue, pubsub, multicast_registry
+  string isolation_level = 2; // none, namespace, session
   map<string, BackendConfig> slots = 3; // Backend configurations for pattern slots
-  map<string, string> settings = 4;  // Pattern-specific settings
+  map<string, string> settings = 4; // Pattern-specific settings
 }
 
 message ProxyProcessConfig {
@@ -259,14 +259,14 @@ message ProxyProcessConfig {
 }
 
 message BackendProcessConfig {
-  string backend_type = 1;           // redis, kafka, nats, postgres
+  string backend_type = 1; // redis, kafka, nats, postgres
   string connection_string = 2;
   map<string, string> credentials = 3;
   map<string, string> driver_options = 4;
 }
 
 message UtilityProcessConfig {
-  string utility_type = 1;           // log-collector, metrics-exporter, health-monitor
+  string utility_type = 1; // log-collector, metrics-exporter, health-monitor
   map<string, string> settings = 2;
   repeated string target_processes = 3; // Process IDs this utility monitors/manages
 }
@@ -279,22 +279,22 @@ message LauncherHeartbeatRequest {
 }
 
 message ProcessHealth {
-  string status = 1;                // running, starting, stopping, failed, stopped
-  int32 pid = 2;                    // Process ID
-  int32 restart_count = 3;          // Number of restarts
-  int32 error_count = 4;            // Cumulative error count
-  int64 memory_mb = 5;              // Memory usage in MB
-  int64 uptime_seconds = 6;         // Seconds since process started
-  string last_error = 7;            // Last error message (if any)
-  float cpu_percent = 8;            // CPU utilization percentage
+  string status = 1; // running, starting, stopping, failed, stopped
+  int32 pid = 2; // Process ID
+  int32 restart_count = 3; // Number of restarts
+  int32 error_count = 4; // Cumulative error count
+  int64 memory_mb = 5; // Memory usage in MB
+  int64 uptime_seconds = 6; // Seconds since process started
+  string last_error = 7; // Last error message (if any)
+  float cpu_percent = 8; // CPU utilization percentage
 }
 
 message LauncherResourceUsage {
-  int32 process_count = 1;          // Current process count
-  int32 max_processes = 2;          // Maximum capacity
-  int64 total_memory_mb = 3;        // Total memory used by all processes
-  float cpu_percent = 4;            // CPU utilization percentage
-  int32 available_slots = 5;        // Remaining process slots
+  int32 process_count = 1; // Current process count
+  int32 max_processes = 2; // Maximum capacity
+  int64 total_memory_mb = 3; // Total memory used by all processes
+  float cpu_percent = 4; // CPU utilization percentage
+  int32 available_slots = 5; // Remaining process slots
 }
 
 message ProcessRevocation {
@@ -306,8 +306,8 @@ message ProcessRevocation {
 message ProcessRevocationAck {
   bool success = 1;
   string message = 2;
-  int64 stopped_at = 3;             // Unix timestamp when process stopped
-  int32 exit_code = 4;              // Process exit code
+  int64 stopped_at = 3; // Unix timestamp when process stopped
+  int32 exit_code = 4; // Process exit code
 }
 
 // ====================================================================
@@ -317,5 +317,5 @@ message ProcessRevocationAck {
 message HeartbeatAck {
   bool success = 1;
   string message = 2;
-  int64 server_timestamp = 3;   // Server's current timestamp for clock sync
+  int64 server_timestamp = 3; // Server's current timestamp for clock sync
 }

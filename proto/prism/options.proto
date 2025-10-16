@@ -2,9 +2,9 @@ syntax = "proto3";
 
 package prism;
 
-option go_package = "github.com/jrepp/prism-data-layer/proto/gen/prism";
-
 import "google/protobuf/descriptor.proto";
+
+option go_package = "github.com/jrepp/prism-data-layer/proto/gen/prism";
 
 //
 // Message-level options (for data models)
@@ -32,7 +32,7 @@ extend google.protobuf.MessageOptions {
   string consistency = 50006;
 
   // Retention policy
-  int32 retention_days = 50007;  // 0 = keep forever
+  int32 retention_days = 50007; // 0 = keep forever
 
   // Caching
   bool enable_cache = 50008;
@@ -62,7 +62,7 @@ extend google.protobuf.FieldOptions {
   bool access_audit = 50104;
 
   // Validation rules
-  string validation = 50105;  // "email" | "uuid" | "url" | "regex:..." | "min:N" | "max:N"
+  string validation = 50105; // "email" | "uuid" | "url" | "regex:..." | "min:N" | "max:N"
 
   // Max length for strings
   int32 max_length = 50106;

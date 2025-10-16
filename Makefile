@@ -449,7 +449,7 @@ watch-proxy: ## Watch and rebuild proxy on changes (requires cargo-watch)
 watch-test: ## Watch and rerun tests on changes (requires cargo-watch)
 	@cd prism-proxy && cargo watch -x test
 
-fmt: fmt-rust fmt-go fmt-python ## Format all code
+fmt: fmt-rust fmt-go fmt-python fmt-proto ## Format all code
 
 fmt-rust: ## Format Rust code
 	$(call print_blue,Formatting Rust code...)
@@ -476,7 +476,13 @@ fmt-python: ## Format Python code with ruff
 	@uv run ruff format tooling/
 	$(call print_green,Python code formatted)
 
-lint: lint-rust lint-go lint-python lint-workflows ## Lint all code and workflows
+fmt-proto: ## Format protobuf files with buf
+	$(call print_blue,Formatting protobuf files...)
+	@command -v buf >/dev/null 2>&1 || { echo "⚠️  buf not installed. Install with: brew install bufbuild/buf/buf"; exit 1; }
+	@cd proto && buf format -w
+	$(call print_green,Protobuf files formatted)
+
+lint: lint-rust lint-go lint-python lint-proto lint-workflows ## Lint all code, proto, and workflows
 
 lint-rust: ## Lint Rust code with clippy
 	$(call print_blue,Linting Rust code...)
@@ -524,6 +530,30 @@ lint-parallel-critical: lint-rust lint-python ## Lint critical categories only i
 lint-parallel-list: ## List all available linter categories
 	@uv run tooling/parallel_lint.py --list
 
+lint-proto: lint-proto-buf lint-proto-breaking ## Lint protobuf files and check for breaking changes
+
+lint-proto-buf: ## Lint protobuf files with buf
+	$(call print_blue,Linting protobuf files with buf...)
+	@command -v buf >/dev/null 2>&1 || { echo "⚠️  buf not installed. Install with: brew install bufbuild/buf/buf"; exit 1; }
+	@cd proto && buf lint
+	$(call print_green,Protobuf linting complete)
+
+lint-proto-breaking: ## Check for breaking changes in protobuf files against main branch
+	$(call print_blue,Checking for protobuf breaking changes...)
+	@command -v buf >/dev/null 2>&1 || { echo "⚠️  buf not installed. Install with: brew install bufbuild/buf/buf"; exit 1; }
+	@if git rev-parse --verify origin/main >/dev/null 2>&1; then \
+		cd proto && buf breaking --against "../.git#branch=origin/main,subdir=proto" && \
+		printf "$(GREEN)✓ No breaking changes detected$(NC)\n"; \
+	else \
+		printf "$(YELLOW)⚠️  Cannot check breaking changes: origin/main not found$(NC)\n"; \
+	fi
+
+lint-proto-format: ## Check protobuf file formatting with buf
+	$(call print_blue,Checking protobuf file formatting...)
+	@command -v buf >/dev/null 2>&1 || { echo "⚠️  buf not installed. Install with: brew install bufbuild/buf/buf"; exit 1; }
+	@cd proto && buf format --diff --exit-code
+	$(call print_green,Protobuf formatting check complete)
+
 lint-workflows: ## Lint GitHub Actions workflows with actionlint
 	$(call print_blue,Linting GitHub Actions workflows...)
 	@command -v actionlint >/dev/null 2>&1 || { echo "⚠️  actionlint not installed. Install with: brew install actionlint"; exit 1; }
@@ -537,6 +567,7 @@ lint-fix: ## Auto-fix linting issues where possible
 	@cd prism-proxy && cargo clippy --fix --allow-dirty -- -D warnings
 	@uv run ruff check --fix tooling/
 	@uv run ruff format tooling/
+	@command -v buf >/dev/null 2>&1 && cd proto && buf format -w || echo "⚠️  buf not installed, skipping proto format"
 	$(call print_green,Auto-fix complete)
 
 ##@ Podman & Compose

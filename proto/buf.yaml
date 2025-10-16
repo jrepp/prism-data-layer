@@ -13,6 +13,8 @@ lint:
     - ENUM_VALUE_PREFIX
     - RPC_REQUEST_STANDARD_NAME
     - RPC_RESPONSE_STANDARD_NAME
+    # Allow reusing common response types like HeartbeatAck across multiple RPCs
+    - RPC_REQUEST_RESPONSE_UNIQUE
     # Allow unversioned packages for options and common types
     - PACKAGE_VERSION_SUFFIX
     # Allow "Interface" suffix for backend interface services (Layer 1)
@@ -25,8 +27,14 @@ breaking:
   use:
     - FILE
   except:
-    # Allow adding fields (backward compatible)
-    - FIELD_SAME_LABEL
+    # Allow adding fields (backward compatible) - using new rules
+    - FIELD_SAME_CARDINALITY
+    - FIELD_WIRE_COMPATIBLE_CARDINALITY
+    - FIELD_WIRE_JSON_COMPATIBLE_CARDINALITY
+    # Allow enum value name changes (for UNSPECIFIED zero value migration)
+    - ENUM_VALUE_SAME_NAME
+    # Allow file deletions (control_plane.proto was already removed)
+    - FILE_NO_DELETE
 
 # Code generation inputs
 build:

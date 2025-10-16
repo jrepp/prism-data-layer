@@ -2,9 +2,9 @@ syntax = "proto3";
 
 package prism.interfaces;
 
-option go_package = "github.com/jrepp/prism-data-layer/proto/gen/prism/interfaces";
-
 import "google/protobuf/struct.proto";
+
+option go_package = "github.com/jrepp/prism-data-layer/proto/gen/prism/interfaces";
 
 // LifecycleInterface defines pattern lifecycle management operations.
 // ALL pattern executors MUST implement this interface for initialization,
@@ -169,7 +169,7 @@ message HealthCheckResponse {
 // Health status enumeration
 enum HealthStatus {
   HEALTH_STATUS_UNSPECIFIED = 0;
-  HEALTH_STATUS_HEALTHY = 1;      // Pattern is healthy
-  HEALTH_STATUS_DEGRADED = 2;     // Pattern is running but unhealthy
-  HEALTH_STATUS_UNHEALTHY = 3;    // Pattern is not functioning
+  HEALTH_STATUS_HEALTHY = 1; // Pattern is healthy
+  HEALTH_STATUS_DEGRADED = 2; // Pattern is running but unhealthy
+  HEALTH_STATUS_UNHEALTHY = 3; // Pattern is not functioning
 }

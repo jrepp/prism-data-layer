@@ -2,9 +2,9 @@ syntax = "proto3";
 
 package prism.interfaces.keyvalue;
 
-option go_package = "github.com/jrepp/prism-data-layer/proto/gen/prism/interfaces/keyvalue";
-
 import "prism/interfaces/keyvalue/keyvalue_basic.proto";
+
+option go_package = "github.com/jrepp/prism-data-layer/proto/gen/prism/interfaces/keyvalue";
 
 // KeyValueBatchInterface defines bulk operations for key-value storage.
 // This interface is OPTIONAL and provides efficiency gains for backends

@@ -2,10 +2,10 @@ syntax = "proto3";
 
 package prism.common;
 
-option go_package = "github.com/jrepp/prism-data-layer/proto/gen/prism/common";
-
 import "google/protobuf/duration.proto";
 import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/jrepp/prism-data-layer/proto/gen/prism/common";
 
 // Error represents a structured error response with rich context for distributed systems.
 //
@@ -58,7 +58,7 @@ message Error {
   map<string, string> metadata = 13;
 
   // Stack trace (for debugging, should be filtered in production responses)
-  optional string stack_trace = 14 [deprecated = true];  // Use debug_info instead
+  optional string stack_trace = 14 [deprecated = true]; // Use debug_info instead
 
   // Debug information (only populated in debug mode)
   optional DebugInfo debug_info = 15;
@@ -72,57 +72,57 @@ enum ErrorCode {
   ERROR_CODE_OK = 200;
 
   // 4xx Client Errors (caller should fix)
-  ERROR_CODE_BAD_REQUEST = 400;           // Invalid request syntax/parameters
-  ERROR_CODE_UNAUTHORIZED = 401;          // Authentication required
-  ERROR_CODE_FORBIDDEN = 403;             // Authenticated but not authorized
-  ERROR_CODE_NOT_FOUND = 404;             // Resource doesn't exist
-  ERROR_CODE_METHOD_NOT_ALLOWED = 405;    // Operation not supported
-  ERROR_CODE_CONFLICT = 409;              // Resource state conflict
-  ERROR_CODE_GONE = 410;                  // Resource permanently deleted
-  ERROR_CODE_PRECONDITION_FAILED = 412;   // Precondition not met (e.g., CAS)
-  ERROR_CODE_PAYLOAD_TOO_LARGE = 413;     // Request exceeds size limits
-  ERROR_CODE_UNPROCESSABLE_ENTITY = 422;  // Validation failed
-  ERROR_CODE_TOO_MANY_REQUESTS = 429;     // Rate limit exceeded
+  ERROR_CODE_BAD_REQUEST = 400; // Invalid request syntax/parameters
+  ERROR_CODE_UNAUTHORIZED = 401; // Authentication required
+  ERROR_CODE_FORBIDDEN = 403; // Authenticated but not authorized
+  ERROR_CODE_NOT_FOUND = 404; // Resource doesn't exist
+  ERROR_CODE_METHOD_NOT_ALLOWED = 405; // Operation not supported
+  ERROR_CODE_CONFLICT = 409; // Resource state conflict
+  ERROR_CODE_GONE = 410; // Resource permanently deleted
+  ERROR_CODE_PRECONDITION_FAILED = 412; // Precondition not met (e.g., CAS)
+  ERROR_CODE_PAYLOAD_TOO_LARGE = 413; // Request exceeds size limits
+  ERROR_CODE_UNPROCESSABLE_ENTITY = 422; // Validation failed
+  ERROR_CODE_TOO_MANY_REQUESTS = 429; // Rate limit exceeded
 
   // 5xx Server Errors (caller should retry)
-  ERROR_CODE_INTERNAL_ERROR = 500;        // Unexpected internal error
-  ERROR_CODE_NOT_IMPLEMENTED = 501;       // Feature not implemented
-  ERROR_CODE_BAD_GATEWAY = 502;           // Upstream backend error
-  ERROR_CODE_SERVICE_UNAVAILABLE = 503;   // Temporarily unavailable
-  ERROR_CODE_GATEWAY_TIMEOUT = 504;       // Upstream timeout
-  ERROR_CODE_INSUFFICIENT_STORAGE = 507;  // Backend storage full
+  ERROR_CODE_INTERNAL_ERROR = 500; // Unexpected internal error
+  ERROR_CODE_NOT_IMPLEMENTED = 501; // Feature not implemented
+  ERROR_CODE_BAD_GATEWAY = 502; // Upstream backend error
+  ERROR_CODE_SERVICE_UNAVAILABLE = 503; // Temporarily unavailable
+  ERROR_CODE_GATEWAY_TIMEOUT = 504; // Upstream timeout
+  ERROR_CODE_INSUFFICIENT_STORAGE = 507; // Backend storage full
 
   // Custom Prism Errors (600+)
-  ERROR_CODE_BACKEND_ERROR = 600;         // Backend-specific error
-  ERROR_CODE_PATTERN_ERROR = 601;         // Pattern-level semantic error
+  ERROR_CODE_BACKEND_ERROR = 600; // Backend-specific error
+  ERROR_CODE_PATTERN_ERROR = 601; // Pattern-level semantic error
   ERROR_CODE_INTERFACE_NOT_SUPPORTED = 602; // Backend doesn't implement interface
-  ERROR_CODE_SLOT_ERROR = 603;            // Pattern slot configuration error
-  ERROR_CODE_CIRCUIT_BREAKER_OPEN = 604;  // Circuit breaker preventing requests
+  ERROR_CODE_SLOT_ERROR = 603; // Pattern slot configuration error
+  ERROR_CODE_CIRCUIT_BREAKER_OPEN = 604; // Circuit breaker preventing requests
 }
 
 // ErrorCategory classifies errors for metrics, alerting, and handling
 enum ErrorCategory {
   ERROR_CATEGORY_UNSPECIFIED = 0;
-  ERROR_CATEGORY_CLIENT_ERROR = 1;        // User/application error
-  ERROR_CATEGORY_SERVER_ERROR = 2;        // Internal service error
-  ERROR_CATEGORY_BACKEND_ERROR = 3;       // Backend storage error
-  ERROR_CATEGORY_NETWORK_ERROR = 4;       // Network connectivity issue
-  ERROR_CATEGORY_TIMEOUT_ERROR = 5;       // Operation timed out
-  ERROR_CATEGORY_RATE_LIMIT_ERROR = 6;    // Quota/rate limit exceeded
+  ERROR_CATEGORY_CLIENT_ERROR = 1; // User/application error
+  ERROR_CATEGORY_SERVER_ERROR = 2; // Internal service error
+  ERROR_CATEGORY_BACKEND_ERROR = 3; // Backend storage error
+  ERROR_CATEGORY_NETWORK_ERROR = 4; // Network connectivity issue
+  ERROR_CATEGORY_TIMEOUT_ERROR = 5; // Operation timed out
+  ERROR_CATEGORY_RATE_LIMIT_ERROR = 6; // Quota/rate limit exceeded
   ERROR_CATEGORY_AUTHORIZATION_ERROR = 7; // Permission denied
-  ERROR_CATEGORY_VALIDATION_ERROR = 8;    // Input validation failed
-  ERROR_CATEGORY_RESOURCE_ERROR = 9;      // Resource not found/unavailable
-  ERROR_CATEGORY_CONCURRENCY_ERROR = 10;  // Concurrent modification conflict
+  ERROR_CATEGORY_VALIDATION_ERROR = 8; // Input validation failed
+  ERROR_CATEGORY_RESOURCE_ERROR = 9; // Resource not found/unavailable
+  ERROR_CATEGORY_CONCURRENCY_ERROR = 10; // Concurrent modification conflict
 }
 
 // ErrorSeverity indicates impact level for prioritization
 enum ErrorSeverity {
   ERROR_SEVERITY_UNSPECIFIED = 0;
-  ERROR_SEVERITY_DEBUG = 1;       // Informational, no action needed
-  ERROR_SEVERITY_INFO = 2;        // Notable but expected (e.g., cache miss)
-  ERROR_SEVERITY_WARNING = 3;     // Degraded but functional
-  ERROR_SEVERITY_ERROR = 4;       // Operation failed, action may be needed
-  ERROR_SEVERITY_CRITICAL = 5;    // Severe failure, immediate action required
+  ERROR_SEVERITY_DEBUG = 1; // Informational, no action needed
+  ERROR_SEVERITY_INFO = 2; // Notable but expected (e.g., cache miss)
+  ERROR_SEVERITY_WARNING = 3; // Degraded but functional
+  ERROR_SEVERITY_ERROR = 4; // Operation failed, action may be needed
+  ERROR_SEVERITY_CRITICAL = 5; // Severe failure, immediate action required
 }
 
 // RetryPolicy provides guidance on how/when to retry
@@ -149,11 +149,11 @@ message RetryPolicy {
 // BackoffStrategy for retry timing
 enum BackoffStrategy {
   BACKOFF_STRATEGY_UNSPECIFIED = 0;
-  BACKOFF_STRATEGY_IMMEDIATE = 1;     // Retry immediately
-  BACKOFF_STRATEGY_LINEAR = 2;        // Linear backoff (delay * attempt)
-  BACKOFF_STRATEGY_EXPONENTIAL = 3;   // Exponential backoff (delay * multiplier^attempt)
-  BACKOFF_STRATEGY_JITTER = 4;        // Exponential with random jitter
-  BACKOFF_STRATEGY_NEVER = 5;         // Don't retry (permanent failure)
+  BACKOFF_STRATEGY_IMMEDIATE = 1; // Retry immediately
+  BACKOFF_STRATEGY_LINEAR = 2; // Linear backoff (delay * attempt)
+  BACKOFF_STRATEGY_EXPONENTIAL = 3; // Exponential backoff (delay * multiplier^attempt)
+  BACKOFF_STRATEGY_JITTER = 4; // Exponential with random jitter
+  BACKOFF_STRATEGY_NEVER = 5; // Don't retry (permanent failure)
 }
 
 // ErrorDetail provides structured error information
