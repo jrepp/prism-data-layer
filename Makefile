@@ -700,3 +700,73 @@ ci: lint test-all test-acceptance docs-validate ## Run full CI pipeline (lint, t
 
 pre-commit: fmt lint test ## Run pre-commit checks (format, lint, test)
 	$(call print_green,Pre-commit checks passed)
+
+##@ Quick Development Iteration
+
+quick-check: lint-parallel-critical build test-unit-fast ## Quick pre-commit check (critical lint + build + fast unit tests) ~30s
+	$(call print_green,Quick check complete - ready to commit!)
+
+test-unit-fast: ## Run only unit tests (no acceptance, no testcontainers) ~10s
+	$(call print_blue,Running fast unit tests...)
+	@uv run tooling/parallel_test.py --categories unit,lint --log-dir $(TEST_LOGS_DIR)
+	$(call print_green,Fast unit tests complete)
+
+quick-pattern: ## Quick test for current pattern directory (auto-detects pattern)
+	$(call print_blue,Quick pattern test...)
+	@if [ -f "go.mod" ]; then \
+		go test -v -short -timeout 30s ./...; \
+	elif [ -f "../../go.mod" ] && [ -d "cmd" ]; then \
+		cd cmd && go build && cd .. && go test -v -short -timeout 30s ./...; \
+	else \
+		echo "Not in a pattern directory"; \
+		exit 1; \
+	fi
+	$(call print_green,Pattern quick test complete)
+
+quick-run-pattern: ## Quick build and run current pattern runner
+	$(call print_blue,Building and running pattern...)
+	@if [ -d "cmd" ]; then \
+		RUNNER_NAME=$$(basename $(CURDIR))-runner; \
+		echo "Building $$RUNNER_NAME..."; \
+		cd cmd/$$RUNNER_NAME && go build -o $(BINARIES_DIR)/$$RUNNER_NAME . && \
+		echo "✓ Built: $(BINARIES_DIR)/$$RUNNER_NAME" && \
+		echo "Run with: ./$(BINARIES_DIR)/$$RUNNER_NAME --help"; \
+	else \
+		echo "Not in a pattern directory with cmd/"; \
+		exit 1; \
+	fi
+
+test-this: ## Test current directory (auto-detects Go, Rust, or Python)
+	$(call print_blue,Testing current directory...)
+	@if [ -f "Cargo.toml" ]; then \
+		cargo test; \
+	elif [ -f "go.mod" ]; then \
+		go test -v -timeout 30s ./...; \
+	elif [ -f "pyproject.toml" ]; then \
+		uv run pytest; \
+	else \
+		echo "No recognized test framework in current directory"; \
+		exit 1; \
+	fi
+
+build-this: ## Build current directory (auto-detects Go, Rust)
+	$(call print_blue,Building current directory...)
+	@if [ -f "Cargo.toml" ]; then \
+		cargo build; \
+	elif [ -f "go.mod" ]; then \
+		go build ./...; \
+	elif [ -d "cmd" ] && [ -f "../go.mod" ]; then \
+		for d in cmd/*; do \
+			if [ -d "$$d" ]; then \
+				echo "Building $$d..."; \
+				cd $$d && go build && cd ../..; \
+			fi \
+		done; \
+	else \
+		echo "No recognized build system in current directory"; \
+		exit 1; \
+	fi
+
+quick-verify-pattern: quick-pattern quick-run-pattern ## Verify pattern (test + build + show how to run)
+	$(call print_green,Pattern verified and ready!)
+

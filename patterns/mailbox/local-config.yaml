@@ -1,0 +1,34 @@
+# Local mailbox configuration for testing without external dependencies
+# Uses in-memory pub/sub (MemPubSub) and local SQLite database
+#
+# This configuration allows testing the complete mailbox workflow:
+# 1. Publish messages via prismctl to a namespace
+# 2. Mailbox consumes from in-memory pub/sub
+# 3. Messages stored in SQLite with indexed headers
+# 4. Query messages via prismctl mailbox commands
+
+name: local-mailbox
+
+behavior:
+  # Topic pattern to subscribe to (simple wildcard)
+  # This will capture all events published to topics starting with "test."
+  topic: "test.events"
+
+  # Consumer group for coordinated consumption
+  consumer_group: "mailbox-local"
+
+  # Automatically acknowledge messages after successful storage
+  auto_commit: true
+
+storage:
+  # Path to SQLite database file in .prism directory
+  database_path: ".prism/mailbox-local.db"
+
+  # Table name for storing events
+  table_name: "mailbox"
+
+  # Retention period in days (keep for 30 days for local testing)
+  retention_days: 30
+
+  # Interval between automatic cleanup runs
+  cleanup_interval: "1h"

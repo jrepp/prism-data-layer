@@ -23,12 +23,15 @@ func init() {
 	rootCmd.PersistentFlags().StringP("endpoint", "e", "localhost:8981", "Admin API endpoint")
 	rootCmd.PersistentFlags().StringP("config", "c", "", "Config file (default: ~/.prism.yaml)")
 	rootCmd.PersistentFlags().String("log-level", "info", "Log level (debug, info, warn, error)")
+	rootCmd.PersistentFlags().String("db", "", "Database URN (default: sqlite://~/.prism/admin.db, supports: sqlite://, postgresql://)")
 
 	// Bind flags to viper
 	viper.BindPFlag("admin.endpoint", rootCmd.PersistentFlags().Lookup("endpoint"))
 	viper.BindPFlag("logging.level", rootCmd.PersistentFlags().Lookup("log-level"))
+	viper.BindPFlag("storage.db", rootCmd.PersistentFlags().Lookup("db"))
 
 	// Add subcommands
+	rootCmd.AddCommand(serveCmd)
 	rootCmd.AddCommand(namespaceCmd)
 	rootCmd.AddCommand(healthCmd)
 }

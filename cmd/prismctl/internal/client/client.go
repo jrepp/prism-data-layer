@@ -120,6 +120,53 @@ func (c *Client) ListSessions(ctx context.Context, namespace string) ([]map[stri
 	return nil, fmt.Errorf("unexpected response format")
 }
 
+// PublishMessage publishes a message to a topic in a namespace
+func (c *Client) PublishMessage(ctx context.Context, namespace, topic string, payload []byte, metadata map[string]string) (string, error) {
+	body := map[string]interface{}{
+		"topic":    topic,
+		"payload":  string(payload),
+		"metadata": metadata,
+	}
+
+	result, err := c.doRequest(ctx, "POST", fmt.Sprintf("/api/v1/namespaces/%s/publish", namespace), body)
+	if err != nil {
+		return "", err
+	}
+
+	// Extract message ID from response
+	if messageID, ok := result["message_id"].(string); ok {
+		return messageID, nil
+	}
+
+	return "", fmt.Errorf("message_id not found in response")
+}
+
+// QueryMailbox queries messages from a mailbox namespace
+func (c *Client) QueryMailbox(ctx context.Context, namespace string, filter map[string]interface{}) ([]map[string]interface{}, error) {
+	result, err := c.doRequest(ctx, "POST", fmt.Sprintf("/api/v1/namespaces/%s/mailbox/query", namespace), filter)
+	if err != nil {
+		return nil, err
+	}
+
+	// Result should be an array
+	if arr, ok := result["events"].([]interface{}); ok {
+		events := make([]map[string]interface{}, len(arr))
+		for i, item := range arr {
+			if event, ok := item.(map[string]interface{}); ok {
+				events[i] = event
+			}
+		}
+		return events, nil
+	}
+
+	return nil, fmt.Errorf("unexpected response format")
+}
+
+// GetMailboxEvent retrieves a single event by message ID from a mailbox
+func (c *Client) GetMailboxEvent(ctx context.Context, namespace, messageID string) (map[string]interface{}, error) {
+	return c.doRequest(ctx, "GET", fmt.Sprintf("/api/v1/namespaces/%s/mailbox/events/%s", namespace, messageID), nil)
+}
+
 // doRequest performs an HTTP request and decodes JSON response
 func (c *Client) doRequest(ctx context.Context, method, path string, body interface{}) (map[string]interface{}, error) {
 	req, err := c.newRequest(ctx, method, path, body)

@@ -20,22 +20,30 @@ import (
 )
 
 var (
-	grpcPort     = flag.Int("grpc-port", 8982, "gRPC server port")
-	metricsPort  = flag.Int("metrics-port", 9092, "Metrics server port")
-	healthPort   = flag.Int("health-port", 9093, "Health server port")
-	patternsDir  = flag.String("patterns-dir", "./patterns", "Patterns directory")
-	isolationStr = flag.String("isolation", "namespace", "Default isolation level (none, namespace, session)")
+	grpcPort      = flag.Int("grpc-port", 8982, "gRPC server port")
+	metricsPort   = flag.Int("metrics-port", 9092, "Metrics server port")
+	healthPort    = flag.Int("health-port", 9093, "Health server port")
+	patternsDir   = flag.String("patterns-dir", "./patterns", "Patterns directory")
+	isolationStr  = flag.String("isolation", "namespace", "Default isolation level (none, namespace, session)")
+	adminEndpoint = flag.String("admin-endpoint", "", "Admin control plane endpoint (e.g., localhost:8981)")
+	launcherID    = flag.String("launcher-id", "launcher-01", "Unique launcher identifier")
+	region        = flag.String("region", "local", "Deployment region")
+	maxProcs      = flag.Int("max-processes", 20, "Maximum concurrent processes")
 )
 
 func main() {
 	flag.Parse()
 
 	log.Printf("Starting Pattern Launcher")
+	log.Printf("  Launcher ID: %s", *launcherID)
+	log.Printf("  Region: %s", *region)
+	log.Printf("  Admin endpoint: %s", *adminEndpoint)
 	log.Printf("  gRPC port: %d", *grpcPort)
 	log.Printf("  Metrics port: %d", *metricsPort)
 	log.Printf("  Health port: %d", *healthPort)
 	log.Printf("  Patterns directory: %s", *patternsDir)
 	log.Printf("  Default isolation: %s", *isolationStr)
+	log.Printf("  Max processes: %d", *maxProcs)
 
 	// Parse isolation level
 	isolationLevel := parseIsolationLevel(*isolationStr)
@@ -54,6 +62,41 @@ func main() {
 	service, err := launcher.NewService(config)
 	if err != nil {
 		log.Fatalf("Failed to create launcher service: %v", err)
+	}
+
+	// Connect to admin control plane if endpoint provided
+	var adminClient *launcher.AdminClient
+	if *adminEndpoint != "" {
+		adminCfg := &launcher.AdminClientConfig{
+			AdminEndpoint: *adminEndpoint,
+			LauncherID:    *launcherID,
+			Address:       fmt.Sprintf("localhost:%d", *grpcPort),
+			Region:        *region,
+			MaxProcesses:  int32(*maxProcs),
+		}
+
+		adminClient, err = launcher.NewAdminClient(adminCfg)
+		if err != nil {
+			log.Fatalf("Failed to create admin client: %v", err)
+		}
+		defer adminClient.Close()
+
+		// Register with admin
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		ack, err := adminClient.Register(ctx)
+		cancel()
+
+		if err != nil {
+			log.Printf("Warning: Failed to register with admin: %v", err)
+			log.Printf("Continuing without admin connectivity...")
+		} else {
+			log.Printf("Successfully registered with admin: %s", ack.Message)
+
+			// Start heartbeat loop
+			go adminClient.StartHeartbeatLoop(context.Background(), 30*time.Second)
+		}
+	} else {
+		log.Printf("No admin endpoint configured, running standalone")
 	}
 
 	// Create gRPC server
