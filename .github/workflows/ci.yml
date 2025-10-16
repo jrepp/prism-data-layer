@@ -157,15 +157,11 @@ jobs:
       - name: Check protobuf formatting
         run: cd proto && buf format --diff --exit-code
 
-      # Note: Breaking change detection temporarily disabled for this PR
-      # as enum zero value additions are intentional breaking changes.
-      # TODO: Re-enable after this PR merges with proper configuration
-      # - name: Check for breaking changes
-      #   if: github.event_name == 'pull_request'
-      #   continue-on-error: true
-      #   run: |
-      #     cd proto
-      #     buf breaking --against "../.git#branch=origin/main,subdir=proto"
+      - name: Check for breaking changes
+        if: github.event_name == 'pull_request'
+        run: |
+          cd proto
+          buf breaking --against "../.git#branch=origin/main,subdir=proto"
 
   # Job 2c: Lint GitHub Actions workflows
   lint-github-actions:
