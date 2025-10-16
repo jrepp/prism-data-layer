@@ -152,16 +152,17 @@ func testConcurrentReadWrite(t *testing.T, driver interface{}, caps framework.Ca
 	const numWriters = 5
 	const writesPerWorker = 10
 
-	var wg sync.WaitGroup
+	var readerWg sync.WaitGroup
+	var writerWg sync.WaitGroup
 	errors := make(chan error, numReaders+numWriters)
 	stopReading := atomic.Bool{}
 	stopReading.Store(false)
 
 	// Launch readers
 	for r := 0; r < numReaders; r++ {
-		wg.Add(1)
+		readerWg.Add(1)
 		go func(readerID int) {
-			defer wg.Done()
+			defer readerWg.Done()
 
 			for !stopReading.Load() {
 				_, found, err := kv.Get(key)
@@ -180,9 +181,9 @@ func testConcurrentReadWrite(t *testing.T, driver interface{}, caps framework.Ca
 
 	// Launch writers
 	for w := 0; w < numWriters; w++ {
-		wg.Add(1)
+		writerWg.Add(1)
 		go func(writerID int) {
-			defer wg.Done()
+			defer writerWg.Done()
 
 			for i := 0; i < writesPerWorker; i++ {
 				value := []byte(fmt.Sprintf("writer-%d-iteration-%d", writerID, i))
@@ -195,10 +196,11 @@ func testConcurrentReadWrite(t *testing.T, driver interface{}, caps framework.Ca
 	}
 
 	// Wait for writers to finish
-	wg.Wait()
+	writerWg.Wait()
 
-	// Stop readers
+	// Stop readers and wait for them to finish
 	stopReading.Store(true)
+	readerWg.Wait()
 
 	close(errors)
 

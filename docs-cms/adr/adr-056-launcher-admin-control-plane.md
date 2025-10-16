@@ -583,7 +583,7 @@ Update `cmd/prismctl/cmd/local.go` to use admin-connected launcher:
 ## References
 
 - [ADR-055: Proxy-Admin Control Plane Protocol](/adr/adr-055) - Proxy registration and namespace distribution
-- [ADR-054: SQLite Storage for prism-admin](/adr/adr-054) - Storage for launcher registry
+- ADR-054: SQLite Storage for prism-admin (planned) - Storage for launcher registry
 - [RFC-035: Pattern Process Launcher](/rfc/rfc-035) - Pattern lifecycle management
 - [MEMO-034: Pattern Process Launcher Quick Start](/memos/memo-034) - Launcher usage guide
 

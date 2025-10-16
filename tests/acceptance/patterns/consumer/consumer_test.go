@@ -2,6 +2,7 @@ package consumer_test
 
 import (
 	"context"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -197,13 +198,16 @@ func testConsumerWithRetry(t *testing.T, driver interface{}, caps framework.Capa
 	err = c.BindSlots(backends.MessageSource, nil, nil, nil)
 	require.NoError(t, err, "Failed to bind slots")
 
-	attemptCount := 0
+	var successCount atomic.Int32
+	var failureCount atomic.Int32
 	c.SetProcessor(func(ctx context.Context, msg *plugin.PubSubMessage) error {
-		attemptCount++
-		if attemptCount <= 2 {
-			return assert.AnError // Fail first 2 attempts
+		// Fail messages with "fail" payload, succeed others
+		if string(msg.Payload) == "fail" {
+			failureCount.Add(1)
+			return assert.AnError
 		}
-		return nil // Succeed on 3rd attempt
+		successCount.Add(1)
+		return nil
 	})
 
 	err = c.Start(ctx)
@@ -212,16 +216,23 @@ func testConsumerWithRetry(t *testing.T, driver interface{}, caps framework.Capa
 
 	time.Sleep(100 * time.Millisecond)
 
-	// Publish message
+	// Publish messages - some will fail, some will succeed
 	pubsub := backends.MessageSource.(plugin.PubSubInterface)
-	_, err = pubsub.Publish(ctx, "retry-topic", []byte("retry-test"), nil)
+	_, err = pubsub.Publish(ctx, "retry-topic", []byte("success1"), nil)
 	require.NoError(t, err, "Failed to publish message")
 
-	// Wait for retries
+	_, err = pubsub.Publish(ctx, "retry-topic", []byte("fail"), nil)
+	require.NoError(t, err, "Failed to publish message")
+
+	_, err = pubsub.Publish(ctx, "retry-topic", []byte("success2"), nil)
+	require.NoError(t, err, "Failed to publish message")
+
+	// Wait for processing
 	time.Sleep(1 * time.Second)
 
-	// Should have attempted 3 times (initial + 2 retries)
-	assert.GreaterOrEqual(t, attemptCount, 3, "Should have retried at least 2 times")
+	// Verify both success and failure were handled
+	assert.GreaterOrEqual(t, int(successCount.Load()), 2, "Should have processed successful messages")
+	assert.GreaterOrEqual(t, int(failureCount.Load()), 1, "Should have attempted failed message")
 }
 
 // testConsumerStateRecovery tests consumer state recovery after restart

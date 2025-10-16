@@ -1,33 +1,14 @@
-name: Pattern Acceptance Tests
+name: Pattern Acceptance Tests (Deprecated - Merged into CI)
+
+# This workflow has been consolidated into .github/workflows/ci.yml
+# Kept for manual trigger only. Use CI workflow for automated testing.
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - 'patterns/**'
-      - 'pkg/drivers/**'
-      - 'pkg/plugin/**'
-      - 'tests/acceptance/patterns/**'
-      - 'tests/acceptance/framework/**'
-      - 'tests/acceptance/suites/**'
-      - '.github/workflows/pattern-acceptance-tests.yml'
-      - '.github/workflows/acceptance-test-pattern.yml'
-  pull_request:
-    branches: [main]
-    paths:
-      - 'patterns/**'
-      - 'pkg/drivers/**'
-      - 'pkg/plugin/**'
-      - 'tests/acceptance/patterns/**'
-      - 'tests/acceptance/framework/**'
-      - 'tests/acceptance/suites/**'
-      - '.github/workflows/pattern-acceptance-tests.yml'
-      - '.github/workflows/acceptance-test-pattern.yml'
-  workflow_dispatch:  # Allow manual trigger
+  workflow_dispatch:  # Manual trigger only
 
-# Cancel in-progress runs for the same PR/branch
+# Cancel in-progress runs for the same PR/branch/merge group
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.event.merge_group.head_sha || github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -35,6 +16,7 @@ jobs:
   generate-proto:
     name: Generate Protobuf Code
     runs-on: ubuntu-latest
+    timeout-minutes: 10
 
     steps:
       - name: Checkout
@@ -115,6 +97,13 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-go-
 
+      - name: Download dependencies
+        run: |
+          if [ -d "patterns/${{ matrix.pattern }}" ]; then
+            cd patterns/${{ matrix.pattern }}
+            go mod download
+          fi
+
       - name: Build pattern module
         run: |
           if [ -d "patterns/${{ matrix.pattern }}" ]; then
@@ -122,20 +111,15 @@ jobs:
             go build ./...
           fi
 
-      - name: Run ${{ matrix.pattern }} pattern tests
+      - name: Run ${{ matrix.pattern }} pattern tests with coverage
         run: |
           cd tests/acceptance/patterns/${{ matrix.pattern }}
-          go test -v -timeout 15m ./...
-        env:
-          PRISM_TEST_QUIET: "1"
-
-      - name: Generate coverage
-        run: |
-          cd tests/acceptance/patterns/${{ matrix.pattern }}
-          go test -coverprofile=coverage.out -timeout 15m ./...
+          go test -v -race -coverprofile=coverage.out -covermode=atomic -timeout 15m ./...
           go tool cover -func=coverage.out | tee coverage.txt
           COVERAGE=$(grep total coverage.txt | awk '{print $3}')
           echo "COVERAGE=$COVERAGE" >> $GITHUB_ENV
+        env:
+          PRISM_TEST_QUIET: "1"
 
       - name: Upload coverage
         uses: actions/upload-artifact@v4
@@ -159,6 +143,7 @@ jobs:
   generate-compliance-report:
     name: Generate Compliance Report
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     needs: test-patterns
     if: always()
 
@@ -310,10 +295,44 @@ jobs:
           echo "📊 Pattern Acceptance Test Summary:"
           cat $GITHUB_STEP_SUMMARY
 
+  # Upload pattern coverage to Codecov
+  codecov-upload:
+    name: Upload Pattern Coverage to Codecov
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: test-patterns
+    if: always()
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download all pattern coverage reports
+        uses: actions/download-artifact@v4
+        with:
+          pattern: coverage-pattern-*
+          path: build/coverage-reports
+
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: >-
+            build/coverage-reports/coverage-pattern-keyvalue/coverage.out,
+            build/coverage-reports/coverage-pattern-consumer/coverage.out,
+            build/coverage-reports/coverage-pattern-producer/coverage.out,
+            build/coverage-reports/coverage-pattern-claimcheck/coverage.out,
+            build/coverage-reports/coverage-pattern-unified/coverage.out
+          flags: acceptance,patterns
+          name: pattern-acceptance-coverage
+          fail_ci_if_error: false
+          verbose: true
+
   # Status check for pattern acceptance tests (required for merge)
   pattern-acceptance-status:
     name: Pattern Acceptance Status
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     needs: test-patterns
     if: always()
 
