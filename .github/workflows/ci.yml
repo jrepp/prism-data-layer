@@ -19,10 +19,12 @@ on:
       - 'tooling/validate_docs.py'
       - '**/*.md'
       - '.github/workflows/docs.yml'
+  merge_group:
+    types: [checks_requested]
 
-# Cancel in-progress runs for the same PR/branch
+# Cancel in-progress runs for the same PR/branch/merge group
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.event.merge_group.head_sha || github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -30,6 +32,7 @@ jobs:
   generate-proto:
     name: Generate Protobuf Code
     runs-on: ubuntu-latest
+    timeout-minutes: 10
 
     steps:
       - name: Checkout
@@ -70,6 +73,7 @@ jobs:
   lint-rust:
     name: Lint Rust
     runs-on: ubuntu-latest
+    timeout-minutes: 10
 
     steps:
       - name: Checkout
@@ -109,6 +113,7 @@ jobs:
   lint-python:
     name: Lint Python
     runs-on: ubuntu-latest
+    timeout-minutes: 5
 
     steps:
       - name: Checkout
@@ -129,10 +134,28 @@ jobs:
           uv run ruff check tooling/
           uv run ruff format --check tooling/
 
+  # Job 2b: Lint GitHub Actions workflows
+  lint-github-actions:
+    name: Lint GitHub Actions
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run actionlint
+        uses: reviewdog/action-actionlint@v1
+        with:
+          reporter: github-check
+          level: error
+          fail_on_error: true
+
   # Job 3: Lint Go code (parallel by category)
   lint-go:
     name: Lint Go (${{ matrix.category }})
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     needs: generate-proto
 
     strategy:
@@ -188,6 +211,7 @@ jobs:
   test-proxy:
     name: Test Rust Proxy
     runs-on: ubuntu-latest
+    timeout-minutes: 15
 
     steps:
       - name: Checkout
@@ -216,14 +240,11 @@ jobs:
             ${{ runner.os }}-cargo-test-
             ${{ runner.os }}-cargo-
 
-      - name: Run Rust tests
-        run: cd prism-proxy && cargo test --lib --verbose
-
       - name: Install cargo-tarpaulin
         run: cargo install cargo-tarpaulin --force
 
-      - name: Generate Rust coverage
-        run: cd prism-proxy && cargo tarpaulin --lib --out Xml --output-dir ../
+      - name: Run Rust tests with coverage
+        run: cd prism-proxy && cargo tarpaulin --lib --verbose --out Xml --output-dir ../
 
       - name: Upload Rust coverage
         uses: actions/upload-artifact@v4
@@ -233,31 +254,69 @@ jobs:
           retention-days: 7
           if-no-files-found: warn
 
-  # Job 3: Test Go drivers and patterns
+  # Job 3: Test Go drivers and patterns (including acceptance tests)
   test-patterns:
     name: Test ${{ matrix.name }}
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     needs: generate-proto
 
     strategy:
       fail-fast: false
       matrix:
         include:
+          # Unit tests for drivers
           - name: "MemStore Driver"
             path: "pkg/drivers/memstore"
             artifact: "memstore"
+            type: "unit"
           - name: "Redis Driver"
             path: "pkg/drivers/redis"
             artifact: "redis"
+            type: "unit"
           - name: "NATS Driver"
             path: "pkg/drivers/nats"
             artifact: "nats"
+            type: "unit"
+          # Unit tests for patterns
           - name: "Consumer Pattern"
             path: "patterns/consumer"
             artifact: "consumer"
+            type: "unit"
           - name: "Producer Pattern"
             path: "patterns/producer"
             artifact: "producer"
+            type: "unit"
+          - name: "Multicast Registry Pattern"
+            path: "patterns/multicast_registry"
+            artifact: "multicast-registry"
+            type: "unit"
+          # Acceptance tests for patterns
+          - name: "KeyValue Acceptance"
+            path: "tests/acceptance/patterns/keyvalue"
+            artifact: "acceptance-keyvalue"
+            type: "acceptance"
+            pattern_dir: "patterns/keyvalue"
+          - name: "Consumer Acceptance"
+            path: "tests/acceptance/patterns/consumer"
+            artifact: "acceptance-consumer"
+            type: "acceptance"
+            pattern_dir: "patterns/consumer"
+          - name: "Producer Acceptance"
+            path: "tests/acceptance/patterns/producer"
+            artifact: "acceptance-producer"
+            type: "acceptance"
+            pattern_dir: "patterns/producer"
+          - name: "ClaimCheck Acceptance"
+            path: "tests/acceptance/patterns/claimcheck"
+            artifact: "acceptance-claimcheck"
+            type: "acceptance"
+            pattern_dir: "patterns/claimcheck"
+          - name: "Unified Acceptance"
+            path: "tests/acceptance/patterns/unified"
+            artifact: "acceptance-unified"
+            type: "acceptance"
+            pattern_dir: "patterns/unified"
 
     steps:
       - name: Checkout
@@ -274,14 +333,37 @@ jobs:
           name: proto-generated
           path: pkg/plugin/gen/
 
-      - name: Run tests for ${{ matrix.name }}
-        run: cd ${{ matrix.path }} && go test -v -cover -race ./...
+      - name: Cache Go modules
+        uses: actions/cache@v4
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
 
-      - name: Generate coverage report
+      - name: Download dependencies for acceptance tests
+        if: matrix.type == 'acceptance' && matrix.pattern_dir != ''
+        run: |
+          if [ -d "${{ matrix.pattern_dir }}" ]; then
+            cd ${{ matrix.pattern_dir }}
+            go mod download
+          fi
+
+      - name: Build pattern module for acceptance tests
+        if: matrix.type == 'acceptance' && matrix.pattern_dir != ''
+        run: |
+          if [ -d "${{ matrix.pattern_dir }}" ]; then
+            cd ${{ matrix.pattern_dir }}
+            go build ./...
+          fi
+
+      - name: Run tests with coverage for ${{ matrix.name }}
         run: |
           cd ${{ matrix.path }}
-          go test -coverprofile=coverage.out ./...
+          go test -v -race -coverprofile=coverage.out -covermode=atomic -timeout 15m ./...
           go tool cover -func=coverage.out | grep total | awk '{print "Coverage: " $3}'
+        env:
+          PRISM_TEST_QUIET: "1"
 
       - name: Upload coverage
         uses: actions/upload-artifact@v4
@@ -294,6 +376,7 @@ jobs:
   test-integration:
     name: Integration Tests
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     needs: generate-proto
 
     steps:
@@ -311,13 +394,10 @@ jobs:
           name: proto-generated
           path: pkg/plugin/gen/
 
-      - name: Run integration tests
-        run: cd tests/integration && go test -v -timeout 5m -race ./...
-
-      - name: Generate coverage report
+      - name: Run integration tests with coverage
         run: |
           cd tests/integration
-          go test -coverprofile=coverage.out -timeout 5m ./...
+          go test -v -race -coverprofile=coverage.out -covermode=atomic -timeout 5m ./...
           go tool cover -func=coverage.out | grep total | awk '{print "Integration Coverage: " $3}'
 
       - name: Upload coverage
@@ -331,6 +411,7 @@ jobs:
   validate-docs:
     name: Validate Documentation
     runs-on: ubuntu-latest
+    timeout-minutes: 10
 
     steps:
       - name: Checkout
@@ -363,7 +444,8 @@ jobs:
   build:
     name: Build All Components
     runs-on: ubuntu-latest
-    needs: [generate-proto, lint-rust, lint-python, lint-go, test-proxy, test-patterns, test-integration]
+    timeout-minutes: 20
+    needs: [generate-proto, lint-rust, lint-python, lint-github-actions, lint-go, test-proxy, test-patterns, test-integration]
 
     steps:
       - name: Checkout
@@ -417,6 +499,7 @@ jobs:
   coverage-summary:
     name: Coverage Summary
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     needs: [test-proxy, test-patterns, test-integration]
     if: always()
 
@@ -448,6 +531,7 @@ jobs:
   codecov-upload:
     name: Upload Coverage to Codecov
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     needs: [test-proxy, test-patterns, test-integration]
     if: always()
 
@@ -472,7 +556,13 @@ jobs:
             build/coverage-reports/coverage-nats/coverage.out,
             build/coverage-reports/coverage-consumer/coverage.out,
             build/coverage-reports/coverage-producer/coverage.out,
+            build/coverage-reports/coverage-multicast-registry/coverage.out,
             build/coverage-reports/coverage-integration/coverage.out,
+            build/coverage-reports/coverage-acceptance-keyvalue/coverage.out,
+            build/coverage-reports/coverage-acceptance-consumer/coverage.out,
+            build/coverage-reports/coverage-acceptance-producer/coverage.out,
+            build/coverage-reports/coverage-acceptance-claimcheck/coverage.out,
+            build/coverage-reports/coverage-acceptance-unified/coverage.out
           flags: unittests,integration,acceptance
           name: prism-coverage
           fail_ci_if_error: false
@@ -482,7 +572,8 @@ jobs:
   ci-status:
     name: CI Status Check
     runs-on: ubuntu-latest
-    needs: [lint-rust, lint-python, lint-go, test-proxy, test-patterns, test-integration, validate-docs, build]
+    timeout-minutes: 5
+    needs: [lint-rust, lint-python, lint-github-actions, lint-go, test-proxy, test-patterns, test-integration, validate-docs, build]
     if: always()
 
     steps:
@@ -491,6 +582,7 @@ jobs:
         run: |
           if [[ "${{ needs.lint-rust.result }}" != "success" ]] || \
              [[ "${{ needs.lint-python.result }}" != "success" ]] || \
+             [[ "${{ needs.lint-github-actions.result }}" != "success" ]] || \
              [[ "${{ needs.lint-go.result }}" != "success" ]] || \
              [[ "${{ needs.test-proxy.result }}" != "success" ]] || \
              [[ "${{ needs.test-patterns.result }}" != "success" ]] || \
@@ -516,6 +608,7 @@ jobs:
           # Build job results summary
           JOBS="Lint Rust: ${{ needs.lint-rust.result == 'success' && '✅' || '❌' }}
           Lint Python: ${{ needs.lint-python.result == 'success' && '✅' || '❌' }}
+          Lint GitHub Actions: ${{ needs.lint-github-actions.result == 'success' && '✅' || '❌' }}
           Lint Go: ${{ needs.lint-go.result == 'success' && '✅' || '❌' }}
           Test Proxy: ${{ needs.test-proxy.result == 'success' && '✅' || '❌' }}
           Test Patterns: ${{ needs.test-patterns.result == 'success' && '✅' || '❌' }}

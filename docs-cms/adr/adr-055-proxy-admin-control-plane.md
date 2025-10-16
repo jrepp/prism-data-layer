@@ -524,7 +524,7 @@ async fn start_proxy(config: ProxyConfig) -> Result<()> {
 
 - [ADR-027: Admin API gRPC](/adr/adr-027) - Admin API definition
 - [ADR-040: Go Binary Admin CLI](/adr/adr-040) - Admin CLI architecture
-- [ADR-054: SQLite Storage for prism-admin](/adr/adr-054) - Storage for proxy registry
+- ADR-054: SQLite Storage for prism-admin (planned) - Storage for proxy registry
 - [RFC-003: Protobuf Single Source of Truth](/rfc/rfc-003) - Protobuf code generation
 - [Consistent Hashing](https://en.wikipedia.org/wiki/Consistent_hashing)
 
