@@ -12,6 +12,194 @@ Quick access to recently updated documentation. Changes listed in reverse chrono
 
 ### 2025-10-15
 
+#### ADR-056: Launcher-Admin Control Plane Protocol (NEW)
+**Link**: [ADR-056](/adr/adr-056)
+
+**Summary**: Extension of control plane protocol (ADR-055) to support pattern-launcher registration and dynamic pattern provisioning via prism-admin:
+
+**Core Protocol Extensions**:
+- **Launcher Registration**: Launcher connects with `--admin-endpoint`, sends LauncherRegistration with ID, capacity, capabilities
+- **Pattern Assignment**: Admin pushes PatternAssignment messages with pattern configs and backend slots
+- **Pattern Provisioning**: Client → Admin → Launcher flow for dynamic pattern deployment
+- **Pattern Health Heartbeat**: 30s interval with pattern status, PID, memory, restart count, error count
+- **Pattern Deprovisioning**: Admin sends RevokePattern with graceful timeout (default 30s)
+
+**Extended ControlPlane Service**:
+```protobuf
+service ControlPlane {
+  // ... proxy RPCs from ADR-055 ...
+  rpc RegisterLauncher(LauncherRegistration) returns (LauncherRegistrationAck);
+  rpc AssignPattern(PatternAssignment) returns (PatternAssignmentAck);
+  rpc LauncherHeartbeat(LauncherHeartbeat) returns (HeartbeatAck);
+  rpc RevokePattern(PatternRevocation) returns (PatternRevocationAck);
+}
+```
+
+**Pattern Assignment Details**:
+- **Pattern Metadata**: Pattern ID, type (keyvalue, pubsub, multicast_registry), namespace
+- **Isolation Configuration**: Isolation level (none, namespace, session) per pattern
+- **Backend Slot Configuration**: Backend configs for each pattern slot
+- **Version Tracking**: Config version for idempotency and rollback
+
+**Launcher Capacity Management**:
+- **Max Patterns**: Configurable per launcher (default 10-20 patterns)
+- **Load Balancing**: Admin distributes patterns based on launcher capacity
+- **Resource Tracking**: Memory usage, CPU%, pattern count reported in heartbeat
+- **Graceful Degradation**: Launcher operates with local patterns directory if admin unavailable
+
+**Storage Schema Extensions** (ADR-054):
+```sql
+CREATE TABLE launchers (
+  launcher_id TEXT NOT NULL UNIQUE,
+  address TEXT NOT NULL,
+  max_patterns INTEGER DEFAULT 10,
+  status TEXT CHECK(status IN ('healthy', 'unhealthy', 'unknown')),
+  last_seen TIMESTAMP
+);
+
+ALTER TABLE patterns ADD COLUMN launcher_id TEXT;
+```
+
+**Implementation Components**:
+- **Launcher-Side**: Go `LauncherAdminClient` in `pkg/launcher/admin_client.go` with registration, heartbeat, pattern provisioning
+- **Admin-Side**: Go `ControlPlaneService` extensions in `cmd/prism-admin/launcher_control.go` with launcher registry and pattern assignment
+- **Process Manager Integration**: Heartbeat collects pattern health from `procmgr.ProcessManager`
+
+**Launcher Configuration**:
+```yaml
+admin:
+  endpoint: "admin.prism.local:8981"
+  launcher_id: "launcher-01"
+  region: "us-west-2"
+  max_patterns: 20
+  heartbeat_interval: "30s"
+```
+
+**prismctl Local Integration**:
+- Updated `prismctl local start` to launch pattern-launcher with `--admin-endpoint=localhost:8980`
+- Launcher registers with admin on startup
+- Admin tracks all running patterns across launcher instances
+- Full local stack: admin + launcher + proxy with control plane integration
+
+**Key Innovation**: Unified control plane service handles both proxy registration (ADR-055) and launcher registration. Single gRPC connection from launcher to admin. Dynamic pattern provisioning without launcher restarts. Admin has complete view of patterns across all launchers. Graceful pattern deprovisioning with 30s timeout. Pattern health monitoring via heartbeat (status, PID, memory, restarts, errors).
+
+**Impact**: Eliminates manual pattern deployment. Admin coordinates pattern distribution across launchers. Dynamic pattern provisioning enables zero-downtime pattern updates. Health monitoring provides operational visibility. Horizontal scaling by adding launchers. Foundation for multi-launcher deployments. Completes control plane architecture: clients → proxies → launchers → backends, all coordinated by admin. Enables `prismctl local` to orchestrate full stack with centralized control.
+
+---
+
+#### ADR-055: Proxy-Admin Control Plane Protocol (NEW)
+**Link**: [ADR-055](/adr/adr-055)
+
+**Summary**: Complete bidirectional gRPC control plane protocol between prism-proxy and prism-admin enabling centralized namespace management and partition-based distribution:
+
+**Core Protocol Flows**:
+- **Proxy Registration**: Proxy connects on startup with `--admin-endpoint`, sends ProxyRegistration with ID, address, region, capabilities
+- **Namespace Assignment**: Admin pushes NamespaceAssignment messages with configs and partition IDs to proxies
+- **Client Namespace Creation**: Client → Proxy → Admin → Proxy flow for namespace creation requests
+- **Health & Heartbeat**: 30s interval heartbeats with namespace health stats (active sessions, RPS, status)
+- **Namespace Revocation**: Admin can revoke namespace assignments from proxies
+
+**Partition Distribution System**:
+- **256 Partitions**: CRC32 hash of namespace name → partition ID (0-255)
+- **Consistent Hashing**: Partition → proxy mapping survives proxy additions/removals
+- **Round-Robin Distribution**: Proxy-01: partitions [0-63], Proxy-02: [64-127], Proxy-03: [128-191], Proxy-04: [192-255]
+- **Namespace Isolation**: Each namespace maps to one proxy per partition
+- **Rebalancing**: Admin redistributes partitions when proxies join/leave
+
+**Protobuf Service Definition**:
+```protobuf
+service ControlPlane {
+  rpc RegisterProxy(ProxyRegistration) returns (ProxyRegistrationAck);
+  rpc AssignNamespace(NamespaceAssignment) returns (NamespaceAssignmentAck);
+  rpc CreateNamespace(CreateNamespaceRequest) returns (CreateNamespaceResponse);
+  rpc Heartbeat(ProxyHeartbeat) returns (HeartbeatAck);
+  rpc RevokeNamespace(NamespaceRevocation) returns (NamespaceRevocationAck);
+}
+```
+
+**Implementation Sketches**:
+- **Proxy-Side**: Rust `AdminClient` in `prism-proxy/src/admin_client.rs` with registration, heartbeat loop, namespace creation
+- **Admin-Side**: Go `ControlPlaneService` in `cmd/prism-admin/control_plane.go` with proxy registry and namespace distribution
+- **Partition Manager**: Go `PartitionManager` for consistent hashing with CRC32, range assignment, and proxy lookup
+
+**Proxy Configuration**:
+```yaml
+admin:
+  endpoint: "admin.prism.local:8981"
+  proxy_id: "proxy-01"
+  region: "us-west-2"
+  heartbeat_interval: "30s"
+  reconnect_backoff: "5s"
+```
+
+**Graceful Fallback**:
+- Proxy attempts admin connection on startup
+- If admin unavailable: falls back to local config file mode
+- Proxy operates independently with local namespaces
+- Data plane continues regardless of admin connectivity
+
+**Key Innovation**: Bidirectional gRPC protocol enables centralized namespace management while maintaining proxy independence. Partition-based consistent hashing provides predictable routing and easy rebalancing. Heartbeat mechanism gives admin complete visibility into proxy/namespace health. Client-initiated namespace creation flows through admin for coordination. Graceful fallback ensures proxy continues operating if admin unavailable.
+
+**Impact**: Eliminates manual namespace distribution across proxies. Admin has complete view of all proxies and namespaces. Dynamic configuration without proxy restarts. Horizontal scaling by adding proxies (admin redistributes partitions automatically). Operational metrics via heartbeat. Foundation for multi-proxy deployments with centralized control. Addresses namespace creation flow, partition routing, and proxy registry requirements. Enables prismctl local command to orchestrate admin + launcher + proxy with full control plane integration.
+
+---
+
+#### ADR-054: SQLite Storage for prism-admin Local State (NEW)
+**Link**: [ADR-054](/adr/adr-054)
+
+**Summary**: Complete SQLite-based local storage implementation for prism-admin providing operational state persistence:
+
+**Core Implementation**:
+- **Default Storage**: SQLite embedded database at `~/.prism/admin.db` (zero configuration)
+- **Database URN Support**: `-db` flag for custom locations (sqlite://, postgresql://)
+- **Schema Design**: 4 tables (namespaces, proxies, patterns, audit_logs) with indexes
+- **SQL Migrations**: golang-migrate with embedded FS for automatic schema upgrades
+- **Pure Go Driver**: modernc.org/sqlite (no CGO, cross-platform builds)
+
+**Database Schema**:
+- **Namespaces**: Name, description, metadata (JSON), timestamps
+- **Proxies**: ProxyID, address, version, status (healthy/unhealthy), last_seen, metadata
+- **Patterns**: PatternID, type, proxy mapping, namespace, status, config (JSON)
+- **Audit Logs**: Complete API interaction history (timestamp, user, action, method, path, status, request/response bodies, duration, client IP)
+
+**Storage Operations**:
+- **Namespaces**: CreateNamespace, GetNamespace, ListNamespaces
+- **Proxies**: UpsertProxy (tracks last known state), GetProxy, ListProxies
+- **Patterns**: CreatePattern, ListPatternsByNamespace
+- **Audit Logs**: LogAudit, QueryAuditLogs (with filtering by namespace, user, time range)
+
+**CLI Integration**:
+- **Default Usage**: `prism-admin server` (auto-creates ~/.prism/admin.db)
+- **Custom SQLite**: `prism-admin server -db sqlite:///path/to/admin.db`
+- **PostgreSQL**: `prism-admin server -db postgresql://user:pass@host:5432/prism_admin`
+- **Config Integration**: Viper binding for storage.db configuration
+
+**Testing**:
+- **Comprehensive Test Suite**: 5 test categories with 17 total tests
+- **Storage Initialization**: Database creation, migration application, schema validation
+- **CRUD Operations**: Namespace, proxy, pattern creation and retrieval
+- **Audit Logging**: Query filtering, time ranges, pagination
+- **URN Parsing**: Multiple database types (sqlite relative/absolute, postgresql, error cases)
+- **All Tests Pass**: 100% pass rate in 0.479s
+
+**Performance Features**:
+- **SQLite Optimizations**: WAL mode, NORMAL synchronous, foreign keys enabled, 5s busy timeout
+- **Concurrent Access**: Read-heavy workload optimized (admin operations infrequent)
+- **JSON Flexibility**: Metadata columns store flexible JSON without schema migrations
+- **Index Coverage**: Common query paths indexed (timestamps, namespaces, resources, status)
+
+**Migration Strategy**:
+- **Embedded Migrations**: SQL files compiled into binary via embed.FS
+- **Automatic Application**: Migrations run on startup using golang-migrate/migrate
+- **Version Tracking**: schema_version table records applied migrations
+- **Rollback Support**: .down.sql files enable migration rollback
+
+**Key Innovation**: Zero-config SQLite default enables immediate local usage while supporting external PostgreSQL for production multi-instance deployments. Complete audit trail of all API interactions provides compliance foundation. Pure Go implementation eliminates CGO cross-compilation issues. JSON columns provide schema flexibility without migration overhead.
+
+**Impact**: Prism-admin now has persistent state for troubleshooting, auditing, and historical analysis. Administrators can view proxy/pattern states even when services are offline. Audit logs provide complete compliance trail for security reviews. SQLite default eliminates external dependencies for local development. PostgreSQL support enables production deployments with HA requirements. Foundation for prism-admin web UI (RFC-036) with persistent storage backend. Addresses operational visibility gap where transient state was lost between prism-admin invocations.
+
+---
+
 #### RFC-036: Minimalist Web Framework for Prism Admin UI with templ+htmx+Gin (NEW)
 **Link**: [RFC-036](/rfc/rfc-036)
 
