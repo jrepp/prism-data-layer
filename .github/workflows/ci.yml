@@ -287,6 +287,10 @@ jobs:
             path: "patterns/producer"
             artifact: "producer"
             type: "unit"
+          - name: "Multicast Registry Pattern"
+            path: "patterns/multicast_registry"
+            artifact: "multicast-registry"
+            type: "unit"
           # Acceptance tests for patterns
           - name: "KeyValue Acceptance"
             path: "tests/acceptance/patterns/keyvalue"
@@ -552,6 +556,7 @@ jobs:
             build/coverage-reports/coverage-nats/coverage.out,
             build/coverage-reports/coverage-consumer/coverage.out,
             build/coverage-reports/coverage-producer/coverage.out,
+            build/coverage-reports/coverage-multicast-registry/coverage.out,
             build/coverage-reports/coverage-integration/coverage.out,
             build/coverage-reports/coverage-acceptance-keyvalue/coverage.out,
             build/coverage-reports/coverage-acceptance-consumer/coverage.out,
