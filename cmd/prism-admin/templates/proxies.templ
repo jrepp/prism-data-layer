@@ -1,0 +1,67 @@
+package templates
+
+import "time"
+
+type ProxyInfo struct {
+	ProxyID  string
+	Address  string
+	Version  string
+	Status   string
+	LastSeen *time.Time
+}
+
+templ ProxiesPage(proxies []*ProxyInfo) {
+	@Layout("Proxies") {
+		<h2 class="mb-20">Registered Proxies</h2>
+
+		if len(proxies) == 0 {
+			<div class="card text-center">
+				<p>No proxies registered yet.</p>
+			</div>
+		} else {
+			<table>
+				<thead>
+					<tr>
+						<th>Status</th>
+						<th>Proxy ID</th>
+						<th>Address</th>
+						<th>Version</th>
+						<th>Last Seen</th>
+					</tr>
+				</thead>
+				<tbody>
+					for _, proxy := range proxies {
+						<tr>
+							<td>
+								<span class={statusClass(proxy.Status)}></span>
+								{proxy.Status}
+							</td>
+							<td>{proxy.ProxyID}</td>
+							<td>{proxy.Address}</td>
+							<td>{proxy.Version}</td>
+							<td>{formatTime(proxy.LastSeen)}</td>
+						</tr>
+					}
+				</tbody>
+			</table>
+		}
+	}
+}
+
+func statusClass(status string) string {
+	switch status {
+	case "healthy":
+		return "status-dot status-healthy"
+	case "unhealthy":
+		return "status-dot status-unhealthy"
+	default:
+		return "status-dot status-unknown"
+	}
+}
+
+func formatTime(t *time.Time) string {
+	if t == nil {
+		return "Never"
+	}
+	return t.Format("2006-01-02 15:04:05")
+}

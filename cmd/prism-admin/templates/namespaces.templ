@@ -1,0 +1,43 @@
+package templates
+
+import "time"
+
+type NamespaceInfo struct {
+	Name        string
+	Description string
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
+}
+
+templ NamespacesPage(namespaces []*NamespaceInfo) {
+	@Layout("Namespaces") {
+		<h2 class="mb-20">Namespaces</h2>
+
+		if len(namespaces) == 0 {
+			<div class="card text-center">
+				<p>No namespaces created yet.</p>
+			</div>
+		} else {
+			<table>
+				<thead>
+					<tr>
+						<th>Name</th>
+						<th>Description</th>
+						<th>Created</th>
+						<th>Updated</th>
+					</tr>
+				</thead>
+				<tbody>
+					for _, ns := range namespaces {
+						<tr>
+							<td><strong>{ns.Name}</strong></td>
+							<td>{ns.Description}</td>
+							<td>{ns.CreatedAt.Format("2006-01-02 15:04")}</td>
+							<td>{ns.UpdatedAt.Format("2006-01-02 15:04")}</td>
+						</tr>
+					}
+				</tbody>
+			</table>
+		}
+	}
+}

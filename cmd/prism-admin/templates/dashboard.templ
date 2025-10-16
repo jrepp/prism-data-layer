@@ -1,0 +1,73 @@
+package templates
+
+import "fmt"
+
+type DashboardMetrics struct {
+	ProxyCount        int
+	ProxyHealthy      int
+	ProxyUnhealthy    int
+	LauncherCount     int
+	LauncherHealthy   int
+	LauncherUnhealthy int
+	NamespaceCount    int
+	LastUpdate        string
+}
+
+templ DashboardPage(metrics *DashboardMetrics) {
+	@Layout("Dashboard") {
+		<h2 class="mb-20">System Overview</h2>
+
+		<div hx-get="/api/metrics"
+		     hx-trigger="every 5s"
+		     hx-swap="outerHTML"
+		     hx-indicator="#loading">
+			@MetricsGrid(metrics)
+		</div>
+
+		<div id="loading" class="htmx-indicator" style="text-align: center; padding: 10px;">
+			<span>⟳ Updating...</span>
+		</div>
+	}
+}
+
+templ MetricsGrid(metrics *DashboardMetrics) {
+	<div class="metrics-grid" id="metrics-grid">
+		<!-- Proxies Card -->
+		<div class="card">
+			<h3>Proxies</h3>
+			<div class="metric-value">{fmt.Sprintf("%d", metrics.ProxyCount)}</div>
+			<div class="metric-subtitle">
+				<span class="metric-healthy">●  {fmt.Sprintf("%d", metrics.ProxyHealthy)} healthy</span>
+				if metrics.ProxyUnhealthy > 0 {
+					<span class="metric-unhealthy"> ●  {fmt.Sprintf("%d", metrics.ProxyUnhealthy)} unhealthy</span>
+				}
+			</div>
+		</div>
+
+		<!-- Launchers Card -->
+		<div class="card">
+			<h3>Launchers</h3>
+			<div class="metric-value">{fmt.Sprintf("%d", metrics.LauncherCount)}</div>
+			<div class="metric-subtitle">
+				<span class="metric-healthy">●  {fmt.Sprintf("%d", metrics.LauncherHealthy)} healthy</span>
+				if metrics.LauncherUnhealthy > 0 {
+					<span class="metric-unhealthy"> ●  {fmt.Sprintf("%d", metrics.LauncherUnhealthy)} unhealthy</span>
+				}
+			</div>
+		</div>
+
+		<!-- Namespaces Card -->
+		<div class="card">
+			<h3>Namespaces</h3>
+			<div class="metric-value">{fmt.Sprintf("%d", metrics.NamespaceCount)}</div>
+			<div class="metric-subtitle">Active namespaces</div>
+		</div>
+
+		<!-- Last Update Card -->
+		<div class="card">
+			<h3>Last Update</h3>
+			<div class="metric-value" style="font-size: 18px;">{metrics.LastUpdate}</div>
+			<div class="metric-subtitle">Auto-refresh every 5s</div>
+		</div>
+	</div>
+}

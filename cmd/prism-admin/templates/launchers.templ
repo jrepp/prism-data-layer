@@ -1,0 +1,59 @@
+package templates
+
+import "time"
+import "fmt"
+
+type LauncherInfo struct {
+	LauncherID     string
+	Address        string
+	Region         string
+	Version        string
+	Status         string
+	MaxProcesses   int32
+	AvailableSlots int32
+	LastSeen       *time.Time
+}
+
+templ LaunchersPage(launchers []*LauncherInfo) {
+	@Layout("Launchers") {
+		<h2 class="mb-20">Registered Launchers</h2>
+
+		if len(launchers) == 0 {
+			<div class="card text-center">
+				<p>No launchers registered yet.</p>
+			</div>
+		} else {
+			<table>
+				<thead>
+					<tr>
+						<th>Status</th>
+						<th>Launcher ID</th>
+						<th>Address</th>
+						<th>Region</th>
+						<th>Version</th>
+						<th>Capacity</th>
+						<th>Last Seen</th>
+					</tr>
+				</thead>
+				<tbody>
+					for _, launcher := range launchers {
+						<tr>
+							<td>
+								<span class={statusClass(launcher.Status)}></span>
+								{launcher.Status}
+							</td>
+							<td>{launcher.LauncherID}</td>
+							<td>{launcher.Address}</td>
+							<td>{launcher.Region}</td>
+							<td>{launcher.Version}</td>
+							<td>
+								{fmt.Sprintf("%d/%d available", launcher.AvailableSlots, launcher.MaxProcesses)}
+							</td>
+							<td>{formatTime(launcher.LastSeen)}</td>
+						</tr>
+					}
+				</tbody>
+			</table>
+		}
+	}
+}
