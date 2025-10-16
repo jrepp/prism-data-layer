@@ -157,6 +157,16 @@ func (p *PostgresPlugin) Start(ctx context.Context) error {
 	return nil
 }
 
+// Drain prepares the plugin for shutdown
+func (p *PostgresPlugin) Drain(ctx context.Context, timeoutSeconds int32, reason string) (*plugin.DrainMetrics, error) {
+	// PostgreSQL connection pool drains automatically
+	// All in-flight queries will complete before Stop() closes connections
+	return &plugin.DrainMetrics{
+		DrainedOperations: 0,
+		AbortedOperations: 0,
+	}, nil
+}
+
 // Stop gracefully shuts down the plugin
 func (p *PostgresPlugin) Stop(ctx context.Context) error {
 	slog.Info("stopping postgres plugin")
