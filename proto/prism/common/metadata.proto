@@ -2,9 +2,9 @@ syntax = "proto3";
 
 package prism.common;
 
-option go_package = "github.com/jrepp/prism-data-layer/proto/gen/prism/common";
-
 import "prism/common/types.proto";
+
+option go_package = "github.com/jrepp/prism-data-layer/proto/gen/prism/common";
 
 // Metadata for stored items
 message ItemMetadata {
@@ -26,13 +26,13 @@ message ItemMetadata {
 }
 
 message EncryptionInfo {
-  string algorithm = 1;  // e.g., "AES-256-GCM"
-  string key_id = 2;     // Key version for rotation
+  string algorithm = 1; // e.g., "AES-256-GCM"
+  string key_id = 2; // Key version for rotation
 }
 
 message ChunkMetadata {
   int32 total_chunks = 1;
   int32 chunk_size_bytes = 2;
-  string hash_algorithm = 3;  // e.g., "SHA256"
-  bytes hash = 4;             // Hash of complete data
+  string hash_algorithm = 3; // e.g., "SHA256"
+  bytes hash = 4; // Hash of complete data
 }

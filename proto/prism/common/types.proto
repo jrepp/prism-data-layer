@@ -11,18 +11,18 @@ message Timestamp {
 
 // UUID (standard 128-bit UUID)
 message UUID {
-  string value = 1;  // UUID string format
+  string value = 1; // UUID string format
 }
 
 // Cursor for pagination
 message Cursor {
-  bytes token = 1;  // Opaque pagination token
+  bytes token = 1; // Opaque pagination token
 }
 
 // Time range
 message TimeRange {
-  int64 start_millis = 1;  // Inclusive
-  int64 end_millis = 2;     // Exclusive
+  int64 start_millis = 1; // Inclusive
+  int64 end_millis = 2; // Exclusive
 }
 
 // Tags for filtering/indexing

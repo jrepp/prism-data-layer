@@ -25,8 +25,10 @@ breaking:
   use:
     - FILE
   except:
-    # Allow adding fields (backward compatible)
-    - FIELD_SAME_LABEL
+    # Allow adding fields (backward compatible) - using new rules
+    - FIELD_SAME_CARDINALITY
+    - FIELD_WIRE_COMPATIBLE_CARDINALITY
+    - FIELD_WIRE_JSON_COMPATIBLE_CARDINALITY
 
 # Code generation inputs
 build:

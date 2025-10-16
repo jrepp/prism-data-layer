@@ -2,10 +2,9 @@ syntax = "proto3";
 
 package prism.interfaces;
 
-option go_package = "github.com/jrepp/prism-data-layer/proto/gen/prism/interfaces";
-
-import "google/protobuf/struct.proto";
 import "prism/interfaces/lifecycle.proto";
+
+option go_package = "github.com/jrepp/prism-data-layer/proto/gen/prism/interfaces";
 
 // ProxyControlPlane is the service that patterns connect to.
 // The proxy runs this service, and patterns connect as clients.
