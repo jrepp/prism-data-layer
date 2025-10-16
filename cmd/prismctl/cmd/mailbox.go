@@ -5,7 +5,6 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/jrepp/prism-data-layer/prismctl/internal/client"
@@ -317,10 +316,4 @@ func displayTruncatedPayload(payload string) {
 	} else {
 		uiInstance.Println(payload)
 	}
-}
-
-// Helper function to check if string is valid JSON (already defined in publish.go but duplicated here for safety)
-func isJSON(data []byte) bool {
-	var js interface{}
-	return json.Unmarshal(data, &js) == nil
 }
