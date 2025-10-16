@@ -19,10 +19,12 @@ on:
       - 'tooling/validate_docs.py'
       - '**/*.md'
       - '.github/workflows/docs.yml'
+  merge_group:
+    types: [checks_requested]
 
-# Cancel in-progress runs for the same PR/branch
+# Cancel in-progress runs for the same PR/branch/merge group
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.event.merge_group.head_sha || github.ref }}
   cancel-in-progress: true
 
 jobs:
