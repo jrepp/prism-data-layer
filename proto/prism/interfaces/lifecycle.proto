@@ -21,6 +21,9 @@ service LifecycleInterface {
   // Start the pattern (begin serving requests)
   rpc Start(StartRequest) returns (StartResponse);
 
+  // Drain the pattern (prepare for shutdown, finish current work, reject new work)
+  rpc Drain(DrainRequest) returns (DrainResponse);
+
   // Stop the pattern (graceful shutdown)
   rpc Stop(StopRequest) returns (StopResponse);
 
@@ -102,6 +105,33 @@ message StartResponse {
 
   // gRPC endpoint for data operations (if different from lifecycle endpoint)
   string data_endpoint = 3;
+}
+
+// Drain request tells pattern to enter drain mode:
+// - Complete pending backend operations attached to current requests
+// - Reject new requests (return UNAVAILABLE status)
+// - Prepare for imminent shutdown
+message DrainRequest {
+  // Graceful drain timeout in seconds
+  int32 timeout_seconds = 1;
+
+  // Reason for drain (for logging/debugging)
+  string reason = 2;
+}
+
+// Drain response
+message DrainResponse {
+  // Success indicator
+  bool success = 1;
+
+  // Error message (if success = false)
+  string error = 2;
+
+  // Number of pending operations that completed during drain
+  int64 drained_operations = 3;
+
+  // Number of pending operations that were aborted due to timeout
+  int64 aborted_operations = 4;
 }
 
 // Stop request

@@ -126,6 +126,16 @@ func (d *S3Driver) Start(ctx context.Context) error {
 	return nil
 }
 
+// Drain prepares the plugin for shutdown
+func (d *S3Driver) Drain(ctx context.Context, timeoutSeconds int32, reason string) (*plugin.DrainMetrics, error) {
+	// S3 client has no persistent connections or pending operations
+	// All operations are synchronous and complete immediately
+	return &plugin.DrainMetrics{
+		DrainedOperations: 0,
+		AbortedOperations: 0,
+	}, nil
+}
+
 // Stop gracefully shuts down the plugin
 func (d *S3Driver) Stop(ctx context.Context) error {
 	slog.Info("s3 driver stopped")

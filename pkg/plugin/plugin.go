@@ -36,6 +36,13 @@ type Plugin interface {
 	// Start begins serving requests
 	Start(ctx context.Context) error
 
+	// Drain prepares the plugin for shutdown:
+	// - Complete pending backend operations attached to current requests
+	// - Reject new requests (return UNAVAILABLE status)
+	// - Prepare for imminent shutdown
+	// Returns DrainMetrics with completed/aborted operation counts
+	Drain(ctx context.Context, timeoutSeconds int32, reason string) (*DrainMetrics, error)
+
 	// Stop gracefully shuts down the backend driver
 	Stop(ctx context.Context) error
 
@@ -45,6 +52,12 @@ type Plugin interface {
 	// GetInterfaceDeclarations returns the interfaces this plugin implements
 	// This replaces runtime introspection with compile-time declarations
 	GetInterfaceDeclarations() []*pb.InterfaceDeclaration
+}
+
+// DrainMetrics contains drain operation statistics
+type DrainMetrics struct {
+	DrainedOperations int64 // Number of operations completed during drain
+	AbortedOperations int64 // Number of operations aborted due to timeout
 }
 
 // BackendDriver is a type alias for Plugin to make terminology clearer

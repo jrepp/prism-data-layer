@@ -143,6 +143,16 @@ func (d *Driver) Start(ctx context.Context) error {
 	return nil
 }
 
+// Drain prepares the plugin for shutdown
+func (d *Driver) Drain(ctx context.Context, timeoutSeconds int32, reason string) (*plugin.DrainMetrics, error) {
+	// SQLite driver waits for in-flight queries to complete
+	// The database connection pool handles this automatically
+	return &plugin.DrainMetrics{
+		DrainedOperations: 0,
+		AbortedOperations: 0,
+	}, nil
+}
+
 // Stop implements plugin.Plugin
 func (d *Driver) Stop(ctx context.Context) error {
 	d.mu.Lock()

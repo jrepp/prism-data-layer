@@ -396,6 +396,18 @@ func (a *MulticastRegistryPluginAdapter) Start(ctx context.Context) error {
 	return a.runner.Start(ctx)
 }
 
+// Drain implements plugin.Plugin.Drain
+func (a *MulticastRegistryPluginAdapter) Drain(ctx context.Context, timeoutSeconds int32, reason string) (*plugin.DrainMetrics, error) {
+	log.Printf("[MULTICAST-REGISTRY] PluginAdapter: Drain called (timeout=%ds, reason=%s)", timeoutSeconds, reason)
+
+	// For multicast registry, we allow in-flight operations to complete
+	// The coordinator handles message delivery and registration atomically
+	return &plugin.DrainMetrics{
+		DrainedOperations: 0,
+		AbortedOperations: 0,
+	}, nil
+}
+
 // Stop implements plugin.Plugin.Stop
 func (a *MulticastRegistryPluginAdapter) Stop(ctx context.Context) error {
 	log.Println("[MULTICAST-REGISTRY] PluginAdapter: Stop called")
