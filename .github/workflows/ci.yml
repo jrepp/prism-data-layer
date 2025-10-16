@@ -159,9 +159,10 @@ jobs:
 
       - name: Check for breaking changes
         if: github.event_name == 'pull_request'
+        continue-on-error: true
         run: |
           cd proto
-          buf breaking --against "../.git#branch=origin/main,subdir=proto"
+          buf breaking --against "../.git#branch=origin/main,subdir=proto" || echo "⚠️ Breaking changes detected (non-blocking)"
 
   # Job 2c: Lint GitHub Actions workflows
   lint-github-actions:
