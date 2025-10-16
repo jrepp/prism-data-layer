@@ -8,6 +8,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"syscall"
 	"time"
 
 	pb "github.com/jrepp/prism-data-layer/pkg/plugin/gen/prism"
@@ -128,8 +129,6 @@ Example:
 
 // startLocalStack starts all components of the local stack
 func startLocalStack() error {
-	ctx := context.Background()
-
 	// Ensure we're in or can find the binaries directory
 	binDir, err := findBinariesDir()
 	if err != nil {
@@ -201,16 +200,26 @@ func startLocalStack() error {
 			return fmt.Errorf("failed to create log file for %s: %w", comp.name, err)
 		}
 
-		// Start process
-		cmd := exec.CommandContext(ctx, comp.binary, comp.args...)
+		// Start process - use exec.Command (not CommandContext) so process survives parent exit
+		cmd := exec.Command(comp.binary, comp.args...)
 		cmd.Stdout = logFile
 		cmd.Stderr = logFile
 		cmd.Dir = binDir
+
+		// Detach process from parent so it continues running after prismctl exits
+		// This creates a new process group for the child
+		cmd.SysProcAttr = &syscall.SysProcAttr{
+			Setpgid: true,
+		}
 
 		if err := cmd.Start(); err != nil {
 			logFile.Close()
 			return fmt.Errorf("failed to start %s: %w", comp.name, err)
 		}
+
+		// Close the log file handle in the parent process
+		// The child process has its own handle and will continue writing
+		logFile.Close()
 
 		// Store PID
 		localStackPIDs[comp.name] = cmd.Process.Pid
@@ -319,16 +328,18 @@ func showLocalStackStatus() error {
 			continue
 		}
 
-		// Check if process is running
-		process, err := os.FindProcess(pid)
+		// Check if process is running using signal 0 (null signal)
+		// This checks for process existence without actually sending a signal
+		err = syscall.Kill(pid, syscall.Signal(0))
 		if err != nil {
-			fmt.Printf("  ❌ %s: Not running (PID: %d not found)\n", comp, pid)
-			continue
-		}
-
-		// Try to signal the process to check if it's alive
-		if err := process.Signal(os.Signal(nil)); err != nil {
-			fmt.Printf("  ❌ %s: Not running (PID: %d exited)\n", comp, pid)
+			if err == syscall.ESRCH {
+				fmt.Printf("  ❌ %s: Not running (PID: %d not found)\n", comp, pid)
+			} else if err == syscall.EPERM {
+				// Process exists but we don't have permission (means it's running)
+				fmt.Printf("  ✅ %s: Running (PID: %d)\n", comp, pid)
+			} else {
+				fmt.Printf("  ❌ %s: Not running (PID: %d exited)\n", comp, pid)
+			}
 			continue
 		}
 
