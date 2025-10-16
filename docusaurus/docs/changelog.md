@@ -12,6 +12,103 @@ Quick access to recently updated documentation. Changes listed in reverse chrono
 
 ### 2025-10-15
 
+#### ADR-057: Refactor pattern-launcher to prism-launcher as General Control Plane Launcher (NEW)
+**Link**: [ADR-057](/adr/adr-057)
+
+**Summary**: Architectural refactoring from pattern-specific launcher to general-purpose prism-launcher capable of managing all Prism components:
+
+**Refactoring Rationale**:
+- **Current Limitation**: pattern-launcher only manages pattern processes
+- **Emerging Needs**: Launch proxies, backends, utilities dynamically via admin
+- **Control Plane Evolution**: Unified launcher for all component types (not just patterns)
+- **prismctl local**: Single launcher manages entire local stack
+
+**Core Changes**:
+- **Binary Rename**: `pattern-launcher` → `prism-launcher`
+- **Process Abstraction**: `Pattern` → `ManagedProcess` with type field (pattern, proxy, backend, utility)
+- **Unified Protocol**: Extended ControlPlane service handles all process types
+- **Capability-Based**: Launchers advertise supported process types in registration
+
+**Process Type Support**:
+```go
+type ProcessType string
+
+const (
+    ProcessTypePattern  ProcessType = "pattern"   // keyvalue-runner, pubsub-runner
+    ProcessTypeProxy    ProcessType = "proxy"     // prism-proxy instances
+    ProcessTypeBackend  ProcessType = "backend"   // redis-driver, kafka-driver
+    ProcessTypeUtility  ProcessType = "utility"   // log-collector, metrics-exporter
+)
+```
+
+**Generalized Control Plane**:
+```protobuf
+message LauncherRegistration {
+  string launcher_id = 1;
+  repeated string capabilities = 2;  // ["pattern", "proxy", "backend"]
+  int32 max_processes = 3;           // Renamed from max_patterns
+  repeated string process_types = 4; // Supported types
+}
+
+message ProcessAssignment {
+  string process_id = 1;
+  string process_type = 2;           // Discriminator
+  ProcessConfig config = 3;
+}
+
+message ProcessConfig {
+  // Common fields
+  string binary = 1;
+  repeated string args = 2;
+
+  // Type-specific configs
+  PatternConfig pattern = 10;
+  ProxyConfig proxy = 11;
+  BackendConfig backend = 12;
+  UtilityConfig utility = 13;
+}
+```
+
+**Implementation Phases** (4 weeks):
+- **Phase 1**: Rename binary, introduce ProcessType enum, rename Process → ManagedProcess
+- **Phase 2**: Generalize control plane protocol (update ADR-056 protobuf messages)
+- **Phase 3**: Minimal process manager changes (type-specific validation)
+- **Phase 4**: Update prismctl local to use single prism-launcher
+- **Phase 5**: Admin-side process provisioner with capability-based launcher selection
+- **Phase 6**: Documentation updates (RFC-035, MEMO-034, migration guide)
+
+**Backward Compatibility**:
+- Keep `pattern-launcher` symlink for 1-2 releases
+- Default ProcessType to "pattern" if not specified
+- Admin recognizes both old PatternAssignment and new ProcessAssignment
+- Existing pattern-launcher configs continue working
+
+**prismctl Local Simplification**:
+```go
+components := []struct { name, binary, args }{{
+    name:   "prism-admin",
+    binary: "prism-admin",
+    args:   []string{"serve", "--port=8980"},
+}, {
+    name:   "prism-launcher",
+    binary: "prism-launcher",
+    args:   []string{
+        "--admin-endpoint=localhost:8980",
+        "--launcher-id=launcher-01",
+        "--max-processes=50",
+        "--capabilities=pattern,proxy,backend",
+    },
+}}
+// After launcher starts, admin dynamically provisions:
+// - 2 proxy instances, keyvalue pattern, any other components
+```
+
+**Key Innovation**: Single launcher binary manages all Prism components (not just patterns). Process type abstraction with type-discriminated configs. Capability-based launcher registration (not all launchers support all types). Unified control plane protocol for all process types. pkg/procmgr stays mostly unchanged (already general-purpose). Enables mixed workloads (patterns + proxies + backends on same launcher).
+
+**Impact**: Simplifies deployment (one launcher vs multiple). prismctl local uses single launcher for entire stack. Admin can dynamically provision proxy instances (horizontal scaling). Backend drivers can run as managed processes. Unified operational visibility (all processes in admin UI). Flexible workload distribution (admin selects launcher by capability). Foundation for sophisticated orchestration (admin coordinates all component types). Completes control plane architecture: unified launcher manages all Prism components under admin coordination.
+
+---
+
 #### ADR-056: Launcher-Admin Control Plane Protocol (NEW)
 **Link**: [ADR-056](/adr/adr-056)
 
