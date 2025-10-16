@@ -1,9 +1,17 @@
 ---
-id: 058
-title: Proxy Drain-on-Shutdown
 date: 2025-01-16
-status: accepted
-tags: [proxy, lifecycle, shutdown, drain, reliability]
+deciders: Core Team
+doc_uuid: 8c2e5f3d-9a1b-4c5e-b6d7-4f8e9a0b1c2d
+id: adr-058
+project_id: prism-data-layer
+status: Accepted
+tags:
+- proxy
+- lifecycle
+- shutdown
+- drain
+- reliability
+title: Proxy Drain-on-Shutdown
 ---
 
 # ADR-058: Proxy Drain-on-Shutdown

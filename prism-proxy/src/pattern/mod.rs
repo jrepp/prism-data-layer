@@ -541,7 +541,11 @@ impl PatternManager {
     }
 
     /// Drain all patterns (prepare for shutdown)
-    pub async fn drain_all_patterns(&self, timeout_seconds: i32, reason: String) -> crate::Result<()> {
+    pub async fn drain_all_patterns(
+        &self,
+        timeout_seconds: i32,
+        reason: String,
+    ) -> crate::Result<()> {
         tracing::info!(
             timeout_seconds = timeout_seconds,
             reason = %reason,
@@ -553,7 +557,10 @@ impl PatternManager {
         drop(patterns);
 
         for name in pattern_names {
-            if let Err(e) = self.drain_pattern(&name, timeout_seconds, reason.clone()).await {
+            if let Err(e) = self
+                .drain_pattern(&name, timeout_seconds, reason.clone())
+                .await
+            {
                 tracing::warn!(
                     pattern = %name,
                     error = %e,
@@ -566,7 +573,12 @@ impl PatternManager {
     }
 
     /// Drain a single pattern
-    async fn drain_pattern(&self, name: &str, timeout_seconds: i32, reason: String) -> crate::Result<()> {
+    async fn drain_pattern(
+        &self,
+        name: &str,
+        timeout_seconds: i32,
+        reason: String,
+    ) -> crate::Result<()> {
         tracing::info!(
             pattern = %name,
             timeout_seconds = timeout_seconds,

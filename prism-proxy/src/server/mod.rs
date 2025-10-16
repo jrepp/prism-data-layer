@@ -170,12 +170,7 @@ impl ProxyServer {
         }
         tracing::info!("🔹 STOPPING MODE: Stopping pattern runners");
 
-        if let Err(e) = self
-            .router
-            .pattern_manager
-            .stop_all_patterns()
-            .await
-        {
+        if let Err(e) = self.router.pattern_manager.stop_all_patterns().await {
             tracing::warn!(error = %e, "Failed to stop pattern runners, continuing shutdown");
         }
 

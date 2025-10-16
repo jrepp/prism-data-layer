@@ -1,0 +1,528 @@
+<!doctype html>
+<html lang="en" dir="ltr" class="docs-wrapper plugin-docs plugin-id-rfc docs-version-current docs-doc-page docs-doc-id-rfc-036" data-has-hydrated="false">
+<head>
+<meta charset="UTF-8">
+<meta name="generator" content="Docusaurus v3.9.1">
+<title data-rh="true">Minimalist Web Framework for Prism Admin UI | Prism</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:image" content="https://jrepp.github.io/prism-data-layer/img/docusaurus-social-card.jpg"><meta data-rh="true" name="twitter:image" content="https://jrepp.github.io/prism-data-layer/img/docusaurus-social-card.jpg"><meta data-rh="true" property="og:url" content="https://jrepp.github.io/prism-data-layer/rfc/rfc-036"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-rfc-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-rfc-current"><meta data-rh="true" property="og:title" content="Minimalist Web Framework for Prism Admin UI | Prism"><meta data-rh="true" name="description" content="Abstract"><meta data-rh="true" property="og:description" content="Abstract"><link data-rh="true" rel="icon" href="/prism-data-layer/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://jrepp.github.io/prism-data-layer/rfc/rfc-036"><link data-rh="true" rel="alternate" href="https://jrepp.github.io/prism-data-layer/rfc/rfc-036" hreflang="en"><link data-rh="true" rel="alternate" href="https://jrepp.github.io/prism-data-layer/rfc/rfc-036" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Minimalist Web Framework for Prism Admin UI • RFC-036","item":"https://jrepp.github.io/prism-data-layer/rfc/rfc-036"}]}</script><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=5,user-scalable=yes">
+<meta name="theme-color" content="#6366f1">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><link rel="stylesheet" href="/prism-data-layer/assets/css/styles.73adf43b.css">
+<script src="/prism-data-layer/assets/js/runtime~main.041dbe04.js" defer="defer"></script>
+<script src="/prism-data-layer/assets/js/main.bd87c8c5.js" defer="defer"></script>
+</head>
+<body class="navigation-with-keyboard">
+<svg style="display: none;"><defs>
+<symbol id="theme-svg-external-link" viewBox="0 0 24 24"><path fill="currentColor" d="M21 13v10h-21v-19h12v2h-10v15h17v-8h2zm3-12h-10.988l4.035 4-6.977 7.07 2.828 2.828 6.977-7.07 4.125 4.172v-11z"/></symbol>
+</defs></svg>
+<script>!function(){var t=function(){try{return new URLSearchParams(window.location.search).get("docusaurus-theme")}catch(t){}}()||function(){try{return window.localStorage.getItem("theme")}catch(t){}}();document.documentElement.setAttribute("data-theme",t||(window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light")),document.documentElement.setAttribute("data-theme-choice",t||"system")}(),function(){try{const c=new URLSearchParams(window.location.search).entries();for(var[t,e]of c)if(t.startsWith("docusaurus-data-")){var a=t.replace("docusaurus-data-","data-");document.documentElement.setAttribute(a,e)}}catch(t){}}()</script><div id="__docusaurus"><div role="region" aria-label="Skip to main content"><a class="skipToContent_fXgn" href="#__docusaurus_skipToContent_fallback">Skip to main content</a></div><nav aria-label="Main" class="theme-layout-navbar navbar navbar--fixed-top"><div class="navbar__inner"><div class="navbar__items"><button aria-label="Toggle navigation bar" aria-expanded="false" class="navbar__toggle clean-btn" type="button"><svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><path stroke="currentColor" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2" d="M4 7h22M4 15h22M4 23h22"></path></svg></button><a class="navbar__brand" href="/prism-data-layer/"><div class="navbar__logo"><img src="/prism-data-layer/img/prism-logo-transparent-background.png" alt="Prism Data Gateway Logo" class="themedComponent_mlkZ themedComponent--light_NVdE" height="32" width="32"><img src="/prism-data-layer/img/prism-logo-transparent-background.png" alt="Prism Data Gateway Logo" class="themedComponent_mlkZ themedComponent--dark_xIcU" height="32" width="32"></div><b class="navbar__title text--truncate">Prism</b></a><a class="navbar__item navbar__link" href="/prism-data-layer/docs/intro">Overview</a><a class="navbar__item navbar__link" href="/prism-data-layer/docs/changelog">Change Log</a><div class="navbar__item dropdown dropdown--hoverable"><a href="#" aria-haspopup="true" aria-expanded="false" role="button" class="navbar__link">Documentation</a><ul class="dropdown__menu"><li><a class="dropdown__link" href="/prism-data-layer/adr">ADRs (Architecture Decision Records)</a></li><li><a aria-current="page" class="dropdown__link dropdown__link--active" href="/prism-data-layer/rfc">RFCs (Request for Comments)</a></li><li><a class="dropdown__link" href="/prism-data-layer/memos">Memos (Technical Analysis)</a></li><li><a class="dropdown__link" href="/prism-data-layer/prds">PRDs (Product Requirements)</a></li></ul></div></div><div class="navbar__items navbar__items--right"><div class="buildInfo_asc2"><span class="version_ADrX" title="Build: 942459b">942459b</span><span class="separator_VfCt">•</span><span class="buildTime_n1Nn" title="Last updated: Oct 16, 7:58 AM PDT">Oct 16, 7:58 AM PDT</span></div><div class="navbar__item"><a href="https://github.com/jrepp/prism-data-layer/actions/workflows/docs.yml" target="_blank" rel="noopener noreferrer" title="GitHub Pages" style="display: flex; align-items: center; padding: 0 0.5rem;"><img src="https://github.com/jrepp/prism-data-layer/actions/workflows/docs.yml/badge.svg" alt="Build" style="margin: 0;"></a></div><a href="https://github.com/jrepp/prism-data-layer" target="_blank" rel="noopener noreferrer" class="navbar__item navbar__link">GitHub<svg width="13.5" height="13.5" aria-label="(opens in new tab)" class="iconExternalLink_nPIU"><use href="#theme-svg-external-link"></use></svg></a><div class="toggle_vylO colorModeToggle_x44X"><button class="clean-btn toggleButton_gllP toggleButtonDisabled_aARS" type="button" disabled="" title="system mode" aria-label="Switch between dark and light mode (currently system mode)"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_g3eP lightToggleIcon_pyhR"><path fill="currentColor" d="M12,9c1.65,0,3,1.35,3,3s-1.35,3-3,3s-3-1.35-3-3S10.35,9,12,9 M12,7c-2.76,0-5,2.24-5,5s2.24,5,5,5s5-2.24,5-5 S14.76,7,12,7L12,7z M2,13l2,0c0.55,0,1-0.45,1-1s-0.45-1-1-1l-2,0c-0.55,0-1,0.45-1,1S1.45,13,2,13z M20,13l2,0c0.55,0,1-0.45,1-1 s-0.45-1-1-1l-2,0c-0.55,0-1,0.45-1,1S19.45,13,20,13z M11,2v2c0,0.55,0.45,1,1,1s1-0.45,1-1V2c0-0.55-0.45-1-1-1S11,1.45,11,2z M11,20v2c0,0.55,0.45,1,1,1s1-0.45,1-1v-2c0-0.55-0.45-1-1-1C11.45,19,11,19.45,11,20z M5.99,4.58c-0.39-0.39-1.03-0.39-1.41,0 c-0.39,0.39-0.39,1.03,0,1.41l1.06,1.06c0.39,0.39,1.03,0.39,1.41,0s0.39-1.03,0-1.41L5.99,4.58z M18.36,16.95 c-0.39-0.39-1.03-0.39-1.41,0c-0.39,0.39-0.39,1.03,0,1.41l1.06,1.06c0.39,0.39,1.03,0.39,1.41,0c0.39-0.39,0.39-1.03,0-1.41 L18.36,16.95z M19.42,5.99c0.39-0.39,0.39-1.03,0-1.41c-0.39-0.39-1.03-0.39-1.41,0l-1.06,1.06c-0.39,0.39-0.39,1.03,0,1.41 s1.03,0.39,1.41,0L19.42,5.99z M7.05,18.36c0.39-0.39,0.39-1.03,0-1.41c-0.39-0.39-1.03-0.39-1.41,0l-1.06,1.06 c-0.39,0.39-0.39,1.03,0,1.41s1.03,0.39,1.41,0L7.05,18.36z"></path></svg><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_g3eP darkToggleIcon_wfgR"><path fill="currentColor" d="M9.37,5.51C9.19,6.15,9.1,6.82,9.1,7.5c0,4.08,3.32,7.4,7.4,7.4c0.68,0,1.35-0.09,1.99-0.27C17.45,17.19,14.93,19,12,19 c-3.86,0-7-3.14-7-7C5,9.07,6.81,6.55,9.37,5.51z M12,3c-4.97,0-9,4.03-9,9s4.03,9,9,9s9-4.03,9-9c0-0.46-0.04-0.92-0.1-1.36 c-0.98,1.37-2.58,2.26-4.4,2.26c-2.98,0-5.4-2.42-5.4-5.4c0-1.81,0.89-3.42,2.26-4.4C12.92,3.04,12.46,3,12,3L12,3z"></path></svg><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_g3eP systemToggleIcon_QzmC"><path fill="currentColor" d="m12 21c4.971 0 9-4.029 9-9s-4.029-9-9-9-9 4.029-9 9 4.029 9 9 9zm4.95-13.95c1.313 1.313 2.05 3.093 2.05 4.95s-0.738 3.637-2.05 4.95c-1.313 1.313-3.093 2.05-4.95 2.05v-14c1.857 0 3.637 0.737 4.95 2.05z"></path></svg></button></div><div class="navbarSearchContainer_Bca1"><div class="navbar__search searchBarContainer_NW3z" dir="ltr"><input placeholder="Search" aria-label="Search" class="navbar__search-input searchInput_YFbd" value=""><div class="loadingRing_RJI3 searchBarLoadingRing_YnHq"><div></div><div></div><div></div><div></div></div></div></div></div></div><div role="presentation" class="navbar-sidebar__backdrop"></div></nav><div id="__docusaurus_skipToContent_fallback" class="theme-layout-main main-wrapper mainWrapper_z2l0"><div class="docsWrapper_hBAB"><button aria-label="Scroll back to top" class="clean-btn theme-back-to-top-button backToTopButton_sjWU" type="button"></button><div class="docRoot_UBD9"><aside class="theme-doc-sidebar-container docSidebarContainer_YfHR"><div class="sidebarViewport_aRkj"><div class="sidebar_njMd"><nav aria-label="Docs sidebar" class="menu thin-scrollbar menu_SIkG"><ul class="theme-doc-sidebar-menu menu__list"><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/prism-data-layer/rfc/"><span title="Request for Comments (RFCs)" class="linkLabel_WmDU">Request for Comments (RFCs)</span></a></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist menu__link--sublist-caret" role="button" aria-expanded="false" href="/prism-data-layer/rfc/rfc-001"><span title="RFC-001 to 010" class="categoryLinkLabel_W154">RFC-001 to 010</span></a></div></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist menu__link--sublist-caret" role="button" aria-expanded="false" href="/prism-data-layer/rfc/rfc-011"><span title="RFC-011 to 020" class="categoryLinkLabel_W154">RFC-011 to 020</span></a></div></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist menu__link--sublist-caret" role="button" aria-expanded="false" href="/prism-data-layer/rfc/rfc-021"><span title="RFC-021 to 030" class="categoryLinkLabel_W154">RFC-021 to 030</span></a></div></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist menu__link--sublist-caret menu__link--active" role="button" aria-expanded="true" href="/prism-data-layer/rfc/rfc-031"><span title="RFC-031 to 040" class="categoryLinkLabel_W154">RFC-031 to 040</span></a></div><ul class="menu__list"><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/prism-data-layer/rfc/rfc-031"><span title="Message Envelope Protocol for Pub/Sub Systems • RFC-031" class="linkLabel_WmDU">Message Envelope Protocol for Pub/Sub Systems • RFC-031</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/prism-data-layer/rfc/rfc-032"><span title="Minimal Prism Schema Registry for Local Testing • RFC-032" class="linkLabel_WmDU">Minimal Prism Schema Registry for Local Testing • RFC-032</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/prism-data-layer/rfc/rfc-033"><span title="Claim Check Pattern for Large Payloads • RFC-033" class="linkLabel_WmDU">Claim Check Pattern for Large Payloads • RFC-033</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/prism-data-layer/rfc/rfc-034"><span title="Robust Process Manager Package Inspired by Kubelet • RFC-034" class="linkLabel_WmDU">Robust Process Manager Package Inspired by Kubelet • RFC-034</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/prism-data-layer/rfc/rfc-035"><span title="Pattern Process Launcher with Bulkhead Isolation • RFC-035" class="linkLabel_WmDU">Pattern Process Launcher with Bulkhead Isolation • RFC-035</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link menu__link--active" aria-current="page" tabindex="0" href="/prism-data-layer/rfc/rfc-036"><span title="Minimalist Web Framework for Prism Admin UI • RFC-036" class="linkLabel_WmDU">Minimalist Web Framework for Prism Admin UI • RFC-036</span></a></li></ul></li></ul></nav><button type="button" title="Collapse sidebar" aria-label="Collapse sidebar" class="button button--secondary button--outline collapseSidebarButton_PEFL"><svg width="20" height="20" aria-hidden="true" class="collapseSidebarButtonIcon_kv0_"><g fill="#7a7a7a"><path d="M9.992 10.023c0 .2-.062.399-.172.547l-4.996 7.492a.982.982 0 01-.828.454H1c-.55 0-1-.453-1-1 0-.2.059-.403.168-.551l4.629-6.942L.168 3.078A.939.939 0 010 2.528c0-.548.45-.997 1-.997h2.996c.352 0 .649.18.828.45L9.82 9.472c.11.148.172.347.172.55zm0 0"></path><path d="M19.98 10.023c0 .2-.058.399-.168.547l-4.996 7.492a.987.987 0 01-.828.454h-3c-.547 0-.996-.453-.996-1 0-.2.059-.403.168-.551l4.625-6.942-4.625-6.945a.939.939 0 01-.168-.55 1 1 0 01.996-.997h3c.348 0 .649.18.828.45l4.996 7.492c.11.148.168.347.168.55zm0 0"></path></g></svg></button></div></div></aside><main class="docMainContainer_TBSr"><div class="container padding-top--md padding-bottom--lg"><div class="row"><div class="col docItemCol_z5aJ"><div class="docItemContainer_c0TR"><article><nav class="theme-doc-breadcrumbs breadcrumbsContainer_Z_bl" aria-label="Breadcrumbs"><ul class="breadcrumbs"><li class="breadcrumbs__item"><a aria-label="Home page" class="breadcrumbs__link" href="/prism-data-layer/"><svg viewBox="0 0 24 24" class="breadcrumbHomeIcon_YNFT"><path d="M10 19v-5h4v5c0 .55.45 1 1 1h3c.55 0 1-.45 1-1v-7h1.7c.46 0 .68-.57.33-.87L12.67 3.6c-.38-.34-.96-.34-1.34 0l-8.36 7.53c-.34.3-.13.87.33.87H5v7c0 .55.45 1 1 1h3c.55 0 1-.45 1-1z" fill="currentColor"></path></svg></a></li><li class="breadcrumbs__item"><span class="breadcrumbs__link">RFC-031 to 040</span></li><li class="breadcrumbs__item breadcrumbs__item--active"><span class="breadcrumbs__link">Minimalist Web Framework for Prism Admin UI • RFC-036</span></li></ul></nav><div class="tocCollapsible_ETCw theme-doc-toc-mobile tocMobile_ITEo"><button type="button" class="clean-btn tocCollapsibleButton_TO0P">On this page</button></div><div class="docMetadata_NQcq"><div class="tagsRow_ipDH"><span class="tag_VbXK">admin</span><span class="tag_VbXK">ui</span><span class="tag_VbXK">go</span><span class="tag_VbXK">templ</span><span class="tag_VbXK">htmx</span><span class="tag_VbXK">web</span></div><div class="metadataRow_PvZM"><span class="metadataItem_RMFE info_Qo8L"><strong>Status:</strong> <!-- -->Proposed</span><span class="metadataItem_RMFE"><strong>Author:</strong> <!-- -->Platform Team</span><span class="metadataItem_RMFE"><strong>Created:</strong> <!-- -->Oct 14, 2025</span><span class="metadataItem_RMFE"><strong>Updated:</strong> <!-- -->Oct 14, 2025</span></div></div><div class="theme-doc-markdown markdown"><header><h1>Minimalist Web Framework for Prism Admin UI</h1></header><h2 class="anchor anchorWithStickyNavbar_LWe7" id="abstract">Abstract<a href="#abstract" class="hash-link" aria-label="Direct link to Abstract" title="Direct link to Abstract" translate="no">​</a></h2>
+<p>This RFC proposes using <strong>templ + htmx + Gin</strong> as an alternative web framework for the Prism Admin UI, replacing the FastAPI + gRPC-Web + Vanilla JavaScript stack proposed in ADR-028. This approach provides server-side rendering with progressive enhancement, eliminates the need for a separate Python service, and aligns the admin UI with our Go-first ecosystem while maintaining simplicity and avoiding heavy JavaScript frameworks.</p>
+<h2 class="anchor anchorWithStickyNavbar_LWe7" id="motivation">Motivation<a href="#motivation" class="hash-link" aria-label="Direct link to Motivation" title="Direct link to Motivation" translate="no">​</a></h2>
+<p>The current admin UI design (ADR-028) uses FastAPI (Python) as a gRPC-Web proxy serving static files. While functional, it introduces several challenges that this RFC aims to address.</p>
+<p><strong>Current Challenges:</strong></p>
+<ol>
+<li><strong>Language Fragmentation</strong>: Python service alongside Go proxy, plugins, and CLI</li>
+<li><strong>Deployment Complexity</strong>: Separate container for admin UI (100-150MB vs 15-20MB Go binary)</li>
+<li><strong>Runtime Dependencies</strong>: Python interpreter, pip packages, uvicorn</li>
+<li><strong>Maintenance Overhead</strong>: Two languages for admin functionality (prismctl in Go + UI in Python)</li>
+<li><strong>Performance</strong>: 1-2 second startup time vs &lt;50ms for Go binary</li>
+</ol>
+<p><strong>Goals:</strong></p>
+<ul>
+<li>Consolidate admin UI into Go ecosystem (same language as proxy/plugins/CLI)</li>
+<li>Eliminate Python dependency for admin UI</li>
+<li>Maintain simplicity (no React/Vue/Angular complexity)</li>
+<li>Preserve progressive enhancement approach (HTML over the wire)</li>
+<li>Enable rapid UI development with compile-time type safety</li>
+<li>Reduce deployment footprint (single Go binary vs Python + deps)</li>
+</ul>
+<p><strong>Non-Goals:</strong></p>
+<ul>
+<li>Replace prismctl (Go CLI remains primary admin tool)</li>
+<li>Build rich SPA-style interactions (admin UI is primarily CRUD)</li>
+<li>Support offline-first or complex client-side state management</li>
+<li>Real-time collaborative editing features</li>
+</ul>
+<h2 class="anchor anchorWithStickyNavbar_LWe7" id="proposed-design">Proposed Design<a href="#proposed-design" class="hash-link" aria-label="Direct link to Proposed Design" title="Direct link to Proposed Design" translate="no">​</a></h2>
+<h3 class="anchor anchorWithStickyNavbar_LWe7" id="core-concept">Core Concept<a href="#core-concept" class="hash-link" aria-label="Direct link to Core Concept" title="Direct link to Core Concept" translate="no">​</a></h3>
+<p><strong>Server-side rendering with progressive enhancement</strong>: Return HTML fragments from Go handlers, use htmx to swap them into the DOM. No JSON APIs between UI and handlers, no JavaScript build step, no client-side state management.</p>
+<h3 class="anchor anchorWithStickyNavbar_LWe7" id="architecture-overview">Architecture Overview<a href="#architecture-overview" class="hash-link" aria-label="Direct link to Architecture Overview" title="Direct link to Architecture Overview" translate="no">​</a></h3>
+<p>```text
+┌─────────────────────────────────────────────────────────┐
+│                      Browser                            │
+│  ┌───────────────────────────────────────────────────┐ │
+│  │  HTML Pages (rendered by templ)                   │ │
+│  │  - Namespace management                           │ │
+│  │  - Session monitoring                             │ │
+│  │  - Backend health dashboard                       │ │
+│  └────────────────┬──────────────────────────────────┘ │
+│                   │ HTML/HTTP (htmx AJAX)               │
+└───────────────────┼─────────────────────────────────────┘
+│
+┌───────────────────▼─────────────────────────────────────┐
+│  Prism Admin UI Service (Gin + templ) (:8000)          │
+│                                                          │
+│  ┌────────────────────────────────────────────────────┐ │
+│  │  Gin HTTP Handlers                                 │ │
+│  │  - Serve HTML pages (templ components)            │ │
+│  │  - Return HTML fragments (htmx responses)         │ │
+│  │  - OIDC authentication middleware                 │ │
+│  └────────────────┬───────────────────────────────────┘ │
+│                   │ gRPC                                 │
+└───────────────────┼──────────────────────────────────────┘
+│
+┌───────────────────▼──────────────────────────────────────┐
+│  Prism Proxy Admin API (gRPC) (:8981)                   │
+│  - prism.admin.v1.AdminService                          │
+│  - Namespace, Session, Backend, Operational APIs        │
+└─────────────────────────────────────────────────────────┘
+```</p>
+<p>This RFC is structured as both a proposal (Sections 1-5) and implementation guide (Appendix).</p>
+<h2 class="anchor anchorWithStickyNavbar_LWe7" id="technology-stack-and-rationale">Technology Stack and Rationale<a href="#technology-stack-and-rationale" class="hash-link" aria-label="Direct link to Technology Stack and Rationale" title="Direct link to Technology Stack and Rationale" translate="no">​</a></h2>
+<h3 class="anchor anchorWithStickyNavbar_LWe7" id="1-templ---type-safe-html-templates">1. templ - Type-Safe HTML Templates<a href="#1-templ---type-safe-html-templates" class="hash-link" aria-label="Direct link to 1. templ - Type-Safe HTML Templates" title="Direct link to 1. templ - Type-Safe HTML Templates" translate="no">​</a></h3>
+<p><a href="https://templ.guide" target="_blank" rel="noopener noreferrer">templ</a> provides compile-time type-safe HTML templating in Go.</p>
+<p><strong>Example - Namespace Card Component:</strong></p>
+<p>```go
+// templates/namespace.templ
+package templates</p>
+<p>import &quot;prism/proto/admin/v1&quot;</p>
+<p>templ NamespaceCard(ns *adminv1.Namespace) {</p>
+  <div class="card p-4 bg-white rounded shadow" id="{&quot;namespace-&quot;">
+    <h3 class="text-lg font-semibold">{ns.Name}</h3>
+    <p class="text-sm text-gray-600">{ns.Description}</p>
+    <button hx-delete="{&quot;/admin/namespaces/&quot;" hx-target="{&quot;#namespace-&quot;" hx-swap="outerHTML swap:1s" hx-confirm="Delete namespace?" class="btn-danger mt-2">
+      Delete
+    </button>
+  </div>
+}
+\`\`\`
+<p><strong>Key Benefits:</strong></p>
+<ul>
+<li><strong>Compile-Time Safety</strong>: Typos in field names caught at build time, not runtime</li>
+<li><strong>IDE Support</strong>: Full autocomplete for Go struct fields</li>
+<li><strong>Automatic Escaping</strong>: XSS protection by default</li>
+<li><strong>Component Composition</strong>: Reusable components with type-safe props</li>
+</ul>
+<p><strong>Rationale</strong>: templ provides the type safety and developer experience of React components, but server-side. Unlike <code>html/template</code> (Go stdlib), templ validates templates at compile time, preventing runtime errors.</p>
+<h3 class="anchor anchorWithStickyNavbar_LWe7" id="2-htmx---html-over-the-wire">2. htmx - HTML Over the Wire<a href="#2-htmx---html-over-the-wire" class="hash-link" aria-label="Direct link to 2. htmx - HTML Over the Wire" title="Direct link to 2. htmx - HTML Over the Wire" translate="no">​</a></h3>
+<p><a href="https://htmx.org" target="_blank" rel="noopener noreferrer">htmx</a> enables declarative AJAX without JavaScript:</p>
+<p>```html</p>
+<p><input type="search" hx-get="/admin/namespaces/search" hx-trigger="keyup changed delay:300ms" hx-target="#namespace-list"></p>
+<p><button hx-delete="/admin/namespaces/analytics" hx-target="#namespace-analytics" hx-swap="outerHTML" hx-confirm="Delete this namespace?">
+Delete
+</button>
+```</p>
+<p><strong>Key Benefits:</strong></p>
+<ul>
+<li><strong>No JavaScript Required</strong>: Declarative attributes handle AJAX</li>
+<li><strong>Progressive Enhancement</strong>: Works without htmx (graceful degradation)</li>
+<li><strong>Small Footprint</strong>: 14KB gzipped (vs 100KB+ for frameworks)</li>
+<li><strong>Server-Authoritative</strong>: UI state lives on server, not client</li>
+</ul>
+<p><strong>Rationale</strong>: htmx eliminates the need for a JavaScript framework while providing modern UX patterns. Admin UI requirements (CRUD, forms, filtering) are perfectly suited to htmx&#x27;s capabilities.</p>
+<h3 class="anchor anchorWithStickyNavbar_LWe7" id="3-gin---go-http-framework">3. Gin - Go HTTP Framework<a href="#3-gin---go-http-framework" class="hash-link" aria-label="Direct link to 3. Gin - Go HTTP Framework" title="Direct link to 3. Gin - Go HTTP Framework" translate="no">​</a></h3>
+<p><a href="https://gin-gonic.com/" target="_blank" rel="noopener noreferrer">Gin</a> provides routing, middleware, and HTTP utilities:</p>
+<p>```go
+func ListNamespaces(c *gin.Context) {
+client := getAdminClient(c)
+resp, err := client.ListNamespaces(c.Request.Context(), &amp;adminv1.ListNamespacesRequest{})
+if err != nil {
+renderError(c, err)
+return
+}</p>
+<div class="language-text codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#393A34;--prism-background-color:#f6f8fa"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-text codeBlock_bY9V thin-scrollbar" style="color:#393A34;background-color:#f6f8fa"><code class="codeBlockLines_e6Vv"><span class="token-line" style="color:#393A34"><span class="token plain">// Return full page or fragment based on HX-Request header</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">if c.GetHeader(&quot;HX-Request&quot;) == &quot;true&quot; {</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">    templates.NamespaceList(resp.Namespaces).Render(c.Request.Context(), c.Writer)</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">} else {</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">    templates.NamespacePage(resp.Namespaces).Render(c.Request.Context(), c.Writer)</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">}</span><br></span></code></pre></div></div>
+<p>}
+```</p>
+<p><strong>Rationale</strong>: Gin is mature, performant, and widely used in the Go ecosystem. Its middleware system integrates well with OIDC auth and htmx detection.</p>
+<h2 class="anchor anchorWithStickyNavbar_LWe7" id="comparison-with-adr-028">Comparison with ADR-028<a href="#comparison-with-adr-028" class="hash-link" aria-label="Direct link to Comparison with ADR-028" title="Direct link to Comparison with ADR-028" translate="no">​</a></h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Aspect</th><th>templ+htmx+Gin (Proposed)</th><th>FastAPI+gRPC-Web (ADR-028)</th></tr></thead><tbody><tr><td><strong>Language</strong></td><td>Go only</td><td>Python + JavaScript</td></tr><tr><td><strong>Type Safety</strong></td><td>Full (compile-time)</td><td>Partial (runtime validation)</td></tr><tr><td><strong>Build Step</strong></td><td><code>templ generate</code></td><td>None (but slower dev iteration)</td></tr><tr><td><strong>Dependencies</strong></td><td>Go binary</td><td>Python + uvicorn + grpcio</td></tr><tr><td><strong>Container Size</strong></td><td>15-20MB (scratch+binary)</td><td>100-150MB (python:3.11-slim)</td></tr><tr><td><strong>Startup Time</strong></td><td>&lt;50ms</td><td>1-2 seconds</td></tr><tr><td><strong>Memory Usage</strong></td><td>20-30MB</td><td>50-100MB</td></tr><tr><td><strong>Consistency</strong></td><td>Matches Go ecosystem</td><td>Separate Python stack</td></tr><tr><td><strong>Admin API Access</strong></td><td>Native gRPC</td><td>gRPC-Web (protocol translation)</td></tr><tr><td><strong>Development UX</strong></td><td><code>templ watch</code> + <code>air</code></td><td><code>uvicorn --reload</code></td></tr><tr><td><strong>Testing</strong></td><td>Standard Go testing</td><td>Python pytest</td></tr></tbody></table>
+<p><strong>Key Advantages:</strong></p>
+<ol>
+<li><strong>85-87% smaller container</strong> (15-20MB vs 100-150MB)</li>
+<li><strong>20-40x faster startup</strong> (&lt;50ms vs 1-2s)</li>
+<li><strong>Language consolidation</strong> (Go for all admin tooling)</li>
+<li><strong>Type safety</strong> (compile-time validation vs runtime)</li>
+<li><strong>Direct gRPC access</strong> (no protocol translation overhead)</li>
+</ol>
+<h2 class="anchor anchorWithStickyNavbar_LWe7" id="project-structure">Project Structure<a href="#project-structure" class="hash-link" aria-label="Direct link to Project Structure" title="Direct link to Project Structure" translate="no">​</a></h2>
+<p>```text
+cmd/prism-admin-ui/
+├── main.go              # Entry point, Gin setup
+├── handlers/
+│   ├── namespace.go     # Namespace CRUD
+│   ├── session.go       # Session monitoring
+│   ├── health.go        # Backend health
+│   └── auth.go          # OIDC login/logout
+├── templates/
+│   ├── layout.templ     # Base layout with nav
+│   ├── namespace.templ  # Namespace components
+│   ├── session.templ    # Session components
+│   └── health.templ     # Health components
+├── static/
+│   ├── css/styles.css   # Tailwind CSS
+│   └── js/htmx.min.js   # htmx library (14KB)
+└── middleware/
+├── auth.go          # OIDC token validation
+├── htmx.go          # HX-Request detection
+└── logging.go       # Request logging
+```</p>
+<h2 class="anchor anchorWithStickyNavbar_LWe7" id="authentication-integration">Authentication Integration<a href="#authentication-integration" class="hash-link" aria-label="Direct link to Authentication Integration" title="Direct link to Authentication Integration" translate="no">​</a></h2>
+<p>Reuse OIDC infrastructure from prismctl (RFC-010):</p>
+<p>```go
+// middleware/auth.go
+func OIDCAuth(validator *auth.JwtValidator) gin.HandlerFunc {
+return func(c *gin.Context) {
+sessionToken, err := c.Cookie(&quot;prism_session&quot;)
+if err == nil &amp;&amp; sessionToken != &quot;&quot; {
+claims, err := validator.ValidateToken(sessionToken)
+if err == nil {
+c.Set(&quot;claims&quot;, claims)
+c.Next()
+return
+}
+}</p>
+<div class="language-text codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#393A34;--prism-background-color:#f6f8fa"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-text codeBlock_bY9V thin-scrollbar" style="color:#393A34;background-color:#f6f8fa"><code class="codeBlockLines_e6Vv"><span class="token-line" style="color:#393A34"><span class="token plain">    c.Redirect(http.StatusFound, &quot;/admin/login&quot;)</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">    c.Abort()</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">}</span><br></span></code></pre></div></div>
+<p>}
+```</p>
+<p><strong>Benefits:</strong></p>
+<ul>
+<li>Shared JWT validation logic with prismctl</li>
+<li>Consistent OIDC configuration</li>
+<li>No duplicate authentication code</li>
+</ul>
+<h2 class="anchor anchorWithStickyNavbar_LWe7" id="security-considerations">Security Considerations<a href="#security-considerations" class="hash-link" aria-label="Direct link to Security Considerations" title="Direct link to Security Considerations" translate="no">​</a></h2>
+<h3 class="anchor anchorWithStickyNavbar_LWe7" id="xss-protection">XSS Protection<a href="#xss-protection" class="hash-link" aria-label="Direct link to XSS Protection" title="Direct link to XSS Protection" translate="no">​</a></h3>
+<p>templ automatically escapes all variables:</p>
+<p>```go
+templ UserInput(input string) {</p>
+  <p>{input}</p>  // Automatically escaped
+}
+<p>// input = &quot;<script>alert(&#x27;xss&#x27;)</script>&quot;
+// Renders: &lt;script&gt;alert(&#x27;xss&#x27;)&lt;/script&gt;
+```</p>
+<p><strong>Manual override</strong> (use sparingly):</p>
+<p>```go
+templ TrustedHTML(html string) {</p>
+  <div>{templ.Raw(html)}</div>  // Explicit opt-in
+}
+\`\`\`
+<h3 class="anchor anchorWithStickyNavbar_LWe7" id="csrf-protection">CSRF Protection<a href="#csrf-protection" class="hash-link" aria-label="Direct link to CSRF Protection" title="Direct link to CSRF Protection" translate="no">​</a></h3>
+<p>Use Gin middleware:</p>
+<p>```go
+import &quot;github.com/utrack/gin-csrf&quot;</p>
+<p>r.Use(csrf.Middleware(csrf.Options{
+Secret: os.Getenv(&quot;CSRF_SECRET&quot;),
+}))
+```</p>
+<h2 class="anchor anchorWithStickyNavbar_LWe7" id="deployment">Deployment<a href="#deployment" class="hash-link" aria-label="Direct link to Deployment" title="Direct link to Deployment" translate="no">​</a></h2>
+<h3 class="anchor anchorWithStickyNavbar_LWe7" id="standalone-service">Standalone Service<a href="#standalone-service" class="hash-link" aria-label="Direct link to Standalone Service" title="Direct link to Standalone Service" translate="no">​</a></h3>
+<p>```yaml</p>
+<h1>docker-compose.yml</h1>
+<p>services:
+prism-proxy:
+image: prism/proxy:latest
+ports:
+- &quot;8980:8980&quot;  # Data plane
+- &quot;8981:8981&quot;  # Admin API</p>
+<p>prism-admin-ui:
+image: prism/admin-ui:latest
+ports:
+- &quot;8000:8000&quot;
+environment:
+PRISM_ADMIN_ENDPOINT: prism-proxy:8981
+OIDC_ISSUER: <a href="https://idp.example.com" target="_blank" rel="noopener noreferrer">https://idp.example.com</a>
+OIDC_AUDIENCE: prism-admin-ui
+```</p>
+<h3 class="anchor anchorWithStickyNavbar_LWe7" id="dockerfile">Dockerfile<a href="#dockerfile" class="hash-link" aria-label="Direct link to Dockerfile" title="Direct link to Dockerfile" translate="no">​</a></h3>
+<p>```dockerfile
+FROM golang:1.21 AS builder
+WORKDIR /app
+COPY go.mod go.sum ./
+RUN go mod download
+COPY . .
+RUN go install github.com/a-h/templ/cmd/templ@latest
+RUN templ generate
+RUN CGO_ENABLED=0 go build -o prism-admin-ui ./cmd/prism-admin-ui</p>
+<p>FROM scratch
+COPY --from=builder /app/prism-admin-ui /prism-admin-ui
+COPY --from=builder /app/cmd/prism-admin-ui/static /static
+EXPOSE 8000
+ENTRYPOINT [&quot;/prism-admin-ui&quot;]
+```</p>
+<p><strong>Result</strong>: 15-20MB image</p>
+<h2 class="anchor anchorWithStickyNavbar_LWe7" id="migration-path-from-adr-028">Migration Path from ADR-028<a href="#migration-path-from-adr-028" class="hash-link" aria-label="Direct link to Migration Path from ADR-028" title="Direct link to Migration Path from ADR-028" translate="no">​</a></h2>
+<p>If FastAPI admin UI already exists:</p>
+<h3 class="anchor anchorWithStickyNavbar_LWe7" id="phase-1-parallel-deployment-week-1-2">Phase 1: Parallel Deployment (Week 1-2)<a href="#phase-1-parallel-deployment-week-1-2" class="hash-link" aria-label="Direct link to Phase 1: Parallel Deployment (Week 1-2)" title="Direct link to Phase 1: Parallel Deployment (Week 1-2)" translate="no">​</a></h3>
+<ul>
+<li>Deploy templ+htmx UI on port 8001</li>
+<li>Keep FastAPI UI on port 8000</li>
+<li>A/B test both versions</li>
+</ul>
+<h3 class="anchor anchorWithStickyNavbar_LWe7" id="phase-2-feature-parity-week-2-4">Phase 2: Feature Parity (Week 2-4)<a href="#phase-2-feature-parity-week-2-4" class="hash-link" aria-label="Direct link to Phase 2: Feature Parity (Week 2-4)" title="Direct link to Phase 2: Feature Parity (Week 2-4)" translate="no">​</a></h3>
+<ul>
+<li>Implement all FastAPI features in templ+htmx</li>
+<li>Migrate users incrementally</li>
+</ul>
+<h3 class="anchor anchorWithStickyNavbar_LWe7" id="phase-3-sunset-fastapi-week-4-6">Phase 3: Sunset FastAPI (Week 4-6)<a href="#phase-3-sunset-fastapi-week-4-6" class="hash-link" aria-label="Direct link to Phase 3: Sunset FastAPI (Week 4-6)" title="Direct link to Phase 3: Sunset FastAPI (Week 4-6)" translate="no">​</a></h3>
+<ul>
+<li>Switch default to templ+htmx (port 8000)</li>
+<li>Deprecate FastAPI UI</li>
+</ul>
+<h3 class="anchor anchorWithStickyNavbar_LWe7" id="phase-4-optimization-week-6-8">Phase 4: Optimization (Week 6-8)<a href="#phase-4-optimization-week-6-8" class="hash-link" aria-label="Direct link to Phase 4: Optimization (Week 6-8)" title="Direct link to Phase 4: Optimization (Week 6-8)" translate="no">​</a></h3>
+<ul>
+<li>Bundle admin UI into proxy binary (optional)</li>
+<li>Server-side caching</li>
+<li>Template rendering optimization</li>
+</ul>
+<h2 class="anchor anchorWithStickyNavbar_LWe7" id="testing-strategy">Testing Strategy<a href="#testing-strategy" class="hash-link" aria-label="Direct link to Testing Strategy" title="Direct link to Testing Strategy" translate="no">​</a></h2>
+<h3 class="anchor anchorWithStickyNavbar_LWe7" id="unit-tests">Unit Tests<a href="#unit-tests" class="hash-link" aria-label="Direct link to Unit Tests" title="Direct link to Unit Tests" translate="no">​</a></h3>
+<p>```go
+func TestNamespaceCard(t *testing.T) {
+ns := &amp;adminv1.Namespace{
+Name:        &quot;test-namespace&quot;,
+Description: &quot;Test description&quot;,
+}</p>
+<div class="language-text codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#393A34;--prism-background-color:#f6f8fa"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-text codeBlock_bY9V thin-scrollbar" style="color:#393A34;background-color:#f6f8fa"><code class="codeBlockLines_e6Vv"><span class="token-line" style="color:#393A34"><span class="token plain">var buf bytes.Buffer</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">err := templates.NamespaceCard(ns).Render(context.Background(), &amp;buf)</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">require.NoError(t, err)</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain" style="display:inline-block"></span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">html := buf.String()</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">assert.Contains(t, html, &quot;test-namespace&quot;)</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">assert.Contains(t, html, `id=&quot;namespace-test-namespace&quot;`)</span><br></span></code></pre></div></div>
+<p>}
+```</p>
+<h3 class="anchor anchorWithStickyNavbar_LWe7" id="integration-tests">Integration Tests<a href="#integration-tests" class="hash-link" aria-label="Direct link to Integration Tests" title="Direct link to Integration Tests" translate="no">​</a></h3>
+<p>```go
+func TestNamespaceCRUD(t *testing.T) {
+mockAdmin := startMockAdminAPI(t)
+defer mockAdmin.Close()</p>
+<div class="language-text codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#393A34;--prism-background-color:#f6f8fa"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-text codeBlock_bY9V thin-scrollbar" style="color:#393A34;background-color:#f6f8fa"><code class="codeBlockLines_e6Vv"><span class="token-line" style="color:#393A34"><span class="token plain">adminUI := startAdminUI(t, mockAdmin.Address())</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">defer adminUI.Close()</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain" style="display:inline-block"></span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">resp, err := http.PostForm(adminUI.URL()+&quot;/admin/namespaces&quot;, url.Values{</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">    &quot;name&quot;:        {&quot;test-ns&quot;},</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">    &quot;description&quot;: {&quot;Test&quot;},</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">})</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">require.NoError(t, err)</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">assert.Equal(t, http.StatusOK, resp.StatusCode)</span><br></span></code></pre></div></div>
+<p>}
+```</p>
+<h2 class="anchor anchorWithStickyNavbar_LWe7" id="alternatives-considered">Alternatives Considered<a href="#alternatives-considered" class="hash-link" aria-label="Direct link to Alternatives Considered" title="Direct link to Alternatives Considered" translate="no">​</a></h2>
+<h3 class="anchor anchorWithStickyNavbar_LWe7" id="alternative-1-keep-fastapi-adr-028">Alternative 1: Keep FastAPI (ADR-028)<a href="#alternative-1-keep-fastapi-adr-028" class="hash-link" aria-label="Direct link to Alternative 1: Keep FastAPI (ADR-028)" title="Direct link to Alternative 1: Keep FastAPI (ADR-028)" translate="no">​</a></h3>
+<p><strong>Pros</strong>: Already designed, familiar to Python developers</p>
+<p><strong>Cons</strong>: Language fragmentation, larger footprint (100-150MB vs 15-20MB), separate maintenance</p>
+<p><strong>Decision</strong>: Propose templ+htmx for Go consolidation</p>
+<h3 class="anchor anchorWithStickyNavbar_LWe7" id="alternative-2-reactvue-spa">Alternative 2: React/Vue SPA<a href="#alternative-2-reactvue-spa" class="hash-link" aria-label="Direct link to Alternative 2: React/Vue SPA" title="Direct link to Alternative 2: React/Vue SPA" translate="no">​</a></h3>
+<p><strong>Pros</strong>: Rich interactions, large ecosystem</p>
+<p><strong>Cons</strong>: Build complexity, large bundle, overkill for CRUD</p>
+<p><strong>Decision</strong>: Rejected - admin UI doesn&#x27;t need SPA complexity</p>
+<h3 class="anchor anchorWithStickyNavbar_LWe7" id="alternative-3-htmltemplate-go-stdlib">Alternative 3: html/template (Go stdlib)<a href="#alternative-3-htmltemplate-go-stdlib" class="hash-link" aria-label="Direct link to Alternative 3: html/template (Go stdlib)" title="Direct link to Alternative 3: html/template (Go stdlib)" translate="no">​</a></h3>
+<p><strong>Pros</strong>: No dependencies, standard library</p>
+<p><strong>Cons</strong>: No type safety, no compile-time validation</p>
+<p><strong>Decision</strong>: Rejected - templ&#x27;s type safety is critical</p>
+<h2 class="anchor anchorWithStickyNavbar_LWe7" id="open-questions">Open Questions<a href="#open-questions" class="hash-link" aria-label="Direct link to Open Questions" title="Direct link to Open Questions" translate="no">​</a></h2>
+<ol>
+<li>
+<p><strong>Embedded vs Standalone</strong>: Embed in proxy or separate service?</p>
+<ul>
+<li><strong>Recommendation</strong>: Start standalone, consider embedding in Phase 4</li>
+</ul>
+</li>
+<li>
+<p><strong>CSS Framework</strong>: Tailwind (utility-first) or custom CSS?</p>
+<ul>
+<li><strong>Recommendation</strong>: Tailwind for rapid development</li>
+</ul>
+</li>
+<li>
+<p><strong>Real-time Updates</strong>: WebSocket for live session monitoring?</p>
+<ul>
+<li><strong>Recommendation</strong>: Start with htmx polling, add WebSocket if needed</li>
+</ul>
+</li>
+</ol>
+<h2 class="anchor anchorWithStickyNavbar_LWe7" id="implementation-roadmap">Implementation Roadmap<a href="#implementation-roadmap" class="hash-link" aria-label="Direct link to Implementation Roadmap" title="Direct link to Implementation Roadmap" translate="no">​</a></h2>
+<p>If this RFC is accepted:</p>
+<h3 class="anchor anchorWithStickyNavbar_LWe7" id="week-1-2-foundation">Week 1-2: Foundation<a href="#week-1-2-foundation" class="hash-link" aria-label="Direct link to Week 1-2: Foundation" title="Direct link to Week 1-2: Foundation" translate="no">​</a></h3>
+<ul>
+<li>Set up <code>cmd/prism-admin-ui</code> directory structure</li>
+<li>Implement base layout and navigation (templ)</li>
+<li>Add OIDC authentication middleware</li>
+<li>Deploy parallel to FastAPI UI (port 8001)</li>
+</ul>
+<h3 class="anchor anchorWithStickyNavbar_LWe7" id="week-3-4-core-features">Week 3-4: Core Features<a href="#week-3-4-core-features" class="hash-link" aria-label="Direct link to Week 3-4: Core Features" title="Direct link to Week 3-4: Core Features" translate="no">​</a></h3>
+<ul>
+<li>Namespace CRUD (full feature parity with FastAPI)</li>
+<li>Session monitoring dashboard</li>
+<li>Backend health checks</li>
+<li>User testing and feedback</li>
+</ul>
+<h3 class="anchor anchorWithStickyNavbar_LWe7" id="week-5-6-polish-and-migration">Week 5-6: Polish and Migration<a href="#week-5-6-polish-and-migration" class="hash-link" aria-label="Direct link to Week 5-6: Polish and Migration" title="Direct link to Week 5-6: Polish and Migration" translate="no">​</a></h3>
+<ul>
+<li>Address feedback from user testing</li>
+<li>Performance optimization</li>
+<li>Switch default to templ+htmx (port 8000)</li>
+<li>Deprecate FastAPI UI</li>
+</ul>
+<h3 class="anchor anchorWithStickyNavbar_LWe7" id="week-7-8-production-readiness">Week 7-8: Production Readiness<a href="#week-7-8-production-readiness" class="hash-link" aria-label="Direct link to Week 7-8: Production Readiness" title="Direct link to Week 7-8: Production Readiness" translate="no">​</a></h3>
+<ul>
+<li>Security audit</li>
+<li>Load testing</li>
+<li>Documentation</li>
+<li>Optional: Embed in proxy binary</li>
+</ul>
+<h2 class="anchor anchorWithStickyNavbar_LWe7" id="references">References<a href="#references" class="hash-link" aria-label="Direct link to References" title="Direct link to References" translate="no">​</a></h2>
+<ul>
+<li><a href="https://templ.guide" target="_blank" rel="noopener noreferrer">templ Documentation</a></li>
+<li><a href="https://htmx.org" target="_blank" rel="noopener noreferrer">htmx Documentation</a></li>
+<li><a href="https://gin-gonic.com" target="_blank" rel="noopener noreferrer">Gin Web Framework</a></li>
+<li>ADR-028: Admin UI with FastAPI and gRPC-Web</li>
+<li>ADR-040: Go Binary for Admin CLI (prismctl)</li>
+<li>RFC-003: Admin Interface for Prism</li>
+<li>RFC-010: Admin Protocol with OIDC Authentication</li>
+</ul>
+<h2 class="anchor anchorWithStickyNavbar_LWe7" id="appendix-implementation-guide">Appendix: Implementation Guide<a href="#appendix-implementation-guide" class="hash-link" aria-label="Direct link to Appendix: Implementation Guide" title="Direct link to Appendix: Implementation Guide" translate="no">​</a></h2>
+<p>This appendix serves as a practical reference for implementing templ+htmx patterns in Prism Admin UI.</p>
+<h3 class="anchor anchorWithStickyNavbar_LWe7" id="common-patterns">Common Patterns<a href="#common-patterns" class="hash-link" aria-label="Direct link to Common Patterns" title="Direct link to Common Patterns" translate="no">​</a></h3>
+<h4 class="anchor anchorWithStickyNavbar_LWe7" id="pattern-1-full-page-render">Pattern 1: Full Page Render<a href="#pattern-1-full-page-render" class="hash-link" aria-label="Direct link to Pattern 1: Full Page Render" title="Direct link to Pattern 1: Full Page Render" translate="no">​</a></h4>
+<p><strong>When:</strong> Initial page load, navigation</p>
+<p>```go
+templ NamespacePage(namespaces []*adminv1.Namespace) {</p>
+  
+  
+    
+      <script src="/static/js/htmx.min.js"></script>
+      <link rel="stylesheet" href="/static/css/styles.css">
+    
+    
+      @NamespaceList(namespaces)
+    
+  
+}
+\`\`\`
+<h4 class="anchor anchorWithStickyNavbar_LWe7" id="pattern-2-partialfragment-render">Pattern 2: Partial/Fragment Render<a href="#pattern-2-partialfragment-render" class="hash-link" aria-label="Direct link to Pattern 2: Partial/Fragment Render" title="Direct link to Pattern 2: Partial/Fragment Render" translate="no">​</a></h4>
+<p><strong>When:</strong> htmx requests</p>
+<p>```go
+func ListNamespaces(c *gin.Context) {
+namespaces := getNamespaces()</p>
+<p>if c.GetHeader(&quot;HX-Request&quot;) == &quot;true&quot; {
+templates.NamespaceList(namespaces).Render(c.Request.Context(), c.Writer)
+} else {
+templates.NamespacePage(namespaces).Render(c.Request.Context(), c.Writer)
+}
+}
+```</p>
+<h4 class="anchor anchorWithStickyNavbar_LWe7" id="pattern-3-forms">Pattern 3: Forms<a href="#pattern-3-forms" class="hash-link" aria-label="Direct link to Pattern 3: Forms" title="Direct link to Pattern 3: Forms" translate="no">​</a></h4>
+<p><strong>When:</strong> Create/Update operations</p>
+<p>```go
+templ NamespaceForm(ns *adminv1.Namespace) {</p>
+  <form hx-post="/admin/namespaces" hx-target="#namespace-list" hx-swap="afterbegin">
+    <input name="name" required="" value="{ns.Name}">
+    <button type="submit">Create</button>
+  </form>
+}
+\`\`\`
+<h4 class="anchor anchorWithStickyNavbar_LWe7" id="pattern-4-searchfilter">Pattern 4: Search/Filter<a href="#pattern-4-searchfilter" class="hash-link" aria-label="Direct link to Pattern 4: Search/Filter" title="Direct link to Pattern 4: Search/Filter" translate="no">​</a></h4>
+<p><strong>When:</strong> Real-time filtering</p>
+<p>```go
+templ SearchBox() {
+<input type="search" hx-get="/admin/namespaces/search" hx-trigger="keyup changed delay:300ms" hx-target="#namespace-list">
+}
+```</p>
+<h4 class="anchor anchorWithStickyNavbar_LWe7" id="pattern-5-optimistic-updates">Pattern 5: Optimistic Updates<a href="#pattern-5-optimistic-updates" class="hash-link" aria-label="Direct link to Pattern 5: Optimistic Updates" title="Direct link to Pattern 5: Optimistic Updates" translate="no">​</a></h4>
+<p><strong>When:</strong> Better UX for slow operations</p>
+<p>```html
+<button hx-delete="/admin/namespaces/analytics" hx-target="#namespace-analytics" hx-swap="outerHTML swap:1s" hx-indicator="#spinner">
+Delete
+</button></p>
+<div id="spinner" class="htmx-indicator">Deleting...</div>
+\`\`\`
+<h3 class="anchor anchorWithStickyNavbar_LWe7" id="htmx-attribute-reference">htmx Attribute Reference<a href="#htmx-attribute-reference" class="hash-link" aria-label="Direct link to htmx Attribute Reference" title="Direct link to htmx Attribute Reference" translate="no">​</a></h3>
+<p>```text
+Core:
+hx-get=&quot;/url&quot;              GET request
+hx-post=&quot;/url&quot;             POST request
+hx-delete=&quot;/url&quot;           DELETE request</p>
+<p>Targeting:
+hx-target=&quot;#id&quot;            Where to put response
+hx-swap=&quot;innerHTML&quot;        How to swap</p>
+<p>Triggers:
+hx-trigger=&quot;click&quot;         When to fire
+hx-trigger=&quot;keyup changed delay:300ms&quot;  Debounced</p>
+<p>State:
+hx-indicator=&quot;#spinner&quot;    Show during request
+hx-confirm=&quot;Are you sure?&quot; Confirm before request
+```</p>
+<h3 class="anchor anchorWithStickyNavbar_LWe7" id="best-practices">Best Practices<a href="#best-practices" class="hash-link" aria-label="Direct link to Best Practices" title="Direct link to Best Practices" translate="no">​</a></h3>
+<ol>
+<li><strong>Component Composition</strong>: Break templates into small, reusable components</li>
+<li><strong>Type Safety</strong>: Use Go structs, let templ validate at compile time</li>
+<li><strong>Predictable IDs</strong>: Use consistent naming (<code>id={&quot;namespace-&quot; + ns.Name}</code>)</li>
+<li><strong>Loading States</strong>: Always provide <code>hx-indicator</code> feedback</li>
+<li><strong>Error Handling</strong>: Return proper HTTP status codes with error templates</li>
+</ol>
+<h3 class="anchor anchorWithStickyNavbar_LWe7" id="common-gotchas">Common Gotchas<a href="#common-gotchas" class="hash-link" aria-label="Direct link to Common Gotchas" title="Direct link to Common Gotchas" translate="no">​</a></h3>
+<ol>
+<li><strong>Templates Not Regenerating</strong>: Run <code>templ generate --watch</code> during development</li>
+<li><strong>URL Encoding</strong>: Use <code>templ.URL()</code> for URLs with query params</li>
+<li><strong>XSS Protection</strong>: templ escapes by default; use <code>templ.Raw()</code> sparingly</li>
+<li><strong>CSRF Tokens</strong>: Add middleware and include tokens in all forms</li>
+<li><strong>Browser Caching</strong>: Disable cache for htmx requests (<code>Cache-Control: no-store</code>)</li>
+</ol>
+<h2 class="anchor anchorWithStickyNavbar_LWe7" id="revision-history">Revision History<a href="#revision-history" class="hash-link" aria-label="Direct link to Revision History" title="Direct link to Revision History" translate="no">​</a></h2>
+<ul>
+<li>2025-10-15: Initial RFC proposing templ+htmx+Gin as alternative to ADR-028</li>
+</ul></div><footer class="theme-doc-footer docusaurus-mt-lg"><div class="row margin-top--sm theme-doc-footer-tags-row"><div class="col"><b>Tags:</b><ul class="tags_jXut padding--none margin-left--sm"><li class="tag_QGVx"><a rel="tag" class="tag_zVej tagRegular_sFm0" href="/prism-data-layer/rfc/tags/admin">admin</a></li><li class="tag_QGVx"><a rel="tag" class="tag_zVej tagRegular_sFm0" href="/prism-data-layer/rfc/tags/ui">ui</a></li><li class="tag_QGVx"><a rel="tag" class="tag_zVej tagRegular_sFm0" href="/prism-data-layer/rfc/tags/go">go</a></li><li class="tag_QGVx"><a rel="tag" class="tag_zVej tagRegular_sFm0" href="/prism-data-layer/rfc/tags/templ">templ</a></li><li class="tag_QGVx"><a rel="tag" class="tag_zVej tagRegular_sFm0" href="/prism-data-layer/rfc/tags/htmx">htmx</a></li><li class="tag_QGVx"><a rel="tag" class="tag_zVej tagRegular_sFm0" href="/prism-data-layer/rfc/tags/web">web</a></li></ul></div></div><div class="row margin-top--sm theme-doc-footer-edit-meta-row"><div class="col"><a href="https://github.com/jrepp/prism-data-layer/tree/main/docs-cms/../docs-cms/rfcs/rfc-036-minimalist-web-framework-for-prism-admin.md" target="_blank" rel="noopener noreferrer" class="theme-edit-this-page"><svg fill="currentColor" height="20" width="20" viewBox="0 0 40 40" class="iconEdit_Z9Sw" aria-hidden="true"><g><path d="m34.5 11.7l-3 3.1-6.3-6.3 3.1-3q0.5-0.5 1.2-0.5t1.1 0.5l3.9 3.9q0.5 0.4 0.5 1.1t-0.5 1.2z m-29.5 17.1l18.4-18.5 6.3 6.3-18.4 18.4h-6.3v-6.2z"></path></g></svg>Edit this page</a></div><div class="col lastUpdated_JAkA"></div></div></footer></article><nav class="docusaurus-mt-lg pagination-nav" aria-label="Docs pages"><a class="pagination-nav__link pagination-nav__link--prev" href="/prism-data-layer/rfc/rfc-035"><div class="pagination-nav__sublabel">Previous</div><div class="pagination-nav__label">Pattern Process Launcher with Bulkhead Isolation • RFC-035</div></a></nav></div></div><div class="col col--3"><div class="tableOfContents_bqdL thin-scrollbar theme-doc-toc-desktop"><ul class="table-of-contents table-of-contents__left-border"><li><a href="#abstract" class="table-of-contents__link toc-highlight">Abstract</a></li><li><a href="#motivation" class="table-of-contents__link toc-highlight">Motivation</a></li><li><a href="#proposed-design" class="table-of-contents__link toc-highlight">Proposed Design</a><ul><li><a href="#core-concept" class="table-of-contents__link toc-highlight">Core Concept</a></li><li><a href="#architecture-overview" class="table-of-contents__link toc-highlight">Architecture Overview</a></li></ul></li><li><a href="#technology-stack-and-rationale" class="table-of-contents__link toc-highlight">Technology Stack and Rationale</a><ul><li><a href="#1-templ---type-safe-html-templates" class="table-of-contents__link toc-highlight">1. templ - Type-Safe HTML Templates</a></li><li><a href="#2-htmx---html-over-the-wire" class="table-of-contents__link toc-highlight">2. htmx - HTML Over the Wire</a></li><li><a href="#3-gin---go-http-framework" class="table-of-contents__link toc-highlight">3. Gin - Go HTTP Framework</a></li></ul></li><li><a href="#comparison-with-adr-028" class="table-of-contents__link toc-highlight">Comparison with ADR-028</a></li><li><a href="#project-structure" class="table-of-contents__link toc-highlight">Project Structure</a></li><li><a href="#authentication-integration" class="table-of-contents__link toc-highlight">Authentication Integration</a></li><li><a href="#security-considerations" class="table-of-contents__link toc-highlight">Security Considerations</a><ul><li><a href="#xss-protection" class="table-of-contents__link toc-highlight">XSS Protection</a></li><li><a href="#csrf-protection" class="table-of-contents__link toc-highlight">CSRF Protection</a></li></ul></li><li><a href="#deployment" class="table-of-contents__link toc-highlight">Deployment</a><ul><li><a href="#standalone-service" class="table-of-contents__link toc-highlight">Standalone Service</a></li><li><a href="#dockerfile" class="table-of-contents__link toc-highlight">Dockerfile</a></li></ul></li><li><a href="#migration-path-from-adr-028" class="table-of-contents__link toc-highlight">Migration Path from ADR-028</a><ul><li><a href="#phase-1-parallel-deployment-week-1-2" class="table-of-contents__link toc-highlight">Phase 1: Parallel Deployment (Week 1-2)</a></li><li><a href="#phase-2-feature-parity-week-2-4" class="table-of-contents__link toc-highlight">Phase 2: Feature Parity (Week 2-4)</a></li><li><a href="#phase-3-sunset-fastapi-week-4-6" class="table-of-contents__link toc-highlight">Phase 3: Sunset FastAPI (Week 4-6)</a></li><li><a href="#phase-4-optimization-week-6-8" class="table-of-contents__link toc-highlight">Phase 4: Optimization (Week 6-8)</a></li></ul></li><li><a href="#testing-strategy" class="table-of-contents__link toc-highlight">Testing Strategy</a><ul><li><a href="#unit-tests" class="table-of-contents__link toc-highlight">Unit Tests</a></li><li><a href="#integration-tests" class="table-of-contents__link toc-highlight">Integration Tests</a></li></ul></li><li><a href="#alternatives-considered" class="table-of-contents__link toc-highlight">Alternatives Considered</a><ul><li><a href="#alternative-1-keep-fastapi-adr-028" class="table-of-contents__link toc-highlight">Alternative 1: Keep FastAPI (ADR-028)</a></li><li><a href="#alternative-2-reactvue-spa" class="table-of-contents__link toc-highlight">Alternative 2: React/Vue SPA</a></li><li><a href="#alternative-3-htmltemplate-go-stdlib" class="table-of-contents__link toc-highlight">Alternative 3: html/template (Go stdlib)</a></li></ul></li><li><a href="#open-questions" class="table-of-contents__link toc-highlight">Open Questions</a></li><li><a href="#implementation-roadmap" class="table-of-contents__link toc-highlight">Implementation Roadmap</a><ul><li><a href="#week-1-2-foundation" class="table-of-contents__link toc-highlight">Week 1-2: Foundation</a></li><li><a href="#week-3-4-core-features" class="table-of-contents__link toc-highlight">Week 3-4: Core Features</a></li><li><a href="#week-5-6-polish-and-migration" class="table-of-contents__link toc-highlight">Week 5-6: Polish and Migration</a></li><li><a href="#week-7-8-production-readiness" class="table-of-contents__link toc-highlight">Week 7-8: Production Readiness</a></li></ul></li><li><a href="#references" class="table-of-contents__link toc-highlight">References</a></li><li><a href="#appendix-implementation-guide" class="table-of-contents__link toc-highlight">Appendix: Implementation Guide</a><ul><li><a href="#common-patterns" class="table-of-contents__link toc-highlight">Common Patterns</a></li><li><a href="#htmx-attribute-reference" class="table-of-contents__link toc-highlight">htmx Attribute Reference</a></li><li><a href="#best-practices" class="table-of-contents__link toc-highlight">Best Practices</a></li><li><a href="#common-gotchas" class="table-of-contents__link toc-highlight">Common Gotchas</a></li></ul></li><li><a href="#revision-history" class="table-of-contents__link toc-highlight">Revision History</a></li></ul></div></div></div></div></main></div></div></div><footer class="theme-layout-footer footer footer--dark"><div class="container container-fluid"><div class="row footer__links"><div class="theme-layout-footer-column col footer__col"><div class="footer__title">Documentation</div><ul class="footer__items clean-list"><li class="footer__item"><a class="footer__link-item" href="/prism-data-layer/docs/intro">Overview</a></li><li class="footer__item"><a class="footer__link-item" href="/prism-data-layer/docs/changelog">Change Log</a></li><li class="footer__item"><a class="footer__link-item" href="/prism-data-layer/adr">ADRs</a></li><li class="footer__item"><a class="footer__link-item" href="/prism-data-layer/rfc">RFCs</a></li><li class="footer__item"><a class="footer__link-item" href="/prism-data-layer/memos">Memos</a></li><li class="footer__item"><a class="footer__link-item" href="/prism-data-layer/prds">PRDs</a></li></ul></div><div class="theme-layout-footer-column col footer__col"><div class="footer__title">Project</div><ul class="footer__items clean-list"><li class="footer__item"><a href="https://github.com/jrepp/prism-data-layer" target="_blank" rel="noopener noreferrer" class="footer__link-item">GitHub<svg width="13.5" height="13.5" aria-label="(opens in new tab)" class="iconExternalLink_nPIU"><use href="#theme-svg-external-link"></use></svg></a></li></ul></div></div><div class="footer__bottom text--center"><div class="footer__copyright"><div>Copyright © 2025 Prism. Built with Docusaurus.</div><div style="margin-top:0.5rem;font-size:0.875rem;opacity:0.8"><span>Version <!-- -->942459b6</span><span> • </span><span>Built <!-- -->Oct 16, 2025, 07:58 AM PDT</span><span> • </span><span>Commit <!-- -->942459b</span></div></div></div></div></footer></div>
+</body>
+</html>

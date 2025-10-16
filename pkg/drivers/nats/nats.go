@@ -139,6 +139,18 @@ func (n *NATSPattern) Stop(ctx context.Context) error {
 	return nil
 }
 
+// Drain prepares the plugin for shutdown
+// For NATS, draining the connection allows pending messages to be flushed
+func (n *NATSPattern) Drain(ctx context.Context, timeoutSeconds int32, reason string) (*plugin.DrainMetrics, error) {
+	// NATS connection has built-in Drain() that waits for pending messages
+	// This is handled automatically by the NATS client library
+	// The actual drain happens in Stop()
+	return &plugin.DrainMetrics{
+		DrainedOperations: 0,
+		AbortedOperations: 0,
+	}, nil
+}
+
 // Health returns the plugin health status
 func (n *NATSPattern) Health(ctx context.Context) (*plugin.HealthStatus, error) {
 	if n.conn == nil {
