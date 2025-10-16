@@ -54,7 +54,6 @@ cmd/plugin-watcher/plugin-watcher
 test-logs/
 
 # Docusaurus build outputs
-/docs/                      # GitHub Pages output (root level only)
 docusaurus/.docusaurus/     # Docusaurus cache
 docusaurus/build/           # Docusaurus build output
 # NOTE: docusaurus/docs/ is SOURCE documentation and must be tracked!
