@@ -13,6 +13,7 @@ import (
 	"gopkg.in/yaml.v3"
 
 	"github.com/jrepp/prism-data-layer/patterns/mailbox"
+	"github.com/jrepp/prism-data-layer/pkg/drivers/memstore"
 	"github.com/jrepp/prism-data-layer/pkg/drivers/nats"
 	"github.com/jrepp/prism-data-layer/pkg/drivers/sqlite"
 	"github.com/jrepp/prism-data-layer/pkg/plugin"

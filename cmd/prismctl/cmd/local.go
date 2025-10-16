@@ -138,6 +138,18 @@ func startLocalStack() error {
 		return fmt.Errorf("failed to create logs directory: %w", err)
 	}
 
+	// Convert binDir to absolute path
+	absBinDir, err := filepath.Abs(binDir)
+	if err != nil {
+		return fmt.Errorf("failed to get absolute path for binaries directory: %w", err)
+	}
+
+	// Find patterns directory (should be at project root)
+	patternsDir := filepath.Join(absBinDir, "..", "..", "patterns")
+	if _, err := os.Stat(patternsDir); os.IsNotExist(err) {
+		return fmt.Errorf("patterns directory not found at %s", patternsDir)
+	}
+
 	// Start components in order
 	components := []struct {
 		name    string
@@ -148,21 +160,21 @@ func startLocalStack() error {
 	}{
 		{
 			name:    "prism-admin",
-			binary:  filepath.Join(binDir, "prism-admin"),
+			binary:  filepath.Join(absBinDir, "prism-admin"),
 			args:    []string{"serve", "--port=8981"},
 			logFile: filepath.Join(logsDir, "admin.log"),
 			delay:   2 * time.Second,
 		},
 		{
 			name:    "pattern-launcher",
-			binary:  filepath.Join(binDir, "pattern-launcher"),
-			args:    []string{"--admin-endpoint=localhost:8981", "--launcher-id=launcher-01", "--grpc-port=7070"},
+			binary:  filepath.Join(absBinDir, "pattern-launcher"),
+			args:    []string{"--admin-endpoint=localhost:8981", "--launcher-id=launcher-01", "--grpc-port=7070", "--patterns-dir=" + patternsDir},
 			logFile: filepath.Join(logsDir, "launcher.log"),
 			delay:   2 * time.Second,
 		},
 		{
 			name:    "keyvalue-runner",
-			binary:  filepath.Join(binDir, "keyvalue-runner"),
+			binary:  filepath.Join(absBinDir, "keyvalue-runner"),
 			args:    []string{"--proxy-addr=localhost:9090"},
 			logFile: filepath.Join(logsDir, "keyvalue.log"),
 			delay:   1 * time.Second,

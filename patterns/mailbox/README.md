@@ -43,7 +43,34 @@ The Mailbox Pattern uses a **3-slot architecture**:
 
 ## Quick Start
 
-### 1. Create Configuration
+### Local Testing (No External Dependencies)
+
+The simplest way to test the mailbox is using local SQLite storage without external message brokers:
+
+```bash
+# 1. Build prismctl (if not already built)
+cd cmd/prismctl
+go build -o prismctl
+
+# 2. Publish test messages via proxy admin API
+./prismctl publish message local-mailbox test.events '{"hello": "world"}' \
+  --principal "test-user" \
+  --correlation-id "trace-123"
+
+# 3. Query messages from mailbox
+./prismctl mailbox query local-mailbox --limit 10 --show-payload
+
+# 4. Get specific message
+./prismctl mailbox get local-mailbox <message-id>
+```
+
+The mailbox stores all published messages in SQLite with indexed headers for efficient querying.
+
+### Production Setup with Message Broker
+
+For production use with NATS or Kafka:
+
+#### 1. Create Configuration
 
 Create a `mailbox.yaml` configuration file:
 
@@ -56,13 +83,13 @@ behavior:
   auto_commit: true
 
 storage:
-  database_path: "/Users/jrepp/.prism/mailbox-admin.db"
+  database_path: "/var/lib/prism/mailbox-admin.db"
   table_name: "mailbox"
   retention_days: 90
   cleanup_interval: "24h"
 ```
 
-### 2. Build and Run
+#### 2. Build and Run
 
 ```bash
 # Build the mailbox runner
@@ -73,19 +100,25 @@ go build -o mailbox-runner
 ./mailbox-runner --config mailbox.yaml --log-level info
 ```
 
-### 3. Query Events
+#### 3. Query Events
 
-Use the query interface to retrieve stored events:
+Use prismctl to query stored events:
 
-```go
-// Query events by time range
-startTime := time.Now().Add(-24 * time.Hour).UnixMilli()
-filter := &plugin.EventFilter{
-    StartTime: &startTime,
-    Limit:     100,
-}
+```bash
+# Query by time range
+prismctl mailbox query admin-mailbox \
+  --start-time "2025-10-15T00:00:00Z" \
+  --end-time "2025-10-15T23:59:59Z" \
+  --limit 100
 
-events, err := mailbox.QueryEvents(ctx, filter)
+# Query by topic
+prismctl mailbox query admin-mailbox --topic "admin.users.*"
+
+# Query by principal
+prismctl mailbox query admin-mailbox --principal "user@example.com"
+
+# Query with correlation ID
+prismctl mailbox query admin-mailbox --correlation-id "trace-abc-123"
 ```
 
 ## Configuration
