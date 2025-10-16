@@ -32,6 +32,7 @@ jobs:
   generate-proto:
     name: Generate Protobuf Code
     runs-on: ubuntu-latest
+    timeout-minutes: 10
 
     steps:
       - name: Checkout
@@ -72,6 +73,7 @@ jobs:
   lint-rust:
     name: Lint Rust
     runs-on: ubuntu-latest
+    timeout-minutes: 10
 
     steps:
       - name: Checkout
@@ -111,6 +113,7 @@ jobs:
   lint-python:
     name: Lint Python
     runs-on: ubuntu-latest
+    timeout-minutes: 5
 
     steps:
       - name: Checkout
@@ -135,6 +138,7 @@ jobs:
   lint-go:
     name: Lint Go (${{ matrix.category }})
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     needs: generate-proto
 
     strategy:
@@ -190,6 +194,7 @@ jobs:
   test-proxy:
     name: Test Rust Proxy
     runs-on: ubuntu-latest
+    timeout-minutes: 15
 
     steps:
       - name: Checkout
@@ -218,14 +223,11 @@ jobs:
             ${{ runner.os }}-cargo-test-
             ${{ runner.os }}-cargo-
 
-      - name: Run Rust tests
-        run: cd prism-proxy && cargo test --lib --verbose
-
       - name: Install cargo-tarpaulin
         run: cargo install cargo-tarpaulin --force
 
-      - name: Generate Rust coverage
-        run: cd prism-proxy && cargo tarpaulin --lib --out Xml --output-dir ../
+      - name: Run Rust tests with coverage
+        run: cd prism-proxy && cargo tarpaulin --lib --verbose --out Xml --output-dir ../
 
       - name: Upload Rust coverage
         uses: actions/upload-artifact@v4
@@ -239,6 +241,7 @@ jobs:
   test-patterns:
     name: Test ${{ matrix.name }}
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     needs: generate-proto
 
     strategy:
@@ -276,13 +279,10 @@ jobs:
           name: proto-generated
           path: pkg/plugin/gen/
 
-      - name: Run tests for ${{ matrix.name }}
-        run: cd ${{ matrix.path }} && go test -v -cover -race ./...
-
-      - name: Generate coverage report
+      - name: Run tests with coverage for ${{ matrix.name }}
         run: |
           cd ${{ matrix.path }}
-          go test -coverprofile=coverage.out ./...
+          go test -v -race -coverprofile=coverage.out -covermode=atomic ./...
           go tool cover -func=coverage.out | grep total | awk '{print "Coverage: " $3}'
 
       - name: Upload coverage
@@ -296,6 +296,7 @@ jobs:
   test-integration:
     name: Integration Tests
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     needs: generate-proto
 
     steps:
@@ -313,13 +314,10 @@ jobs:
           name: proto-generated
           path: pkg/plugin/gen/
 
-      - name: Run integration tests
-        run: cd tests/integration && go test -v -timeout 5m -race ./...
-
-      - name: Generate coverage report
+      - name: Run integration tests with coverage
         run: |
           cd tests/integration
-          go test -coverprofile=coverage.out -timeout 5m ./...
+          go test -v -race -coverprofile=coverage.out -covermode=atomic -timeout 5m ./...
           go tool cover -func=coverage.out | grep total | awk '{print "Integration Coverage: " $3}'
 
       - name: Upload coverage
@@ -333,6 +331,7 @@ jobs:
   validate-docs:
     name: Validate Documentation
     runs-on: ubuntu-latest
+    timeout-minutes: 10
 
     steps:
       - name: Checkout
@@ -365,6 +364,7 @@ jobs:
   build:
     name: Build All Components
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     needs: [generate-proto, lint-rust, lint-python, lint-go, test-proxy, test-patterns, test-integration]
 
     steps:
@@ -419,6 +419,7 @@ jobs:
   coverage-summary:
     name: Coverage Summary
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     needs: [test-proxy, test-patterns, test-integration]
     if: always()
 
@@ -450,6 +451,7 @@ jobs:
   codecov-upload:
     name: Upload Coverage to Codecov
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     needs: [test-proxy, test-patterns, test-integration]
     if: always()
 
@@ -484,6 +486,7 @@ jobs:
   ci-status:
     name: CI Status Check
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     needs: [lint-rust, lint-python, lint-go, test-proxy, test-patterns, test-integration, validate-docs, build]
     if: always()
 
