@@ -13,7 +13,7 @@ Quick access to recently updated documentation. Changes listed in reverse chrono
 ### 2025-10-15
 
 #### CI Workflow Consolidation and GitHub Merge Queue Support (MAJOR UPDATE)
-**Links**: [CI Workflow](.github/workflows/ci.yml), [Merge Queue Workflow](.github/workflows/merge-queue.yml), [MERGE_QUEUE_SETUP.md](MERGE_QUEUE_SETUP.md)
+**Links**: [CI Workflow](https://github.com/jrepp/prism-data-layer/blob/main/.github/workflows/ci.yml), [Merge Queue Workflow](https://github.com/jrepp/prism-data-layer/blob/main/.github/workflows/merge-queue.yml), [Merge Queue Setup Guide](https://github.com/jrepp/prism-data-layer/blob/main/.github/MERGE_QUEUE_SETUP.md)
 
 **Summary**: Comprehensive CI/CD optimization consolidating multiple workflows into unified pipeline with GitHub merge queue support:
 
