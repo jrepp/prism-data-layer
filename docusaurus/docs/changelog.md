@@ -10,6 +10,71 @@ Quick access to recently updated documentation. Changes listed in reverse chrono
 
 ## Recent Changes
 
+### 2025-10-16
+
+#### MEMO-035: Local Kubernetes Deployment with k3d for Prism (NEW)
+**Link**: [MEMO-035](/memos/memo-035)
+
+**Summary**: Comprehensive guide for setting up local Kubernetes clusters using k3d (recommended modern approach) and deploying Prism service components in production-like environment:
+
+**k3d Recommendation**:
+- **Best modern installer** for local Kubernetes with Docker
+- Fastest startup (seconds vs minutes)
+- Lightweight (runs k3s in Docker containers)
+- Built-in load balancer and multi-node support
+- Perfect for CI/CD and local development
+
+**Why k3d Over Alternatives**:
+- **vs kind**: Faster startup, built-in load balancer, simpler configuration
+- **vs minikube**: Much faster (seconds vs minutes), less resource-heavy, better for development
+- **vs Docker Desktop K8s**: Multi-node support, customization, works on all platforms
+- **vs k0s**: Simpler for local dev, not overkill for development use case
+
+**Quick Start**:
+```bash
+# Create multi-node cluster with load balancer
+k3d cluster create prism-local \
+  --servers 1 --agents 2 \
+  --port "8080:80@loadbalancer" \
+  --port "50051:50051@loadbalancer" \
+  --k3s-arg "--disable=traefik@server:0"
+
+# Load local images
+k3d image import prism-proxy:latest -c prism-local
+k3d image import prism-admin:latest -c prism-local
+```
+
+**Deployment Architecture**:
+- **Ingress Layer**: Nginx Ingress Controller (Traefik disabled for consistency)
+- **Control Plane**: prism-admin (SQLite storage) + prism-proxy (gRPC gateway)
+- **Pattern Runners**: KeyValue, Consumer, Producer, Mailbox patterns as Deployments/StatefulSets
+- **Backend Drivers**: Redis, NATS, Postgres, MinIO (S3), Kafka as StatefulSets with PVCs
+- **Backing Services**: Containerized backends with persistent storage
+- **Observability**: Prometheus + Grafana + Loki stack
+
+**Complete Implementation**:
+- Step-by-step deployment (7 phases from cluster creation to testing)
+- Storage configuration with local-path provisioner
+- Service manifests for all Prism components
+- Ingress routes for HTTP/gRPC access
+- Resource limits for laptop/desktop/workstation configurations
+- Horizontal Pod Autoscaling examples
+- Persistent data management (backup/restore)
+- Troubleshooting guide (4 common issues)
+
+**Advanced Features**:
+- Multi-cluster setup (dev/staging/prod)
+- Performance tuning (API server limits, disabled features)
+- CI/CD integration (GitHub Actions example)
+- Local registry support for faster image loading
+- Observability stack installation (Prometheus/Grafana)
+
+**Key Innovation**: k3d provides production-like Kubernetes environment on local machine with minimal overhead. Multi-node clusters test scheduling and load balancing. Built-in load balancer eliminates need for external ingress setup. Image import bypasses registry for instant deployment. Lightweight enough for laptop development but realistic enough for production parity.
+
+**Impact**: Enables local Kubernetes development without cloud costs. Developers test full Prism deployment stack including ingress, services, storage, and observability. Multi-node clusters validate scheduling behavior and HA configurations. Quick cluster creation/deletion supports rapid iteration. Foundation for Kubernetes-native development and testing workflows. Addresses local development needs while maintaining production parity with realistic resource constraints and service discovery.
+
+---
+
 ### 2025-01-16
 
 #### ADR-058: Proxy Drain-on-Shutdown for Graceful Termination (NEW)
