@@ -2346,6 +2346,767 @@ spec:
           topologyKey: kubernetes.io/hostname
 ```
 
+## Auto-Scaling Architecture
+
+Auto-scaling is critical for production deployments to handle variable load efficiently. The Prism operator supports two primary auto-scaling strategies:
+
+1. **Kubernetes HPA** (Horizontal Pod Autoscaler) - CPU/memory-based scaling
+2. **KEDA** (Kubernetes Event-Driven Autoscaling) - Event/queue-based scaling
+
+### Auto-Scaling Decision Matrix
+
+| Component | Primary Metric | Recommended Scaler | Use Case |
+|-----------|---------------|-------------------|----------|
+| **Proxy Nodes** | Request rate, CPU | HPA (custom metrics) | Client request traffic |
+| **Pattern Runners (Consumer)** | Queue depth, lag | KEDA (queue-based) | Message consumption from Kafka/NATS |
+| **Pattern Runners (Producer)** | CPU, throughput | HPA (CPU) | Write-heavy workloads |
+| **Pattern Runners (KeyValue)** | Request rate, connections | HPA (custom metrics) | Redis/cache operations |
+| **Admin Control Plane** | Fixed replicas | None (3-5 replicas) | Control plane stability |
+
+### Architecture Overview
+
+```mermaid
+graph TB
+    subgraph "Auto-Scaling Components"
+        HPA[HPA Controller<br/>CPU/Memory/Custom]
+        KEDA[KEDA Operator<br/>Queue/Event-Driven]
+        MetricsServer[Metrics Server<br/>Prometheus/OTLP]
+    end
+
+    subgraph "Proxy Auto-Scaling"
+        ProxyHPA[Proxy HPA<br/>Target: 70% CPU]
+        ProxyMetrics[Custom Metrics<br/>Requests/sec]
+        Proxy1[Proxy-1]
+        Proxy2[Proxy-2]
+        ProxyN[Proxy-N]
+    end
+
+    subgraph "Pattern Runner Auto-Scaling"
+        ConsumerKEDA[Consumer KEDA<br/>Kafka Lag]
+        ProducerHPA[Producer HPA<br/>CPU-based]
+        Consumer1[Consumer-1]
+        Consumer2[Consumer-2]
+        ConsumerN[Consumer-N]
+    end
+
+    subgraph "Data Sources"
+        Kafka[Kafka Topics<br/>Consumer Lag]
+        NATS[NATS Streams<br/>Pending Messages]
+        Redis[Redis Connections]
+    end
+
+    HPA -->|Scales based on CPU| ProxyHPA
+    HPA -->|Scales based on CPU| ProducerHPA
+    KEDA -->|Scales based on lag| ConsumerKEDA
+    MetricsServer -->|Provides metrics| HPA
+    MetricsServer -->|Provides metrics| KEDA
+
+    ProxyHPA -->|Manages replicas| Proxy1
+    ProxyHPA -->|Manages replicas| Proxy2
+    ProxyHPA -->|Manages replicas| ProxyN
+
+    ConsumerKEDA -->|Manages replicas| Consumer1
+    ConsumerKEDA -->|Manages replicas| Consumer2
+    ConsumerKEDA -->|Manages replicas| ConsumerN
+
+    Kafka -->|Reports lag| KEDA
+    NATS -->|Reports pending| KEDA
+    Redis -->|Reports connections| MetricsServer
+
+    style HPA fill:#25ba81
+    style KEDA fill:#4a9eff
+    style MetricsServer fill:#ff6b35
+```
+
+### 1. Proxy Node Auto-Scaling
+
+Proxies scale based on **request rate** and **CPU utilization** to handle client traffic.
+
+#### HPA Configuration for Proxies
+
+```yaml
+apiVersion: prism.io/v1alpha1
+kind: PrismStack
+metadata:
+  name: prism-production
+spec:
+  proxy:
+    image: ghcr.io/prism/prism-proxy:latest
+    replicas: 3  # Initial replicas
+
+    # Auto-scaling configuration
+    autoscaling:
+      enabled: true
+      minReplicas: 3
+      maxReplicas: 20
+
+      # CPU-based scaling
+      targetCPUUtilizationPercentage: 70
+
+      # Memory-based scaling (optional)
+      targetMemoryUtilizationPercentage: 80
+
+      # Custom metrics (requires Prometheus adapter)
+      metrics:
+        - type: Pods
+          pods:
+            metric:
+              name: http_requests_per_second
+            target:
+              type: AverageValue
+              averageValue: "1000"  # Scale up at 1000 req/s per pod
+
+        - type: Pods
+          pods:
+            metric:
+              name: grpc_active_connections
+            target:
+              type: AverageValue
+              averageValue: "500"  # Scale up at 500 connections per pod
+
+      # Scale-down behavior (prevents flapping)
+      behavior:
+        scaleDown:
+          stabilizationWindowSeconds: 300  # 5 minutes
+          policies:
+            - type: Percent
+              value: 50  # Scale down max 50% at a time
+              periodSeconds: 60
+            - type: Pods
+              value: 2  # Scale down max 2 pods at a time
+              periodSeconds: 60
+        scaleUp:
+          stabilizationWindowSeconds: 0  # Scale up immediately
+          policies:
+            - type: Percent
+              value: 100  # Scale up max 100% at a time
+              periodSeconds: 15
+            - type: Pods
+              value: 4  # Scale up max 4 pods at a time
+              periodSeconds: 15
+
+    resources:
+      requests:
+        cpu: "2000m"
+        memory: "4Gi"
+      limits:
+        cpu: "8000m"
+        memory: "16Gi"
+```
+
+#### Generated HPA Manifest
+
+The operator generates this HPA resource:
+
+```yaml
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: prism-production-proxy
+  namespace: prism-system
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: prism-production-proxy
+
+  minReplicas: 3
+  maxReplicas: 20
+
+  metrics:
+    # CPU-based scaling
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
+
+    # Memory-based scaling
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 80
+
+    # Custom metric: Request rate
+    - type: Pods
+      pods:
+        metric:
+          name: http_requests_per_second
+        target:
+          type: AverageValue
+          averageValue: "1000"
+
+    # Custom metric: Active connections
+    - type: Pods
+      pods:
+        metric:
+          name: grpc_active_connections
+        target:
+          type: AverageValue
+          averageValue: "500"
+
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+        - type: Percent
+          value: 50
+          periodSeconds: 60
+        - type: Pods
+          value: 2
+          periodSeconds: 60
+      selectPolicy: Min  # Use the most conservative policy
+    scaleUp:
+      stabilizationWindowSeconds: 0
+      policies:
+        - type: Percent
+          value: 100
+          periodSeconds: 15
+        - type: Pods
+          value: 4
+          periodSeconds: 15
+      selectPolicy: Max  # Use the most aggressive policy
+```
+
+### 2. Pattern Runner Auto-Scaling (Consumer-Based)
+
+Pattern runners that consume from queues (Kafka, NATS, SQS) use **KEDA** to scale based on queue depth and consumer lag.
+
+#### Consumer Pattern with KEDA
+
+```yaml
+apiVersion: prism.io/v1alpha1
+kind: PrismPattern
+metadata:
+  name: consumer-kafka-orders
+  namespace: prism-system
+spec:
+  pattern: consumer
+  backend: kafka
+
+  image: ghcr.io/prism/consumer-runner:latest
+  replicas: 1  # Minimum replicas when no load
+
+  # KEDA auto-scaling configuration
+  autoscaling:
+    enabled: true
+    scaler: keda  # Use KEDA instead of HPA
+
+    minReplicas: 1
+    maxReplicas: 50
+
+    # Kafka-specific configuration
+    triggers:
+      - type: kafka
+        metadata:
+          bootstrapServers: kafka.prism-system.svc.cluster.local:9092
+          consumerGroup: prism-orders-consumer
+          topic: orders
+          lagThreshold: "1000"  # Scale up when lag > 1000 messages
+          offsetResetPolicy: earliest
+
+          # Authentication
+          sasl: plaintext
+          tls: disable
+
+        # Advanced trigger configuration
+        authenticationRef:
+          name: kafka-credentials  # Secret reference
+
+  # Backend connection configuration
+  backendConfig:
+    kafka:
+      bootstrapServers: kafka.prism-system.svc.cluster.local:9092
+      topics:
+        - orders
+      consumerGroup: prism-orders-consumer
+      autoOffsetReset: earliest
+      maxPollRecords: 500
+
+  resources:
+    requests:
+      cpu: "500m"
+      memory: "1Gi"
+    limits:
+      cpu: "2000m"
+      memory: "4Gi"
+```
+
+#### Generated KEDA ScaledObject
+
+```yaml
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: consumer-kafka-orders
+  namespace: prism-system
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: consumer-kafka-orders
+
+  minReplicaCount: 1
+  maxReplicaCount: 50
+
+  pollingInterval: 10  # Check every 10 seconds
+  cooldownPeriod: 300  # 5 minutes before scaling down
+
+  triggers:
+    - type: kafka
+      metadata:
+        bootstrapServers: kafka.prism-system.svc.cluster.local:9092
+        consumerGroup: prism-orders-consumer
+        topic: orders
+        lagThreshold: "1000"
+        offsetResetPolicy: earliest
+      authenticationRef:
+        name: kafka-trigger-auth
+
+  # Advanced scaling configuration
+  advanced:
+    restoreToOriginalReplicaCount: false
+    horizontalPodAutoscalerConfig:
+      behavior:
+        scaleDown:
+          stabilizationWindowSeconds: 300
+          policies:
+            - type: Percent
+              value: 50
+              periodSeconds: 60
+        scaleUp:
+          stabilizationWindowSeconds: 0
+          policies:
+            - type: Percent
+              value: 100
+              periodSeconds: 15
+```
+
+### 3. Pattern Runner Auto-Scaling (Producer-Based)
+
+Producers scale based on **CPU** and **throughput** as they push data to backends.
+
+```yaml
+apiVersion: prism.io/v1alpha1
+kind: PrismPattern
+metadata:
+  name: producer-kafka-events
+  namespace: prism-system
+spec:
+  pattern: producer
+  backend: kafka
+
+  image: ghcr.io/prism/producer-runner:latest
+  replicas: 2
+
+  # HPA-based scaling for producers
+  autoscaling:
+    enabled: true
+    scaler: hpa  # Use HPA for CPU-based scaling
+
+    minReplicas: 2
+    maxReplicas: 20
+
+    targetCPUUtilizationPercentage: 75
+
+    # Custom metric: Message throughput
+    metrics:
+      - type: Pods
+        pods:
+          metric:
+            name: kafka_messages_produced_per_second
+          target:
+            type: AverageValue
+            averageValue: "5000"
+
+  resources:
+    requests:
+      cpu: "1000m"
+      memory: "2Gi"
+    limits:
+      cpu: "4000m"
+      memory: "8Gi"
+```
+
+### 4. Multi-Trigger KEDA Scaling
+
+For complex scenarios, use multiple triggers to scale based on different data sources:
+
+```yaml
+apiVersion: prism.io/v1alpha1
+kind: PrismPattern
+metadata:
+  name: consumer-multi-source
+  namespace: prism-system
+spec:
+  pattern: consumer
+  backend: kafka
+
+  autoscaling:
+    enabled: true
+    scaler: keda
+
+    minReplicas: 2
+    maxReplicas: 100
+
+    # Multiple triggers (OR logic - scales to highest)
+    triggers:
+      # Trigger 1: Kafka lag
+      - type: kafka
+        metadata:
+          bootstrapServers: kafka.prism-system.svc.cluster.local:9092
+          consumerGroup: prism-multi-consumer
+          topic: high-priority-orders
+          lagThreshold: "500"
+
+      # Trigger 2: NATS pending messages
+      - type: nats-jetstream
+        metadata:
+          natsServerMonitoringEndpoint: nats.prism-system.svc.cluster.local:8222
+          stream: EVENTS
+          consumer: prism-consumer
+          lagThreshold: "100"
+
+      # Trigger 3: AWS SQS queue depth
+      - type: aws-sqs-queue
+        metadata:
+          queueURL: https://sqs.us-east-1.amazonaws.com/123456789/orders-queue
+          queueLength: "1000"
+          awsRegion: us-east-1
+        authenticationRef:
+          name: aws-credentials
+
+      # Trigger 4: CPU-based fallback
+      - type: cpu
+        metadata:
+          type: Utilization
+          value: "80"
+```
+
+### 5. KEDA Trigger Types for Prism Backends
+
+| Backend | KEDA Trigger Type | Metric | Threshold Example |
+|---------|------------------|--------|------------------|
+| **Kafka** | `kafka` | Consumer lag | `lagThreshold: "1000"` |
+| **NATS** | `nats-jetstream` | Pending messages | `lagThreshold: "100"` |
+| **AWS SQS** | `aws-sqs-queue` | Queue depth | `queueLength: "1000"` |
+| **RabbitMQ** | `rabbitmq` | Queue length | `queueLength: "500"` |
+| **Redis** | `redis` | List length | `listLength: "1000"` |
+| **PostgreSQL** | `postgresql` | Unprocessed rows | `query: "SELECT COUNT(*) FROM queue"` |
+
+### 6. Installation: KEDA + Metrics Server
+
+#### Install Metrics Server (for HPA)
+
+```bash
+# Install metrics-server (required for CPU/memory HPA)
+kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
+
+# Verify metrics server
+kubectl get deployment metrics-server -n kube-system
+kubectl top nodes
+kubectl top pods
+```
+
+#### Install KEDA
+
+```bash
+# Add KEDA Helm repository
+helm repo add kedacore https://kedacore.github.io/charts
+helm repo update
+
+# Install KEDA
+helm install keda kedacore/keda --namespace keda --create-namespace
+
+# Verify KEDA installation
+kubectl get pods -n keda
+
+# Expected output:
+# NAME                                      READY   STATUS    RESTARTS   AGE
+# keda-operator-xxxxxxxxxx-xxxxx            1/1     Running   0          30s
+# keda-operator-metrics-apiserver-xxxxx     1/1     Running   0          30s
+```
+
+#### Install Prometheus Adapter (for custom metrics)
+
+```bash
+# Install Prometheus Adapter for custom metrics
+helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+helm repo update
+
+helm install prometheus-adapter prometheus-community/prometheus-adapter \
+  --namespace monitoring \
+  --create-namespace \
+  --set prometheus.url=http://prometheus-server.monitoring.svc.cluster.local \
+  --set prometheus.port=80
+
+# Verify custom metrics API
+kubectl get apiservice v1beta1.custom.metrics.k8s.io
+kubectl get --raw /apis/custom.metrics.k8s.io/v1beta1
+```
+
+### 7. Controller Implementation: Auto-Scaling Support
+
+The operator controller needs to generate HPA or KEDA resources based on the `autoscaling` spec.
+
+**File: `controllers/prismpattern_autoscaling.go`**
+
+```go
+package controllers
+
+import (
+    "context"
+    "fmt"
+
+    autoscalingv2 "k8s.io/api/autoscaling/v2"
+    metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+    kedav1alpha1 "github.com/kedacore/keda/v2/apis/keda/v1alpha1"
+
+    prismv1alpha1 "github.com/prism/prism-operator/api/v1alpha1"
+)
+
+func (r *PrismPatternReconciler) reconcileAutoscaling(ctx context.Context, pattern *prismv1alpha1.PrismPattern) error {
+    if !pattern.Spec.Autoscaling.Enabled {
+        // Delete any existing HPA/ScaledObject
+        return r.deleteAutoscaling(ctx, pattern)
+    }
+
+    // Determine scaler type
+    switch pattern.Spec.Autoscaling.Scaler {
+    case "hpa":
+        return r.reconcileHPA(ctx, pattern)
+    case "keda":
+        return r.reconcileKEDAScaledObject(ctx, pattern)
+    default:
+        return fmt.Errorf("unknown scaler type: %s", pattern.Spec.Autoscaling.Scaler)
+    }
+}
+
+func (r *PrismPatternReconciler) reconcileHPA(ctx context.Context, pattern *prismv1alpha1.PrismPattern) error {
+    hpa := &autoscalingv2.HorizontalPodAutoscaler{
+        ObjectMeta: metav1.ObjectMeta{
+            Name:      pattern.Name,
+            Namespace: pattern.Namespace,
+            Labels:    r.labelsForPattern(pattern),
+        },
+        Spec: autoscalingv2.HorizontalPodAutoscalerSpec{
+            ScaleTargetRef: autoscalingv2.CrossVersionObjectReference{
+                APIVersion: "apps/v1",
+                Kind:       "Deployment",
+                Name:       pattern.Name,
+            },
+            MinReplicas: &pattern.Spec.Autoscaling.MinReplicas,
+            MaxReplicas: pattern.Spec.Autoscaling.MaxReplicas,
+            Metrics:     r.buildHPAMetrics(pattern),
+            Behavior:    r.buildHPABehavior(pattern),
+        },
+    }
+
+    if err := ctrl.SetControllerReference(pattern, hpa, r.Scheme); err != nil {
+        return err
+    }
+
+    // Create or update HPA
+    found := &autoscalingv2.HorizontalPodAutoscaler{}
+    err := r.Get(ctx, types.NamespacedName{Name: hpa.Name, Namespace: hpa.Namespace}, found)
+    if err != nil && errors.IsNotFound(err) {
+        return r.Create(ctx, hpa)
+    } else if err != nil {
+        return err
+    }
+
+    found.Spec = hpa.Spec
+    return r.Update(ctx, found)
+}
+
+func (r *PrismPatternReconciler) reconcileKEDAScaledObject(ctx context.Context, pattern *prismv1alpha1.PrismPattern) error {
+    scaledObject := &kedav1alpha1.ScaledObject{
+        ObjectMeta: metav1.ObjectMeta{
+            Name:      pattern.Name,
+            Namespace: pattern.Namespace,
+            Labels:    r.labelsForPattern(pattern),
+        },
+        Spec: kedav1alpha1.ScaledObjectSpec{
+            ScaleTargetRef: &kedav1alpha1.ScaleTarget{
+                APIVersion: "apps/v1",
+                Kind:       "Deployment",
+                Name:       pattern.Name,
+            },
+            MinReplicaCount: &pattern.Spec.Autoscaling.MinReplicas,
+            MaxReplicaCount: &pattern.Spec.Autoscaling.MaxReplicas,
+            PollingInterval: ptr.To(int32(10)),
+            CooldownPeriod:  ptr.To(int32(300)),
+            Triggers:        r.buildKEDATriggers(pattern),
+        },
+    }
+
+    if err := ctrl.SetControllerReference(pattern, scaledObject, r.Scheme); err != nil {
+        return err
+    }
+
+    // Create or update ScaledObject
+    found := &kedav1alpha1.ScaledObject{}
+    err := r.Get(ctx, types.NamespacedName{Name: scaledObject.Name, Namespace: scaledObject.Namespace}, found)
+    if err != nil && errors.IsNotFound(err) {
+        return r.Create(ctx, scaledObject)
+    } else if err != nil {
+        return err
+    }
+
+    found.Spec = scaledObject.Spec
+    return r.Update(ctx, found)
+}
+
+func (r *PrismPatternReconciler) buildKEDATriggers(pattern *prismv1alpha1.PrismPattern) []kedav1alpha1.ScaleTriggers {
+    triggers := []kedav1alpha1.ScaleTriggers{}
+
+    for _, trigger := range pattern.Spec.Autoscaling.Triggers {
+        scaleTrigger := kedav1alpha1.ScaleTriggers{
+            Type:     trigger.Type,
+            Metadata: trigger.Metadata,
+        }
+
+        if trigger.AuthenticationRef != nil {
+            scaleTrigger.AuthenticationRef = &kedav1alpha1.ScaledObjectAuthRef{
+                Name: trigger.AuthenticationRef.Name,
+            }
+        }
+
+        triggers = append(triggers, scaleTrigger)
+    }
+
+    return triggers
+}
+```
+
+### 8. Testing Auto-Scaling
+
+#### Test HPA Scaling (Proxy)
+
+```bash
+# Deploy proxy with HPA enabled
+kubectl apply -f - <<EOF
+apiVersion: prism.io/v1alpha1
+kind: PrismStack
+metadata:
+  name: prism-hpa-test
+spec:
+  proxy:
+    image: prism-proxy:latest
+    replicas: 3
+    autoscaling:
+      enabled: true
+      minReplicas: 3
+      maxReplicas: 10
+      targetCPUUtilizationPercentage: 50
+EOF
+
+# Wait for HPA to be created
+kubectl get hpa prism-hpa-test-proxy -w
+
+# Generate load
+kubectl run load-generator --image=busybox --restart=Never -- /bin/sh -c \
+  "while true; do wget -q -O- http://prism-hpa-test-proxy.prism-system.svc.cluster.local:9090/health; done"
+
+# Watch scaling
+kubectl get hpa prism-hpa-test-proxy -w
+kubectl get pods -l component=prism-proxy -w
+
+# Expected behavior:
+# - CPU increases to >50%
+# - HPA scales up to more replicas
+# - After load stops, HPA scales down after stabilization window
+```
+
+#### Test KEDA Scaling (Consumer)
+
+```bash
+# Deploy consumer with KEDA enabled
+kubectl apply -f - <<EOF
+apiVersion: prism.io/v1alpha1
+kind: PrismPattern
+metadata:
+  name: consumer-keda-test
+spec:
+  pattern: consumer
+  backend: kafka
+  autoscaling:
+    enabled: true
+    scaler: keda
+    minReplicas: 1
+    maxReplicas: 20
+    triggers:
+      - type: kafka
+        metadata:
+          bootstrapServers: kafka.prism-system.svc.cluster.local:9092
+          consumerGroup: test-consumer
+          topic: test-topic
+          lagThreshold: "100"
+EOF
+
+# Produce messages to Kafka
+kubectl run kafka-producer --image=confluentinc/cp-kafka:latest --rm -it -- bash
+# Inside pod:
+kafka-console-producer --broker-list kafka.prism-system.svc.cluster.local:9092 --topic test-topic
+# Type messages and press Enter
+
+# Watch KEDA scaling
+kubectl get scaledobject consumer-keda-test -w
+kubectl get pods -l pattern=consumer -w
+
+# Expected behavior:
+# - As lag increases, KEDA scales up consumers
+# - As lag decreases, KEDA scales down after cooldown period
+```
+
+### 9. Monitoring Auto-Scaling
+
+```bash
+# View HPA status
+kubectl get hpa --all-namespaces
+kubectl describe hpa prism-production-proxy
+
+# View KEDA ScaledObject status
+kubectl get scaledobject --all-namespaces
+kubectl describe scaledobject consumer-kafka-orders
+
+# View metrics
+kubectl top nodes
+kubectl top pods -n prism-system
+
+# Custom metrics (if Prometheus adapter installed)
+kubectl get --raw "/apis/custom.metrics.k8s.io/v1beta1/namespaces/prism-system/pods/*/http_requests_per_second" | jq
+```
+
+### 10. Production Best Practices
+
+**Proxy Auto-Scaling**:
+- Start with `minReplicas: 3` for high availability
+- Set `maxReplicas` based on infrastructure capacity
+- Use `stabilizationWindowSeconds: 300` to prevent flapping
+- Monitor request rate and CPU together
+
+**Consumer Auto-Scaling**:
+- Set `lagThreshold` based on message processing time
+- Use `cooldownPeriod: 300` to avoid rapid scaling
+- Configure `maxReplicaCount` to match partition count (Kafka)
+- Monitor consumer lag and throughput
+
+**Cost Optimization**:
+- Scale down aggressively during off-peak hours
+- Use spot instances for non-critical runners
+- Set appropriate resource requests to avoid over-provisioning
+- Use KEDA `ScaleToZero` for sporadic workloads
+
+**Testing**:
+- Load test with realistic traffic patterns
+- Verify scale-up speed meets SLAs
+- Verify scale-down doesn't cause request drops
+- Test edge cases (sudden spikes, sustained load)
+
 ## Related Documents
 
 - [MEMO-033: Process Isolation Bulkhead Pattern](/memos/memo-033) - Process management patterns
