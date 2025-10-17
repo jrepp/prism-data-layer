@@ -10,6 +10,105 @@ Quick access to recently updated documentation. Changes listed in reverse chrono
 
 ## Recent Changes
 
+### 2025-10-17
+
+#### Prism Kubernetes Operator - Polish Pass, KEDA Integration, and Installation Guide (NEW)
+**Links**: [prism-operator](https://github.com/jrepp/prism-data-layer/tree/main/prism-operator), [CHANGELOG.md](https://github.com/jrepp/prism-data-layer/blob/main/prism-operator/CHANGELOG.md), [QUICK_START.md](https://github.com/jrepp/prism-data-layer/blob/main/prism-operator/QUICK_START.md), [KEDA_INSTALL_GUIDE.md](https://github.com/jrepp/prism-data-layer/blob/main/prism-operator/KEDA_INSTALL_GUIDE.md)
+
+**Summary**: Completed comprehensive polish pass on Kubernetes operator and added full KEDA integration with optional installer:
+
+**Polish Pass Improvements**:
+- **KEDA Error Handling**: Fixed graceful degradation when KEDA CRDs not installed
+  - Added `isKEDANotInstalledError()` helper function detecting missing KEDA CRDs
+  - Changed log level from ERROR to INFO for missing KEDA scenarios
+  - Applied handling to all KEDA reconciliation paths (Get, Create, Delete)
+  - Operator deploys patterns successfully without autoscaling when KEDA unavailable
+- **Enhanced Status Tracking**: Comprehensive PrismPattern status updates
+  - Three-phase lifecycle: `Pending` → `Progressing` → `Running`
+  - Replica count tracking (`replicas`, `availableReplicas`)
+  - Kubernetes Conditions with detailed messages including replica counts
+  - ObservedGeneration tracking
+  - Better deployment not found handling
+- **Improved Logging**: All reconciliation steps logged appropriately
+  - KEDA missing CRDs: INFO level (not ERROR)
+  - Status updates: DEBUG/INFO with details
+  - Better error context in messages
+
+**KEDA Integration** (Complete):
+- **Optional KEDA Installer**: `scripts/install-keda.sh` with full lifecycle management
+  - Multiple installation methods: Helm (default) or YAML manifests
+  - Version control (default: 2.12.1) and namespace customization
+  - Automatic verification of CRDs, deployments, and readiness
+  - Graceful upgrade support detecting existing installations
+  - Clean uninstall with CRD cleanup
+  - Status checking with version and pod information
+- **Operator KEDA Support**: Full event-driven autoscaling integration
+  - KEDA scheme registration in manager (kedav1alpha1.AddToScheme)
+  - Support for 60+ KEDA scalers (Kafka lag, RabbitMQ queue depth, AWS SQS, etc.)
+  - ScaledObject creation and lifecycle management
+  - CPU trigger example for simple testing
+  - Automatic cleanup when switching between HPA and KEDA
+- **Makefile Targets**: Organized installation and management
+  - `local-install-metrics`: Install metrics-server only (HPA support)
+  - `local-install-keda`: Install KEDA only (event-driven autoscaling)
+  - `local-install-deps`: Install both metrics-server + KEDA
+  - `local-uninstall-keda`: Uninstall KEDA
+  - `local-keda-status`: Show KEDA installation status
+  - Docker Desktop TLS patch for metrics-server compatibility
+
+**Documentation**:
+- **CHANGELOG.md**: Complete project changelog with versioning
+  - Unreleased features (KEDA, status updates, graceful degradation)
+  - Initial release (v0.1.0) summary
+  - Known limitations and migration guidance
+- **QUICK_START.md**: 5-minute getting started guide
+  - Installation steps (CRDs, dependencies, operator)
+  - Example patterns (basic, HPA, KEDA)
+  - Status tracking and verification
+  - Autoscaling options comparison (HPA vs KEDA)
+  - Cleanup procedures
+  - Complete Makefile command reference
+  - Production-ready example pattern
+  - Troubleshooting guide
+  - Architecture diagram
+- **KEDA_INSTALL_GUIDE.md**: Comprehensive KEDA installation guide
+  - Quick start commands
+  - Installation script usage (all options)
+  - What gets installed (operator, metrics server, admission controller, CRDs)
+  - Using KEDA with Prism operator (examples)
+  - Verification steps
+  - Troubleshooting (KEDA not found, operator issues, ScaledObject problems)
+  - Docker Desktop specific notes
+  - Advanced configuration (custom versions, namespaces, Helm values)
+  - Supported scalers (60+ with link to KEDA docs)
+  - Production considerations (HA, resource limits, monitoring)
+
+**Test Results**:
+- ✅ Basic reconciliation: PrismPattern, Deployment, Service created successfully
+- ✅ Status updates: Phase correctly set (Pending → Progressing → Running)
+- ✅ KEDA graceful degradation: No errors when KEDA not installed
+- ✅ KEDA integration: ScaledObject created successfully with CPU trigger
+- ✅ Cleanup path: Cascade deletion works correctly (owner references)
+- ✅ KEDA installation: Installed via YAML method in <60 seconds
+- ✅ All resources verified: prismpattern, deployment, service, scaledobject
+
+**Key Innovation**: KEDA integration is truly optional - operator gracefully handles absence of KEDA CRDs with informative logging instead of errors. Installation script provides production-ready KEDA deployment with comprehensive verification and lifecycle management. Status tracking provides Kubernetes-native observability with three-phase lifecycle and detailed conditions.
+
+**Impact**: Prism operator now supports both HPA (CPU/memory) and KEDA (event-driven) autoscaling with seamless switching. KEDA installer enables Docker Desktop developers to test event-driven autoscaling locally without complex setup. Graceful degradation ensures patterns deploy successfully regardless of autoscaling availability. Enhanced status tracking provides operational visibility matching Kubernetes best practices. Documentation provides clear path from 5-minute quick start to production deployment.
+
+**Files Modified**:
+- `prism-operator/Makefile` - Split metrics-server and KEDA targets
+- `prism-operator/cmd/manager/main.go` - Added KEDA scheme registration
+- `prism-operator/controllers/prismpattern_controller.go` - Enhanced status updates
+- `prism-operator/pkg/autoscaling/keda.go` - Fixed graceful degradation
+- `prism-operator/scripts/install-keda.sh` - **NEW** full KEDA installer
+- `prism-operator/CHANGELOG.md` - **NEW** project changelog
+- `prism-operator/QUICK_START.md` - **NEW** getting started guide
+- `prism-operator/KEDA_INSTALL_GUIDE.md` - **NEW** KEDA installation guide
+- `prism-operator/config/samples/test-keda-simple.yaml` - **NEW** KEDA test example
+
+---
+
 ### 2025-01-16
 
 #### ADR-058: Proxy Drain-on-Shutdown for Graceful Termination (NEW)
