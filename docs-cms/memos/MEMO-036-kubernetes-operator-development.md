@@ -1,7 +1,7 @@
 ---
 author: Platform Team
 created: 2025-10-16
-doc_uuid: 9a4b3d2e-5c8f-4g9b-0e3f-6d7g8h9i0j1k
+doc_uuid: f1421d8d-31f3-4e92-aedb-9c5fe89f4eca
 id: memo-036
 project_id: prism-data-layer
 tags:
