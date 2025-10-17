@@ -116,11 +116,12 @@ func (r *KEDAReconciler) buildTriggers(autoscaling *prismv1alpha1.AutoscalingSpe
 			Metadata: trigger.Metadata,
 		}
 
-		if trigger.AuthenticationRef != nil {
-			scaleTrigger.AuthenticationRef = &kedav1alpha1.ScaledObjectAuthRef{
-				Name: trigger.AuthenticationRef.Name,
-			}
-		}
+		// TODO: Add authentication reference support when KEDA v2.12+ types are available
+		// if trigger.AuthenticationRef != nil {
+		// 	scaleTrigger.AuthenticationRef = &kedav1alpha1.AuthenticationRef{
+		// 		Name: trigger.AuthenticationRef.Name,
+		// 	}
+		// }
 
 		triggers = append(triggers, scaleTrigger)
 	}

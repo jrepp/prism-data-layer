@@ -291,6 +291,7 @@ type PrismStackList struct {
 	Items           []PrismStack `json:"items"`
 }
 
-func init() {
-	SchemeBuilder.Register(&PrismStack{}, &PrismStackList{})
-}
+// Temporarily disabled - needs proper deepcopy implementation
+// func init() {
+// 	SchemeBuilder.Register(&PrismStack{}, &PrismStackList{})
+// }
