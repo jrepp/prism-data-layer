@@ -65,8 +65,8 @@ Create a Kubernetes operator for the Prism stack that automates deployment, conf
 |-----|-----------|---------|
 | `PrismStack` | `prismstacks.prism.io` | Manages entire Prism deployment |
 | `PrismNamespace` | `prismnamespaces.prism.io` | Provisions multi-tenant namespaces |
-| `PrismPatternRunner` | `prismpatternrunners.prism.io` | Individual pattern instance |
-| `PrismBackendConfig` | `prismbackendconfigs.prism.io` | Backend connection configuration |
+| `PrismPattern` | `prismpatterns.prism.io` | Individual pattern instance |
+| `PrismBackend` | `prismbackends.prism.io` | Backend connection configuration |
 
 **Rationale**:
 - ✅ **Consistent branding** - All resources immediately identifiable as Prism
@@ -83,8 +83,8 @@ graph TB
     subgraph "Prism CRDs"
         PrismStack[PrismStack<br/>Manages entire stack]
         PrismNamespace[PrismNamespace<br/>Provisions namespace on proxy]
-        PrismPatternRunner[PrismPatternRunner<br/>Individual pattern instance]
-        PrismBackendConfig[PrismBackendConfig<br/>Backend connections]
+        PrismPattern[PrismPattern<br/>Individual pattern instance]
+        PrismBackend[PrismBackend<br/>Backend connections]
     end
 
     subgraph "Kubernetes Resources"
@@ -95,20 +95,20 @@ graph TB
     end
 
     PrismStack -->|Creates| PrismNamespace
-    PrismStack -->|Creates| PrismPatternRunner
-    PrismStack -->|Creates| PrismBackendConfig
+    PrismStack -->|Creates| PrismPattern
+    PrismStack -->|Creates| PrismBackend
 
     PrismNamespace -->|Provisions on| ProxyAPI[Prism Proxy gRPC API]
-    PrismPatternRunner -->|Manages| Deployment
-    PrismPatternRunner -->|Creates| Service
+    PrismPattern -->|Manages| Deployment
+    PrismPattern -->|Creates| Service
 
-    PrismBackendConfig -->|Generates| ConfigMap
-    PrismBackendConfig -->|Generates| Secret
+    PrismBackend -->|Generates| ConfigMap
+    PrismBackend -->|Generates| Secret
 
     style PrismStack fill:#25ba81
     style PrismNamespace fill:#9b59b6
-    style PrismPatternRunner fill:#4a9eff
-    style PrismBackendConfig fill:#ff6b35
+    style PrismPattern fill:#4a9eff
+    style PrismBackend fill:#ff6b35
 ```
 
 ### CRD Specifications
@@ -178,13 +178,13 @@ spec:
       port: 9090
 ```
 
-#### 2. PrismPatternRunner CRD
+#### 2. PrismPattern CRD
 
 Represents a single pattern instance:
 
 ```yaml
 apiVersion: prism.io/v1alpha1
-kind: PrismPatternRunner
+kind: PrismPattern
 metadata:
   name: keyvalue-memstore-001
   namespace: prism-system
@@ -234,13 +234,13 @@ status:
       message: "Pattern runner is healthy"
 ```
 
-#### 3. PrismBackendConfig CRD
+#### 3. PrismBackend CRD
 
 Represents backend connection configuration:
 
 ```yaml
 apiVersion: prism.io/v1alpha1
-kind: PrismBackendConfig
+kind: PrismBackend
 metadata:
   name: nats-production
   namespace: prism-system
@@ -408,14 +408,14 @@ prism-operator/
 │   └── v1alpha1/
 │       ├── prismstack_types.go      # PrismStack CRD
 │       ├── prismnamespace_types.go  # PrismNamespace CRD
-│       ├── patternrunner_types.go   # PatternRunner CRD
-│       ├── backendconfig_types.go   # BackendConfig CRD
+│       ├── prismpattern_types.go    # PrismPattern CRD
+│       ├── prismbackend_types.go    # PrismBackend CRD
 │       └── zz_generated.deepcopy.go # Generated code
 ├── controllers/
 │   ├── prismstack_controller.go     # Stack reconciler
 │   ├── prismnamespace_controller.go # Namespace reconciler
-│   ├── patternrunner_controller.go  # Pattern reconciler
-│   └── backendconfig_controller.go  # Backend reconciler
+│   ├── prismpattern_controller.go   # Pattern reconciler
+│   └── prismbackend_controller.go   # Backend reconciler
 ├── config/
 │   ├── crd/                     # CRD manifests
 │   ├── rbac/                    # RBAC rules
@@ -870,8 +870,8 @@ kubebuilder init --domain prism.io --repo github.com/prism/prism-operator
 # Create CRDs (answer 'y' to create Resource and Controller)
 kubebuilder create api --group prism --version v1alpha1 --kind PrismStack
 kubebuilder create api --group prism --version v1alpha1 --kind PrismNamespace
-kubebuilder create api --group prism --version v1alpha1 --kind PatternRunner
-kubebuilder create api --group prism --version v1alpha1 --kind BackendConfig
+kubebuilder create api --group prism --version v1alpha1 --kind PrismPattern
+kubebuilder create api --group prism --version v1alpha1 --kind PrismBackend
 
 # Build and generate manifests
 make manifests generate
@@ -944,10 +944,10 @@ func (r *PrismStackReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
         }
     }
 
-    // Reconcile pattern runners
+    // Reconcile patterns
     for _, pattern := range prismStack.Spec.Patterns {
-        if err := r.reconcilePatternRunner(ctx, prismStack, pattern); err != nil {
-            log.Error(err, "Failed to reconcile pattern runner", "pattern", pattern.Name)
+        if err := r.reconcilePattern(ctx, prismStack, pattern); err != nil {
+            log.Error(err, "Failed to reconcile pattern", "pattern", pattern.Name)
             return ctrl.Result{}, err
         }
     }
@@ -1024,14 +1024,14 @@ func (r *PrismStackReconciler) reconcileProxyDeployment(ctx context.Context, sta
     return nil
 }
 
-func (r *PrismStackReconciler) reconcilePatternRunner(ctx context.Context, stack *prismv1alpha1.PrismStack, pattern prismv1alpha1.PatternSpec) error {
-    // Create or update PatternRunner CR
-    patternRunner := &prismv1alpha1.PatternRunner{
+func (r *PrismStackReconciler) reconcilePattern(ctx context.Context, stack *prismv1alpha1.PrismStack, pattern prismv1alpha1.PatternSpec) error {
+    // Create or update PrismPattern CR
+    prismPattern := &prismv1alpha1.PrismPattern{
         ObjectMeta: metav1.ObjectMeta{
             Name:      pattern.Name,
             Namespace: stack.Namespace,
         },
-        Spec: prismv1alpha1.PatternRunnerSpec{
+        Spec: prismv1alpha1.PrismPatternSpec{
             Pattern:  pattern.Type,
             Backend:  pattern.Backend,
             Replicas: pattern.Replicas,
@@ -1040,16 +1040,16 @@ func (r *PrismStackReconciler) reconcilePatternRunner(ctx context.Context, stack
     }
 
     // Set PrismStack as owner
-    if err := ctrl.SetControllerReference(stack, patternRunner, r.Scheme); err != nil {
+    if err := ctrl.SetControllerReference(stack, prismPattern, r.Scheme); err != nil {
         return err
     }
 
-    // Check if PatternRunner exists
-    found := &prismv1alpha1.PatternRunner{}
-    err := r.Get(ctx, types.NamespacedName{Name: patternRunner.Name, Namespace: patternRunner.Namespace}, found)
+    // Check if PrismPattern exists
+    found := &prismv1alpha1.PrismPattern{}
+    err := r.Get(ctx, types.NamespacedName{Name: prismPattern.Name, Namespace: prismPattern.Namespace}, found)
     if err != nil && errors.IsNotFound(err) {
-        // Create new PatternRunner
-        if err := r.Create(ctx, patternRunner); err != nil {
+        // Create new PrismPattern
+        if err := r.Create(ctx, prismPattern); err != nil {
             return err
         }
         return nil
@@ -1057,8 +1057,8 @@ func (r *PrismStackReconciler) reconcilePatternRunner(ctx context.Context, stack
         return err
     }
 
-    // Update existing PatternRunner
-    found.Spec = patternRunner.Spec
+    // Update existing PrismPattern
+    found.Spec = prismPattern.Spec
     if err := r.Update(ctx, found); err != nil {
         return err
     }
@@ -1096,9 +1096,9 @@ func (r *PrismStackReconciler) SetupWithManager(mgr ctrl.Manager) error {
 }
 ```
 
-### 4. PatternRunner Controller
+### 4. PrismPattern Controller
 
-File: `controllers/patternrunner_controller.go`
+File: `controllers/prismpattern_controller.go`
 
 ```go
 package controllers
@@ -1121,21 +1121,21 @@ import (
     prismv1alpha1 "github.com/prism/prism-operator/api/v1alpha1"
 )
 
-// PatternRunnerReconciler reconciles a PatternRunner object
-type PatternRunnerReconciler struct {
+// PrismPatternReconciler reconciles a PrismPattern object
+type PrismPatternReconciler struct {
     client.Client
     Scheme *runtime.Scheme
 }
 
-//+kubebuilder:rbac:groups=prism.io,resources=patternrunners,verbs=get;list;watch;create;update;patch;delete
-//+kubebuilder:rbac:groups=prism.io,resources=patternrunners/status,verbs=get;update;patch
+//+kubebuilder:rbac:groups=prism.io,resources=prismpatterns,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups=prism.io,resources=prismpatterns/status,verbs=get;update;patch
 
-func (r *PatternRunnerReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+func (r *PrismPatternReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
     log := log.FromContext(ctx)
 
-    // Fetch PatternRunner
-    patternRunner := &prismv1alpha1.PatternRunner{}
-    if err := r.Get(ctx, req.NamespacedName, patternRunner); err != nil {
+    // Fetch PrismPattern
+    pattern := &prismv1alpha1.PrismPattern{}
+    if err := r.Get(ctx, req.NamespacedName, pattern); err != nil {
         if errors.IsNotFound(err) {
             return ctrl.Result{}, nil
         }
@@ -1143,19 +1143,19 @@ func (r *PatternRunnerReconciler) Reconcile(ctx context.Context, req ctrl.Reques
     }
 
     // Reconcile deployment
-    if err := r.reconcileDeployment(ctx, patternRunner); err != nil {
+    if err := r.reconcileDeployment(ctx, pattern); err != nil {
         log.Error(err, "Failed to reconcile deployment")
         return ctrl.Result{}, err
     }
 
     // Reconcile service
-    if err := r.reconcileService(ctx, patternRunner); err != nil {
+    if err := r.reconcileService(ctx, pattern); err != nil {
         log.Error(err, "Failed to reconcile service")
         return ctrl.Result{}, err
     }
 
     // Update status
-    if err := r.updateStatus(ctx, patternRunner); err != nil {
+    if err := r.updateStatus(ctx, pattern); err != nil {
         log.Error(err, "Failed to update status")
         return ctrl.Result{}, err
     }
@@ -1163,38 +1163,38 @@ func (r *PatternRunnerReconciler) Reconcile(ctx context.Context, req ctrl.Reques
     return ctrl.Result{}, nil
 }
 
-func (r *PatternRunnerReconciler) reconcileDeployment(ctx context.Context, pr *prismv1alpha1.PatternRunner) error {
+func (r *PrismPatternReconciler) reconcileDeployment(ctx context.Context, pattern *prismv1alpha1.PrismPattern) error {
     deployment := &appsv1.Deployment{
         ObjectMeta: metav1.ObjectMeta{
-            Name:      pr.Name,
-            Namespace: pr.Namespace,
-            Labels:    r.labelsForPatternRunner(pr),
+            Name:      pattern.Name,
+            Namespace: pattern.Namespace,
+            Labels:    r.labelsForPattern(pattern),
         },
         Spec: appsv1.DeploymentSpec{
-            Replicas: &pr.Spec.Replicas,
+            Replicas: &pattern.Spec.Replicas,
             Selector: &metav1.LabelSelector{
-                MatchLabels: r.labelsForPatternRunner(pr),
+                MatchLabels: r.labelsForPattern(pattern),
             },
             Template: corev1.PodTemplateSpec{
                 ObjectMeta: metav1.ObjectMeta{
-                    Labels: r.labelsForPatternRunner(pr),
+                    Labels: r.labelsForPattern(pattern),
                 },
                 Spec: corev1.PodSpec{
                     Containers: []corev1.Container{
                         {
-                            Name:  fmt.Sprintf("%s-runner", pr.Spec.Pattern),
-                            Image: pr.Spec.Image,
+                            Name:  fmt.Sprintf("%s-runner", pattern.Spec.Pattern),
+                            Image: pattern.Spec.Image,
                             Args: []string{
-                                fmt.Sprintf("--pattern=%s", pr.Spec.Pattern),
-                                fmt.Sprintf("--backend=%s", pr.Spec.Backend),
+                                fmt.Sprintf("--pattern=%s", pattern.Spec.Pattern),
+                                fmt.Sprintf("--backend=%s", pattern.Spec.Backend),
                             },
                             Ports: []corev1.ContainerPort{
                                 {
                                     Name:          "grpc",
-                                    ContainerPort: int32(pr.Spec.Service.Port),
+                                    ContainerPort: int32(pattern.Spec.Service.Port),
                                 },
                             },
-                            Resources: pr.Spec.Resources,
+                            Resources: pattern.Spec.Resources,
                         },
                     },
                 },
@@ -1202,7 +1202,7 @@ func (r *PatternRunnerReconciler) reconcileDeployment(ctx context.Context, pr *p
         },
     }
 
-    if err := ctrl.SetControllerReference(pr, deployment, r.Scheme); err != nil {
+    if err := ctrl.SetControllerReference(pattern, deployment, r.Scheme); err != nil {
         return err
     }
 
@@ -1219,28 +1219,28 @@ func (r *PatternRunnerReconciler) reconcileDeployment(ctx context.Context, pr *p
     return r.Update(ctx, found)
 }
 
-func (r *PatternRunnerReconciler) reconcileService(ctx context.Context, pr *prismv1alpha1.PatternRunner) error {
+func (r *PrismPatternReconciler) reconcileService(ctx context.Context, pattern *prismv1alpha1.PrismPattern) error {
     service := &corev1.Service{
         ObjectMeta: metav1.ObjectMeta{
-            Name:      pr.Name,
-            Namespace: pr.Namespace,
-            Labels:    r.labelsForPatternRunner(pr),
+            Name:      pattern.Name,
+            Namespace: pattern.Namespace,
+            Labels:    r.labelsForPattern(pattern),
         },
         Spec: corev1.ServiceSpec{
-            Selector: r.labelsForPatternRunner(pr),
-            Type:     pr.Spec.Service.Type,
+            Selector: r.labelsForPattern(pattern),
+            Type:     pattern.Spec.Service.Type,
             Ports: []corev1.ServicePort{
                 {
                     Name:       "grpc",
-                    Port:       int32(pr.Spec.Service.Port),
-                    TargetPort: intstr.FromInt(pr.Spec.Service.Port),
+                    Port:       int32(pattern.Spec.Service.Port),
+                    TargetPort: intstr.FromInt(pattern.Spec.Service.Port),
                     Protocol:   corev1.ProtocolTCP,
                 },
             },
         },
     }
 
-    if err := ctrl.SetControllerReference(pr, service, r.Scheme); err != nil {
+    if err := ctrl.SetControllerReference(pattern, service, r.Scheme); err != nil {
         return err
     }
 
@@ -1256,39 +1256,39 @@ func (r *PatternRunnerReconciler) reconcileService(ctx context.Context, pr *pris
     return r.Update(ctx, found)
 }
 
-func (r *PatternRunnerReconciler) labelsForPatternRunner(pr *prismv1alpha1.PatternRunner) map[string]string {
+func (r *PrismPatternReconciler) labelsForPattern(pattern *prismv1alpha1.PrismPattern) map[string]string {
     return map[string]string{
         "app":     "prism",
-        "pattern": pr.Spec.Pattern,
-        "backend": pr.Spec.Backend,
-        "runner":  pr.Name,
+        "pattern": pattern.Spec.Pattern,
+        "backend": pattern.Spec.Backend,
+        "runner":  pattern.Name,
     }
 }
 
-func (r *PatternRunnerReconciler) updateStatus(ctx context.Context, pr *prismv1alpha1.PatternRunner) error {
+func (r *PrismPatternReconciler) updateStatus(ctx context.Context, pattern *prismv1alpha1.PrismPattern) error {
     // Get deployment status
     deployment := &appsv1.Deployment{}
-    if err := r.Get(ctx, types.NamespacedName{Name: pr.Name, Namespace: pr.Namespace}, deployment); err != nil {
+    if err := r.Get(ctx, types.NamespacedName{Name: pattern.Name, Namespace: pattern.Namespace}, deployment); err != nil {
         return err
     }
 
-    pr.Status.Replicas = deployment.Status.Replicas
-    pr.Status.AvailableReplicas = deployment.Status.AvailableReplicas
-    pr.Status.ObservedGeneration = deployment.Status.ObservedGeneration
+    pattern.Status.Replicas = deployment.Status.Replicas
+    pattern.Status.AvailableReplicas = deployment.Status.AvailableReplicas
+    pattern.Status.ObservedGeneration = deployment.Status.ObservedGeneration
 
     if deployment.Status.AvailableReplicas == *deployment.Spec.Replicas {
-        pr.Status.Phase = "Running"
+        pattern.Status.Phase = "Running"
     } else {
-        pr.Status.Phase = "Pending"
+        pattern.Status.Phase = "Pending"
     }
 
-    return r.Status().Update(ctx, pr)
+    return r.Status().Update(ctx, pattern)
 }
 
 // SetupWithManager sets up the controller with the Manager.
-func (r *PatternRunnerReconciler) SetupWithManager(mgr ctrl.Manager) error {
+func (r *PrismPatternReconciler) SetupWithManager(mgr ctrl.Manager) error {
     return ctrl.NewControllerManagedBy(mgr).
-        For(&prismv1alpha1.PatternRunner{}).
+        For(&prismv1alpha1.PrismPattern{}).
         Owns(&appsv1.Deployment{}).
         Owns(&corev1.Service{}).
         Complete(r)
@@ -1664,6 +1664,556 @@ spec:
       replicas: 2
       config:
         connectionString: "postgres://postgres.prism-system.svc.cluster.local:5432/prism"
+```
+
+## Installation Guide
+
+### Prerequisites
+
+```bash
+# Verify k8s cluster access
+kubectl cluster-info
+kubectl get nodes
+
+# Verify required tools
+go version          # Go 1.21+
+kubebuilder version # v3.0+
+kustomize version   # v4.0+
+```
+
+### Install Operator (Local Development)
+
+**Method 1: Run Operator Out-of-Cluster** (fastest for development):
+
+```bash
+cd prism-operator
+
+# Install CRDs only
+make install
+
+# Run operator locally (connects to k8s cluster)
+make run
+
+# Operator logs appear in terminal
+# Press Ctrl+C to stop
+```
+
+**Method 2: Deploy Operator In-Cluster**:
+
+```bash
+cd prism-operator
+
+# Build operator image
+make docker-build IMG=prism-operator:dev
+
+# Load image into Docker Desktop (skip for remote clusters)
+docker image save prism-operator:dev | docker image load
+
+# Install CRDs and deploy operator
+make install deploy IMG=prism-operator:dev
+
+# Verify deployment
+kubectl get deployment -n prism-system
+kubectl get pods -n prism-system
+```
+
+**Method 3: Install via Helm** (production-ready):
+
+```bash
+# Add Prism operator Helm repo
+helm repo add prism https://charts.prism.io
+helm repo update
+
+# Install operator
+helm install prism-operator prism/prism-operator \
+  --namespace prism-system \
+  --create-namespace \
+  --set image.tag=v0.1.0
+
+# Verify installation
+helm status prism-operator -n prism-system
+kubectl get pods -n prism-system
+```
+
+### Verify Installation
+
+```bash
+# Check CRDs are installed
+kubectl get crds | grep prism.io
+
+# Expected output:
+# prismstacks.prism.io
+# prismnamespaces.prism.io
+# prismpatterns.prism.io
+# prismbackends.prism.io
+
+# Check operator pod is running
+kubectl get pods -n prism-system
+
+# Expected output:
+# NAME                                     READY   STATUS    RESTARTS   AGE
+# prism-operator-controller-manager-xxx    2/2     Running   0          30s
+
+# Check operator logs
+kubectl logs -n prism-system deployment/prism-operator-controller-manager -c manager
+```
+
+### Deploy First PrismStack
+
+```bash
+# Deploy minimal stack
+kubectl apply -f - <<EOF
+apiVersion: prism.io/v1alpha1
+kind: PrismStack
+metadata:
+  name: prism-quickstart
+  namespace: default
+spec:
+  proxy:
+    image: ghcr.io/prism/prism-proxy:latest
+    replicas: 1
+  admin:
+    enabled: true
+    replicas: 1
+  patterns:
+    - name: kv-memstore
+      type: keyvalue
+      backend: memstore
+      replicas: 1
+EOF
+
+# Wait for stack to be ready
+kubectl wait --for=condition=Ready prismstack/prism-quickstart --timeout=60s
+
+# Check resources
+kubectl get prismstack
+kubectl get prismpattern
+kubectl get pods -l stack=prism-quickstart
+```
+
+## Uninstall Guide
+
+### Uninstall Operator (Keep Resources)
+
+```bash
+# Method 1: Helm uninstall
+helm uninstall prism-operator -n prism-system
+
+# Method 2: Makefile undeploy
+make undeploy
+
+# Verify operator removed
+kubectl get deployment -n prism-system
+```
+
+### Uninstall CRDs (⚠️ Deletes ALL PrismStack/Pattern/Backend resources)
+
+```bash
+# WARNING: This deletes ALL Prism resources in cluster!
+make uninstall
+
+# Verify CRDs removed
+kubectl get crds | grep prism.io
+```
+
+### Complete Cleanup
+
+```bash
+# Delete all Prism resources first
+kubectl delete prismstack --all --all-namespaces
+kubectl delete prismpattern --all --all-namespaces
+kubectl delete prismbackend --all --all-namespaces
+kubectl delete prismnamespace --all --all-namespaces
+
+# Uninstall operator
+helm uninstall prism-operator -n prism-system
+
+# Remove CRDs
+make uninstall
+
+# Delete namespace
+kubectl delete namespace prism-system
+
+# Verify cleanup
+kubectl get all -n prism-system
+kubectl get crds | grep prism.io
+```
+
+### Uninstall from Docker Desktop
+
+```bash
+# Complete cleanup
+make local-clean
+
+# Reset Docker Desktop k8s cluster (nuclear option)
+# Docker Desktop > Preferences > Kubernetes > Reset Kubernetes Cluster
+```
+
+## Debug Guide
+
+### Enable Debug Logging
+
+**Option 1: Operator Running Locally** (`make run`):
+
+```bash
+# Set log level before running
+export LOG_LEVEL=debug
+make run
+```
+
+**Option 2: Operator Running In-Cluster**:
+
+```bash
+# Edit deployment to add debug flag
+kubectl edit deployment prism-operator-controller-manager -n prism-system
+
+# Add to container args:
+spec:
+  template:
+    spec:
+      containers:
+      - args:
+        - --zap-log-level=debug  # Add this line
+```
+
+**Option 3: Using Helm**:
+
+```bash
+helm upgrade prism-operator prism/prism-operator \
+  --namespace prism-system \
+  --set logLevel=debug \
+  --reuse-values
+```
+
+### Debug Reconciliation Loop
+
+```bash
+# Watch reconciliation in real-time
+kubectl logs -n prism-system deployment/prism-operator-controller-manager -f | grep -E "Reconcile|Error"
+
+# Filter for specific resource
+kubectl logs -n prism-system deployment/prism-operator-controller-manager -f | grep prism-dev
+
+# Get structured logs (JSON format)
+kubectl logs -n prism-system deployment/prism-operator-controller-manager --tail=100 -c manager | jq 'select(.msg | contains("Reconcile"))'
+```
+
+### Debug Resource Creation
+
+```bash
+# Check if CRD is registered
+kubectl explain prismstack
+kubectl explain prismstack.spec
+kubectl explain prismstack.spec.proxy
+
+# Describe custom resource
+kubectl describe prismstack prism-dev
+
+# Check status field
+kubectl get prismstack prism-dev -o jsonpath='{.status}' | jq
+
+# View events
+kubectl get events --field-selector involvedObject.name=prism-dev
+```
+
+### Debug Controller RBAC
+
+```bash
+# Check if operator has required permissions
+kubectl auth can-i create deployments --as=system:serviceaccount:prism-system:prism-operator-controller-manager
+
+# List operator's permissions
+kubectl describe clusterrole prism-operator-manager-role
+
+# Check role bindings
+kubectl get clusterrolebinding | grep prism-operator
+kubectl describe clusterrolebinding prism-operator-manager-rolebinding
+```
+
+### Debug Pod Scheduling
+
+```bash
+# Check why pod is not scheduling
+kubectl describe pod prism-proxy-xxx
+
+# Common scheduling issues:
+# - Insufficient resources: Look for "FailedScheduling" events
+# - Node selector mismatch: Check nodeSelector vs node labels
+# - Tolerations missing: Check taints on nodes
+
+# List node labels
+kubectl get nodes --show-labels
+
+# Check node taints
+kubectl describe node docker-desktop | grep Taints
+
+# Check if resources are available
+kubectl describe nodes | grep -A 5 "Allocated resources"
+```
+
+### Debug Network/Connectivity
+
+```bash
+# Test service DNS resolution
+kubectl run debug --image=busybox --rm -it -- nslookup prism-admin.prism-system.svc.cluster.local
+
+# Test service connectivity
+kubectl run debug --image=nicolaka/netshoot --rm -it -- bash
+# Inside pod:
+curl http://prism-admin.prism-system.svc.cluster.local:8981/health
+grpcurl -plaintext prism-admin.prism-system.svc.cluster.local:8981 list
+
+# Check service endpoints
+kubectl get endpoints -n prism-system
+```
+
+### Debug Operator Webhook (If Using Validating/Mutating Webhooks)
+
+```bash
+# Check webhook configuration
+kubectl get validatingwebhookconfigurations | grep prism
+kubectl describe validatingwebhookconfiguration prism-validating-webhook-configuration
+
+# Test webhook certificate
+kubectl get secret -n prism-system webhook-server-cert -o jsonpath='{.data.tls\.crt}' | base64 -d | openssl x509 -noout -text
+
+# Webhook logs
+kubectl logs -n prism-system deployment/prism-operator-controller-manager -c manager | grep webhook
+```
+
+## Troubleshooting Guide
+
+### Issue 1: CRD Not Found After Install
+
+**Symptoms**:
+```text
+error: the server doesn't have a resource type "prismstack"
+```
+
+**Solution**:
+```bash
+# Reinstall CRDs
+make install
+
+# Verify CRDs exist
+kubectl get crds | grep prism.io
+
+# If still missing, check kubebuilder manifests
+ls config/crd/bases/
+kubectl apply -f config/crd/bases/
+```
+
+### Issue 2: Operator Pod CrashLoopBackOff
+
+**Symptoms**:
+```bash
+$ kubectl get pods -n prism-system
+NAME                                     READY   STATUS             RESTARTS   AGE
+prism-operator-controller-manager-xxx    0/2     CrashLoopBackOff   5          2m
+```
+
+**Diagnosis**:
+```bash
+# Check pod logs
+kubectl logs -n prism-system prism-operator-controller-manager-xxx -c manager
+
+# Common causes:
+# 1. Missing RBAC permissions
+# 2. CRDs not installed
+# 3. Image pull errors
+# 4. Invalid configuration
+```
+
+**Solutions**:
+```bash
+# Solution 1: Fix RBAC
+make manifests
+kubectl apply -f config/rbac/
+
+# Solution 2: Reinstall CRDs
+make install
+
+# Solution 3: Check image
+kubectl describe pod -n prism-system prism-operator-controller-manager-xxx | grep Image
+
+# Solution 4: Check events
+kubectl get events -n prism-system --sort-by='.lastTimestamp'
+```
+
+### Issue 3: PrismStack Not Reconciling
+
+**Symptoms**:
+- PrismStack created but no pods appear
+- Status not updating
+
+**Diagnosis**:
+```bash
+# Check PrismStack status
+kubectl get prismstack prism-dev -o yaml | grep -A 20 status
+
+# Check operator logs for reconciliation
+kubectl logs -n prism-system deployment/prism-operator-controller-manager | grep prism-dev
+
+# Check for errors
+kubectl describe prismstack prism-dev
+```
+
+**Solutions**:
+```bash
+# Solution 1: Check controller is watching correct namespace
+kubectl logs -n prism-system deployment/prism-operator-controller-manager | grep "Starting workers"
+
+# Solution 2: Trigger reconciliation by updating resource
+kubectl annotate prismstack prism-dev debug=true
+
+# Solution 3: Restart operator
+kubectl rollout restart deployment prism-operator-controller-manager -n prism-system
+```
+
+### Issue 4: Pods Not Scheduling (Node Selector)
+
+**Symptoms**:
+```text
+0/1 nodes are available: 1 node(s) didn't match Pod's node affinity/selector
+```
+
+**Diagnosis**:
+```bash
+# Check pod scheduling failure
+kubectl describe pod prism-proxy-xxx
+
+# Check node labels
+kubectl get nodes --show-labels
+
+# Check node selector in deployment
+kubectl get deployment prism-dev-proxy -o jsonpath='{.spec.template.spec.nodeSelector}'
+```
+
+**Solutions**:
+```bash
+# Solution 1: Label nodes to match selector
+kubectl label nodes docker-desktop role=prism-proxy
+
+# Solution 2: Remove node selector from PrismStack
+kubectl edit prismstack prism-dev
+# Remove or modify nodeSelector in placement section
+
+# Solution 3: Use node affinity instead of node selector (more flexible)
+```
+
+### Issue 5: Multi-Admin Leader Election Not Working
+
+**Symptoms**:
+- Multiple admins show as "Leader" in logs
+- No lease object found
+
+**Diagnosis**:
+```bash
+# Check for lease object
+kubectl get lease -n prism-system
+
+# Check admin logs for leader election
+kubectl logs -l component=prism-admin -n prism-system | grep "leader"
+
+# Check RBAC for lease permissions
+kubectl auth can-i create leases --as=system:serviceaccount:prism-system:prism-admin --namespace=prism-system
+```
+
+**Solutions**:
+```bash
+# Solution 1: Add lease RBAC
+kubectl apply -f - <<EOF
+apiVersion: rbac.authorization.k8s.io/v1
+kind:Role
+metadata:
+  name: prism-admin-leader-election
+  namespace: prism-system
+rules:
+- apiGroups: ["coordination.k8s.io"]
+  resources: ["leases"]
+  verbs: ["get", "create", "update"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: prism-admin-leader-election
+  namespace: prism-system
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: prism-admin-leader-election
+subjects:
+- kind: ServiceAccount
+  name: prism-admin
+  namespace: prism-system
+EOF
+
+# Solution 2: Verify leader election config in PrismStack
+kubectl get prismstack prism-dev -o jsonpath='{.spec.admin.leaderElection}'
+```
+
+###Issue 6: Pattern Pods ImagePullBackOff
+
+**Symptoms**:
+```text
+Back-off pulling image "ghcr.io/prism/keyvalue-runner:latest"
+```
+
+**Diagnosis**:
+```bash
+# Check image pull status
+kubectl describe pod keyvalue-memstore-xxx | grep -A 10 Events
+
+# Check imagePullSecrets
+kubectl get pod keyvalue-memstore-xxx -o jsonpath='{.spec.imagePullSecrets}'
+```
+
+**Solutions**:
+```bash
+# Solution 1: Create image pull secret for private registries
+kubectl create secret docker-registry ghcr-secret \
+  --docker-server=ghcr.io \
+  --docker-username=$GITHUB_USER \
+  --docker-password=$GITHUB_TOKEN \
+  --namespace=prism-system
+
+# Solution 2: Add imagePullSecrets to PrismStack
+kubectl patch prismstack prism-dev --type=json -p='[
+  {"op": "add", "path": "/spec/imagePullSecrets", "value": [{"name": "ghcr-secret"}]}
+]'
+
+# Solution 3: Use public image or build locally
+make docker-build IMG=keyvalue-runner:local
+```
+
+### Issue 7: Operator Using Too Much Memory/CPU
+
+**Symptoms**:
+- Operator pod OOMKilled or throttled
+- Slow reconciliation
+
+**Diagnosis**:
+```bash
+# Check resource usage
+kubectl top pod -n prism-system
+
+# Check resource limits
+kubectl get deployment prism-operator-controller-manager -n prism-system -o jsonpath='{.spec.template.spec.containers[0].resources}'
+```
+
+**Solutions**:
+```bash
+# Solution 1: Increase operator resource limits
+kubectl set resources deployment prism-operator-controller-manager \
+  -n prism-system \
+  --limits=cpu=2000m,memory=2Gi \
+  --requests=cpu=500m,memory=512Mi
+
+# Solution 2: Reduce reconciliation frequency
+# Edit controller to add rate limiting:
+# workqueue.NewItemExponentialFailureRateLimiter(5*time.Second, 1000*time.Second)
+
+# Solution 3: Enable leader election for operator (if multiple replicas)
 ```
 
 ## Debugging
