@@ -1074,16 +1074,125 @@ jobs:
 - k3s Documentation: https://docs.k3s.io
 - Kubernetes Documentation: https://kubernetes.io/docs
 - ADR-049: Podman/Docker Container Strategy
+- ADR-059: Kubernetes Operator for Declarative Prism Deployment
 - MEMO-033: Process Isolation Bulkhead Pattern
 - RFC-031: Security Architecture
+
+## Alternative: Kubernetes Operator Deployment
+
+For production deployments requiring runtime flexibility and declarative configuration, consider the **Prism Kubernetes Operator** approach (ADR-059).
+
+### Operator vs Manual YAML
+
+| Aspect | Manual YAML (This Guide) | Kubernetes Operator |
+|--------|--------------------------|---------------------|
+| **Best For** | Learning, POC, quick start | Production, runtime flexibility |
+| **Configuration** | Static (install-time) | Dynamic (runtime changes) |
+| **Complexity** | Low (copy-paste YAML) | Higher (CRD + controller) |
+| **Updates** | Manual `kubectl apply` | Automatic reconciliation |
+| **Self-Healing** | None | Automatic recreation |
+| **Pattern Addition** | Edit manifests manually | Edit CRD spec |
+| **Backend Management** | Manual ordering | Automatic dependency resolution |
+
+### Quick Operator Example
+
+Instead of 20+ YAML files, define entire Prism stack in single CRD:
+
+```yaml
+apiVersion: prism.io/v1alpha1
+kind: PrismCluster
+metadata:
+  name: prism-local
+  namespace: prism
+spec:
+  admin:
+    replicas: 1
+    storage: {type: sqlite, size: 1Gi}
+
+  proxy:
+    replicas: 2
+    autoscaling: {enabled: true, minReplicas: 2, maxReplicas: 10}
+
+  patterns:
+    - name: keyvalue
+      type: StatefulSet
+      backends: [redis]
+
+    - name: consumer
+      type: Deployment
+      replicas: 2
+      backends: [nats]
+
+  backends:
+    redis: {enabled: true, storage: 1Gi}
+    nats: {enabled: true}
+```
+
+Apply with:
+```bash
+kubectl apply -f prismcluster.yaml
+```
+
+**Operator handles**:
+- Creates all backing services in correct order
+- Deploys admin, proxy, pattern runners
+- Injects backend connection env vars
+- Creates Services and Ingress
+- Monitors health and updates status
+
+**Runtime flexibility**:
+```bash
+# Add new pattern (no manual YAML editing)
+kubectl patch prismcluster prism-local --type='json' -p='[
+  {"op": "add", "path": "/spec/patterns/-", "value": {
+    "name": "mailbox",
+    "type": "StatefulSet",
+    "backends": ["minio", "sqlite"]
+  }}
+]'
+
+# Scale proxy
+kubectl patch prismcluster prism-local --type='json' -p='[
+  {"op": "replace", "path": "/spec/proxy/replicas", "value": 5}
+]'
+
+# Enable Kafka
+kubectl patch prismcluster prism-local --type='json' -p='[
+  {"op": "replace", "path": "/spec/backends/kafka/enabled", "value": true}
+]'
+```
+
+### When to Use Operator
+
+**Use Manual YAML (This Guide)** if:
+- Learning Kubernetes basics
+- Quick POC or demo
+- Simple, static deployment
+- No runtime configuration changes needed
+
+**Use Operator (ADR-059)** if:
+- Production deployment
+- Frequent topology changes (add/remove patterns)
+- Multiple environments (dev/staging/prod)
+- GitOps with ArgoCD
+- Need self-healing and auto-scaling
+
+### Migration Path
+
+1. **Week 1-2**: Start with this guide (manual YAML)
+2. **Week 3-4**: Deploy operator when comfortable with Kubernetes
+3. **Production**: Use operator for runtime flexibility
+
+See **ADR-059: Kubernetes Operator for Declarative Prism Deployment** for complete operator design, CRD schema, and implementation plan.
 
 ## Next Steps
 
 1. **Add Helm Charts**: Package Prism as a Helm chart for easier deployment
-2. **GitOps with ArgoCD**: Implement continuous deployment with ArgoCD
-3. **Service Mesh**: Add Istio/Linkerd for advanced traffic management
-4. **Chaos Engineering**: Use Chaos Mesh to test resilience
-5. **Cost Optimization**: Profile and optimize resource usage
+2. **Deploy Kubernetes Operator**: Follow ADR-059 for declarative, flexible deployments
+3. **GitOps with ArgoCD**: Implement continuous deployment with ArgoCD
+4. **Service Mesh**: Add Istio/Linkerd for advanced traffic management
+5. **Chaos Engineering**: Use Chaos Mesh to test resilience
+6. **Cost Optimization**: Profile and optimize resource usage
 
 ## Appendix: Quick Reference
 

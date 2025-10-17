@@ -12,6 +12,66 @@ Quick access to recently updated documentation. Changes listed in reverse chrono
 
 ### 2025-10-16
 
+#### ADR-059: Kubernetes Operator for Declarative Prism Deployment (NEW)
+**Link**: [ADR-059](/adr/adr-059)
+
+**Summary**: Comprehensive architectural decision for Kubernetes Operator enabling declarative, flexible Prism cluster management with runtime configuration changes:
+
+**Core Design**:
+- **Custom Resource Definition**: PrismCluster CRD (v1alpha1) defines entire Prism stack in single YAML
+- **Controller Reconciliation**: Automated orchestration of backing services, admin, proxy, and pattern runners
+- **Runtime Flexibility**: Add/remove patterns, scale components, enable backends via kubectl patch
+- **Self-Healing**: Automatic recreation of failed components
+- **Dependency Management**: Automatic ordering (Redis before keyvalue-runner, NATS before consumer-runner)
+
+**PrismCluster CRD Schema**:
+```yaml
+apiVersion: prism.io/v1alpha1
+kind: PrismCluster
+spec:
+  admin: {replicas, storage, resources}
+  proxy: {replicas, autoscaling, resources}
+  patterns: [{name, type, backends, resources}]
+  backends: {redis, nats, postgres, minio, kafka}
+  ingress: {enabled, className, host}
+  observability: {prometheus, grafana, loki}
+```
+
+**Controller Features**:
+- **Reconciliation Loop**: 7-phase reconciliation (backends → admin → proxy → patterns → ingress → status)
+- **Service Discovery**: Automatic ConfigMap generation with backend connection strings
+- **Status Management**: Rich status fields (phase, component health, conditions)
+- **Owner References**: Garbage collection on PrismCluster deletion
+
+**Technology Choice**:
+- **Kubebuilder**: Selected over Operator SDK for Go-first approach and Kubernetes SIG alignment
+- **Implementation Plan**: 8-week phased rollout (scaffolding → backends → admin/proxy → patterns → status → observability → hardening)
+
+**Runtime Examples**:
+- Add new pattern runner: `kubectl patch prismcluster` with new pattern spec
+- Scale proxy: Change replicas in spec, controller updates Deployment
+- Enable Kafka: Set `backends.kafka.enabled: true`, controller deploys StatefulSet
+
+**Comparison with Alternatives**:
+- **vs Manual YAML (MEMO-035)**: Operator provides runtime flexibility vs static config
+- **vs Helm Charts**: Operator has self-healing and automatic reconciliation
+- **vs Kustomize**: Operator provides validation and rich status reporting
+
+**Migration Path**:
+- **New Users**: Week 1-2 (MEMO-035 manual YAML) → Week 3-4 (operator) → production
+- **Existing Deployments**: Backup → install operator → create PrismCluster → transfer ownership
+
+**Future Extensions**:
+- **PrismNamespace CRD** (v1alpha2): Per-namespace pattern configuration
+- **PrismPattern CRD** (v1beta1): Fine-grained pattern runner configuration
+- **Multi-Cluster Support** (v1alpha3): Federation across Kubernetes clusters
+
+**Key Innovation**: Kubernetes Operator extends Prism's control plane architecture (ADR-055, ADR-056, ADR-057) to cloud-native deployments. Single CRD replaces 20+ YAML files. Declarative configuration with runtime flexibility enables production-grade Kubernetes deployments without manual kubectl orchestration.
+
+**Impact**: Eliminates manual Kubernetes deployment complexity. Enables runtime topology changes (add patterns, scale components, enable backends) without downtime. Self-healing ensures failed components automatically recreate. GitOps-ready with ArgoCD integration. Foundation for Kubernetes-native Prism deployments with operator-managed lifecycle. Completes control plane vision: unified orchestration from local processes (prism-launcher) to Kubernetes clusters (prism-operator).
+
+---
+
 #### MEMO-035: Local Kubernetes Deployment with k3d for Prism (NEW)
 **Link**: [MEMO-035](/memos/memo-035)
 
