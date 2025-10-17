@@ -853,7 +853,6 @@ spec:
           effect: "NoSchedule"
       # Use PodDisruptionBudget to handle spot interruptions
 ```
-```
 
 ### 2. Operator Scaffold (Kubebuilder)
 
@@ -1313,7 +1312,7 @@ kubectl get nodes
 ```
 
 Expected output:
-```text
+```bash
 NAME             STATUS   ROLES           AGE   VERSION
 docker-desktop   Ready    control-plane   1d    v1.28.2
 ```
@@ -1519,7 +1518,7 @@ kubectl get all -l stack=prism-dev
 
 Add to `Makefile`:
 
-```makefile
+```bash
 # Local development targets
 
 .PHONY: local-deploy
@@ -1986,7 +1985,7 @@ kubectl logs -n prism-system deployment/prism-operator-controller-manager -c man
 ### Issue 1: CRD Not Found After Install
 
 **Symptoms**:
-```text
+```go
 error: the server doesn't have a resource type "prismstack"
 ```
 
@@ -2365,7 +2364,7 @@ Auto-scaling is critical for production deployments to handle variable load effi
 
 ### Architecture Overview
 
-```mermaid
+```text
 graph TB
     subgraph "Auto-Scaling Components"
         HPA[HPA Controller<br/>CPU/Memory/Custom]
