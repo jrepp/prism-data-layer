@@ -380,43 +380,70 @@ func (r *PrismPatternReconciler) getInitialReplicas(pattern *prismv1alpha1.Prism
 
 // updateStatus updates the PrismPattern status
 func (r *PrismPatternReconciler) updateStatus(ctx context.Context, pattern *prismv1alpha1.PrismPattern) error {
+	log := log.FromContext(ctx)
+
 	// Get deployment status
 	deployment := &appsv1.Deployment{}
 	if err := r.Get(ctx, types.NamespacedName{Name: pattern.Name, Namespace: pattern.Namespace}, deployment); err != nil {
-		if !errors.IsNotFound(err) {
+		if errors.IsNotFound(err) {
+			// Deployment not created yet
+			pattern.Status.Phase = "Pending"
+			pattern.Status.Replicas = 0
+			pattern.Status.AvailableReplicas = 0
+		} else {
 			return fmt.Errorf("failed to get deployment for status: %w", err)
+		}
+	} else {
+		// Update status from deployment
+		pattern.Status.Replicas = deployment.Status.Replicas
+		pattern.Status.AvailableReplicas = deployment.Status.AvailableReplicas
+		pattern.Status.ObservedGeneration = deployment.Status.ObservedGeneration
+
+		// Determine phase
+		if deployment.Spec.Replicas != nil && *deployment.Spec.Replicas > 0 {
+			if deployment.Status.AvailableReplicas == *deployment.Spec.Replicas {
+				pattern.Status.Phase = "Running"
+			} else if deployment.Status.Replicas > 0 {
+				pattern.Status.Phase = "Progressing"
+			} else {
+				pattern.Status.Phase = "Pending"
+			}
+		} else {
+			pattern.Status.Phase = "Pending"
 		}
 	}
 
-	pattern.Status.Replicas = deployment.Status.Replicas
-	pattern.Status.AvailableReplicas = deployment.Status.AvailableReplicas
-	pattern.Status.ObservedGeneration = deployment.Status.ObservedGeneration
-
-	// Determine phase
-	if deployment.Status.AvailableReplicas == *deployment.Spec.Replicas && *deployment.Spec.Replicas > 0 {
-		pattern.Status.Phase = "Running"
-	} else if deployment.Status.Replicas > 0 {
-		pattern.Status.Phase = "Pending"
-	} else {
-		pattern.Status.Phase = "Unknown"
+	// Update conditions based on phase
+	readyCondition := metav1.Condition{
+		Type:               "Ready",
+		ObservedGeneration: pattern.Generation,
+		LastTransitionTime: metav1.Now(),
 	}
 
-	// Update conditions
-	pattern.Status.Conditions = []metav1.Condition{
-		{
-			Type:               "Ready",
-			Status:             metav1.ConditionTrue,
-			ObservedGeneration: pattern.Generation,
-			LastTransitionTime: metav1.Now(),
-			Reason:             "DeploymentReady",
-			Message:            "Pattern runner is healthy",
-		},
+	switch pattern.Status.Phase {
+	case "Running":
+		readyCondition.Status = metav1.ConditionTrue
+		readyCondition.Reason = "DeploymentReady"
+		readyCondition.Message = fmt.Sprintf("All %d replicas are available", pattern.Status.AvailableReplicas)
+	case "Progressing":
+		readyCondition.Status = metav1.ConditionFalse
+		readyCondition.Reason = "DeploymentProgressing"
+		readyCondition.Message = fmt.Sprintf("%d/%d replicas available", pattern.Status.AvailableReplicas, pattern.Status.Replicas)
+	default:
+		readyCondition.Status = metav1.ConditionFalse
+		readyCondition.Reason = "DeploymentPending"
+		readyCondition.Message = "Waiting for deployment to start"
 	}
 
+	pattern.Status.Conditions = []metav1.Condition{readyCondition}
+
+	// Update status subresource
 	if err := r.Status().Update(ctx, pattern); err != nil {
+		log.Error(err, "Failed to update status subresource")
 		return fmt.Errorf("failed to update status: %w", err)
 	}
 
+	log.V(1).Info("Updated status", "phase", pattern.Status.Phase, "replicas", pattern.Status.Replicas, "available", pattern.Status.AvailableReplicas)
 	return nil
 }
 

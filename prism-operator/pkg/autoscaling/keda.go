@@ -3,9 +3,11 @@ package autoscaling
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	kedav1alpha1 "github.com/kedacore/keda/v2/apis/keda/v1alpha1"
 	"k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
@@ -20,6 +22,21 @@ import (
 type KEDAReconciler struct {
 	client.Client
 	Scheme *runtime.Scheme
+}
+
+// isKEDANotInstalledError checks if the error indicates KEDA CRDs are not installed
+func isKEDANotInstalledError(err error) bool {
+	if err == nil {
+		return false
+	}
+	// Check for NoMatchError (API group not registered)
+	if meta.IsNoMatchError(err) {
+		return true
+	}
+	// Check for scheme registration error message
+	errMsg := err.Error()
+	return strings.Contains(errMsg, "no kind is registered for the type") &&
+		strings.Contains(errMsg, "ScaledObject")
 }
 
 // ReconcileKEDA creates or updates a KEDA ScaledObject for the given deployment
@@ -89,10 +106,20 @@ func (r *KEDAReconciler) ReconcileKEDA(
 		// Create new ScaledObject
 		log.Info("Creating new KEDA ScaledObject", "name", name)
 		if err := r.Create(ctx, scaledObject); err != nil {
+			// Check if KEDA CRDs are not installed
+			if isKEDANotInstalledError(err) {
+				log.Info("KEDA CRDs not installed, cannot create ScaledObject", "name", name)
+				return fmt.Errorf("KEDA not installed: please install KEDA CRDs to use event-driven auto-scaling")
+			}
 			return fmt.Errorf("failed to create ScaledObject: %w", err)
 		}
 		return nil
 	} else if err != nil {
+		// Check if KEDA CRDs are not installed
+		if isKEDANotInstalledError(err) {
+			log.Info("KEDA CRDs not installed, cannot reconcile ScaledObject", "name", name)
+			return fmt.Errorf("KEDA not installed: please install KEDA CRDs to use event-driven auto-scaling")
+		}
 		return fmt.Errorf("failed to get ScaledObject: %w", err)
 	}
 
@@ -158,11 +185,21 @@ func (r *KEDAReconciler) deleteScaledObject(ctx context.Context, name, namespace
 			// ScaledObject doesn't exist, nothing to do
 			return nil
 		}
+		// Check if KEDA CRDs are not installed
+		if isKEDANotInstalledError(err) {
+			log.Info("KEDA CRDs not installed, skipping ScaledObject cleanup", "name", name)
+			return nil
+		}
 		return fmt.Errorf("failed to get ScaledObject for deletion: %w", err)
 	}
 
 	log.Info("Deleting KEDA ScaledObject", "name", name)
 	if err := r.Delete(ctx, scaledObject); err != nil {
+		// Gracefully handle if KEDA CRDs were removed during deletion
+		if isKEDANotInstalledError(err) {
+			log.Info("KEDA CRDs removed during cleanup", "name", name)
+			return nil
+		}
 		return fmt.Errorf("failed to delete ScaledObject: %w", err)
 	}
 

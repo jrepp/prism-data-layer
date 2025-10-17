@@ -90,17 +90,31 @@ undeploy: ## Undeploy controller from the K8s cluster specified in ~/.kube/confi
 
 ##@ Local Development with Docker Desktop
 
-.PHONY: local-install-deps
-local-install-deps: ## Install required dependencies (metrics-server, KEDA)
+.PHONY: local-install-metrics
+local-install-metrics: ## Install metrics-server for HPA support
 	@echo "Installing metrics-server..."
 	kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
-	@echo "Installing KEDA..."
-	helm repo add kedacore https://kedacore.github.io/charts
-	helm repo update
-	helm install keda kedacore/keda --namespace keda --create-namespace
-	@echo "Verifying installations..."
-	kubectl get deployment metrics-server -n kube-system
-	kubectl get pods -n keda
+	@echo "Patching metrics-server for Docker Desktop..."
+	kubectl patch deployment metrics-server -n kube-system --type='json' \
+		-p='[{"op": "add", "path": "/spec/template/spec/containers/0/args/-", "value": "--kubelet-insecure-tls"}]' || true
+	@echo "Waiting for metrics-server to be ready..."
+	kubectl wait --for=condition=available --timeout=60s deployment/metrics-server -n kube-system
+	@echo "✓ metrics-server is ready"
+
+.PHONY: local-install-keda
+local-install-keda: ## Install KEDA for event-driven autoscaling (optional)
+	@./scripts/install-keda.sh install
+
+.PHONY: local-uninstall-keda
+local-uninstall-keda: ## Uninstall KEDA
+	@./scripts/install-keda.sh uninstall
+
+.PHONY: local-keda-status
+local-keda-status: ## Show KEDA installation status
+	@./scripts/install-keda.sh status
+
+.PHONY: local-install-deps
+local-install-deps: local-install-metrics local-install-keda ## Install all dependencies (metrics-server + KEDA)
 
 .PHONY: local-run
 local-run: install ## Run operator locally against Docker Desktop k8s
