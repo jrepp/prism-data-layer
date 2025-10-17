@@ -1,0 +1,108 @@
+# Example: PrismPattern with KEDA auto-scaling (Kafka consumer lag)
+# Use case: Consumer pattern that scales based on Kafka consumer lag
+apiVersion: prism.io/v1alpha1
+kind: PrismPattern
+metadata:
+  name: consumer-kafka-orders
+  namespace: prism-system
+spec:
+  # Pattern configuration
+  pattern: consumer
+  backend: kafka
+
+  # Container image
+  image: ghcr.io/prism/consumer-runner:latest
+
+  # Initial replicas (minimum when no load)
+  replicas: 1
+
+  # Resource requirements
+  resources:
+    requests:
+      cpu: "500m"
+      memory: "1Gi"
+    limits:
+      cpu: "2000m"
+      memory: "4Gi"
+
+  # Service configuration
+  service:
+    type: ClusterIP
+    port: 8080
+
+  # KEDA auto-scaling configuration
+  autoscaling:
+    enabled: true
+    scaler: keda  # Use KEDA for event-driven scaling
+
+    # Replica bounds
+    minReplicas: 1
+    maxReplicas: 50
+
+    # KEDA polling and cooldown
+    pollingInterval: 10  # Check every 10 seconds
+    cooldownPeriod: 300  # 5 minutes before scaling down
+
+    # Kafka-specific trigger
+    triggers:
+      - type: kafka
+        metadata:
+          # Kafka connection
+          bootstrapServers: "kafka.prism-system.svc.cluster.local:9092"
+          consumerGroup: "prism-orders-consumer"
+          topic: "orders"
+
+          # Scaling threshold
+          lagThreshold: "1000"  # Scale up when lag > 1000 messages
+
+          # Offset policy
+          offsetResetPolicy: "earliest"
+
+          # Authentication (if using SASL)
+          sasl: "plaintext"
+          tls: "disable"
+
+        # Reference to authentication secret
+        authenticationRef:
+          name: kafka-credentials
+
+    # Advanced behavior (optional)
+    behavior:
+      scaleDown:
+        stabilizationWindowSeconds: 300
+        policies:
+          - type: Percent
+            value: 50
+            periodSeconds: 60
+      scaleUp:
+        stabilizationWindowSeconds: 0
+        policies:
+          - type: Percent
+            value: 100
+            periodSeconds: 15
+
+  # Backend configuration
+  backendConfig:
+    name: kafka-production
+    namespace: prism-system
+
+  # Pattern-specific configuration
+  config:
+    kafkaBootstrapServers: "kafka.prism-system.svc.cluster.local:9092"
+    kafkaTopic: "orders"
+    kafkaConsumerGroup: "prism-orders-consumer"
+    kafkaAutoOffsetReset: "earliest"
+    kafkaMaxPollRecords: "500"
+
+---
+# Authentication secret for KEDA (if needed)
+apiVersion: v1
+kind: Secret
+metadata:
+  name: kafka-credentials
+  namespace: prism-system
+type: Opaque
+stringData:
+  # Add Kafka credentials if using SASL
+  saslUsername: ""
+  saslPassword: ""
