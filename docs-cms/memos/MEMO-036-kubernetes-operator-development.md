@@ -55,6 +55,27 @@ Create a Kubernetes operator for the Prism stack that automates deployment, conf
 
 ## Architecture
 
+### Naming Convention
+
+**API Group**: `prism.io/v1alpha1`
+
+**Resource Naming**: All CRDs use the `Prism` prefix for clarity and immediate recognition:
+
+| CRD | Full Name | Purpose |
+|-----|-----------|---------|
+| `PrismStack` | `prismstacks.prism.io` | Manages entire Prism deployment |
+| `PrismNamespace` | `prismnamespaces.prism.io` | Provisions multi-tenant namespaces |
+| `PrismPatternRunner` | `prismpatternrunners.prism.io` | Individual pattern instance |
+| `PrismBackendConfig` | `prismbackendconfigs.prism.io` | Backend connection configuration |
+
+**Rationale**:
+- ✅ **Consistent branding** - All resources immediately identifiable as Prism
+- ✅ **Avoids conflicts** - Clear distinction from other operators
+- ✅ **IDE-friendly** - Easy autocomplete with `Prism` prefix
+- ✅ **kubectl clarity** - `kubectl get prismstack` is more explicit than `kubectl get stack`
+
+**Alternative considered**: Drop prefix and rely on API group (`stack.prism.io`), but rejected for reduced clarity in kubectl output.
+
 ### Custom Resource Definitions (CRDs)
 
 ```mermaid
@@ -62,8 +83,8 @@ graph TB
     subgraph "Prism CRDs"
         PrismStack[PrismStack<br/>Manages entire stack]
         PrismNamespace[PrismNamespace<br/>Provisions namespace on proxy]
-        PatternRunner[PatternRunner<br/>Individual pattern instance]
-        BackendConfig[BackendConfig<br/>Backend connections]
+        PrismPatternRunner[PrismPatternRunner<br/>Individual pattern instance]
+        PrismBackendConfig[PrismBackendConfig<br/>Backend connections]
     end
 
     subgraph "Kubernetes Resources"
@@ -74,20 +95,20 @@ graph TB
     end
 
     PrismStack -->|Creates| PrismNamespace
-    PrismStack -->|Creates| PatternRunner
-    PrismStack -->|Creates| BackendConfig
+    PrismStack -->|Creates| PrismPatternRunner
+    PrismStack -->|Creates| PrismBackendConfig
 
     PrismNamespace -->|Provisions on| ProxyAPI[Prism Proxy gRPC API]
-    PatternRunner -->|Manages| Deployment
-    PatternRunner -->|Creates| Service
+    PrismPatternRunner -->|Manages| Deployment
+    PrismPatternRunner -->|Creates| Service
 
-    BackendConfig -->|Generates| ConfigMap
-    BackendConfig -->|Generates| Secret
+    PrismBackendConfig -->|Generates| ConfigMap
+    PrismBackendConfig -->|Generates| Secret
 
     style PrismStack fill:#25ba81
     style PrismNamespace fill:#9b59b6
-    style PatternRunner fill:#4a9eff
-    style BackendConfig fill:#ff6b35
+    style PrismPatternRunner fill:#4a9eff
+    style PrismBackendConfig fill:#ff6b35
 ```
 
 ### CRD Specifications
@@ -157,13 +178,13 @@ spec:
       port: 9090
 ```
 
-#### 2. PatternRunner CRD
+#### 2. PrismPatternRunner CRD
 
 Represents a single pattern instance:
 
 ```yaml
 apiVersion: prism.io/v1alpha1
-kind: PatternRunner
+kind: PrismPatternRunner
 metadata:
   name: keyvalue-memstore-001
   namespace: prism-system
@@ -213,13 +234,13 @@ status:
       message: "Pattern runner is healthy"
 ```
 
-#### 3. BackendConfig CRD
+#### 3. PrismBackendConfig CRD
 
 Represents backend connection configuration:
 
 ```yaml
 apiVersion: prism.io/v1alpha1
-kind: BackendConfig
+kind: PrismBackendConfig
 metadata:
   name: nats-production
   namespace: prism-system
@@ -421,29 +442,49 @@ kind: PrismStack
 metadata:
   name: prism-production
 spec:
-  # Proxy placement
+  # Proxy placement - control WHERE proxies run
   proxy:
     image: prism-proxy:latest
     replicas: 3
-    runnerSpec:
-      # Node selector for proxy placement
+
+    # Proxy placement strategy
+    placement:
+      # Strategy: spread across zones for HA
+      strategy: MultiZone
+
+      # Node selector - run on dedicated proxy nodes
       nodeSelector:
         role: prism-proxy
         tier: data-plane
-      # Affinity rules
+        topology.kubernetes.io/zone: us-east-1a  # Or use labels
+
+      # Affinity rules for HA
       affinity:
+        # Anti-affinity: Don't run multiple proxies on same node
         podAntiAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
             - labelSelector:
                 matchLabels:
                   component: prism-proxy
               topologyKey: kubernetes.io/hostname
+
+        # Prefer spreading across zones
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchLabels:
+                    component: prism-proxy
+                topologyKey: topology.kubernetes.io/zone
+
       # Tolerations for tainted nodes
       tolerations:
         - key: "workload-type"
           operator: "Equal"
           value: "data-intensive"
           effect: "NoSchedule"
+
       # Resource requests/limits
       resources:
         requests:
@@ -453,14 +494,43 @@ spec:
           cpu: "8000m"
           memory: "16Gi"
 
-  # Admin service placement
+      # Optional: Pin to specific nodes by name
+      # nodeName: "node-proxy-01"
+
+      # Optional: Topology spread constraints
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: topology.kubernetes.io/zone
+          whenUnsatisfiable: DoNotSchedule
+          labelSelector:
+            matchLabels:
+              component: prism-proxy
+
+  # Multi-admin configuration - control plane HA
   admin:
     enabled: true
-    replicas: 2
-    runnerSpec:
+    replicas: 3  # Odd number for leader election
+
+    # Admin placement strategy
+    placement:
+      # Strategy: spread across zones for control plane HA
+      strategy: MultiZone
+
+      # Node selector - run on control plane nodes
       nodeSelector:
         role: prism-control-plane
         tier: management
+
+      # Anti-affinity: spread admins across nodes/zones
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchLabels:
+                  component: prism-admin
+              topologyKey: kubernetes.io/hostname
+
+      # Resource allocation
       resources:
         requests:
           cpu: "500m"
@@ -468,6 +538,30 @@ spec:
         limits:
           cpu: "2000m"
           memory: "2Gi"
+
+      # Topology spread for multi-zone HA
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: topology.kubernetes.io/zone
+          whenUnsatisfiable: DoNotSchedule
+          labelSelector:
+            matchLabels:
+              component: prism-admin
+
+    # Leader election for multi-admin
+    leaderElection:
+      enabled: true
+      leaseDuration: "15s"
+      renewDeadline: "10s"
+      retryPeriod: "2s"
+
+    # Service configuration
+    service:
+      type: LoadBalancer  # Or ClusterIP with Ingress
+      port: 8981
+      annotations:
+        service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
+        service.beta.kubernetes.io/aws-load-balancer-cross-zone-load-balancing-enabled: "true"
 
   # Pattern runners with different placement strategies
   patterns:
@@ -537,6 +631,228 @@ spec:
 3. **Pattern-Specific** - Match runner requirements to node capabilities
 4. **Cost Optimization** - Use spot instances for non-critical runners
 5. **Multi-Zone HA** - Spread replicas across availability zones
+
+### Multi-Admin Architecture
+
+For production deployments, multiple admin instances provide:
+- **High Availability** - No single point of failure
+- **Leader Election** - One active admin, others standby
+- **Load Balancing** - Distribute admin API requests
+- **Rolling Updates** - Zero-downtime deployments
+
+```mermaid
+graph TB
+    subgraph "Multi-Admin Setup"
+        LB[Load Balancer<br/>:8981]
+        Admin1[Admin-1<br/>Zone A<br/>Leader]
+        Admin2[Admin-2<br/>Zone B<br/>Standby]
+        Admin3[Admin-3<br/>Zone C<br/>Standby]
+    end
+
+    subgraph "Leader Election"
+        Lease[Kubernetes Lease<br/>prism-admin-leader]
+    end
+
+    subgraph "Data Plane"
+        Proxy1[Proxy-1]
+        Proxy2[Proxy-2]
+        Proxy3[Proxy-3]
+    end
+
+    LB -->|Routes to| Admin1
+    LB -->|Routes to| Admin2
+    LB -->|Routes to| Admin3
+
+    Admin1 -.->|Holds lease| Lease
+    Admin2 -.->|Watches lease| Lease
+    Admin3 -.->|Watches lease| Lease
+
+    Admin1 -->|Manages| Proxy1
+    Admin1 -->|Manages| Proxy2
+    Admin1 -->|Manages| Proxy3
+
+    style Admin1 fill:#25ba81
+    style Admin2 fill:#gray
+    style Admin3 fill:#gray
+    style Lease fill:#ff6b35
+```
+
+**Multi-Admin Configuration Examples**:
+
+```yaml
+# Example 1: Single-Zone Multi-Admin (3 replicas)
+apiVersion: prism.io/v1alpha1
+kind: PrismStack
+metadata:
+  name: prism-single-zone
+spec:
+  admin:
+    enabled: true
+    replicas: 3
+    placement:
+      nodeSelector:
+        role: prism-control-plane
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchLabels:
+                  component: prism-admin
+              topologyKey: kubernetes.io/hostname
+    leaderElection:
+      enabled: true
+
+---
+# Example 2: Multi-Zone Multi-Admin (5 replicas across 3 zones)
+apiVersion: prism.io/v1alpha1
+kind: PrismStack
+metadata:
+  name: prism-multi-zone
+spec:
+  admin:
+    enabled: true
+    replicas: 5
+    placement:
+      strategy: MultiZone
+      nodeSelector:
+        role: prism-control-plane
+      topologySpreadConstraints:
+        - maxSkew: 2  # Allow 2 admins per zone max
+          topologyKey: topology.kubernetes.io/zone
+          whenUnsatisfiable: DoNotSchedule
+          labelSelector:
+            matchLabels:
+              component: prism-admin
+    leaderElection:
+      enabled: true
+      leaseDuration: "15s"
+
+---
+# Example 3: Multi-Region Multi-Admin (9 replicas across 3 regions)
+apiVersion: prism.io/v1alpha1
+kind: PrismStack
+metadata:
+  name: prism-multi-region
+spec:
+  admin:
+    enabled: true
+    replicas: 9  # 3 per region
+    placement:
+      strategy: MultiRegion
+      topologySpreadConstraints:
+        # Spread across regions
+        - maxSkew: 1
+          topologyKey: topology.kubernetes.io/region
+          whenUnsatisfiable: DoNotSchedule
+          labelSelector:
+            matchLabels:
+              component: prism-admin
+        # Spread across zones within region
+        - maxSkew: 1
+          topologyKey: topology.kubernetes.io/zone
+          whenUnsatisfiable: DoNotSchedule
+          labelSelector:
+            matchLabels:
+              component: prism-admin
+    leaderElection:
+      enabled: true
+      leaseDuration: "30s"  # Longer for multi-region
+    service:
+      type: LoadBalancer
+      annotations:
+        service.beta.kubernetes.io/aws-load-balancer-cross-zone-load-balancing-enabled: "true"
+```
+
+### Proxy Placement Control
+
+Control WHERE proxies run in the cluster:
+
+```yaml
+# Example 1: Dedicated Proxy Nodes
+apiVersion: prism.io/v1alpha1
+kind: PrismStack
+metadata:
+  name: prism-dedicated-proxies
+spec:
+  proxy:
+    replicas: 10
+    placement:
+      strategy: DedicatedNodes
+      nodeSelector:
+        node-type: prism-proxy  # Label your nodes
+        instance-type: c5.4xlarge  # High CPU nodes
+      tolerations:
+        - key: "dedicated"
+          operator: "Equal"
+          value: "prism-proxy"
+          effect: "NoSchedule"
+
+---
+# Example 2: Multi-Zone Proxy Spread
+apiVersion: prism.io/v1alpha1
+kind: PrismStack
+metadata:
+  name: prism-zone-spread
+spec:
+  proxy:
+    replicas: 9  # 3 per zone
+    placement:
+      strategy: MultiZone
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: topology.kubernetes.io/zone
+          whenUnsatisfiable: DoNotSchedule
+          labelSelector:
+            matchLabels:
+              component: prism-proxy
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchLabels:
+                  component: prism-proxy
+              topologyKey: kubernetes.io/hostname
+
+---
+# Example 3: Proximity to Backends
+apiVersion: prism.io/v1alpha1
+kind: PrismStack
+metadata:
+  name: prism-backend-proximity
+spec:
+  proxy:
+    replicas: 6
+    placement:
+      # Run proxies on same nodes as Redis for low latency
+      affinity:
+        podAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchLabels:
+                    app: redis
+                topologyKey: kubernetes.io/hostname
+
+---
+# Example 4: Spot Instance Proxies (Cost Optimization)
+apiVersion: prism.io/v1alpha1
+kind: PrismStack
+metadata:
+  name: prism-spot-proxies
+spec:
+  proxy:
+    replicas: 20
+    placement:
+      nodeSelector:
+        node-lifecycle: spot  # EKS spot instances
+      tolerations:
+        - key: "node-lifecycle"
+          operator: "Equal"
+          value: "spot"
+          effect: "NoSchedule"
+      # Use PodDisruptionBudget to handle spot interruptions
+```
 ```
 
 ### 2. Operator Scaffold (Kubebuilder)
