@@ -1,0 +1,163 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: prismpatterns.prism.io
+spec:
+  group: prism.io
+  names:
+    kind: PrismPattern
+    listKind: PrismPatternList
+    plural: prismpatterns
+    singular: prismpattern
+  scope: Namespaced
+  versions:
+  - name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: PrismPattern is the Schema for the prismpatterns API
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation of an object.'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this object represents.'
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: PrismPatternSpec defines the desired state of PrismPattern
+            properties:
+              pattern:
+                description: Pattern type (consumer, producer, keyvalue, etc.)
+                type: string
+              backend:
+                description: Backend type (kafka, nats, redis, etc.)
+                type: string
+              image:
+                description: Container image
+                type: string
+              replicas:
+                description: Number of replicas
+                format: int32
+                type: integer
+              resources:
+                description: Resource requirements
+                properties:
+                  limits:
+                    additionalProperties:
+                      anyOf:
+                      - type: integer
+                      - type: string
+                      pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                      x-kubernetes-int-or-string: true
+                    type: object
+                  requests:
+                    additionalProperties:
+                      anyOf:
+                      - type: integer
+                      - type: string
+                      pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                      x-kubernetes-int-or-string: true
+                    type: object
+                type: object
+              service:
+                description: Service configuration
+                properties:
+                  type:
+                    type: string
+                  port:
+                    format: int32
+                    type: integer
+                type: object
+              autoscaling:
+                description: Auto-scaling configuration
+                properties:
+                  enabled:
+                    type: boolean
+                  scaler:
+                    description: 'Scaler type: hpa or keda'
+                    type: string
+                  minReplicas:
+                    format: int32
+                    type: integer
+                  maxReplicas:
+                    format: int32
+                    type: integer
+                  targetCPUUtilizationPercentage:
+                    format: int32
+                    type: integer
+                  pollingInterval:
+                    format: int32
+                    type: integer
+                  cooldownPeriod:
+                    format: int32
+                    type: integer
+                  triggers:
+                    description: KEDA triggers
+                    items:
+                      properties:
+                        type:
+                          type: string
+                        metadata:
+                          additionalProperties:
+                            type: string
+                          type: object
+                        authenticationRef:
+                          properties:
+                            name:
+                              type: string
+                          type: object
+                      required:
+                      - type
+                      - metadata
+                      type: object
+                    type: array
+                required:
+                - enabled
+                - minReplicas
+                - maxReplicas
+                type: object
+              placement:
+                description: Placement configuration
+                properties:
+                  nodeSelector:
+                    additionalProperties:
+                      type: string
+                    type: object
+                type: object
+              backendConfig:
+                description: Backend configuration reference
+                properties:
+                  name:
+                    type: string
+                  namespace:
+                    type: string
+                type: object
+              config:
+                additionalProperties:
+                  type: string
+                description: Pattern-specific configuration
+                type: object
+            required:
+            - pattern
+            - backend
+            - image
+            - replicas
+            type: object
+          status:
+            description: PrismPatternStatus defines the observed state of PrismPattern
+            properties:
+              replicas:
+                format: int32
+                type: integer
+              availableReplicas:
+                format: int32
+                type: integer
+              phase:
+                type: string
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}
