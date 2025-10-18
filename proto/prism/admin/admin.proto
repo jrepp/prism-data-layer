@@ -1,0 +1,195 @@
+syntax = "proto3";
+
+package prism.admin;
+
+option go_package = "github.com/jrepp/prism-data-layer/pkg/plugin/gen/prism/admin";
+
+// CommandType enumerates all possible Raft log commands for admin cluster operations
+enum CommandType {
+  COMMAND_TYPE_UNSPECIFIED = 0;
+  COMMAND_TYPE_CREATE_NAMESPACE = 1;
+  COMMAND_TYPE_REGISTER_PROXY = 2;
+  COMMAND_TYPE_REGISTER_LAUNCHER = 3;
+  COMMAND_TYPE_ASSIGN_PATTERN = 4;
+  COMMAND_TYPE_UPDATE_PROXY_STATUS = 5;
+  COMMAND_TYPE_UPDATE_LAUNCHER_STATUS = 6;
+}
+
+// Command represents a single Raft log entry for admin cluster state mutation
+// All commands must be deterministic and idempotent
+message Command {
+  CommandType type = 1;
+  int64 timestamp = 2;
+  string issuer = 3; // User/service that issued the command
+
+  // Command payloads (oneof ensures exactly one is set)
+  oneof payload {
+    CreateNamespaceCommand create_namespace = 10;
+    RegisterProxyCommand register_proxy = 11;
+    RegisterLauncherCommand register_launcher = 12;
+    AssignPatternCommand assign_pattern = 13;
+    UpdateProxyStatusCommand update_proxy_status = 14;
+    UpdateLauncherStatusCommand update_launcher_status = 15;
+  }
+}
+
+// ====================================================================
+// Command Payloads
+// ====================================================================
+
+// CreateNamespaceCommand creates a new namespace in the admin cluster
+message CreateNamespaceCommand {
+  string namespace = 1;
+  int32 partition_id = 2;
+  string assigned_proxy = 3;
+  map<string, string> config = 4;
+  string principal = 5;
+}
+
+// RegisterProxyCommand registers a new proxy instance
+message RegisterProxyCommand {
+  string proxy_id = 1;
+  string address = 2;
+  string region = 3;
+  string version = 4;
+  repeated string capabilities = 5;
+  map<string, string> metadata = 6;
+}
+
+// RegisterLauncherCommand registers a new launcher instance
+message RegisterLauncherCommand {
+  string launcher_id = 1;
+  string address = 2;
+  string region = 3;
+  string version = 4;
+  repeated string capabilities = 5;
+  repeated string process_types = 6;
+  int32 max_processes = 7;
+  map<string, string> metadata = 8;
+}
+
+// AssignPatternCommand assigns a pattern to a launcher
+message AssignPatternCommand {
+  string pattern_id = 1;
+  string namespace = 2;
+  string pattern_type = 3;
+  string launcher_id = 4;
+  map<string, string> config = 5;
+}
+
+// UpdateProxyStatusCommand updates proxy health status
+message UpdateProxyStatusCommand {
+  string proxy_id = 1;
+  string status = 2;
+  int64 last_seen = 3;
+  ProxyResources resources = 4;
+}
+
+// UpdateLauncherStatusCommand updates launcher health status
+message UpdateLauncherStatusCommand {
+  string launcher_id = 1;
+  string status = 2;
+  int64 last_seen = 3;
+  int32 available_slots = 4;
+  LauncherResources resources = 5;
+}
+
+// ====================================================================
+// Admin State (FSM State)
+// ====================================================================
+
+// AdminState represents the complete admin cluster state replicated via Raft
+// This is the FSM state that is built up by applying Commands from the Raft log
+message AdminState {
+  int32 version = 1; // Schema version for forward compatibility
+
+  // State maps (key = ID/name)
+  map<string, NamespaceEntry> namespaces = 2;
+  map<string, ProxyEntry> proxies = 3;
+  map<string, LauncherEntry> launchers = 4;
+  map<string, PatternEntry> patterns = 5;
+
+  // Metadata
+  int64 last_applied_index = 10;
+  int64 last_applied_term = 11;
+  int64 state_updated_at = 12; // Unix timestamp of last state change
+}
+
+// ====================================================================
+// State Entries
+// ====================================================================
+
+// NamespaceEntry represents a namespace in the admin cluster
+message NamespaceEntry {
+  string name = 1;
+  string description = 2;
+  int32 partition_id = 3;
+  string assigned_proxy = 4;
+  map<string, string> config = 5;
+  string created_by = 6;
+  int64 created_at = 7;
+  int64 updated_at = 8;
+}
+
+// ProxyEntry represents a proxy instance in the admin cluster
+message ProxyEntry {
+  string proxy_id = 1;
+  string address = 2;
+  string region = 3;
+  string version = 4;
+  repeated string capabilities = 5;
+  map<string, string> metadata = 6;
+  string status = 7;
+  int64 registered_at = 8;
+  int64 last_seen = 9;
+  ProxyResources resources = 10;
+}
+
+// LauncherEntry represents a launcher instance in the admin cluster
+message LauncherEntry {
+  string launcher_id = 1;
+  string address = 2;
+  string region = 3;
+  string version = 4;
+  repeated string capabilities = 5;
+  repeated string process_types = 6;
+  int32 max_processes = 7;
+  map<string, string> metadata = 8;
+  string status = 9;
+  int64 registered_at = 10;
+  int64 last_seen = 11;
+  int32 available_slots = 12;
+  LauncherResources resources = 13;
+}
+
+// PatternEntry represents a pattern assignment
+message PatternEntry {
+  string pattern_id = 1;
+  string namespace = 2;
+  string pattern_type = 3;
+  string launcher_id = 4;
+  map<string, string> config = 5;
+  string status = 6;
+  int64 assigned_at = 7;
+  int64 updated_at = 8;
+}
+
+// ====================================================================
+// Resource Types
+// ====================================================================
+
+// ProxyResources represents proxy resource utilization
+message ProxyResources {
+  int64 memory_bytes = 1;
+  double cpu_percent = 2;
+  int32 active_namespaces = 3;
+  int64 requests_per_second = 4;
+}
+
+// LauncherResources represents launcher resource utilization
+message LauncherResources {
+  int64 memory_bytes = 1;
+  double cpu_percent = 2;
+  int32 active_processes = 3;
+  int32 available_slots = 4;
+}

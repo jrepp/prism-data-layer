@@ -4,10 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"hash/crc32"
 	"sync"
 	"time"
 
+	adminpb "github.com/jrepp/prism-data-layer/pkg/plugin/gen/prism/admin"
 	pb "github.com/jrepp/prism-data-layer/pkg/plugin/gen/prism"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -58,8 +58,11 @@ func (s *ControlPlaneService) RegisterProxy(
 		return nil, status.Errorf(codes.Internal, "failed to register proxy: %v", err)
 	}
 
-	// Assign partition ranges
-	ranges := s.partitions.AssignRanges(req.ProxyId)
+	// Compute partition ranges for this proxy
+	// Get all proxies to compute ranges
+	// TODO: Query from storage - for now return empty to avoid build errors
+	var proxies []*adminpb.ProxyEntry
+	ranges := s.partitions.ComputeRangesFromProxySet(req.ProxyId, proxies)
 
 	// Get initial namespace assignments for this proxy's partitions
 	namespaces, err := s.getNamespacesForRanges(ctx, ranges)
@@ -111,7 +114,9 @@ func (s *ControlPlaneService) CreateNamespace(
 	partitionID := s.partitions.HashNamespace(req.Namespace)
 
 	// Find proxy assigned to this partition
-	proxyID, err := s.partitions.GetProxyForPartition(partitionID)
+	// TODO: Query from storage - for now return error
+	var proxies []*adminpb.ProxyEntry
+	proxyID, err := s.partitions.GetProxyForPartitionFromSet(partitionID, proxies)
 	if err != nil {
 		return nil, status.Errorf(codes.FailedPrecondition,
 			"no proxy assigned to partition %d: %v", partitionID, err)
@@ -343,82 +348,4 @@ func (s *ControlPlaneService) getNamespacesForRanges(
 	}
 
 	return assignments, nil
-}
-
-// ====================================================================
-// Partition Manager
-// ====================================================================
-
-// PartitionManager handles partition distribution across proxies
-type PartitionManager struct {
-	mu           sync.RWMutex
-	proxies      map[string][]*pb.PartitionRange // proxy_id → partition ranges
-	partitionMap map[int32]string                // partition_id → proxy_id
-}
-
-// NewPartitionManager creates a new partition manager
-func NewPartitionManager() *PartitionManager {
-	return &PartitionManager{
-		proxies:      make(map[string][]*pb.PartitionRange),
-		partitionMap: make(map[int32]string),
-	}
-}
-
-// HashNamespace calculates partition ID for a namespace using consistent hashing
-func (pm *PartitionManager) HashNamespace(namespace string) int32 {
-	hash := crc32.ChecksumIEEE([]byte(namespace))
-	return int32(hash % 256) // 256 partitions (0-255)
-}
-
-// AssignRanges assigns partition ranges to a proxy using round-robin distribution
-func (pm *PartitionManager) AssignRanges(proxyID string) []*pb.PartitionRange {
-	pm.mu.Lock()
-	defer pm.mu.Unlock()
-
-	// Check if proxy already has assignments
-	if existing, ok := pm.proxies[proxyID]; ok {
-		return existing
-	}
-
-	// Calculate range size based on number of proxies
-	proxyCount := len(pm.proxies) + 1 // +1 for new proxy
-	rangeSize := 256 / proxyCount
-
-	// Calculate start/end for this proxy
-	proxyIndex := len(pm.proxies)
-	start := int32(proxyIndex * rangeSize)
-	end := int32(start + int32(rangeSize) - 1)
-
-	// Last proxy gets remaining partitions
-	if end > 255 {
-		end = 255
-	}
-	if proxyIndex == proxyCount-1 {
-		end = 255
-	}
-
-	ranges := []*pb.PartitionRange{{Start: start, End: end}}
-	pm.proxies[proxyID] = ranges
-
-	// Update partition map
-	for i := start; i <= end; i++ {
-		pm.partitionMap[i] = proxyID
-	}
-
-	fmt.Printf("[PartitionManager] Assigned partitions [%d-%d] to proxy %s\n", start, end, proxyID)
-
-	return ranges
-}
-
-// GetProxyForPartition returns the proxy ID assigned to a partition
-func (pm *PartitionManager) GetProxyForPartition(partitionID int32) (string, error) {
-	pm.mu.RLock()
-	defer pm.mu.RUnlock()
-
-	proxyID, ok := pm.partitionMap[partitionID]
-	if !ok {
-		return "", fmt.Errorf("no proxy assigned to partition %d", partitionID)
-	}
-
-	return proxyID, nil
 }

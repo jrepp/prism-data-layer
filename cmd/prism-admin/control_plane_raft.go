@@ -168,6 +168,15 @@ func (s *ControlPlaneServiceRaft) CreateNamespace(
 			"no proxy assigned to partition %d: %v", partitionID, err)
 	}
 
+	// Convert NamespaceConfig to map[string]string
+	// TODO: Implement proper config serialization
+	configMap := make(map[string]string)
+	if req.Config != nil && req.Config.Metadata != nil {
+		for k, v := range req.Config.Metadata {
+			configMap[k] = v
+		}
+	}
+
 	// Build Raft command
 	cmd := &adminpb.Command{
 		Type:      adminpb.CommandType_COMMAND_TYPE_CREATE_NAMESPACE,
@@ -178,7 +187,7 @@ func (s *ControlPlaneServiceRaft) CreateNamespace(
 				Namespace:     req.Namespace,
 				PartitionId:   partitionID,
 				AssignedProxy: proxyID,
-				Config:        req.Config,
+				Config:        configMap,
 				Principal:     req.Principal,
 			},
 		},
@@ -233,6 +242,17 @@ func (s *ControlPlaneServiceRaft) Heartbeat(
 		}, nil
 	}
 
+	// Convert resources
+	var proxyResources *adminpb.ProxyResources
+	if req.Resources != nil {
+		proxyResources = &adminpb.ProxyResources{
+			MemoryBytes:       req.Resources.MemoryMb * 1024 * 1024,
+			CpuPercent:        float64(req.Resources.CpuPercent),
+			ActiveNamespaces:  0, // Not tracked in heartbeat
+			RequestsPerSecond: 0, // Not tracked in heartbeat
+		}
+	}
+
 	// Build command for proxy status update
 	cmd := &adminpb.Command{
 		Type:      adminpb.CommandType_COMMAND_TYPE_UPDATE_PROXY_STATUS,
@@ -243,7 +263,7 @@ func (s *ControlPlaneServiceRaft) Heartbeat(
 				ProxyId:   req.ProxyId,
 				Status:    "healthy",
 				LastSeen:  req.Timestamp,
-				Resources: req.Resources,
+				Resources: proxyResources,
 			},
 		},
 	}
@@ -379,6 +399,17 @@ func (s *ControlPlaneServiceRaft) LauncherHeartbeat(
 		}, nil
 	}
 
+	// Convert launcher resources
+	var launcherResources *adminpb.LauncherResources
+	if req.Resources != nil {
+		launcherResources = &adminpb.LauncherResources{
+			MemoryBytes:      req.Resources.TotalMemoryMb * 1024 * 1024,
+			CpuPercent:       float64(req.Resources.CpuPercent),
+			ActiveProcesses:  req.Resources.ProcessCount,
+			AvailableSlots:   req.Resources.AvailableSlots,
+		}
+	}
+
 	cmd := &adminpb.Command{
 		Type:      adminpb.CommandType_COMMAND_TYPE_UPDATE_LAUNCHER_STATUS,
 		Timestamp: req.Timestamp,
@@ -389,7 +420,7 @@ func (s *ControlPlaneServiceRaft) LauncherHeartbeat(
 				Status:         "healthy",
 				LastSeen:       req.Timestamp,
 				AvailableSlots: req.Resources.AvailableSlots,
-				Resources:      req.Resources,
+				Resources:      launcherResources,
 			},
 		},
 	}
@@ -477,10 +508,16 @@ func (s *ControlPlaneServiceRaft) getNamespacesForRanges(ranges []*pb.PartitionR
 		// Check if namespace's partition falls within ranges
 		for _, r := range ranges {
 			if nsEntry.PartitionId >= r.Start && nsEntry.PartitionId <= r.End {
+				// Convert map[string]string back to NamespaceConfig
+				// TODO: Implement proper config deserialization
+				config := &pb.NamespaceConfig{
+					Metadata: nsEntry.Config,
+				}
+
 				assignments = append(assignments, &pb.NamespaceAssignment{
 					Namespace:   nsEntry.Name,
 					PartitionId: nsEntry.PartitionId,
-					Config:      nsEntry.Config,
+					Config:      config,
 					Version:     1, // TODO: Track version
 				})
 				break

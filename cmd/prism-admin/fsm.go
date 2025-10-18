@@ -481,7 +481,7 @@ func (fsm *AdminStateMachine) applyUpdateProxyStatus(cmd *adminpb.UpdateProxySta
 	proxy.Status = cmd.Status
 	proxy.LastSeen = cmd.LastSeen
 	if cmd.Resources != nil {
-		proxy.LastResources = cmd.Resources
+		proxy.Resources = cmd.Resources
 	}
 
 	fsm.log.Debug("updated proxy status",
@@ -506,7 +506,7 @@ func (fsm *AdminStateMachine) applyUpdateLauncherStatus(cmd *adminpb.UpdateLaunc
 	launcher.LastSeen = cmd.LastSeen
 	launcher.AvailableSlots = cmd.AvailableSlots
 	if cmd.Resources != nil {
-		launcher.LastResources = cmd.Resources
+		launcher.Resources = cmd.Resources
 	}
 
 	fsm.log.Debug("updated launcher status",
