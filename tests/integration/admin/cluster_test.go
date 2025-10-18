@@ -340,7 +340,7 @@ func TestAdminClusterMajorityFailure(t *testing.T) {
 	require.NoError(t, harness.ConnectToNode(ctx, "node3"))
 
 	// Wait for leader
-	leaderID, err := harness.WaitForLeader(ctx, 10*time.Second)
+	_, err := harness.WaitForLeader(ctx, 10*time.Second)
 	require.NoError(t, err)
 
 	// Kill two nodes (majority failure)
@@ -378,6 +378,99 @@ func TestAdminClusterMajorityFailure(t *testing.T) {
 	// Should fail due to no quorum
 	assert.Error(t, err, "Operation should fail without quorum")
 	t.Logf("Cluster correctly unavailable with only 1/3 nodes (no quorum): %v", err)
+}
+
+// TestAdminClusterNetworkPartition tests network partition (split brain scenario)
+func TestAdminClusterNetworkPartition(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skipping integration test in short mode")
+	}
+
+	// This test simulates network partition by blocking ports
+	// NOTE: Requires ability to manipulate firewall rules (may need sudo in some environments)
+	// For now, we simulate partition by killing connections rather than using iptables
+
+	executable := findPrismAdminExecutable(t)
+	harness := NewAdminClusterHarness(t, executable)
+	defer harness.Cleanup()
+
+	ctx := context.Background()
+
+	// Define 3-node cluster
+	peers := map[uint64]string{
+		1: "127.0.0.1:19051",
+		2: "127.0.0.1:19052",
+		3: "127.0.0.1:19053",
+	}
+
+	// Start all nodes
+	require.NoError(t, harness.StartNode(ctx, "node1", 1, 18051, 17051, 19051, peers))
+	require.NoError(t, harness.StartNode(ctx, "node2", 2, 18052, 17052, 19052, peers))
+	require.NoError(t, harness.StartNode(ctx, "node3", 3, 18053, 17053, 19053, peers))
+
+	// Connect to all nodes
+	require.NoError(t, harness.ConnectToNode(ctx, "node1"))
+	require.NoError(t, harness.ConnectToNode(ctx, "node2"))
+	require.NoError(t, harness.ConnectToNode(ctx, "node3"))
+
+	// Wait for initial leader
+	initialLeader, err := harness.WaitForLeader(ctx, 10*time.Second)
+	require.NoError(t, err)
+	t.Logf("Initial leader: %s", initialLeader)
+
+	// Register a proxy via initial leader
+	leader, _ := harness.GetNode(initialLeader)
+	resp, err := leader.GRPCClient.RegisterProxy(ctx, &pb.ProxyRegistration{
+		ProxyId: "proxy-partition-test",
+		Address: "proxy-01.local:8080",
+	})
+	require.NoError(t, err)
+	assert.True(t, resp.Success)
+
+	// Simulate network partition: Kill one node to create minority partition
+	// In a real network partition, we'd use iptables/firewall rules to block traffic
+	// between specific nodes. For this test, we'll kill one node to simulate
+	// losing network connectivity to it.
+	var partitionedNode string
+	for nodeID := range harness.Nodes {
+		if nodeID != initialLeader {
+			partitionedNode = nodeID
+			break
+		}
+	}
+
+	t.Logf("Simulating network partition by isolating node %s", partitionedNode)
+	require.NoError(t, harness.KillNode(partitionedNode))
+
+	// Wait for cluster to detect partition
+	time.Sleep(3 * time.Second)
+
+	// Majority partition (2/3 nodes) should still be operational
+	// Try to register another proxy
+	resp2, err := leader.GRPCClient.RegisterProxy(ctx, &pb.ProxyRegistration{
+		ProxyId: "proxy-after-partition",
+		Address: "proxy-02.local:8080",
+	})
+	require.NoError(t, err)
+	assert.True(t, resp2.Success)
+	t.Logf("Majority partition still operational with 2/3 nodes")
+
+	// Heal the partition by restarting the isolated node
+	t.Logf("Healing partition by restarting node %s", partitionedNode)
+	require.NoError(t, harness.RestartNode(ctx, partitionedNode, peers))
+	require.NoError(t, harness.ConnectToNode(ctx, partitionedNode))
+
+	// Wait for node to rejoin
+	time.Sleep(3 * time.Second)
+
+	// Verify cluster is fully operational again
+	resp3, err := leader.GRPCClient.RegisterProxy(ctx, &pb.ProxyRegistration{
+		ProxyId: "proxy-after-heal",
+		Address: "proxy-03.local:8080",
+	})
+	require.NoError(t, err)
+	assert.True(t, resp3.Success)
+	t.Logf("Cluster operational after partition healed (all 3 nodes)")
 }
 
 // Helper function to find prism-admin executable

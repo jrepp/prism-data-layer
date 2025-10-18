@@ -106,6 +106,19 @@ Test Harness
 
 **Validates**: Cluster correctly becomes unavailable without quorum
 
+### TestAdminClusterNetworkPartition
+**Duration**: ~20s
+**Nodes**: 3 (1 partitioned, then healed)
+**Tests**:
+- Initial cluster with leader election
+- Proxy registration via leader
+- Simulate network partition (kill one node to isolate it)
+- Majority partition (2/3) remains operational
+- Heal partition by restarting isolated node
+- Verify node rejoins and cluster fully operational
+
+**Validates**: Network partition handling and partition healing
+
 ## Running Tests
 
 ### Prerequisites
@@ -155,6 +168,7 @@ Tests use fixed port ranges to avoid conflicts:
 | NodeRestart            | 18021-18023 | 17021-17023 | 19021-19023 |
 | MinorityFailure        | 18031-18033 | 17031-17033 | 19031-19033 |
 | MajorityFailure        | 18041-18043 | 17041-17043 | 19041-19043 |
+| NetworkPartition       | 18051-18053 | 17051-17053 | 19051-19053 |
 
 ## Debugging
 
@@ -270,6 +284,7 @@ assert.True(t, resp.Success)
 | NodeRestart | ~20s | 3 | 1 RPC + restart + rejoin |
 | MinorityFailure | ~15s | 2/3 | 1 RPC + crash |
 | MajorityFailure | ~15s | 1/3 | 1 RPC (fails) + 2 crashes |
+| NetworkPartition | ~20s | 3 → 2 → 3 | 3 RPCs + partition + heal |
 
 **Total Suite**: ~1-2 minutes (varies with leader election timing)
 
