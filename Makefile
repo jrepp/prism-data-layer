@@ -269,6 +269,16 @@ test-integration-go: ## Run Go integration tests (proxy-pattern lifecycle)
 	@cd tests/integration && go test -v -timeout 5m ./...
 	$(call print_green,Go integration tests passed)
 
+test-integration-admin: build-prism-admin ## Run admin cluster integration tests (multi-node Raft)
+	$(call print_blue,Running admin cluster integration tests...)
+	@cd tests/integration/admin && go test -v -timeout 15m ./...
+	$(call print_green,Admin cluster integration tests passed)
+
+test-integration-admin-short: build-prism-admin ## Run admin cluster integration tests (basic only, faster)
+	$(call print_blue,Running admin cluster integration tests (short mode)...)
+	@cd tests/integration/admin && go test -v -timeout 5m -short ./...
+	$(call print_green,Admin cluster integration tests passed (short mode))
+
 test-acceptance-unified: ## Run unified acceptance tests (dynamic interface discovery)
 	$(call print_blue,Running unified acceptance tests...)
 	@cd tests/acceptance && go test -v -timeout 10m -run TestUnifiedPattern

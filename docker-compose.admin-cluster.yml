@@ -1,0 +1,157 @@
+version: '3.8'
+
+# 3-node prism-admin cluster for testing RFC-038 Raft HA
+# Usage:
+#   docker-compose -f docker-compose.admin-cluster.yml up
+#   docker-compose -f docker-compose.admin-cluster.yml logs admin-01
+#   docker-compose -f docker-compose.admin-cluster.yml stop admin-01  # Test failover
+
+networks:
+  prism-admin:
+    driver: bridge
+
+volumes:
+  admin-01-data:
+  admin-02-data:
+  admin-03-data:
+
+services:
+  # Admin Node 1 (will likely be leader initially)
+  admin-01:
+    build:
+      context: .
+      dockerfile: cmd/prism-admin/Dockerfile
+    container_name: prism-admin-01
+    hostname: admin-01
+    networks:
+      - prism-admin
+    ports:
+      - "8980:8980"  # Control Plane (external)
+      - "8990:8990"  # Raft transport (external for debugging)
+      - "9090:9090"  # Prometheus metrics
+    environment:
+      # Node configuration
+      PRISM_NODE_ID: "1"
+      PRISM_BIND_ADDR: "0.0.0.0:8990"
+      PRISM_ADVERTISE_ADDR: "admin-01:8990"
+
+      # Cluster peers (all 3 nodes)
+      PRISM_PEERS: "1=http://admin-01:8990,2=http://admin-02:8990,3=http://admin-03:8990"
+
+      # Control plane
+      CONTROL_PLANE_LISTEN: "0.0.0.0:8980"
+
+      # Storage
+      STORAGE_DB: "sqlite:///data/admin.db"
+
+      # Raft tuning
+      RAFT_HEARTBEAT_TICK: "1"
+      RAFT_ELECTION_TICK: "10"
+      RAFT_SNAPSHOT_INTERVAL: "10000"
+      RAFT_ENABLE_FOLLOWER_READS: "true"
+      RAFT_MAX_STALENESS: "200ms"
+    volumes:
+      - admin-01-data:/data
+    healthcheck:
+      test: ["CMD", "grpc_health_probe", "-addr=:8980"]
+      interval: 5s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+
+  # Admin Node 2
+  admin-02:
+    build:
+      context: .
+      dockerfile: cmd/prism-admin/Dockerfile
+    container_name: prism-admin-02
+    hostname: admin-02
+    networks:
+      - prism-admin
+    ports:
+      - "8981:8980"  # Control Plane (different host port)
+      - "8991:8990"  # Raft transport
+      - "9091:9090"  # Prometheus metrics
+    environment:
+      PRISM_NODE_ID: "2"
+      PRISM_BIND_ADDR: "0.0.0.0:8990"
+      PRISM_ADVERTISE_ADDR: "admin-02:8990"
+      PRISM_PEERS: "1=http://admin-01:8990,2=http://admin-02:8990,3=http://admin-03:8990"
+      CONTROL_PLANE_LISTEN: "0.0.0.0:8980"
+      STORAGE_DB: "sqlite:///data/admin.db"
+      RAFT_HEARTBEAT_TICK: "1"
+      RAFT_ELECTION_TICK: "10"
+      RAFT_SNAPSHOT_INTERVAL: "10000"
+      RAFT_ENABLE_FOLLOWER_READS: "true"
+      RAFT_MAX_STALENESS: "200ms"
+    volumes:
+      - admin-02-data:/data
+    healthcheck:
+      test: ["CMD", "grpc_health_probe", "-addr=:8980"]
+      interval: 5s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+    depends_on:
+      - admin-01
+
+  # Admin Node 3
+  admin-03:
+    build:
+      context: .
+      dockerfile: cmd/prism-admin/Dockerfile
+    container_name: prism-admin-03
+    hostname: admin-03
+    networks:
+      - prism-admin
+    ports:
+      - "8982:8980"  # Control Plane
+      - "8992:8990"  # Raft transport
+      - "9092:9090"  # Prometheus metrics
+    environment:
+      PRISM_NODE_ID: "3"
+      PRISM_BIND_ADDR: "0.0.0.0:8990"
+      PRISM_ADVERTISE_ADDR: "admin-03:8990"
+      PRISM_PEERS: "1=http://admin-01:8990,2=http://admin-02:8990,3=http://admin-03:8990"
+      CONTROL_PLANE_LISTEN: "0.0.0.0:8980"
+      STORAGE_DB: "sqlite:///data/admin.db"
+      RAFT_HEARTBEAT_TICK: "1"
+      RAFT_ELECTION_TICK: "10"
+      RAFT_SNAPSHOT_INTERVAL: "10000"
+      RAFT_ENABLE_FOLLOWER_READS: "true"
+      RAFT_MAX_STALENESS: "200ms"
+    volumes:
+      - admin-03-data:/data
+    healthcheck:
+      test: ["CMD", "grpc_health_probe", "-addr=:8980"]
+      interval: 5s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+    depends_on:
+      - admin-01
+      - admin-02
+
+# Testing commands:
+#
+# 1. Start cluster:
+#    docker-compose -f docker-compose.admin-cluster.yml up -d
+#
+# 2. Check logs to see leader election:
+#    docker-compose -f docker-compose.admin-cluster.yml logs -f
+#
+# 3. Test failover by killing leader:
+#    docker-compose -f docker-compose.admin-cluster.yml stop admin-01
+#    docker-compose -f docker-compose.admin-cluster.yml logs admin-02 admin-03
+#    # Should see new leader elected within 1-2 seconds
+#
+# 4. Restart failed node:
+#    docker-compose -f docker-compose.admin-cluster.yml start admin-01
+#    docker-compose -f docker-compose.admin-cluster.yml logs admin-01
+#    # Should rejoin as follower and sync state
+#
+# 5. Clean up:
+#    docker-compose -f docker-compose.admin-cluster.yml down -v
