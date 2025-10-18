@@ -35,12 +35,37 @@ Example:
 }
 
 func init() {
+	// Legacy flags (kept for backward compatibility)
 	serveCmd.Flags().IntP("port", "p", 8981, "Control plane gRPC port")
 	serveCmd.Flags().String("listen", "0.0.0.0", "Listen address")
 	serveCmd.Flags().IntP("metrics-port", "m", 9090, "Prometheus metrics HTTP port")
+
+	// Raft cluster flags
+	serveCmd.Flags().Uint64("raft-id", 0, "Raft node ID (1, 2, 3, ...) - auto-computed if not specified")
+	serveCmd.Flags().Int("http-port", 8980, "Admin HTTP API port")
+	serveCmd.Flags().Int("grpc-port", 8981, "Control plane gRPC port (same as --port)")
+	serveCmd.Flags().Int("raft-port", 8990, "Raft consensus protocol port")
+	serveCmd.Flags().String("raft-addr", "127.0.0.1", "Raft bind address (default: 127.0.0.1)")
+	serveCmd.Flags().String("advertise-addr", "", "Address advertised to peers (e.g., admin-01:8990)")
+	serveCmd.Flags().String("cluster", "", "Cluster peers (e.g., '1=localhost:19001,2=localhost:19002,3=localhost:19003')")
+	serveCmd.Flags().String("data-dir", "", "Raft data directory")
+	serveCmd.Flags().String("db", "", "Database URN (e.g., sqlite:///var/lib/prism-admin/admin.db)")
+
+	// Bind legacy flags
 	viper.BindPFlag("server.port", serveCmd.Flags().Lookup("port"))
 	viper.BindPFlag("server.listen", serveCmd.Flags().Lookup("listen"))
 	viper.BindPFlag("server.metrics_port", serveCmd.Flags().Lookup("metrics-port"))
+
+	// Bind Raft cluster flags
+	viper.BindPFlag("cluster.node_id", serveCmd.Flags().Lookup("raft-id"))
+	viper.BindPFlag("admin_api.listen", serveCmd.Flags().Lookup("http-port"))
+	viper.BindPFlag("control_plane.listen", serveCmd.Flags().Lookup("grpc-port"))
+	viper.BindPFlag("cluster.raft_port", serveCmd.Flags().Lookup("raft-port"))
+	viper.BindPFlag("cluster.bind_addr", serveCmd.Flags().Lookup("raft-addr"))
+	viper.BindPFlag("cluster.advertise_addr", serveCmd.Flags().Lookup("advertise-addr"))
+	viper.BindPFlag("cluster.peers", serveCmd.Flags().Lookup("cluster"))
+	viper.BindPFlag("cluster.data_dir", serveCmd.Flags().Lookup("data-dir"))
+	viper.BindPFlag("storage.db", serveCmd.Flags().Lookup("db"))
 }
 
 func runServe(cmd *cobra.Command, args []string) error {

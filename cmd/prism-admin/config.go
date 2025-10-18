@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"net/url"
+	"net"
 	"os"
 	"strconv"
 	"strings"
@@ -56,8 +56,6 @@ func LoadConfig() (*ClusterConfig, *ControlPlaneConfig, *AdminAPIConfig, error) 
 	// Cluster configuration
 	cluster := &ClusterConfig{
 		NodeID:              viper.GetUint64("cluster.node_id"),
-		BindAddr:            viper.GetString("cluster.bind_addr"),
-		AdvertiseAddr:       viper.GetString("cluster.advertise_addr"),
 		HeartbeatTick:       viper.GetInt("cluster.raft.heartbeat_tick"),
 		ElectionTick:        viper.GetInt("cluster.raft.election_tick"),
 		SnapshotInterval:    viper.GetUint64("cluster.raft.snapshot_interval"),
@@ -70,17 +68,96 @@ func LoadConfig() (*ClusterConfig, *ControlPlaneConfig, *AdminAPIConfig, error) 
 		LogRetention:        viper.GetString("cluster.log_retention"),
 	}
 
-	// Parse peers from comma-separated string or map
-	peers := viper.GetStringSlice("cluster.peers")
-	cluster.Peers = make(map[uint64]string)
+	// Get raft port first
+	raftPort := viper.GetInt("cluster.raft_port")
+	if raftPort == 0 {
+		raftPort = 8990
+	}
 
-	if len(peers) > 0 {
-		// Format: "admin-01.prism.local:8990,admin-02.prism.local:8990,admin-03.prism.local:8990"
-		for i, peer := range peers {
-			nodeID := uint64(i + 1) // 1-indexed
-			cluster.Peers[nodeID] = fmt.Sprintf("http://%s", peer)
+	// Build bind address from raft-addr and raft-port
+	// Default to localhost instead of 0.0.0.0 for security
+	// Note: We'll potentially update this after parsing peers if needed
+	raftAddr := viper.GetString("cluster.bind_addr")
+	if raftAddr == "" {
+		raftAddr = "127.0.0.1"
+	}
+	tempBindAddr := fmt.Sprintf("%s:%d", raftAddr, raftPort)
+
+	// Parse peers from comma-separated string or slice FIRST
+	var peersStr string
+	if viper.IsSet("cluster.peers") {
+		// Could be a string or slice, handle both
+		if peerSlice := viper.GetStringSlice("cluster.peers"); len(peerSlice) > 0 {
+			peersStr = peerSlice[0] // If it's a slice, take first element
+		} else {
+			peersStr = viper.GetString("cluster.peers")
 		}
 	}
+
+	cluster.Peers = make(map[uint64]string)
+
+	if peersStr != "" {
+		// Parse peers from string (e.g., "1=localhost:19001,2=localhost:19002,3=localhost:19003")
+		cluster.Peers = parsePeersFromEnv(peersStr)
+	}
+
+	// Auto-compute node ID if not specified
+	if cluster.NodeID == 0 {
+		if len(cluster.Peers) == 0 {
+			// Single-node mode: default to ID 1
+			cluster.NodeID = 1
+			fmt.Println("[INFO] No --raft-id specified, defaulting to 1 (single-node mode)")
+		} else {
+			// Multi-node mode: find first available ID by matching bind address to peer list
+			localAddr := fmt.Sprintf("%s:%d", raftAddr, raftPort)
+			for id, peerAddr := range cluster.Peers {
+				// Check if this peer address matches our bind address
+				if peerAddr == localAddr || peerAddr == fmt.Sprintf("localhost:%d", raftPort) ||
+				   peerAddr == fmt.Sprintf("127.0.0.1:%d", raftPort) {
+					cluster.NodeID = id
+					fmt.Printf("[INFO] No --raft-id specified, auto-detected as %d based on bind address %s\n", id, localAddr)
+					break
+				}
+			}
+
+			// If still not found, use the first peer ID as fallback
+			if cluster.NodeID == 0 {
+				for id := range cluster.Peers {
+					cluster.NodeID = id
+					fmt.Printf("[INFO] No --raft-id specified and no match found, using first peer ID: %d\n", id)
+					break
+				}
+			}
+		}
+	}
+
+	// Build advertise address AFTER parsing peers
+	advertiseAddr := viper.GetString("cluster.advertise_addr")
+	if advertiseAddr == "" && cluster.NodeID > 0 {
+		// Try to extract from peers if available
+		if len(cluster.Peers) > 0 && cluster.Peers[cluster.NodeID] != "" {
+			// Peer addresses are already in TCP format (no http:// prefix)
+			advertiseAddr = cluster.Peers[cluster.NodeID]
+		} else {
+			// Default to localhost:<raft-port> for testing
+			advertiseAddr = fmt.Sprintf("localhost:%d", raftPort)
+		}
+	}
+	cluster.AdvertiseAddr = advertiseAddr
+
+	// If bind address is 0.0.0.0 and we have an advertise address, use the advertise
+	// address for binding. This is necessary because Hashicorp Raft doesn't allow
+	// 0.0.0.0 as an advertisable address.
+	// Note: Default is now 127.0.0.1, but user might explicitly set 0.0.0.0
+	if raftAddr == "0.0.0.0" && advertiseAddr != "" {
+		// Extract the host from advertise address
+		host, _, err := net.SplitHostPort(advertiseAddr)
+		if err == nil {
+			tempBindAddr = fmt.Sprintf("%s:%d", host, raftPort)
+			fmt.Printf("[INFO] Bind address was 0.0.0.0, using advertise address host: %s\n", host)
+		}
+	}
+	cluster.BindAddr = tempBindAddr
 
 	// Environment variable overrides (for Docker/K8s)
 	if nodeIDStr := os.Getenv("PRISM_NODE_ID"); nodeIDStr != "" {
@@ -129,12 +206,25 @@ func LoadConfig() (*ClusterConfig, *ControlPlaneConfig, *AdminAPIConfig, error) 
 
 	// Control plane configuration
 	controlPlane := &ControlPlaneConfig{
-		Listen:          viper.GetString("control_plane.listen"),
 		ReadConsistency: viper.GetStringMapString("control_plane.read_consistency"),
 	}
 
-	if controlPlane.Listen == "" {
-		controlPlane.Listen = "0.0.0.0:8981"
+	// Build listen address from CLI flag or config
+	grpcPort := viper.GetInt("control_plane.listen")
+	if grpcPort == 0 {
+		grpcPort = 8981 // Default gRPC port
+	}
+	// Handle both "8981" and "0.0.0.0:8981" formats
+	if grpcPort < 65536 {
+		controlPlane.Listen = fmt.Sprintf("0.0.0.0:%d", grpcPort)
+	} else {
+		// If it's not a valid port, try to parse as string
+		listenStr := viper.GetString("control_plane.listen")
+		if listenStr != "" {
+			controlPlane.Listen = listenStr
+		} else {
+			controlPlane.Listen = "0.0.0.0:8981"
+		}
 	}
 
 	// Default consistency levels per operation
@@ -153,13 +243,27 @@ func LoadConfig() (*ClusterConfig, *ControlPlaneConfig, *AdminAPIConfig, error) 
 
 	// Admin API configuration
 	adminAPI := &AdminAPIConfig{
-		Listen:                 viper.GetString("admin_api.listen"),
 		DefaultReadConsistency: viper.GetString("admin_api.default_read_consistency"),
 	}
 
-	if adminAPI.Listen == "" {
-		adminAPI.Listen = "0.0.0.0:8980"
+	// Build listen address from CLI flag or config
+	httpPort := viper.GetInt("admin_api.listen")
+	if httpPort == 0 {
+		httpPort = 8980 // Default HTTP port
 	}
+	// Handle both "8980" and "0.0.0.0:8980" formats
+	if httpPort < 65536 {
+		adminAPI.Listen = fmt.Sprintf("0.0.0.0:%d", httpPort)
+	} else {
+		// If it's not a valid port, try to parse as string
+		listenStr := viper.GetString("admin_api.listen")
+		if listenStr != "" {
+			adminAPI.Listen = listenStr
+		} else {
+			adminAPI.Listen = "0.0.0.0:8980"
+		}
+	}
+
 	if adminAPI.DefaultReadConsistency == "" {
 		adminAPI.DefaultReadConsistency = "stale"
 	}
@@ -173,8 +277,9 @@ func LoadConfig() (*ClusterConfig, *ControlPlaneConfig, *AdminAPIConfig, error) 
 }
 
 // parsePeersFromEnv parses peers from environment variable
-// Format: "1=http://admin-01:8990,2=http://admin-02:8990,3=http://admin-03:8990"
+// Format: "1=admin-01:8990,2=admin-02:8990,3=admin-03:8990"
 // Or: "admin-01:8990,admin-02:8990,admin-03:8990" (auto-assign IDs)
+// NOTE: Raft uses TCP transport, so we DON'T add http:// prefix
 func parsePeersFromEnv(peersStr string) map[uint64]string {
 	peers := make(map[uint64]string)
 	parts := strings.Split(peersStr, ",")
@@ -189,52 +294,62 @@ func parsePeersFromEnv(peersStr string) map[uint64]string {
 			if err != nil {
 				continue
 			}
-			peers[id] = ensureHTTPScheme(kv[1])
+			// Strip any http:// or https:// prefix if present
+			addr := strings.TrimPrefix(kv[1], "http://")
+			addr = strings.TrimPrefix(addr, "https://")
+			peers[id] = addr
 		} else {
 			// Auto-assign IDs (1, 2, 3...)
 			id := uint64(i + 1)
-			peers[id] = ensureHTTPScheme(part)
+			// Strip any http:// or https:// prefix if present
+			addr := strings.TrimPrefix(part, "http://")
+			addr = strings.TrimPrefix(addr, "https://")
+			peers[id] = addr
 		}
 	}
 
 	return peers
 }
 
-// ensureHTTPScheme adds http:// if no scheme present
-func ensureHTTPScheme(addr string) string {
-	if !strings.HasPrefix(addr, "http://") && !strings.HasPrefix(addr, "https://") {
-		return "http://" + addr
-	}
-	return addr
-}
-
 // validateClusterConfig validates cluster configuration
 func validateClusterConfig(cfg *ClusterConfig) error {
+	// NodeID should have been auto-computed by LoadConfig if not specified
 	if cfg.NodeID == 0 {
-		return fmt.Errorf("node_id is required (must be > 0)")
+		return fmt.Errorf("failed to determine node_id (should have been auto-computed)")
 	}
 
 	if cfg.BindAddr == "" {
 		return fmt.Errorf("bind_addr is required")
 	}
 
-	if cfg.AdvertiseAddr == "" {
-		return fmt.Errorf("advertise_addr is required")
-	}
-
-	// Validate advertise address is valid URL
-	if _, err := url.Parse(cfg.AdvertiseAddr); err != nil {
-		return fmt.Errorf("invalid advertise_addr: %w", err)
-	}
-
 	// Check if single-node mode (no peers = standalone)
 	if len(cfg.Peers) == 0 {
 		fmt.Println("[INFO] Running in single-node mode (no peers configured)")
 		// Add self as only peer for single-node cluster
+		// Use advertise addr if provided, otherwise use bind addr
+		addr := cfg.AdvertiseAddr
+		if addr == "" {
+			addr = cfg.BindAddr
+		}
+		// Don't add http:// prefix - Raft uses TCP transport
 		cfg.Peers = map[uint64]string{
-			cfg.NodeID: ensureHTTPScheme(cfg.AdvertiseAddr),
+			cfg.NodeID: addr,
+		}
+		// Set advertise addr to match
+		if cfg.AdvertiseAddr == "" {
+			cfg.AdvertiseAddr = addr
 		}
 		return nil
+	}
+
+	// Multi-node cluster validation
+	if cfg.AdvertiseAddr == "" {
+		return fmt.Errorf("advertise_addr is required for multi-node clusters")
+	}
+
+	// Validate advertise address is valid
+	if !strings.Contains(cfg.AdvertiseAddr, ":") {
+		return fmt.Errorf("invalid advertise_addr: must include port (e.g., 'admin-01:8990')")
 	}
 
 	// Validate this node is in peer list

@@ -1,0 +1,22 @@
+apiVersion: prism.io/v1alpha1
+kind: PrismPattern
+metadata:
+  name: test-simple-pattern
+  namespace: prism-system
+spec:
+  pattern: keyvalue
+  backend: redis
+  image: busybox:latest
+  replicas: 1
+
+  resources:
+    requests:
+      cpu: "100m"
+      memory: "128Mi"
+    limits:
+      cpu: "200m"
+      memory: "256Mi"
+
+  service:
+    type: ClusterIP
+    port: 8080

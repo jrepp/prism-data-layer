@@ -1,0 +1,114 @@
+# Example: PrismPattern with KEDA multi-trigger auto-scaling
+# Use case: Consumer that scales based on multiple data sources (Kafka + NATS + CPU)
+apiVersion: prism.io/v1alpha1
+kind: PrismPattern
+metadata:
+  name: consumer-multi-source
+  namespace: prism-system
+spec:
+  # Pattern configuration
+  pattern: consumer
+  backend: kafka
+
+  # Container image
+  image: ghcr.io/prism/consumer-runner:latest
+
+  # Initial replicas
+  replicas: 2
+
+  # Resource requirements
+  resources:
+    requests:
+      cpu: "1000m"
+      memory: "2Gi"
+    limits:
+      cpu: "4000m"
+      memory: "8Gi"
+
+  # Service configuration
+  service:
+    type: ClusterIP
+    port: 8080
+
+  # KEDA multi-trigger auto-scaling
+  autoscaling:
+    enabled: true
+    scaler: keda
+
+    # Replica bounds
+    minReplicas: 2
+    maxReplicas: 100
+
+    # KEDA configuration
+    pollingInterval: 10
+    cooldownPeriod: 300
+
+    # Multiple triggers (OR logic - scales to highest)
+    triggers:
+      # Trigger 1: Kafka consumer lag
+      - type: kafka
+        metadata:
+          bootstrapServers: "kafka.prism-system.svc.cluster.local:9092"
+          consumerGroup: "prism-multi-consumer"
+          topic: "high-priority-orders"
+          lagThreshold: "500"
+        authenticationRef:
+          name: kafka-credentials
+
+      # Trigger 2: NATS JetStream pending messages
+      - type: nats-jetstream
+        metadata:
+          natsServerMonitoringEndpoint: "nats.prism-system.svc.cluster.local:8222"
+          stream: "EVENTS"
+          consumer: "prism-consumer"
+          lagThreshold: "100"
+
+      # Trigger 3: AWS SQS queue depth
+      - type: aws-sqs-queue
+        metadata:
+          queueURL: "https://sqs.us-east-1.amazonaws.com/123456789/orders-queue"
+          queueLength: "1000"
+          awsRegion: "us-east-1"
+        authenticationRef:
+          name: aws-credentials
+
+      # Trigger 4: CPU-based fallback
+      - type: cpu
+        metadata:
+          type: "Utilization"
+          value: "80"
+
+  # Backend configuration
+  backendConfig:
+    name: kafka-production
+    namespace: prism-system
+
+  # Pattern-specific configuration
+  config:
+    kafkaBootstrapServers: "kafka.prism-system.svc.cluster.local:9092"
+    natsUrl: "nats://nats.prism-system.svc.cluster.local:4222"
+    sqsRegion: "us-east-1"
+
+---
+# Kafka credentials
+apiVersion: v1
+kind: Secret
+metadata:
+  name: kafka-credentials
+  namespace: prism-system
+type: Opaque
+stringData:
+  saslUsername: ""
+  saslPassword: ""
+
+---
+# AWS credentials for SQS
+apiVersion: v1
+kind: Secret
+metadata:
+  name: aws-credentials
+  namespace: prism-system
+type: Opaque
+stringData:
+  AWS_ACCESS_KEY_ID: ""
+  AWS_SECRET_ACCESS_KEY: ""
