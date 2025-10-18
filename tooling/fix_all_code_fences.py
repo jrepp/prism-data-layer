@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""
-Comprehensive fix for all code fence errors in MEMO-036.
+"""Comprehensive fix for all code fence errors in MEMO-036.
 
 Fixes:
 1. Unlabeled shell script blocks (``` should be ```bash)
@@ -9,14 +8,12 @@ Fixes:
 4. Go code blocks (``` should be ```go)
 """
 
-import re
 import sys
 from pathlib import Path
 
 
 def fix_all_code_fences(content: str) -> tuple[str, int]:
-    """
-    Fix all code fence errors comprehensively.
+    """Fix all code fence errors comprehensively.
 
     Strategy:
     1. Track code block state
@@ -26,7 +23,7 @@ def fix_all_code_fences(content: str) -> tuple[str, int]:
     Returns:
         Tuple of (fixed_content, number_of_fixes)
     """
-    lines = content.split('\n')
+    lines = content.split("\n")
     fixed_lines = []
     fixes = 0
     in_code_block = False
@@ -35,7 +32,7 @@ def fix_all_code_fences(content: str) -> tuple[str, int]:
         stripped = line.strip()
 
         # Check if this is a code fence line
-        if stripped.startswith('```'):
+        if stripped.startswith("```"):
             fence_content = stripped[3:].strip()
 
             if not in_code_block:
@@ -45,71 +42,82 @@ def fix_all_code_fences(content: str) -> tuple[str, int]:
                     # Look ahead to determine appropriate label
                     label = infer_language_label(lines, i)
                     indent = len(line) - len(line.lstrip())
-                    fixed_lines.append(' ' * indent + f'```{label}')
+                    fixed_lines.append(" " * indent + f"```{label}")
                     fixes += 1
                     in_code_block = True
                 else:
                     # Has language label - keep as is
                     fixed_lines.append(line)
                     in_code_block = True
+            # Closing fence
+            elif fence_content:
+                # Closing fence has extra text - remove it
+                indent = len(line) - len(line.lstrip())
+                fixed_lines.append(" " * indent + "```")
+                fixes += 1
+                in_code_block = False
             else:
-                # Closing fence
-                if fence_content:
-                    # Closing fence has extra text - remove it
-                    indent = len(line) - len(line.lstrip())
-                    fixed_lines.append(' ' * indent + '```')
-                    fixes += 1
-                    in_code_block = False
-                else:
-                    # Clean closing fence - keep as is
-                    fixed_lines.append(line)
-                    in_code_block = False
+                # Clean closing fence - keep as is
+                fixed_lines.append(line)
+                in_code_block = False
         else:
             fixed_lines.append(line)
 
-    return '\n'.join(fixed_lines), fixes
+    return "\n".join(fixed_lines), fixes
 
 
 def infer_language_label(lines: list[str], fence_index: int) -> str:
-    """
-    Infer the appropriate language label based on the code block content.
+    """Infer the appropriate language label based on the code block content.
 
     Returns appropriate label: bash, yaml, go, text
     """
     # Look at next 5 lines to determine language
-    next_lines = lines[fence_index + 1:fence_index + 6]
-    content = '\n'.join(next_lines).lower()
+    next_lines = lines[fence_index + 1 : fence_index + 6]
+    content = "\n".join(next_lines).lower()
 
     # Check for shell script patterns
     shell_patterns = [
-        'curl', 'kubectl', 'helm', 'make', 'cd ', 'export',
-        'brew install', 'sudo', 'chmod', 'mkdir', '#!/bin',
-        'go run', 'docker', 'git ', 'npm ', 'go version'
+        "curl",
+        "kubectl",
+        "helm",
+        "make",
+        "cd ",
+        "export",
+        "brew install",
+        "sudo",
+        "chmod",
+        "mkdir",
+        "#!/bin",
+        "go run",
+        "docker",
+        "git ",
+        "npm ",
+        "go version",
     ]
     if any(pattern in content for pattern in shell_patterns):
-        return 'bash'
+        return "bash"
 
     # Check for YAML patterns
-    yaml_patterns = ['apiversion:', 'kind:', 'metadata:', 'spec:', '- name:']
+    yaml_patterns = ["apiversion:", "kind:", "metadata:", "spec:", "- name:"]
     if any(pattern in content for pattern in yaml_patterns):
-        return 'yaml'
+        return "yaml"
 
     # Check for Go patterns
-    go_patterns = ['package ', 'import (', 'func ', 'type ', 'return ']
+    go_patterns = ["package ", "import (", "func ", "type ", "return "]
     if any(pattern in content for pattern in go_patterns):
-        return 'go'
+        return "go"
 
     # Check for output/plain text patterns
-    text_patterns = ['name ', 'ready', 'status', 'age', 'expected output', '#']
+    text_patterns = ["name ", "ready", "status", "age", "expected output", "#"]
     if any(pattern in content for pattern in text_patterns):
-        return 'text'
+        return "text"
 
     # Default to text
-    return 'text'
+    return "text"
 
 
 def main():
-    memo_path = Path('/Users/jrepp/dev/data-access/docs-cms/memos/MEMO-036-kubernetes-operator-development.md')
+    memo_path = Path("/Users/jrepp/dev/data-access/docs-cms/memos/MEMO-036-kubernetes-operator-development.md")
 
     if not memo_path.exists():
         print(f"❌ File not found: {memo_path}")
@@ -134,5 +142,5 @@ def main():
     return 0
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main())
